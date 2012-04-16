@@ -1,0 +1,19 @@
+-=Bon pour accord=-
+
+* Paramétrage
+
+PROPALE_APPROVAL
+Booléen
+Active le cadre de « Bon pour accord »
+
+PROPALE_APPROVAL_COMMENT
+Chaîne de caractère
+Permet d'ajouter un commentaire personnalisé /!\ à la longueur du message
+
+COMMANDE_APPROVAL
+Booléen
+Active le cadre de « Bon pour accord »
+
+COMMANDE_APPROVAL_COMMENT
+Chaîne de caractère
+Permet d'ajouter un commentaire personnalisé /!\ à la longueur du message
