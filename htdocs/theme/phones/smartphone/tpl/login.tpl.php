@@ -84,7 +84,7 @@ jQuery(document).bind("mobileinit", function(){
             </li>
             <li>
         <?php if ($helpcenterlink && 1 == 2) { ?>
-            <a href="<?php echo $dol_url_root.'/support/index.php'; ?>" data-icon="info"><?php echo $langs->trans('NeedHelpCenter'); ?></a>
+            <a href="<?php echo 'http://assistance.gpcsolutions.fr" Assistance'; ?></a>
         <?php } ?>
             </li>
         	</ul>

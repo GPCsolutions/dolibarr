@@ -220,17 +220,17 @@ if ($action == 'edit')	// Edit
 	print '<td width="20">&nbsp;</td>';
 	print '</tr>';
 
-    // Hide helpcenter link on login page
+    // Hide GPC helpdesk link on login page
     $var=!$var;
-    print '<tr '.$bc[$var].'><td width="35%">'.$langs->trans("DisableLinkToHelpCenter").'</td><td>';
+    print '<tr '.$bc[$var].'><td width="35%">Désactiver le lien vers l\'assistance sur la page d\'accueil</td><td>';
     print $form->selectyesno('MAIN_HELPCENTER_DISABLELINK',isset($conf->global->MAIN_HELPCENTER_DISABLELINK)?$conf->global->MAIN_HELPCENTER_DISABLELINK:0,1);
     print '</td>';
 	print '<td width="20">&nbsp;</td>';
 	print '</tr>';
 
-	// Hide wiki link on login page
+	// Hide GPC helpdesk link on login page
     $var=!$var;
-    print '<tr '.$bc[$var].'><td width="35%">'.$langs->trans("DisableLinkToHelp",img_picto('',DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/helpdoc.png','',1)).'</td><td>';
+    print '<tr '.$bc[$var].'><td width="35%">Désactiver le lien vers l\'assistance</td><td>';
     print $form->selectyesno('MAIN_HELP_DISABLELINK', isset($conf->global->MAIN_HELP_DISABLELINK)?$conf->global->MAIN_HELP_DISABLELINK:0,1);
     print '</td>';
 	print '<td width="20">&nbsp;</td>';
@@ -378,15 +378,15 @@ else	// Show
 	print yn((isset($conf->global->MAIN_BUTTON_HIDE_UNAUTHORIZED)?$conf->global->MAIN_BUTTON_HIDE_UNAUTHORIZED:0),1);
 	print '</td></tr>';
 
-    // Link to help center
+	// Link to GPC helpdesk center
     $var=!$var;
-    print '<tr '.$bc[$var].'><td width="35%">'.$langs->trans("DisableLinkToHelpCenter").'</td><td colspan="2">';
+    print '<tr '.$bc[$var].'><td width="35%">Désactiver le lien vers l\'assistance sur la page d\'accueil</td><td colspan="2">';
     print yn((isset($conf->global->MAIN_HELPCENTER_DISABLELINK)?$conf->global->MAIN_HELPCENTER_DISABLELINK:0),1);
     print '</td></tr>';
 
-    // Link to wiki help
+	// Link to GPC helpdesk help
     $var=!$var;
-    print '<tr '.$bc[$var].'><td width="35%">'.$langs->trans("DisableLinkToHelp",img_picto('',DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/helpdoc.png','',1)).'</td><td colspan="2">';
+    print '<tr '.$bc[$var].'><td width="35%">Désactiver le lien vers l\'assistance</td><td colspan="2">';
     print yn((isset($conf->global->MAIN_HELP_DISABLELINK)?$conf->global->MAIN_HELP_DISABLELINK:0),1);
     print '</td></tr>';
 
