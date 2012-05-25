@@ -1022,6 +1022,8 @@ AddDeliveryAddressAbility= Possibilité de sélectionner une adresse de livraiso
 UseOptionLineIfNoQuantity= Une ligne de produit/service ayant une quantité nulle est considérée comme une option
 FreeLegalTextOnProposal= Mention complémentaire sur les propositions
 WatermarkOnDraftProposal= Filigrane sur les brouillons de propositions (aucun si vide)
+ApprovalOnProposal=Cadre « bon pour accord » sur les propositions
+ApprovalCommentOnProposal=Texte de complémentaire pour le « bon pour accord » sur les propositions
 ##### Orders #####
 OrdersSetup= Configuration du module Commandes
 OrdersNumberingModules= Modèles de numérotation des commandes
@@ -1030,6 +1032,8 @@ HideTreadedOrders= Cacher les commandes traitées ou annulées de la liste
 ValidOrderAfterPropalClosed= Valider la commande après la clôture de la propale, permet de ne pas passer par la commande provisoire
 FreeLegalTextOnOrders= Mention complémentaire sur les commandes
 WatermarkOnDraftOrders= Filigrane sur les brouillons de commandes (aucun si vide)
+ApprovalOnCustomerOrder=Cadre « bon pour accord » sur les propositions
+ApprovalCommentOnCustomerOrder=Texte de complémentaire pour le « bon pour accord » sur les propositions
 ##### Clicktodial #####
 ClickToDialSetup= Configuration du module Click To Dial
 ClickToDialUrlDesc= Url appelée lors dun clic sur le picto téléphone. Dans l'url, vous pouvez utiliser les balises<br><b>__PHONETO__</b> qui sera remplacé par le téléphone de l'appelé<br><b>__PHONEFROM__</b> qui sera remplacé par le téléphone de l'appelant (le votre, défini sur votre fiche utilisateur)<br><b>__LOGIN__</b> qui sera remplacé par votre login clicktodial (défini sur votre fiche utilisateur)<br><b>__PASS__</b> qui sera remplacé par votre mot de passe clicktodial (défini sur votre fiche utilisateur).
