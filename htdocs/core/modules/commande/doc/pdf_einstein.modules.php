@@ -95,6 +95,7 @@ class pdf_einstein extends ModelePDFCommandes
 		$this->option_credit_note = 0;             // Support credit notes
 		$this->option_freetext = 1;				   // Support add of a personalised text
 		$this->option_draft_watermark = 1;		   // Support add of a watermark on drafts
+                $this->option_approval = 1;                 // Supports approval frame
 
 		$this->franchise=!$mysoc->tva_assuj;
 

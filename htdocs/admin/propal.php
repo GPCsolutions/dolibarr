@@ -488,6 +488,7 @@ foreach ($dirmodels as $reldir)
 								//$htmltooltip.='<br>'.$langs->trans("Discounts").': '.yn($module->option_escompte,1,1);
 								//$htmltooltip.='<br>'.$langs->trans("CreditNote").': '.yn($module->option_credit_note,1,1);
 								$htmltooltip.='<br>'.$langs->trans("WatermarkOnDraftProposal").': '.yn($module->option_draft_watermark,1,1);
+                                                                $htmltooltip.='<br>'.$langs->trans("ApprovalOnProposal").': '.yn($module->option_approval,1,1);
 
 
 	                            print '<td align="center">';
