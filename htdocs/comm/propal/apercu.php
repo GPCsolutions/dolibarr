@@ -142,7 +142,9 @@ if ($id > 0 || ! empty($ref))
 
 			print "<tr $bc[$var]><td>".$langs->trans("Propal")." PDF</td>";
 
-			print '<td><a href="'.DOL_URL_ROOT . '/document.php?modulepart=propal&file='.urlencode($relativepath).'">'.$object->ref.'.pdf</a></td>';
+			print '<td><a';
+            if (!empty($conf->global->MAIN_DISABLE_FORCE_SAVEAS)) print ' target="blank"';
+            print ' href="'.DOL_URL_ROOT . '/document.php?modulepart=propal&file='.urlencode($relativepath).'">'.$object->ref.'.pdf</a></td>';
 
 			print '<td align="right">'.dol_print_size(dol_filesize($file)).'</td>';
 			print '<td align="right">'.dol_print_date(dol_filemtime($file),'dayhour').'</td>';
