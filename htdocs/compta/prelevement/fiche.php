@@ -141,7 +141,9 @@ if ($id)
 
 		$relativepath = 'receipts/'.$bon->ref;
 
-		print '<a href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
+		print '<a';
+        if (!empty($conf->global->MAIN_DISABLE_FORCE_SAVEAS)) print ' target="blank"';
+        print ' href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
 
 		print '</td></tr>';
 

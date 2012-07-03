@@ -32,7 +32,7 @@ require_once(DOL_DOCUMENT_ROOT ."/core/class/commonobject.class.php");
 require_once(DOL_DOCUMENT_ROOT ."/product/class/product.class.php");
 require_once(DOL_DOCUMENT_ROOT ."/contact/class/contact.class.php");
 
-
+global $conf;
 /**
  *	\class      Propal
  *	\brief      Classe permettant la gestion des propales
@@ -2323,7 +2323,9 @@ class Propal extends CommonObject
         }
         if ($option == 'document')
         {
-            $lien = '<a href="'.DOL_URL_ROOT.'/comm/propal/document.php?id='.$this->id. $get_params .'">';
+            $lien = '<a';
+            if (!empty($conf->global->MAIN_DISABLE_FORCE_SAVEAS)) $lien .= ' target="blank"';
+            $lien .= ' href="'.DOL_URL_ROOT.'/comm/propal/document.php?id='.$this->id. $get_params .'">';
         }
         $lienfin='</a>';
 

@@ -30,6 +30,8 @@ require_once(DOL_DOCUMENT_ROOT."/compta/prelevement/class/ligne-prelevement.clas
 require_once(DOL_DOCUMENT_ROOT."/compta/prelevement/class/rejet-prelevement.class.php");
 require_once(DOL_DOCUMENT_ROOT."/compta/paiement/class/paiement.class.php");
 
+global $conf;
+
 // Security check
 if ($user->societe_id > 0) accessforbidden();
 
@@ -68,7 +70,9 @@ if ($prev_id)
 
 		$relativepath = 'receipts/'.$bon->ref;
 
-		print '<a href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
+		print '<a';
+        if (!empty($conf->global->MAIN_DISABLE_FORCE_SAVEAS)) print ' target="blank"';
+        print ' href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
 
 		print '</td></tr>';
 

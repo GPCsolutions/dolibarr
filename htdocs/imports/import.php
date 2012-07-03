@@ -536,7 +536,9 @@ if ($step == 3 && $datatoimport)
 			print '<td>';
 			$modulepart='import';
 			//$relativepath=$filetoimport;
-    		print '<a href="'.DOL_URL_ROOT.'/document.php?modulepart='.$modulepart.'&file='.urlencode($relativepath).'&step=3'.$param.'" target="_blank">';
+    		print '<a';
+            if (!empty($conf->global->MAIN_DISABLE_FORCE_SAVEAS)) print ' target="blank"';
+            print ' href="'.DOL_URL_ROOT.'/document.php?modulepart='.$modulepart.'&file='.urlencode($relativepath).'&step=3'.$param.'" target="_blank">';
     		print $file;
     		print '</a>';
 			print '</td>';

@@ -33,6 +33,8 @@ require_once(DOL_DOCUMENT_ROOT."/compta/paiement/class/paiement.class.php");
 $langs->load("companies");
 $langs->load("categories");
 
+global $conf;
+
 // Securite acces client
 if ($user->societe_id > 0) accessforbidden();
 
@@ -62,7 +64,9 @@ if ($prev_id)
 
 		$relativepath = 'receipts/'.$bon->ref;
 
-		print '<a href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
+		print '<a';
+        if (!empty($conf->global->MAIN_DISABLE_FORCE_SAVEAS)) print ' target="blank"';
+        print ' href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
 
 		print '</td></tr>';
 
