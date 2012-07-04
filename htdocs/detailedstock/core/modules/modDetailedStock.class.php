@@ -57,11 +57,11 @@ class modDetailedStock extends DolibarrModules
 		// Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
 		$this->description = "Description of module detailedStock";
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
-		$this->version = 'dev';
+		$this->version = 'development';
 		// Key used in llx_const table to save module status enabled/disabled (where detailedStock is value of property name of module in uppercase)
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
 		// Where to store the module in setup page (0=common,1=interface,2=others,3=very specific)
-		$this->special = 2;
+		$this->special = 3;
 		// Name of image file used for this module.
 		// If file is in theme/yourtheme/img directory under name object_pictovalue.png, use this->picto='pictovalue'
 		// If file is in module/img directory under name object_pictovalue.png, use this->picto='pictovalue@module'
@@ -89,14 +89,14 @@ class modDetailedStock extends DolibarrModules
 		$this->dirs = array();
 
 		// Config pages. Put here list of php page, stored into detailedStock/admin directory, to use to setup module.
-		$this->config_page_url = array("mysetuppage.php@detailedStock");
+		$this->config_page_url = array("detailedStockConfiguration.php@detailedstock");
 
 		// Dependencies
 		$this->depends = array();		// List of modules id that must be enabled if this module is enabled
 		$this->requiredby = array();	// List of modules id to disable if this one is disabled
 		$this->phpmin = array(5,0);					// Minimum version of PHP required by module
 		$this->need_dolibarr_version = array(3,0);	// Minimum version of Dolibarr required by module
-		$this->langfiles = array("langfiles@detailedStock");
+		$this->langfiles = array("langfiles@detailedstock");
 
 		// Constants
 		// List of particular constants to add when module is enabled (key, 'chaine', value, desc, visible, 'current' or 'allentities', deleteonunactive)
