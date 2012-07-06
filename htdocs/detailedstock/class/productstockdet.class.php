@@ -1,10 +1,11 @@
 <?php
-/* Copyright (C) 2007-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) ---Put here your own copyright and developer email---
+/*
+ * Copyright (C) 2012      Cédric Salvador      <csalvador@gpcsolutions.fr>
+ * Copyright (C) 2012      Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
  *
- * This program is free software; you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -13,13 +14,13 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /**
  *  \file       htdocs/detailedstock/class/productstockdet.class.php
  *  \ingroup    detailedstock
- *  \brief      
+ *  \brief
  *				Initialy built by build_class_from_table on 2012-07-04 10:05
  */
 
@@ -41,7 +42,7 @@ class Productstockdet extends CommonObject
 	//var $table_element='productstockdet';	//!< Name of table without prefix where object is stored
 
     var $id;
-    
+
 	var $tms_i='';
 	var $tms_o='';
 	var $fk_product;
@@ -52,7 +53,7 @@ class Productstockdet extends CommonObject
 	var $serial_type;
 	var $price;
 
-    
+
 
 
     /**
@@ -80,7 +81,7 @@ class Productstockdet extends CommonObject
 		$error=0;
 
 		// Clean parameters
-        
+
 		if (isset($this->fk_product)) $this->fk_product=trim($this->fk_product);
 		if (isset($this->fk_entrepot)) $this->fk_entrepot=trim($this->fk_entrepot);
 		if (isset($this->fk_user_author_i)) $this->fk_user_author_i=trim($this->fk_user_author_i);
@@ -89,14 +90,14 @@ class Productstockdet extends CommonObject
 		if (isset($this->serial_type)) $this->serial_type=trim($this->serial_type);
 		if (isset($this->price)) $this->price=trim($this->price);
 
-        
+
 
 		// Check parameters
 		// Put here code to add control on parameters values
 
         // Insert request
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX."product_stock_det(";
-		
+
 		$sql.= "tms_i,";
 		$sql.= "tms_o,";
 		$sql.= "fk_product,";
@@ -107,9 +108,9 @@ class Productstockdet extends CommonObject
 		$sql.= "serial_type,";
 		$sql.= "price";
 
-		
+
         $sql.= ") VALUES (";
-        
+
 		$sql.= " ".(! isset($this->tms_i) || dol_strlen($this->tms_i)==0?'NULL':$this->db->idate($this->tms_i)).",";
 		$sql.= " ".(! isset($this->tms_o) || dol_strlen($this->tms_o)==0?'NULL':$this->db->idate($this->tms_o)).",";
 		$sql.= " ".(! isset($this->fk_product)?'NULL':"'".$this->fk_product."'").",";
@@ -120,7 +121,7 @@ class Productstockdet extends CommonObject
 		$sql.= " ".(! isset($this->serial_type)?'NULL':"'".$this->serial_type."'").",";
 		$sql.= " ".(! isset($this->price)?'NULL':"'".$this->price."'")."";
 
-        
+
 		$sql.= ")";
 
 		$this->db->begin();
@@ -177,7 +178,7 @@ class Productstockdet extends CommonObject
     	global $langs;
         $sql = "SELECT";
 		$sql.= " t.rowid,";
-		
+
 		$sql.= " t.tms_i,";
 		$sql.= " t.tms_o,";
 		$sql.= " t.fk_product,";
@@ -188,7 +189,7 @@ class Productstockdet extends CommonObject
 		$sql.= " t.serial_type,";
 		$sql.= " t.price";
 
-		
+
         $sql.= " FROM ".MAIN_DB_PREFIX."product_stock_det as t";
         $sql.= " WHERE t.rowid = ".$id;
 
@@ -201,7 +202,7 @@ class Productstockdet extends CommonObject
                 $obj = $this->db->fetch_object($resql);
 
                 $this->id    = $obj->rowid;
-                
+
 				$this->tms_i = $this->db->jdate($obj->tms_i);
 				$this->tms_o = $this->db->jdate($obj->tms_o);
 				$this->fk_product = $obj->fk_product;
@@ -212,7 +213,7 @@ class Productstockdet extends CommonObject
 				$this->serial_type = $obj->serial_type;
 				$this->price = $obj->price;
 
-                
+
             }
             $this->db->free($resql);
 
@@ -240,7 +241,7 @@ class Productstockdet extends CommonObject
 		$error=0;
 
 		// Clean parameters
-        
+
 		if (isset($this->fk_product)) $this->fk_product=trim($this->fk_product);
 		if (isset($this->fk_entrepot)) $this->fk_entrepot=trim($this->fk_entrepot);
 		if (isset($this->fk_user_author_i)) $this->fk_user_author_i=trim($this->fk_user_author_i);
@@ -249,14 +250,14 @@ class Productstockdet extends CommonObject
 		if (isset($this->serial_type)) $this->serial_type=trim($this->serial_type);
 		if (isset($this->price)) $this->price=trim($this->price);
 
-        
+
 
 		// Check parameters
 		// Put here code to add control on parameters values
 
         // Update request
         $sql = "UPDATE ".MAIN_DB_PREFIX."product_stock_det SET";
-        
+
 		$sql.= " tms_i=".(dol_strlen($this->tms_i)!=0 ? "'".$this->db->idate($this->tms_i)."'" : 'null').",";
 		$sql.= " tms_o=".(dol_strlen($this->tms_o)!=0 ? "'".$this->db->idate($this->tms_o)."'" : 'null').",";
 		$sql.= " fk_product=".(isset($this->fk_product)?$this->fk_product:"null").",";
@@ -267,7 +268,7 @@ class Productstockdet extends CommonObject
 		$sql.= " serial_type=".(isset($this->serial_type)?$this->serial_type:"null").",";
 		$sql.= " price=".(isset($this->price)?$this->price:"null")."";
 
-        
+
         $sql.= " WHERE rowid=".$this->id;
 
 		$this->db->begin();
@@ -434,7 +435,7 @@ class Productstockdet extends CommonObject
 	function initAsSpecimen()
 	{
 		$this->id=0;
-		
+
 		$this->tms_i='';
 		$this->tms_o='';
 		$this->fk_product='';
@@ -445,7 +446,7 @@ class Productstockdet extends CommonObject
 		$this->serial_type='';
 		$this->price='';
 
-		
+
 	}
 
 }
