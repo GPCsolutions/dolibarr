@@ -8,8 +8,9 @@ CREATE TABLE IF NOT EXISTS llx_product_stock_det (
   fk_user_author_i integer NOT NULL ,
   fk_user_author_o integer NOT NULL ,
   serial VARCHAR(128) NULL ,
-  serial_type integer NULL ,
+  fk_serial_type integer NULL ,
   price DOUBLE NULL ,
   fk_invoice_line integer NOT NULL,
+  fk_command_line integer NULL,
   fk_supplier integer NOT NULL)
 ENGINE = innodb;

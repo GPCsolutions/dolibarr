@@ -17,14 +17,14 @@
  */
 
 /**
- *  \file       htdocs/detailedstock/class/productstockdet.class.php
- *  \ingroup    detailedstock
- *  \brief      
- *				Initialy built by build_class_from_table on 2012-07-04 10:05
+ *  \file       dev/skeletons/productstockdet.class.php
+ *  \ingroup    mymodule othermodule1 othermodule2
+ *  \brief      This file is an example for a CRUD class file (Create/Read/Update/Delete)
+ *				Initialy built by build_class_from_table on 2012-07-09 17:36
  */
 
 // Put here all includes required by your class file
-require_once(DOL_DOCUMENT_ROOT."/core/class/commonobject.class.php");
+//require_once(DOL_DOCUMENT_ROOT."/core/class/commonobject.class.php");
 //require_once(DOL_DOCUMENT_ROOT."/societe/class/societe.class.php");
 //require_once(DOL_DOCUMENT_ROOT."/product/class/product.class.php");
 
@@ -32,7 +32,7 @@ require_once(DOL_DOCUMENT_ROOT."/core/class/commonobject.class.php");
 /**
  *	Put here description of your class
  */
-class Productstockdet extends CommonObject
+class Productstockdet // extends CommonObject
 {
 	var $db;							//!< To store db handler
 	var $error;							//!< To return error code (or message)
@@ -49,8 +49,11 @@ class Productstockdet extends CommonObject
 	var $fk_user_author_i;
 	var $fk_user_author_o;
 	var $serial;
-	var $serial_type;
+	var $fk_serial_type;
 	var $price;
+	var $fk_invoice_line;
+	var $fk_command_line;
+	var $fk_supplier;
 
     
 
@@ -86,8 +89,11 @@ class Productstockdet extends CommonObject
 		if (isset($this->fk_user_author_i)) $this->fk_user_author_i=trim($this->fk_user_author_i);
 		if (isset($this->fk_user_author_o)) $this->fk_user_author_o=trim($this->fk_user_author_o);
 		if (isset($this->serial)) $this->serial=trim($this->serial);
-		if (isset($this->serial_type)) $this->serial_type=trim($this->serial_type);
+		if (isset($this->fk_serial_type)) $this->fk_serial_type=trim($this->fk_serial_type);
 		if (isset($this->price)) $this->price=trim($this->price);
+		if (isset($this->fk_invoice_line)) $this->fk_invoice_line=trim($this->fk_invoice_line);
+		if (isset($this->fk_command_line)) $this->fk_command_line=trim($this->fk_command_line);
+		if (isset($this->fk_supplier)) $this->fk_supplier=trim($this->fk_supplier);
 
         
 
@@ -104,8 +110,11 @@ class Productstockdet extends CommonObject
 		$sql.= "fk_user_author_i,";
 		$sql.= "fk_user_author_o,";
 		$sql.= "serial,";
-		$sql.= "serial_type,";
-		$sql.= "price";
+		$sql.= "fk_serial_type,";
+		$sql.= "price,";
+		$sql.= "fk_invoice_line,";
+		$sql.= "fk_command_line,";
+		$sql.= "fk_supplier";
 
 		
         $sql.= ") VALUES (";
@@ -117,8 +126,11 @@ class Productstockdet extends CommonObject
 		$sql.= " ".(! isset($this->fk_user_author_i)?'NULL':"'".$this->fk_user_author_i."'").",";
 		$sql.= " ".(! isset($this->fk_user_author_o)?'NULL':"'".$this->fk_user_author_o."'").",";
 		$sql.= " ".(! isset($this->serial)?'NULL':"'".$this->db->escape($this->serial)."'").",";
-		$sql.= " ".(! isset($this->serial_type)?'NULL':"'".$this->serial_type."'").",";
-		$sql.= " ".(! isset($this->price)?'NULL':"'".$this->price."'")."";
+		$sql.= " ".(! isset($this->fk_serial_type)?'NULL':"'".$this->fk_serial_type."'").",";
+		$sql.= " ".(! isset($this->price)?'NULL':"'".$this->price."'").",";
+		$sql.= " ".(! isset($this->fk_invoice_line)?'NULL':"'".$this->fk_invoice_line."'").",";
+		$sql.= " ".(! isset($this->fk_command_line)?'NULL':"'".$this->fk_command_line."'").",";
+		$sql.= " ".(! isset($this->fk_supplier)?'NULL':"'".$this->fk_supplier."'")."";
 
         
 		$sql.= ")";
@@ -185,8 +197,11 @@ class Productstockdet extends CommonObject
 		$sql.= " t.fk_user_author_i,";
 		$sql.= " t.fk_user_author_o,";
 		$sql.= " t.serial,";
-		$sql.= " t.serial_type,";
-		$sql.= " t.price";
+		$sql.= " t.fk_serial_type,";
+		$sql.= " t.price,";
+		$sql.= " t.fk_invoice_line,";
+		$sql.= " t.fk_command_line,";
+		$sql.= " t.fk_supplier";
 
 		
         $sql.= " FROM ".MAIN_DB_PREFIX."product_stock_det as t";
@@ -209,8 +224,11 @@ class Productstockdet extends CommonObject
 				$this->fk_user_author_i = $obj->fk_user_author_i;
 				$this->fk_user_author_o = $obj->fk_user_author_o;
 				$this->serial = $obj->serial;
-				$this->serial_type = $obj->serial_type;
+				$this->fk_serial_type = $obj->fk_serial_type;
 				$this->price = $obj->price;
+				$this->fk_invoice_line = $obj->fk_invoice_line;
+				$this->fk_command_line = $obj->fk_command_line;
+				$this->fk_supplier = $obj->fk_supplier;
 
                 
             }
@@ -246,8 +264,11 @@ class Productstockdet extends CommonObject
 		if (isset($this->fk_user_author_i)) $this->fk_user_author_i=trim($this->fk_user_author_i);
 		if (isset($this->fk_user_author_o)) $this->fk_user_author_o=trim($this->fk_user_author_o);
 		if (isset($this->serial)) $this->serial=trim($this->serial);
-		if (isset($this->serial_type)) $this->serial_type=trim($this->serial_type);
+		if (isset($this->fk_serial_type)) $this->fk_serial_type=trim($this->fk_serial_type);
 		if (isset($this->price)) $this->price=trim($this->price);
+		if (isset($this->fk_invoice_line)) $this->fk_invoice_line=trim($this->fk_invoice_line);
+		if (isset($this->fk_command_line)) $this->fk_command_line=trim($this->fk_command_line);
+		if (isset($this->fk_supplier)) $this->fk_supplier=trim($this->fk_supplier);
 
         
 
@@ -264,8 +285,11 @@ class Productstockdet extends CommonObject
 		$sql.= " fk_user_author_i=".(isset($this->fk_user_author_i)?$this->fk_user_author_i:"null").",";
 		$sql.= " fk_user_author_o=".(isset($this->fk_user_author_o)?$this->fk_user_author_o:"null").",";
 		$sql.= " serial=".(isset($this->serial)?"'".$this->db->escape($this->serial)."'":"null").",";
-		$sql.= " serial_type=".(isset($this->serial_type)?$this->serial_type:"null").",";
-		$sql.= " price=".(isset($this->price)?$this->price:"null")."";
+		$sql.= " fk_serial_type=".(isset($this->fk_serial_type)?$this->fk_serial_type:"null").",";
+		$sql.= " price=".(isset($this->price)?$this->price:"null").",";
+		$sql.= " fk_invoice_line=".(isset($this->fk_invoice_line)?$this->fk_invoice_line:"null").",";
+		$sql.= " fk_command_line=".(isset($this->fk_command_line)?$this->fk_command_line:"null").",";
+		$sql.= " fk_supplier=".(isset($this->fk_supplier)?$this->fk_supplier:"null")."";
 
         
         $sql.= " WHERE rowid=".$this->id;
@@ -442,8 +466,11 @@ class Productstockdet extends CommonObject
 		$this->fk_user_author_i='';
 		$this->fk_user_author_o='';
 		$this->serial='';
-		$this->serial_type='';
+		$this->fk_serial_type='';
 		$this->price='';
+		$this->fk_invoice_line='';
+		$this->fk_command_line='';
+		$this->fk_supplier='';
 
 		
 	}
