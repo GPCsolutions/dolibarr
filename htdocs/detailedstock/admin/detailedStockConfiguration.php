@@ -1,13 +1,11 @@
 <?php
-/* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
- * Copyright (C) 2011-2012 Juanjo Menent	    <jmenent@2byte.es>
- * Copyright (C) 2012      Cédric Salvador	    <csalvador@gpcsolutions.fr>
+/*
+ * Copyright (C) 2012      Cédric Salvador      <csalvador@gpcsolutions.fr>
+ * Copyright (C) 2012      Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
  *
- * This program is free software; you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -16,7 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /**
@@ -41,9 +39,9 @@ $compta_mode = defined('COMPTA_MODE')?COMPTA_MODE:'RECETTES-DEPENSES';
 if ($action == 'setcomptamode')
 {
 	$compta_mode = GETPOST('compta_mode','alpha');
-	
+
 	$res = dolibarr_set_const($db, 'COMPTA_MODE', $compta_mode,'chaine',0,'',$conf->entity);
-	
+
 	if (! $res > 0) $error++;
 
  	if (! $error)
@@ -63,9 +61,9 @@ if ($action == 'update' || $action == 'add')
 	$constvalue = GETPOST('constvalue','alpha');
 	$consttype = GETPOST('consttype','alpha');
 	$constnote = GETPOST('constnote','alpha');
-	
+
 	$res = dolibarr_set_const($db, $constname, $constvalue, $consttype, 0, $constnote, $conf->entity);
-	
+
 	if (! $res > 0) $error++;
 
  	if (! $error)
@@ -176,11 +174,11 @@ foreach ($list as $key)
 	print '<input type="hidden" name="action" value="update">';
 	print '<input type="hidden" name="consttype" value="string">';
 	print '<input type="hidden" name="constname" value="'.$key.'">';
-	
+
 	print '<tr '.$bc[$var].' class="value">';
 
 	// Param
-	$libelle = $langs->trans($key); 
+	$libelle = $langs->trans($key);
 	print '<td>'.$libelle;
 	//print ' ('.$key.')';
 	print "</td>\n";
@@ -192,7 +190,7 @@ foreach ($list as $key)
 	print '<input type="submit" class="button" value="'.$langs->trans('Modify').'" name="button"> &nbsp; ';
 	print "</td></tr>\n";
 	print '</form>';
-	
+
 	$i++;
 }
 
