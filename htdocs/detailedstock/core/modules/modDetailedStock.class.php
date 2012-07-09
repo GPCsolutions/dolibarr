@@ -83,7 +83,9 @@ class modDetailedStock extends DolibarrModules
 		//							'hooks' => array('hookcontext1','hookcontext2')  // Set here all hooks context managed by module
 		//							'workflow' => array('order' => array('WORKFLOW_ORDER_AUTOCREATE_INVOICE')) // Set here all workflow context managed by module
 		//                        );
-		$this->module_parts = array();
+		$this->module_parts = array(
+            'hooks' => array('ordersuppliercard', 'invoicecard', 'productcard')
+        );
 
 		// Data directories to create when module is enabled.
 		// Example: this->dirs = array("/detailedStock/temp");
@@ -97,7 +99,7 @@ class modDetailedStock extends DolibarrModules
 		$this->requiredby = array("modWholesalerRemuneration");	// List of modules id to disable if this one is disabled
 		$this->phpmin = array(5,0);					// Minimum version of PHP required by module
 		$this->need_dolibarr_version = array(3,0);	// Minimum version of Dolibarr required by module
-		$this->langfiles = array("langfiles@detailedstock");
+		$this->langfiles = array("detailedStock@detailedstock");
 
 		// Constants
 		// List of particular constants to add when module is enabled (key, 'chaine', value, desc, visible, 'current' or 'allentities', deleteonunactive)
@@ -126,7 +128,7 @@ class modDetailedStock extends DolibarrModules
 		// 'group'            to add a tab in group view
 		// 'contact'          to add a tab in contact view
 		// 'categories_x'	  to add a tab in category view (replace 'x' by type of category (0=product, 1=supplier, 2=customer, 3=member)
-        $this->tabs = array();
+        $this->tabs = array('product:+tabname:DetailedStock:detailedStock@detailedstock:/detailedstock/detail.php?id=__ID__');
 
         // Dictionnaries
         if (! isset($conf->detailedStock->enabled)) $conf->detailedStock->enabled=0;
