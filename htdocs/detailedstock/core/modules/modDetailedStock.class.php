@@ -128,7 +128,7 @@ class modDetailedStock extends DolibarrModules
 		// 'group'            to add a tab in group view
 		// 'contact'          to add a tab in contact view
 		// 'categories_x'	  to add a tab in category view (replace 'x' by type of category (0=product, 1=supplier, 2=customer, 3=member)
-        $this->tabs = array('product:+tabname:DetailedStock:detailedStock@detailedstock:/detailedstock/detail.php?id=__ID__');
+        $this->tabs = array('product:+detail:DetailedStock:detailedStock@detailedstock:/detailedstock/detail.php?id=__ID__');
 
         // Dictionnaries
         if (! isset($conf->detailedStock->enabled)) $conf->detailedStock->enabled=0;

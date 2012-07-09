@@ -32,7 +32,7 @@
 /**
  *	Put here description of your class
  */
-class Productstockdet // extends CommonObject
+class Productstockdet extends CommonObject
 {
 	var $db;							//!< To store db handler
 	var $error;							//!< To return error code (or message)
