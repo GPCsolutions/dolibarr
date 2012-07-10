@@ -23,7 +23,9 @@ require_once(DOL_DOCUMENT_ROOT . "/product/class/product.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/lib/product.lib.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/class/html.form.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/productstockdet.class.php");
-
+require_once(DOL_DOCUMENT_ROOT."/product/class/html.formproduct.class.php");
+require_once(DOL_DOCUMENT_ROOT . "/core/lib/functions.lib.php");
+global $langs, $user;
 $langs->load("products");
 $langs->load("orders");
 $langs->load("bills");
@@ -49,7 +51,25 @@ if ($_GET["id"] || $_GET["ref"]) {
     $picto = ($product->type == 1 ? 'service' : 'product');
     dol_fiche_head($head, 'detail', $titre, 0, $picto);
 
-
+if(GETPOST('action')=='create'){
+  $newDet = new Productstockdet($db);
+  $newDet->tms_i = dol_now();
+  $newDet->fk_product = $product->id;
+  $newDet->fk_entrepot = GETPOST('warehouse');
+  $newDet->fk_user_author_i = $user->id;
+  $newDet->serial = GETPOST('serialNumber');
+  $newDet->fk_serial_type = GETPOST('serialType');
+  $newDet->price = price2num(GETPOST('buyingPrice'),'MT');
+  $newDet->fk_supplier = GETPOST('supplier');
+  $newDet->create($user);
+  unset($_POST['action']);
+  unset($_POST['warehouse']);
+  unset($_POST['serialNumber']);
+  unset($_POST['serialType']);
+  unset($_POST['buyingPrice']);
+  unset($_POST['supplier']);
+}
+    
     print($mesg);
 
     print '<table class="border" width="100%">';
@@ -154,49 +174,77 @@ if ($_GET["id"] || $_GET["ref"]) {
     print '</td></tr></table>';
   }
   print '</div>';
-  $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id;
-  $resql = $db->query($sql);
-  if ($resql) {
-    if($db->num_rows($resql) < $product->stock_reel)
-      print '<table width="100%"><tr><td align="right"><a class="butAction" href="#">'.$langs->trans("Add").'</a></td></tr></table>';
-    
-    if ($db->num_rows($resql) > 0) {
-      print '<br><table class="noborder" width="100%">';
-      print '<tr class="liste_titre"><td>' . $langs->trans("Id") . '</td>';
-      print '<td align="right">' . $langs->trans("N°") . '</td>';
-      print '<td align="right">' . $langs->trans("Supplier") . '</td>';
-      print '<td align="right">' . $langs->trans("BuyingPrice") . '</td>';
-      print '<td align="right">' . $langs->trans("Warehouse") . '</td>';
-      print '</tr>';
-      while ($obj = $db->fetch_object($resql)) {
-        $det = new Productstockdet($db);
-        $res = $det->fetch($obj->rowid);
-        if ($res) {
-          print '<td align>' . $det->id . '</td>';
-          print '<td align="right">' . $form->textwithpicto($det->serial, $det->getSerialTypeLabel(), 1) . '</td>';
-          //print picto help serial type
-          $soc = new Societe($db);
-          $infosoc = $soc->fetch($det->fk_supplier);
-          if ($infosoc) {
-            print '<td align="right">' . $soc->getNomUrl() . '</td>';
+  //view mode
+  if (GETPOST('action') != 'add') {
+    $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id;
+    $resql = $db->query($sql);
+    if ($resql) {
+      if ($db->num_rows($resql) < $product->stock_reel)
+          print '<table width="100%"><tr><td align="right"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?id=' . $product->id . '&action=add">' . $langs->trans("Add") . '</a></td></tr></table>';
+
+      if ($db->num_rows($resql) > 0) {
+        print '<br><table class="noborder" width="100%">';
+        print '<tr class="liste_titre"><td>' . $langs->trans("Id") . '</td>';
+        print '<td align="right">' . $langs->trans("N°") . '</td>';
+        print '<td align="right">' . $langs->trans("Supplier") . '</td>';
+        print '<td align="right">' . $langs->trans("BuyingPrice") . '</td>';
+        print '<td align="right">' . $langs->trans("Warehouse") . '</td>';
+        print '</tr>';
+        while ($obj = $db->fetch_object($resql)) {
+          $det = new Productstockdet($db);
+          $res = $det->fetch($obj->rowid);
+          if ($res) {
+            print '<tr><td align=>' . $det->id . '</td>';
+            print '<td align="right">' . $form->textwithpicto($det->serial, $det->getSerialTypeLabel(), 1) . '</td>';
+            $soc = new Societe($db);
+            $infosoc = $soc->fetch($det->fk_supplier);
+            if ($infosoc) {
+              print '<td align="right">' . $soc->getNomUrl() . '</td>';
+            } else {
+              $this->error="Error ".$this->db->lasterror();
+              dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
+            }
+            print '<td align="right">' . $det->price . '</td>';
+            $entrepot = new Entrepot($db);
+            $infoentrepot = $entrepot->fetch($det->fk_entrepot);
+            if ($infoentrepot) {
+              print '<td align="right">' . $entrepot->getNomUrl() . '</td>';
+            } else {
+              $this->error="Error ".$this->db->lasterror();
+              dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
+            }
+            print '</tr>';
           } else {
-            //error
+            $this->error="Error ".$this->db->lasterror();
+            dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
           }
-          print '<td align="right">' . $det->price . '</td>';
-          $entrepot = new Entrepot($db);
-          $infoentrepot = $entrepot->fetch($det->fk_entrepot);
-          if ($infoentrepot) {
-            print '<td align="right">' . $entrepot->getNomUrl() . '</td>';
-          } else {
-            //error
-          }
-        } else {
-          //error
         }
       }
+    } else {
+      //error
     }
-  } else {
-    //error
+  }
+  //add mode
+  else {
+    $newDet = new Productstockdet($db);
+    $formproduct=new FormProduct($db);
+    print '<br><form action="'.$_SERVER['PHP_SELF'] . '?id=' . $product->id.'" method="post"><table class="noborder" width="100%">';
+    print '<input type="hidden" name="action" value="create"/>';
+    print '<tr class="liste_titre"><td>' . $langs->trans("SerialType") . '</td>';
+    print '<td>'.$langs->trans("SerialNumber").'</td>';
+    print '<td>' . $langs->trans("Supplier") . '</td>';
+    print '<td>'.$langs->trans("BuyingPrice").'</td>';
+    print '<td>'.$langs->trans("Warehouse").'</td>';
+    print '<td>&nbsp;</td><td>&nbsp;</td></tr>';
+    
+    print '<tr>';
+    print '<td>'.$newDet->selectSerialType('','serialType').'</td>';
+    print '<td><input type="text" name="serialNumber" /></td>';
+    print '<td>'.$form->select_company('','supplier', 's.fournisseur=1').'</td>';
+    print '<td><input type="text" name="buyingPrice" /></td>';
+    print '<td>'.$formproduct->selectWarehouses('','warehouse','',1).'</td>';    print '<td><input type="submit" value="'.$langs->trans("Valid").'"/></td><td><input type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
+    print '</tr>';
+    print '</table></form>';
   }
 }
 ?>

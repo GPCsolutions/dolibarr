@@ -492,6 +492,29 @@ class Productstockdet extends CommonObject
         return -1;
       }
     }
+    
+    function selectSerialType($selected, $htmlname){
+      $return = '';
+      $sql = 'select rowid, label from '.MAIN_DB_PREFIX.'c_serial_type';
+      $resql = $this->db->query($sql);
+      if($resql && $this->db->num_rows($resql) > 0){
+        $return = '<select class="flat" name="'.$htmlname.'">';
+        $return .= '<option value="0" selected="selected"></option>';
+        while($obj = $this->db->fetch_object($resql)){
+          $option = '<option value="'.$obj->rowid.'" ';
+          if($obj->rowid == $selected) $option .= "selected=selected";
+          $option .= '>'.$obj->label.'</option>';
+          $return .= $option;
+        }
+        $return .= '</select>';
+        return $return;
+      }
+      else{
+        $this->error="Error ".$this->db->lasterror();
+        dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
+        return -1;
+      }
+    }
 
 }
 ?>
