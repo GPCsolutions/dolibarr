@@ -474,6 +474,24 @@ class Productstockdet extends CommonObject
 
 		
 	}
+    
+    function getSerialTypeLabel(){
+      $sql = 'select label from '.MAIN_DB_PREFIX.'c_serial_type where rowid = '.$this->fk_serial_type;
+      $resql = $this->db->query($sql);
+      if($resql){
+        $label = '';
+        if($this->db->num_rows($resql) > 0){
+          $res = $this->db->fetch_object($resql);
+          $label = $res->label;
+        }
+        return $label;
+      }
+      else{
+        $this->error="Error ".$this->db->lasterror();
+        dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
+        return -1;
+      }
+    }
 
 }
 ?>
