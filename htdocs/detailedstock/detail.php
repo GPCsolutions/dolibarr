@@ -154,6 +154,7 @@ if ($_GET["id"] || $_GET["ref"]) {
     print '</td></tr></table>';
   }
   print '</div>';
+  print '<table width="100%"><tr><td align="right"><a class="butAction" href="#">'.$langs->trans("Add").'</a></td></tr></table>';
   $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id;
   $resql = $db->query($sql);
   if ($resql) {
@@ -170,7 +171,7 @@ if ($_GET["id"] || $_GET["ref"]) {
         $res = $det->fetch($obj->rowid);
         if ($res) {
           print '<td align>' . $det->id . '</td>';
-          print '<td align="right">' . $form->textwithpicto($det->serial, $det->fk_serial, 1) . '</td>';
+          print '<td align="right">' . $form->textwithpicto($det->serial, $det->fk_serial_type, 1) . '</td>';
           //print picto help serial type
           $soc = new Societe($db);
           $infosoc = $soc->fetch($det->fk_supplier);
