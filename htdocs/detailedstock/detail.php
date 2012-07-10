@@ -117,6 +117,15 @@ if(GETPOST('action')=='create'){
     print '</td>';
     print '</tr>';
 
+    //undetailled stock
+    $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id;
+    $resql = $db->query($sql);
+    $num = $db->num_rows($resql);
+    $reste = $product->stock_reel - $num;
+    print '<tr><td>' . $langs->trans("UndetailledStock") . '</td>';
+    print '<td>'.$reste.'</td>';
+    print '</tr>'; 
+
     // Calculating a theorical value of stock if stock increment is done on real sending
     if ($conf->global->STOCK_CALCULATE_ON_SHIPMENT) {
       $stock_commande_client = $stock_commande_fournisseur = 0;
@@ -176,8 +185,8 @@ if(GETPOST('action')=='create'){
   print '</div>';
   //view mode
   if (GETPOST('action') != 'add') {
-    $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id;
-    $resql = $db->query($sql);
+    //$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id;
+    //$resql = $db->query($sql);
     if ($resql) {
       if ($db->num_rows($resql) < $product->stock_reel)
           print '<table width="100%"><tr><td align="right"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?id=' . $product->id . '&action=add">' . $langs->trans("Add") . '</a></td></tr></table>';
