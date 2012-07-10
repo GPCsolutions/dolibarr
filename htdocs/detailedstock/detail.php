@@ -21,7 +21,7 @@ require("../main.inc.php");
 require_once(DOL_DOCUMENT_ROOT . "/product/stock/class/entrepot.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/product/class/product.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/lib/product.lib.php");
-require_once(DOL_DOCUMENT_ROOT . "/product/class/html.formproduct.class.php");
+require_once(DOL_DOCUMENT_ROOT . "/core/class/html.form.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/productstockdet.class.php");
 
 $langs->load("products");
@@ -32,7 +32,7 @@ $langs->load("stocks");
  * View
  */
 
-$formproduct = new FormProduct($db);
+$form = new Form($db);
 
 
 if ($_GET["id"] || $_GET["ref"]) {
@@ -49,7 +49,6 @@ if ($_GET["id"] || $_GET["ref"]) {
     $picto = ($product->type == 1 ? 'service' : 'product');
     dol_fiche_head($head, 'detail', $titre, 0, $picto);
 
-    $form = new Form($db);
 
     print($mesg);
 
@@ -151,51 +150,50 @@ if ($_GET["id"] || $_GET["ref"]) {
         if ($result < 0) dol_print_error($db, $product->error);
         print ' (' . $langs->trans("DraftOrWaitingApproved") . ': ' . $product->stats_commande_fournisseur['qty'] . ')';
       }
-      print '</td></tr>';
     }
-    $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id;
-    $resql = $db->query($sql);
-    if ($resql) {
-      if ($db->num_rows($resql) > 0) {
-        print '<br><table class="noborder" width="100%">';
-        print '<tr class="liste_titre"><td>' . $langs->trans("Id") . '</td>';
-        print '<td align="right">' . $langs->trans("N°") . '</td>';
-        print '<td align="right">' . $langs->trans("Supplier") . '</td>';
-        print '<td align="right">' . $langs->trans("BuyingPrice") . '</td>';
-        print '<td align="right">' . $langs->trans("Warehouse") . '</td>';
-        print '</tr>';
-        while ($obj = $db->fetch_object($resql)) {
-          $det = new Productstockdet($db);
-          $res = $det->fetch($obj->rowid);
-          if ($res) {
-            print '<td align>' . $det->id . '</td>';
-            print '<td align="right">' . $det->serial . '</td>';
-            //print picto help serial type
-            $soc = new Societe($db);
-            $infosoc = $soc->fetch($det->fk_supplier);
-            if($infosoc){
-              print '<td align="right">' . $soc->getNomUrl() . '</td>';
-            }
-            else {
-              //error
-            }
-            print '<td align="right">' . $det->price . '</td>';
-            $entrepot = new Entrepot($db);
-            $infoentrepot = $entrepot->fetch($det->fk_entrepot);
-            if($infoentrepot){
-              print '<td align="right">' . $entrepot->getNomUrl() . '</td>';
-            }
-            else {
-              //error
-            }
+    print '</td></tr></table>';
+  }
+  print '</div>';
+  $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id;
+  $resql = $db->query($sql);
+  if ($resql) {
+    if ($db->num_rows($resql) > 0) {
+      print '<br><table class="noborder" width="100%">';
+      print '<tr class="liste_titre"><td>' . $langs->trans("Id") . '</td>';
+      print '<td align="right">' . $langs->trans("N°") . '</td>';
+      print '<td align="right">' . $langs->trans("Supplier") . '</td>';
+      print '<td align="right">' . $langs->trans("BuyingPrice") . '</td>';
+      print '<td align="right">' . $langs->trans("Warehouse") . '</td>';
+      print '</tr>';
+      while ($obj = $db->fetch_object($resql)) {
+        $det = new Productstockdet($db);
+        $res = $det->fetch($obj->rowid);
+        if ($res) {
+          print '<td align>' . $det->id . '</td>';
+          print '<td align="right">' . $form->textwithpicto($det->serial, $det->fk_serial, 1) . '</td>';
+          //print picto help serial type
+          $soc = new Societe($db);
+          $infosoc = $soc->fetch($det->fk_supplier);
+          if ($infosoc) {
+            print '<td align="right">' . $soc->getNomUrl() . '</td>';
           } else {
             //error
           }
+          print '<td align="right">' . $det->price . '</td>';
+          $entrepot = new Entrepot($db);
+          $infoentrepot = $entrepot->fetch($det->fk_entrepot);
+          if ($infoentrepot) {
+            print '<td align="right">' . $entrepot->getNomUrl() . '</td>';
+          } else {
+            //error
+          }
+        } else {
+          //error
         }
       }
-    } else {
-      //error
     }
+  } else {
+    //error
   }
 }
 ?>
