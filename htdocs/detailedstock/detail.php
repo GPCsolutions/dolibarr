@@ -68,6 +68,7 @@ if(GETPOST('action')=='create'){
   unset($_POST['serialType']);
   unset($_POST['buyingPrice']);
   unset($_POST['supplier']);
+  //TODO validation using Luhn algo
 }
     
     print($mesg);
