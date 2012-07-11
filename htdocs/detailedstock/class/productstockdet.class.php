@@ -486,7 +486,7 @@ class Productstockdet extends CommonObject
  * @param	int		$fk_product		Add quantity of stock in label for product with id fk_product. Nothing if 0.
  * @return  int  		    		Nb of loaded lines, 0 if already loaded, <0 if KO
  */
-  function loadWarehouses($fk_product = 0)
+  function loadWarehouses($fk_product = 0, $filter='')
   {
     global $conf, $langs;
 
@@ -502,7 +502,7 @@ class Productstockdet extends CommonObject
     }
     $sql.= " WHERE e.entity = " . $conf->entity;
     $sql.= " AND e.statut = 1";
-    $sql.= " AND ps.reel > 0";
+    $sql.= " AND ".$filter;
     $sql.= " ORDER BY e.label";
 
     dol_syslog(get_class($this) . '::loadWarehouses sql=' . $sql, LOG_DEBUG);
@@ -526,13 +526,13 @@ class Productstockdet extends CommonObject
     }
   }
 
-function selectWarehouses($selected = '', $htmlname = 'idwarehouse', $filtertype = '', $empty = 0, $disabled = 0, $fk_product = 0){
+function selectWarehouses($selected = '', $htmlname = 'idwarehouse', $filter = '', $empty = 0, $disabled = 0, $fk_product = 0){
     global $langs, $user;
 
-    dol_syslog(get_class($this) . "::selectWarehouses $selected, $htmlname, $filtertype, $empty, $disabled, $fk_product",
+    dol_syslog(get_class($this) . "::selectWarehouses $selected, $htmlname, $filter, $empty, $disabled, $fk_product",
         LOG_DEBUG);
 
-    $this->loadWarehouses($fk_product);
+    $this->loadWarehouses($fk_product, $filter);
 
     $out = '<select class="flat"' . ($disabled ? ' disabled="disabled"' : '') . ' id="' . $htmlname . '" name="' . ($htmlname . ($disabled ? '_disabled' : '')) . '">';
     if ($empty) $out.='<option value="">&nbsp;</option>';
@@ -548,7 +548,6 @@ function selectWarehouses($selected = '', $htmlname = 'idwarehouse', $filtertype
     $out.='</select>';
     if ($disabled) $out.='<input type="hidden" name="' . $htmlname . '" value="' . $selected . '">';
 
-    //count($this->cache_warehouses);
     return $out;
   }
 
