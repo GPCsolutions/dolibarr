@@ -51,7 +51,7 @@ if ($_GET["id"] || $_GET["ref"]) {
     $titre = $langs->trans("CardProduct" . $product->type);
     $picto = ($product->type == 1 ? 'service' : 'product');
 
-    if ($action == 'create') {
+    if ($action == 'create' && GETPOST('valid')==$langs->trans('Valid')) {
       $newDet = new Productstockdet($db);
       $newDet->tms_i = dol_now();
       $newDet->fk_product = $product->id;
@@ -271,7 +271,7 @@ if ($_GET["id"] || $_GET["ref"]) {
     print '<td>' . $form->select_company($newDet->fk_supplier, 'supplier', 's.fournisseur=1') . '</td>';
     print '<td><input type="text" name="buyingPrice" value="' . $newDet->price . '"/></td>';
     print '<td>' . $formproduct->selectWarehouses($newDet->fk_entrepot, 'warehouse', '', 1) . '</td>';
-    print '<td><input type="submit" value="' . $langs->trans("Valid") . '"/></td><td><input type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
+    print '<td><input type="submit" name ="valid" value="' . $langs->trans("Valid") . '"/></td><td><input type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
     print '</tr>';
     print '</table></form>';
   }
