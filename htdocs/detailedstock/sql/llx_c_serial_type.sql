@@ -15,9 +15,9 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 CREATE TABLE IF NOT EXISTS llx_c_serial_type (
-  rowid integer NOT NULL auto_increment primary key ,
-  code VARCHAR(30),
-  label VARCHAR(60),
-  algo_valid TINYINT(4),
-  active TINYINT(4)
+    rowid integer NOT NULL auto_increment primary key ,
+    code VARCHAR(30),
+    label VARCHAR(60),
+    algo_valid TINYINT(4),
+    active TINYINT(4)
 )ENGINE = innodb;

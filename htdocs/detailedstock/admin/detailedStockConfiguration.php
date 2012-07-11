@@ -18,72 +18,61 @@
  */
 
 /**
- *	\file       htdocs/admin/compta.php
- *	\ingroup    compta
- *	\brief      Page to setup accountancy module
+ *  \file       htdocs/admin/compta.php
+ *  \ingroup    compta
+ *  \brief      Page to setup accountancy module
  */
-
 require("../../main.inc.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/admin.lib.php");
+require_once(DOL_DOCUMENT_ROOT . "/core/lib/admin.lib.php");
 
 $langs->load('admin');
 $langs->load('compta');
 
-if (!$user->admin)
-accessforbidden();
+if ( ! $user->admin) accessforbidden();
 
-$action = GETPOST('action','alpha');
+$action = GETPOST('action', 'alpha');
 
-$compta_mode = defined('COMPTA_MODE')?COMPTA_MODE:'RECETTES-DEPENSES';
+$compta_mode = defined('COMPTA_MODE') ? COMPTA_MODE : 'RECETTES-DEPENSES';
 
-if ($action == 'setcomptamode')
-{
-	$compta_mode = GETPOST('compta_mode','alpha');
+if ($action == 'setcomptamode') {
+    $compta_mode = GETPOST('compta_mode', 'alpha');
 
-	$res = dolibarr_set_const($db, 'COMPTA_MODE', $compta_mode,'chaine',0,'',$conf->entity);
+    $res = dolibarr_set_const($db, 'COMPTA_MODE', $compta_mode, 'chaine', 0, '', $conf->entity);
 
-	if (! $res > 0) $error++;
+    if ( ! $res > 0) $error ++;
 
- 	if (! $error)
-    {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+    if ( ! $error) {
+        $mesg = "<font class=\"ok\">" . $langs->trans("SetupSaved") . "</font>";
+    } else {
+        $mesg = "<font class=\"error\">" . $langs->trans("Error") . "</font>";
     }
-    else
-    {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
-    }
-
 }
 
-if ($action == 'update' || $action == 'add')
-{
-	$constname = GETPOST('constname','alpha');
-	$constvalue = GETPOST('constvalue','alpha');
-	$consttype = GETPOST('consttype','alpha');
-	$constnote = GETPOST('constnote','alpha');
+if ($action == 'update' || $action == 'add') {
+    $constname = GETPOST('constname', 'alpha');
+    $constvalue = GETPOST('constvalue', 'alpha');
+    $consttype = GETPOST('consttype', 'alpha');
+    $constnote = GETPOST('constnote', 'alpha');
 
-	$res = dolibarr_set_const($db, $constname, $constvalue, $consttype, 0, $constnote, $conf->entity);
+    $res = dolibarr_set_const($db, $constname, $constvalue, $consttype, 0, $constnote, $conf->entity);
 
-	if (! $res > 0) $error++;
+    if ( ! $res > 0) $error ++;
 
- 	if (! $error)
-    {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
-    }
-    else
-    {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+    if ( ! $error) {
+        $mesg = "<font class=\"ok\">" . $langs->trans("SetupSaved") . "</font>";
+    } else {
+        $mesg = "<font class=\"error\">" . $langs->trans("Error") . "</font>";
     }
 }
 
 
-/*if ($action == 'delete')
-{
-	if (! dolibarr_del_const($db, $_GET['constname'],$conf->entity));
-	{
-		print $db->error();
-	}
-}*/
+/* if ($action == 'delete')
+  {
+  if (! dolibarr_del_const($db, $_GET['constname'],$conf->entity));
+  {
+  print $db->error();
+  }
+  } */
 
 /*
  * Affichage page
@@ -91,10 +80,10 @@ if ($action == 'update' || $action == 'add')
 
 llxHeader();
 
-$form=new Form($db);
+$form = new Form($db);
 
-$linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans('ComptaSetup'),$linkback,'setup');
+$linkback = '<a href="' . DOL_URL_ROOT . '/admin/modules.php">' . $langs->trans("BackToModuleList") . '</a>';
+print_fiche_titre($langs->trans('ComptaSetup'), $linkback, 'setup');
 
 
 print '<br>';
@@ -102,29 +91,26 @@ print '<br>';
 print '<table class="noborder" width="100%">';
 
 // Cas du parametre COMPTA_MODE
-print '<form action="'.$_SERVER["PHP_SELF"].'" method="post">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print '<form action="' . $_SERVER["PHP_SELF"] . '" method="post">';
+print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
 print '<input type="hidden" name="action" value="setcomptamode">';
 print '<tr class="liste_titre">';
-print '<td>'.$langs->trans('OptionMode').'</td><td>'.$langs->trans('Description').'</td>';
-print '<td align="right"><input class="button" type="submit" value="'.$langs->trans('Modify').'"></td>';
+print '<td>' . $langs->trans('OptionMode') . '</td><td>' . $langs->trans('Description') . '</td>';
+print '<td align="right"><input class="button" type="submit" value="' . $langs->trans('Modify') . '"></td>';
 print "</tr>\n";
-print '<tr '.$bc[false].'><td width="200"><input type="radio" name="compta_mode" value="RECETTES-DEPENSES"'.($compta_mode != 'CREANCES-DETTES' ? ' checked' : '').'> '.$langs->trans('OptionModeTrue').'</td>';
-print '<td colspan="2">'.nl2br($langs->trans('OptionModeTrueDesc'));
+print '<tr ' . $bc[false] . '><td width="200"><input type="radio" name="compta_mode" value="RECETTES-DEPENSES"' . ($compta_mode != 'CREANCES-DETTES' ? ' checked' : '') . '> ' . $langs->trans('OptionModeTrue') . '</td>';
+print '<td colspan="2">' . nl2br($langs->trans('OptionModeTrueDesc'));
 // Write info on way to count VAT
-if ($conf->global->MAIN_MODULE_COMPTABILITE)
-{
-	//	print "<br>\n";
-	//	print nl2br($langs->trans('OptionModeTrueInfoModuleComptabilite'));
-}
-else
-{
-	//	print "<br>\n";
-	//	print nl2br($langs->trans('OptionModeTrueInfoExpert'));
+if ($conf->global->MAIN_MODULE_COMPTABILITE) {
+    //  print "<br>\n";
+    //  print nl2br($langs->trans('OptionModeTrueInfoModuleComptabilite'));
+} else {
+    //  print "<br>\n";
+    //  print nl2br($langs->trans('OptionModeTrueInfoExpert'));
 }
 print "</td></tr>\n";
-print '<tr '.$bc[true].'><td width="200"><input type="radio" name="compta_mode" value="CREANCES-DETTES"'.($compta_mode == 'CREANCES-DETTES' ? ' checked' : '').'> '.$langs->trans('OptionModeVirtual').'</td>';
-print '<td colspan="2">'.nl2br($langs->trans('OptionModeVirtualDesc'))."</td></tr>\n";
+print '<tr ' . $bc[true] . '><td width="200"><input type="radio" name="compta_mode" value="CREANCES-DETTES"' . ($compta_mode == 'CREANCES-DETTES' ? ' checked' : '') . '> ' . $langs->trans('OptionModeVirtual') . '</td>';
+print '<td colspan="2">' . nl2br($langs->trans('OptionModeVirtualDesc')) . "</td></tr>\n";
 print '</form>';
 
 print "</table>\n";
@@ -132,71 +118,70 @@ print "</table>\n";
 print "<br>\n";
 
 // Cas des autres parametres COMPTA_*
-$list=array('COMPTA_PRODUCT_BUY_ACCOUNT','COMPTA_PRODUCT_SOLD_ACCOUNT','COMPTA_SERVICE_BUY_ACCOUNT','COMPTA_SERVICE_SOLD_ACCOUNT',
-'COMPTA_VAT_ACCOUNT','COMPTA_ACCOUNT_CUSTOMER','COMPTA_ACCOUNT_SUPPLIER'
+$list = array('COMPTA_PRODUCT_BUY_ACCOUNT', 'COMPTA_PRODUCT_SOLD_ACCOUNT', 'COMPTA_SERVICE_BUY_ACCOUNT', 'COMPTA_SERVICE_SOLD_ACCOUNT',
+    'COMPTA_VAT_ACCOUNT', 'COMPTA_ACCOUNT_CUSTOMER', 'COMPTA_ACCOUNT_SUPPLIER'
 );
 
-/*$sql = "SELECT rowid, name, value, type, note";
+/*
+$sql = "SELECT rowid, name, value, type, note";
 $sql.= " FROM ".MAIN_DB_PREFIX."const";
 $sql.= " WHERE name LIKE 'COMPTA_%'";
 $sql.= " AND name NOT IN ('COMPTA_MODE')";
 $sql.= " AND entity = ".$conf->entity;
 $result = $db->query($sql);
 if ($result)
-{
-	$num = $db->num_rows($result);
-	$i = 0;
+    {
+        $num = $db->num_rows($result);
+        $i = 0;
 
-	while ($i < $num)
-	{
-		$obj = $db->fetch_object($result);
-		$var=!$var;
-		$list[$obj->name]=$obj->value;
-		$i++;
-	}
-}*/
+        while ($i < $num)
+        {
+            $obj = $db->fetch_object($result);
+            $var=!$var;
+            $list[$obj->name]=$obj->value;
+        $i++;
+        }
+    }
+*/
 
-$num=count($list);
-if ($num)
-{
-	print '<table class="noborder" width="100%">';
-	print '<tr class="liste_titre">';
-	print '<td colspan="3">'.$langs->trans('OtherOptions').'</td>';
-	print "</tr>\n";
+$num = count($list);
+if ($num) {
+    print '<table class="noborder" width="100%">';
+    print '<tr class="liste_titre">';
+    print '<td colspan="3">' . $langs->trans('OtherOptions') . '</td>';
+    print "</tr>\n";
 }
 
-foreach ($list as $key)
-{
-	$var=!$var;
+foreach ($list as $key) {
+    $var = ! $var;
 
-	print '<form action="compta.php" method="POST">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="update">';
-	print '<input type="hidden" name="consttype" value="string">';
-	print '<input type="hidden" name="constname" value="'.$key.'">';
+    print '<form action="compta.php" method="POST">';
+    print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
+    print '<input type="hidden" name="action" value="update">';
+    print '<input type="hidden" name="consttype" value="string">';
+    print '<input type="hidden" name="constname" value="' . $key . '">';
 
-	print '<tr '.$bc[$var].' class="value">';
+    print '<tr ' . $bc[$var] . ' class="value">';
 
-	// Param
-	$libelle = $langs->trans($key);
-	print '<td>'.$libelle;
-	//print ' ('.$key.')';
-	print "</td>\n";
+    // Param
+    $libelle = $langs->trans($key);
+    print '<td>' . $libelle;
+    //print ' ('.$key.')';
+    print "</td>\n";
 
-	// Value
-	print '<td>';
-	print '<input type="text" size="20" name="constvalue" value="'.$conf->global->$key.'">';
-	print '</td><td>';
-	print '<input type="submit" class="button" value="'.$langs->trans('Modify').'" name="button"> &nbsp; ';
-	print "</td></tr>\n";
-	print '</form>';
+    // Value
+    print '<td>';
+    print '<input type="text" size="20" name="constvalue" value="' . $conf->global->$key . '">';
+    print '</td><td>';
+    print '<input type="submit" class="button" value="' . $langs->trans('Modify') . '" name="button"> &nbsp; ';
+    print "</td></tr>\n";
+    print '</form>';
 
-	$i++;
+    $i ++;
 }
 
-if ($num)
-{
-	print "</table>\n";
+if ($num) {
+    print "</table>\n";
 }
 
 dol_htmloutput_mesg($mesg);
