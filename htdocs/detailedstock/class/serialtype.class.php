@@ -366,7 +366,7 @@ class Serialtype extends CommonObject
   }
 
   /**
-   * Check the IMEI of a mobile phone
+   * Checks the IMEI of a mobile phone using the Luhn algorithm
    * @param $imei IMEI to validate
    */
   function is_IMEI_valid($imei)
@@ -397,6 +397,11 @@ class Serialtype extends CommonObject
     return ($diflast == $CD);
   }
 
+  /**
+   * Checks if a serial is valid by calling the appropriate validation method
+   * @param $serial serial to validate
+   * @return false or true
+   */
   function validate($serial)
   {
     if ($this->algo_valid == 1) return $this->is_IMEI_valid($serial);

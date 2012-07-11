@@ -16,8 +16,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  * */
 
-//TODO MODIFS CLE TABLE VOIR AVEC RAPH
-
 require("../main.inc.php");
 require_once(DOL_DOCUMENT_ROOT . "/product/stock/class/entrepot.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/product/class/product.class.php");
@@ -51,8 +49,10 @@ if ($_GET["id"] || $_GET["ref"]) {
     $titre = $langs->trans("CardProduct" . $product->type);
     $picto = ($product->type == 1 ? 'service' : 'product');
 
+    //after the user hit the valid button
     if ($action == 'create' && GETPOST('valid')==$langs->trans('Valid')) {
       $newDet = new Productstockdet($db);
+      //create a new detailled stock object with the input parameters
       $newDet->tms_i = dol_now();
       $newDet->fk_product = $product->id;
       $newDet->fk_entrepot = GETPOST('warehouse');
@@ -61,10 +61,14 @@ if ($_GET["id"] || $_GET["ref"]) {
       $newDet->fk_serial_type = GETPOST('serialType');
       $newDet->price = price2num(GETPOST('buyingPrice'), 'MT');
       $newDet->fk_supplier = GETPOST('supplier');
+      //default $valid value is 1 in case we don't need to go through the validation process
       $valid = 1;
+      //if a serial type is defined
       if ($newDet->fk_serial_type) {
+        //get the appropriate serial type object
         $serial = new Serialtype($db);
         if ($serial->fetch($newDet->fk_serial_type)) {
+          //if the serial is active, check if it's valid
           if ($serial->active) {
             $valid = $serial->validate($newDet->serial);
           }
@@ -72,10 +76,12 @@ if ($_GET["id"] || $_GET["ref"]) {
           //error
         }
       }
+      //if nothing went wrong, the object is saved in the database
       if ($valid) {
         $newDet->create($user);
         unset($action);
       } else {
+        //else, prepare the error message and go back to add mode
         $mesg = '<div class="error">' . $langs->trans('InvalidCode') . '</div>';
         $action = 'add';
       }
@@ -85,10 +91,10 @@ if ($_GET["id"] || $_GET["ref"]) {
       unset($_POST['serialType']);
       unset($_POST['buyingPrice']);
       unset($_POST['supplier']);
-      //TODO validation using Luhn algo
     }
     llxHeader("", $langs->trans("CardProduct" . $product->type), $help_url);
     dol_fiche_head($head, 'detail', $titre, 0, $picto);
+    //display the error message when there's one
     dol_htmloutput_mesg($mesg);
 
     print '<table class="border" width="100%">';
@@ -204,12 +210,10 @@ if ($_GET["id"] || $_GET["ref"]) {
   print '</div>';
   //view mode
   if ($action != 'add') {
-    //$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id;
-    //$resql = $db->query($sql);
     if ($resql) {
       if ($db->num_rows($resql) < $product->stock_reel)
           print '<table width="100%"><tr><td align="right"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?id=' . $product->id . '&action=add">' . $langs->trans("Add") . '</a></td></tr></table>';
-
+      //display each detailled stock line related to this product
       if ($db->num_rows($resql) > 0) {
         print '<br><table class="noborder" width="100%">';
         print '<tr class="liste_titre"><td>' . $langs->trans("Id") . '</td>';
