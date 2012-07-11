@@ -13,6 +13,7 @@
 --
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 CREATE TABLE IF NOT EXISTS llx_product_stock_det (
     rowid integer NOT NULL auto_increment primary key ,
     tms_i TIMESTAMP NOT NULL ,
