@@ -2,3 +2,4 @@ DetailedStock=Detailed stock
 SerialType=Serial number type
 SerialNumber=Serial number
 UndetailledStock=Undetailled stock
+InvalidCode=Invalid serial number
