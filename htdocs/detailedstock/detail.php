@@ -60,8 +60,8 @@ if ($_GET["id"] || $_GET["ref"]) {
       $newDet->fk_product = $product->id;
       $newDet->fk_entrepot = GETPOST('warehouse');
       $newDet->fk_user_author_i = $user->id;
-      $newDet->serial = GETPOST('serialNumber');
-      $newDet->fk_serial_type = GETPOST('serialType');
+      if(GETPOST('serialNumber')!='')$newDet->serial = GETPOST('serialNumber');
+      if(GETPOST('serialType')>0)$newDet->fk_serial_type = GETPOST('serialType');
       $newDet->price = price2num(GETPOST('buyingPrice'), 'MT');
       $newDet->fk_supplier = GETPOST('supplier');
       //default $valid value is 1 in case we don't need to go through the validation process
@@ -81,7 +81,7 @@ if ($_GET["id"] || $_GET["ref"]) {
       }
       //if nothing went wrong, the object is saved in the database
       if ($valid) {
-        $newDet->create($user);
+        $id = $newDet->create($user);
         unset($action);
       } else {
         //else, prepare the error message and go back to add mode
@@ -277,7 +277,7 @@ if ($_GET["id"] || $_GET["ref"]) {
     print '<td><input type="text" name="serialNumber" value="' . $newDet->serial . '"/></td>';
     print '<td>' . $form->select_company($newDet->fk_supplier, 'supplier', 's.fournisseur=1') . '</td>';
     print '<td><input type="text" name="buyingPrice" value="' . $newDet->price . '"/></td>';
-    print '<td>' . $formproduct->selectWarehouses($newDet->fk_entrepot, 'warehouse', '', 1) . '</td>';
+    print '<td>' . $det->selectWarehouses($newDet->fk_entrepot, 'warehouse', '', 0,0,$product->id) . '</td>';
     print '<td><input type="submit" name ="valid" value="' . $langs->trans("Valid") . '"/></td><td><input type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
     print '</tr>';
     print '</table></form>';

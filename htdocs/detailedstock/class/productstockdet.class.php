@@ -433,23 +433,25 @@ class Productstockdet extends CommonObject
         $this->fk_supplier = '';
     }
 
-    public function getSerialTypeLabel()
-    {
-        $sql = 'select label from ' . MAIN_DB_PREFIX . 'c_serial_type where rowid = ' . $this->fk_serial_type;
-        $resql = $this->db->query($sql);
-        if ($resql) {
-            $label = '';
-            if ($this->db->num_rows($resql) > 0) {
-                $res = $this->db->fetch_object($resql);
-                $label = $res->label;
-            }
-            return $label;
-        } else {
-            $this->error = "Error " . $this->db->lasterror();
-            dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
-            return -1;
+    public function getSerialTypeLabel(){
+    $label = '';
+    if ($this->fk_serial_type) {
+      $sql = 'select label from ' . MAIN_DB_PREFIX . 'c_serial_type where rowid = ' . $this->fk_serial_type;
+      $resql = $this->db->query($sql);
+      if ($resql) {
+        if ($this->db->num_rows($resql) > 0) {
+          $res = $this->db->fetch_object($resql);
+          $label = $res->label;
         }
+        return $label;
+      } else {
+        $this->error = "Error " . $this->db->lasterror();
+        dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
+        return -1;
+      }
     }
+    return $label;
+  }
 
     public function selectSerialType($selected, $htmlname)
     {
@@ -474,6 +476,81 @@ class Productstockdet extends CommonObject
             return -1;
         }
     }
+
+    //had to copy 2 functions from html.formproduct.class.php to modify because they're terrible and I don't want to modify dolibarr core files.
+
+    /**
+ * Load in cache array list of warehouses
+ * If fk_product is not 0, we do not use cache
+ *
+ * @param	int		$fk_product		Add quantity of stock in label for product with id fk_product. Nothing if 0.
+ * @return  int  		    		Nb of loaded lines, 0 if already loaded, <0 if KO
+ */
+  function loadWarehouses($fk_product = 0)
+  {
+    global $conf, $langs;
+
+    if (empty($fk_product) && count($this->cache_warehouses))
+        return 0;    // Cache already loaded and we do not want a list with information specific to a product
+
+    $sql = "SELECT e.rowid, e.label";
+    if ($fk_product) $sql.= ", ps.reel";
+    $sql.= " FROM " . MAIN_DB_PREFIX . "entrepot as e";
+    if ($fk_product) {
+      $sql.= " LEFT JOIN " . MAIN_DB_PREFIX . "product_stock as ps on ps.fk_entrepot = e.rowid";
+      $sql.= " AND ps.fk_product = '" . $fk_product . "'";
+    }
+    $sql.= " WHERE e.entity = " . $conf->entity;
+    $sql.= " AND e.statut = 1";
+    $sql.= " AND ps.reel > 0";
+    $sql.= " ORDER BY e.label";
+
+    dol_syslog(get_class($this) . '::loadWarehouses sql=' . $sql, LOG_DEBUG);
+    $resql = $this->db->query($sql);
+    if ($resql) {
+      $num = $this->db->num_rows($resql);
+      $i = 0;
+      while ($i < $num) {
+        $obj = $this->db->fetch_object($resql);
+
+        $this->cache_warehouses[$obj->rowid]['id'] = $obj->rowid;
+        $this->cache_warehouses[$obj->rowid]['label'] = $obj->label;
+        if ($fk_product) $this->cache_warehouses[$obj->rowid]['stock'] = $obj->reel;
+        $i++;
+      }
+      return $num;
+    }
+    else {
+      dol_print_error($this->db);
+      return -1;
+    }
+  }
+
+function selectWarehouses($selected = '', $htmlname = 'idwarehouse', $filtertype = '', $empty = 0, $disabled = 0, $fk_product = 0){
+    global $langs, $user;
+
+    dol_syslog(get_class($this) . "::selectWarehouses $selected, $htmlname, $filtertype, $empty, $disabled, $fk_product",
+        LOG_DEBUG);
+
+    $this->loadWarehouses($fk_product);
+
+    $out = '<select class="flat"' . ($disabled ? ' disabled="disabled"' : '') . ' id="' . $htmlname . '" name="' . ($htmlname . ($disabled ? '_disabled' : '')) . '">';
+    if ($empty) $out.='<option value="">&nbsp;</option>';
+    foreach ($this->cache_warehouses as $id => $arraytypes) {
+      $out.='<option value="' . $id . '"';
+      // Si selected est text, on compare avec code, sinon avec id
+      if ($selected == $id) $out.=' selected="selected"';
+      $out.='>';
+      $out.=$arraytypes['label'];
+      if ($fk_product) $out.=' (' . $langs->trans("Stock") . ': ' . ($arraytypes['stock'] > 0 ? $arraytypes['stock'] : '?') . ')';
+      $out.='</option>';
+    }
+    $out.='</select>';
+    if ($disabled) $out.='<input type="hidden" name="' . $htmlname . '" value="' . $selected . '">';
+
+    //count($this->cache_warehouses);
+    return $out;
+  }
 
 }
 
