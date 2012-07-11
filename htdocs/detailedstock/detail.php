@@ -1,5 +1,6 @@
 <?php
-/*Copyright (C) 2012      Cédric Salvador      <csalvador@gpcsolutions.fr>
+
+/* Copyright (C) 2012      Cédric Salvador      <csalvador@gpcsolutions.fr>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +24,8 @@ require_once(DOL_DOCUMENT_ROOT . "/product/class/product.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/lib/product.lib.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/class/html.form.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/productstockdet.class.php");
-require_once(DOL_DOCUMENT_ROOT."/product/class/html.formproduct.class.php");
+require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/serialtype.class.php");
+require_once(DOL_DOCUMENT_ROOT . "/product/class/html.formproduct.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/lib/functions.lib.php");
 global $langs, $user;
 $langs->load("products");
@@ -35,7 +37,7 @@ $langs->load("stocks");
  */
 
 $form = new Form($db);
-
+$action = GETPOST('action');
 
 if ($_GET["id"] || $_GET["ref"]) {
   $product = new Product($db);
@@ -43,35 +45,51 @@ if ($_GET["id"] || $_GET["ref"]) {
   if ($_GET["id"]) $result = $product->fetch($_GET["id"]);
 
   $help_url = 'EN:Module_Stocks_En|FR:Module_Stock|ES:M&oacute;dulo_Stocks';
-  llxHeader("", $langs->trans("CardProduct" . $product->type), $help_url);
 
   if ($result > 0) {
     $head = product_prepare_head($product, $user);
     $titre = $langs->trans("CardProduct" . $product->type);
     $picto = ($product->type == 1 ? 'service' : 'product');
-    dol_fiche_head($head, 'detail', $titre, 0, $picto);
 
-if(GETPOST('action')=='create'){
-  $newDet = new Productstockdet($db);
-  $newDet->tms_i = dol_now();
-  $newDet->fk_product = $product->id;
-  $newDet->fk_entrepot = GETPOST('warehouse');
-  $newDet->fk_user_author_i = $user->id;
-  $newDet->serial = GETPOST('serialNumber');
-  $newDet->fk_serial_type = GETPOST('serialType');
-  $newDet->price = price2num(GETPOST('buyingPrice'),'MT');
-  $newDet->fk_supplier = GETPOST('supplier');
-  $newDet->create($user);
-  unset($_POST['action']);
-  unset($_POST['warehouse']);
-  unset($_POST['serialNumber']);
-  unset($_POST['serialType']);
-  unset($_POST['buyingPrice']);
-  unset($_POST['supplier']);
-  //TODO validation using Luhn algo
-}
-    
-    print($mesg);
+    if ($action == 'create') {
+      $newDet = new Productstockdet($db);
+      $newDet->tms_i = dol_now();
+      $newDet->fk_product = $product->id;
+      $newDet->fk_entrepot = GETPOST('warehouse');
+      $newDet->fk_user_author_i = $user->id;
+      $newDet->serial = GETPOST('serialNumber');
+      $newDet->fk_serial_type = GETPOST('serialType');
+      $newDet->price = price2num(GETPOST('buyingPrice'), 'MT');
+      $newDet->fk_supplier = GETPOST('supplier');
+      $valid = 1;
+      if ($newDet->fk_serial_type) {
+        $serial = new Serialtype($db);
+        if ($serial->fetch($newDet->fk_serial_type)) {
+          if ($serial->active) {
+            $valid = $serial->validate($newDet->serial);
+          }
+        } else {
+          //error
+        }
+      }
+      if ($valid) {
+        $newDet->create($user);
+        unset($action);
+      } else {
+        $mesg = '<div class="error">' . $langs->trans('InvalidCode') . '</div>';
+        $action = 'add';
+      }
+      unset($_POST['action']);
+      unset($_POST['warehouse']);
+      unset($_POST['serialNumber']);
+      unset($_POST['serialType']);
+      unset($_POST['buyingPrice']);
+      unset($_POST['supplier']);
+      //TODO validation using Luhn algo
+    }
+    llxHeader("", $langs->trans("CardProduct" . $product->type), $help_url);
+    dol_fiche_head($head, 'detail', $titre, 0, $picto);
+    dol_htmloutput_mesg($mesg);
 
     print '<table class="border" width="100%">';
 
@@ -124,8 +142,8 @@ if(GETPOST('action')=='create'){
     $num = $db->num_rows($resql);
     $reste = $product->stock_reel - $num;
     print '<tr><td>' . $langs->trans("UndetailledStock") . '</td>';
-    print '<td>'.$reste.'</td>';
-    print '</tr>'; 
+    print '<td>' . $reste . '</td>';
+    print '</tr>';
 
     // Calculating a theorical value of stock if stock increment is done on real sending
     if ($conf->global->STOCK_CALCULATE_ON_SHIPMENT) {
@@ -185,7 +203,7 @@ if(GETPOST('action')=='create'){
   }
   print '</div>';
   //view mode
-  if (GETPOST('action') != 'add') {
+  if ($action != 'add') {
     //$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id;
     //$resql = $db->query($sql);
     if ($resql) {
@@ -211,8 +229,8 @@ if(GETPOST('action')=='create'){
             if ($infosoc) {
               print '<td align="right">' . $soc->getNomUrl() . '</td>';
             } else {
-              $this->error="Error ".$this->db->lasterror();
-              dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
+              $this->error = "Error " . $this->db->lasterror();
+              dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
             }
             print '<td align="right">' . $det->price . '</td>';
             $entrepot = new Entrepot($db);
@@ -220,13 +238,13 @@ if(GETPOST('action')=='create'){
             if ($infoentrepot) {
               print '<td align="right">' . $entrepot->getNomUrl() . '</td>';
             } else {
-              $this->error="Error ".$this->db->lasterror();
-              dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
+              $this->error = "Error " . $this->db->lasterror();
+              dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
             }
             print '</tr>';
           } else {
-            $this->error="Error ".$this->db->lasterror();
-            dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
+            $this->error = "Error " . $this->db->lasterror();
+            dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
           }
         }
       }
@@ -236,23 +254,24 @@ if(GETPOST('action')=='create'){
   }
   //add mode
   else {
-    $newDet = new Productstockdet($db);
-    $formproduct=new FormProduct($db);
-    print '<br><form action="'.$_SERVER['PHP_SELF'] . '?id=' . $product->id.'" method="post"><table class="noborder" width="100%">';
+    $det = new Productstockdet($db);
+    $formproduct = new FormProduct($db);
+    print '<br><form action="' . $_SERVER['PHP_SELF'] . '?id=' . $product->id . '" method="post"><table class="noborder" width="100%">';
     print '<input type="hidden" name="action" value="create"/>';
     print '<tr class="liste_titre"><td>' . $langs->trans("SerialType") . '</td>';
-    print '<td>'.$langs->trans("SerialNumber").'</td>';
+    print '<td>' . $langs->trans("SerialNumber") . '</td>';
     print '<td>' . $langs->trans("Supplier") . '</td>';
-    print '<td>'.$langs->trans("BuyingPrice").'</td>';
-    print '<td>'.$langs->trans("Warehouse").'</td>';
+    print '<td>' . $langs->trans("BuyingPrice") . '</td>';
+    print '<td>' . $langs->trans("Warehouse") . '</td>';
     print '<td>&nbsp;</td><td>&nbsp;</td></tr>';
-    
+
     print '<tr>';
-    print '<td>'.$newDet->selectSerialType('','serialType').'</td>';
-    print '<td><input type="text" name="serialNumber" /></td>';
-    print '<td>'.$form->select_company('','supplier', 's.fournisseur=1').'</td>';
-    print '<td><input type="text" name="buyingPrice" /></td>';
-    print '<td>'.$formproduct->selectWarehouses('','warehouse','',1).'</td>';    print '<td><input type="submit" value="'.$langs->trans("Valid").'"/></td><td><input type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
+    print '<td>' . $det->selectSerialType($newDet->fk_serial_type, 'serialType') . '</td>';
+    print '<td><input type="text" name="serialNumber" value="' . $newDet->serial . '"/></td>';
+    print '<td>' . $form->select_company($newDet->fk_supplier, 'supplier', 's.fournisseur=1') . '</td>';
+    print '<td><input type="text" name="buyingPrice" value="' . $newDet->price . '"/></td>';
+    print '<td>' . $formproduct->selectWarehouses($newDet->fk_entrepot, 'warehouse', '', 1) . '</td>';
+    print '<td><input type="submit" value="' . $langs->trans("Valid") . '"/></td><td><input type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
     print '</tr>';
     print '</table></form>';
   }
