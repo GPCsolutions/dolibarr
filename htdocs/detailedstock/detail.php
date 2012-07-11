@@ -239,7 +239,7 @@ if ($_GET["id"] || $_GET["ref"]) {
               $this->error = "Error " . $this->db->lasterror();
               dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
             }
-            print '<td align="right">' . $det->price . '</td>';
+            print '<td align="right">' . price($det->price) . ' HT</td>';
             $entrepot = new Entrepot($db);
             $infoentrepot = $entrepot->fetch($det->fk_entrepot);
             if ($infoentrepot) {
