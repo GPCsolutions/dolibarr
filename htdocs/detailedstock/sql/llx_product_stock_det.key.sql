@@ -1,4 +1,4 @@
---Copyright (C) 2012      Cédric Salvador	    <csalvador@gpcsolutions.fr>--
+--Copyright (C) 2012      Cédric Salvador    <csalvador@gpcsolutions.fr>--
 
 ALTER TABLE llx_product_stock_det ADD INDEX idx_product_stock_det_fk_invoice_line (fk_invoice_line);
 ALTER TABLE llx_product_stock_det ADD INDEX idx_product_stock_det_fk_supplier (fk_supplier);

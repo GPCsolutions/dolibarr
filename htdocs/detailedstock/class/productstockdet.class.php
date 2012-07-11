@@ -20,48 +20,42 @@
  *  \file       dev/skeletons/productstockdet.class.php
  *  \ingroup    mymodule othermodule1 othermodule2
  *  \brief      This file is an example for a CRUD class file (Create/Read/Update/Delete)
- *				Initialy built by build_class_from_table on 2012-07-09 17:36
+ *              Initialy built by build_class_from_table on 2012-07-09 17:36
  */
-
 // Put here all includes required by your class file
-require_once(DOL_DOCUMENT_ROOT."/core/class/commonobject.class.php");
+require_once(DOL_DOCUMENT_ROOT . "/core/class/commonobject.class.php");
 //require_once(DOL_DOCUMENT_ROOT."/societe/class/societe.class.php");
 //require_once(DOL_DOCUMENT_ROOT."/product/class/product.class.php");
 
-
 /**
- *	Put here description of your class
+ *  Put here description of your class
  */
 class Productstockdet extends CommonObject
 {
-	var $db;							//!< To store db handler
-	var $error;							//!< To return error code (or message)
-	var $errors=array();				//!< To return several error codes (or messages)
-	//var $element='productstockdet';			//!< Id that identify managed objects
-	//var $table_element='productstockdet';	//!< Name of table without prefix where object is stored
 
+    var $db;                                //!< To store db handler
+    var $error;                             //!< To return error code (or message)
+    var $errors = array();                  //!< To return several error codes (or messages)
+    //var $element='productstockdet';       //!< Id that identify managed objects
+    //var $table_element='productstockdet'; //!< Name of table without prefix where object is stored
     var $id;
-    
-	var $tms_i='';
-	var $tms_o='';
-	var $fk_product;
-	var $fk_entrepot;
-	var $fk_user_author_i;
-	var $fk_user_author_o;
-	var $serial;
-	var $fk_serial_type;
-	var $price;
-	var $fk_invoice_line;
-	var $fk_command_line;
-	var $fk_supplier;
-
-    
-
+    var $tms_i = '';
+    var $tms_o = '';
+    var $fk_product;
+    var $fk_entrepot;
+    var $fk_user_author_i;
+    var $fk_user_author_o;
+    var $serial;
+    var $fk_serial_type;
+    var $price;
+    var $fk_invoice_line;
+    var $fk_command_line;
+    var $fk_supplier;
 
     /**
      *  Constructor
      *
-     *  @param	DoliDb		$db      Database handler
+     *  @param  DoliDb      $db      Database handler
      */
     function __construct($db)
     {
@@ -69,452 +63,417 @@ class Productstockdet extends CommonObject
         return 1;
     }
 
-
     /**
      *  Create object into database
      *
-     *  @param	User	$user        User that create
-     *  @param  int		$notrigger   0=launch triggers after, 1=disable triggers
-     *  @return int      		   	 <0 if KO, Id of created object if OK
+     *  @param  User    $user        User that create
+     *  @param  int     $notrigger   0=launch triggers after, 1=disable triggers
+     *  @return int                  <0 if KO, Id of created object if OK
      */
-    function create($user, $notrigger=0)
+    function create($user, $notrigger = 0)
     {
-    	global $conf, $langs;
-		$error=0;
+        global $conf, $langs;
+        $error = 0;
 
-		// Clean parameters
-        
-		if (isset($this->fk_product)) $this->fk_product=trim($this->fk_product);
-		if (isset($this->fk_entrepot)) $this->fk_entrepot=trim($this->fk_entrepot);
-		if (isset($this->fk_user_author_i)) $this->fk_user_author_i=trim($this->fk_user_author_i);
-		if (isset($this->fk_user_author_o)) $this->fk_user_author_o=trim($this->fk_user_author_o);
-		if (isset($this->serial)) $this->serial=trim($this->serial);
-		if (isset($this->fk_serial_type)) $this->fk_serial_type=trim($this->fk_serial_type);
-		if (isset($this->price)) $this->price=trim($this->price);
-		if (isset($this->fk_invoice_line)) $this->fk_invoice_line=trim($this->fk_invoice_line);
-		if (isset($this->fk_command_line)) $this->fk_command_line=trim($this->fk_command_line);
-		if (isset($this->fk_supplier)) $this->fk_supplier=trim($this->fk_supplier);
+        // Clean parameters
 
-        
+        if (isset($this->fk_product)) $this->fk_product = trim($this->fk_product);
+        if (isset($this->fk_entrepot)) $this->fk_entrepot = trim($this->fk_entrepot);
+        if (isset($this->fk_user_author_i)) $this->fk_user_author_i = trim($this->fk_user_author_i);
+        if (isset($this->fk_user_author_o)) $this->fk_user_author_o = trim($this->fk_user_author_o);
+        if (isset($this->serial)) $this->serial = trim($this->serial);
+        if (isset($this->fk_serial_type)) $this->fk_serial_type = trim($this->fk_serial_type);
+        if (isset($this->price)) $this->price = trim($this->price);
+        if (isset($this->fk_invoice_line)) $this->fk_invoice_line = trim($this->fk_invoice_line);
+        if (isset($this->fk_command_line)) $this->fk_command_line = trim($this->fk_command_line);
+        if (isset($this->fk_supplier)) $this->fk_supplier = trim($this->fk_supplier);
 
-		// Check parameters
-		// Put here code to add control on parameters values
 
+
+        // Check parameters
+        // Put here code to add control on parameters values
         // Insert request
-		$sql = "INSERT INTO ".MAIN_DB_PREFIX."product_stock_det(";
-		
-		$sql.= "tms_i,";
-		$sql.= "tms_o,";
-		$sql.= "fk_product,";
-		$sql.= "fk_entrepot,";
-		$sql.= "fk_user_author_i,";
-		$sql.= "fk_user_author_o,";
-		$sql.= "serial,";
-		$sql.= "fk_serial_type,";
-		$sql.= "price,";
-		$sql.= "fk_invoice_line,";
-		$sql.= "fk_command_line,";
-		$sql.= "fk_supplier";
+        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "product_stock_det(";
 
-		
+        $sql.= "tms_i,";
+        $sql.= "tms_o,";
+        $sql.= "fk_product,";
+        $sql.= "fk_entrepot,";
+        $sql.= "fk_user_author_i,";
+        $sql.= "fk_user_author_o,";
+        $sql.= "serial,";
+        $sql.= "fk_serial_type,";
+        $sql.= "price,";
+        $sql.= "fk_invoice_line,";
+        $sql.= "fk_command_line,";
+        $sql.= "fk_supplier";
+
+
         $sql.= ") VALUES (";
-        
-		$sql.= " ".(! isset($this->tms_i) || dol_strlen($this->tms_i)==0?'NULL':$this->db->idate($this->tms_i)).",";
-		$sql.= " ".(! isset($this->tms_o) || dol_strlen($this->tms_o)==0?'NULL':$this->db->idate($this->tms_o)).",";
-		$sql.= " ".(! isset($this->fk_product)?'NULL':"'".$this->fk_product."'").",";
-		$sql.= " ".(! isset($this->fk_entrepot)?'NULL':"'".$this->fk_entrepot."'").",";
-		$sql.= " ".(! isset($this->fk_user_author_i)?'NULL':"'".$this->fk_user_author_i."'").",";
-		$sql.= " ".(! isset($this->fk_user_author_o)?'NULL':"'".$this->fk_user_author_o."'").",";
-		$sql.= " ".(! isset($this->serial)?'NULL':"'".$this->db->escape($this->serial)."'").",";
-		$sql.= " ".(! isset($this->fk_serial_type)?'NULL':"'".$this->fk_serial_type."'").",";
-		$sql.= " ".(! isset($this->price)?'NULL':"'".$this->price."'").",";
-		$sql.= " ".(! isset($this->fk_invoice_line)?'NULL':"'".$this->fk_invoice_line."'").",";
-		$sql.= " ".(! isset($this->fk_command_line)?'NULL':"'".$this->fk_command_line."'").",";
-		$sql.= " ".(! isset($this->fk_supplier)?'NULL':"'".$this->fk_supplier."'")."";
 
-        
-		$sql.= ")";
+        $sql.= " " . ( ! isset($this->tms_i) || dol_strlen($this->tms_i) == 0 ? 'NULL' : $this->db->idate($this->tms_i)) . ",";
+        $sql.= " " . ( ! isset($this->tms_o) || dol_strlen($this->tms_o) == 0 ? 'NULL' : $this->db->idate($this->tms_o)) . ",";
+        $sql.= " " . ( ! isset($this->fk_product) ? 'NULL' : "'" . $this->fk_product . "'") . ",";
+        $sql.= " " . ( ! isset($this->fk_entrepot) ? 'NULL' : "'" . $this->fk_entrepot . "'") . ",";
+        $sql.= " " . ( ! isset($this->fk_user_author_i) ? 'NULL' : "'" . $this->fk_user_author_i . "'") . ",";
+        $sql.= " " . ( ! isset($this->fk_user_author_o) ? 'NULL' : "'" . $this->fk_user_author_o . "'") . ",";
+        $sql.= " " . ( ! isset($this->serial) ? 'NULL' : "'" . $this->db->escape($this->serial) . "'") . ",";
+        $sql.= " " . ( ! isset($this->fk_serial_type) ? 'NULL' : "'" . $this->fk_serial_type . "'") . ",";
+        $sql.= " " . ( ! isset($this->price) ? 'NULL' : "'" . $this->price . "'") . ",";
+        $sql.= " " . ( ! isset($this->fk_invoice_line) ? 'NULL' : "'" . $this->fk_invoice_line . "'") . ",";
+        $sql.= " " . ( ! isset($this->fk_command_line) ? 'NULL' : "'" . $this->fk_command_line . "'") . ",";
+        $sql.= " " . ( ! isset($this->fk_supplier) ? 'NULL' : "'" . $this->fk_supplier . "'") . "";
 
-		$this->db->begin();
 
-	   	dol_syslog(get_class($this)."::create sql=".$sql, LOG_DEBUG);
-        $resql=$this->db->query($sql);
-    	if (! $resql) { $error++; $this->errors[]="Error ".$this->db->lasterror(); }
+        $sql.= ")";
 
-		if (! $error)
-        {
-            $this->id = $this->db->last_insert_id(MAIN_DB_PREFIX."product_stock_det");
+        $this->db->begin();
 
-			if (! $notrigger)
-			{
-	            // Uncomment this and change MYOBJECT to your own tag if you
-	            // want this action call a trigger.
+        dol_syslog(get_class($this) . "::create sql=" . $sql, LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        if ( ! $resql) {
+            $error ++;
+            $this->errors[] = "Error " . $this->db->lasterror();
+        }
 
-	            //// Call triggers
-	            //include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
-	            //$interface=new Interfaces($this->db);
-	            //$result=$interface->run_triggers('MYOBJECT_CREATE',$this,$user,$langs,$conf);
-	            //if ($result < 0) { $error++; $this->errors=$interface->errors; }
-	            //// End call triggers
-			}
+        if ( ! $error) {
+            $this->id = $this->db->last_insert_id(MAIN_DB_PREFIX . "product_stock_det");
+
+            if ( ! $notrigger) {
+                // Uncomment this and change MYOBJECT to your own tag if you
+                // want this action call a trigger.
+                //// Call triggers
+                //include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+                //$interface=new Interfaces($this->db);
+                //$result=$interface->run_triggers('MYOBJECT_CREATE',$this,$user,$langs,$conf);
+                //if ($result < 0) { $error++; $this->errors=$interface->errors; }
+                //// End call triggers
+            }
         }
 
         // Commit or rollback
-        if ($error)
-		{
-			foreach($this->errors as $errmsg)
-			{
-	            dol_syslog(get_class($this)."::create ".$errmsg, LOG_ERR);
-	            $this->error.=($this->error?', '.$errmsg:$errmsg);
-			}
-			$this->db->rollback();
-			return -1*$error;
-		}
-		else
-		{
-			$this->db->commit();
+        if ($error) {
+            foreach ($this->errors as $errmsg) {
+                dol_syslog(get_class($this) . "::create " . $errmsg, LOG_ERR);
+                $this->error.=($this->error ? ', ' . $errmsg : $errmsg);
+            }
+            $this->db->rollback();
+            return -1 * $error;
+        } else {
+            $this->db->commit();
             return $this->id;
-		}
+        }
     }
-
 
     /**
      *  Load object in memory from database
      *
-     *  @param	int		$id    Id object
-     *  @return int          	<0 if KO, >0 if OK
+     *  @param  int     $id    Id object
+     *  @return int             <0 if KO, >0 if OK
      */
     function fetch($id)
     {
-    	global $langs;
+        global $langs;
         $sql = "SELECT";
-		$sql.= " t.rowid,";
-		
-		$sql.= " t.tms_i,";
-		$sql.= " t.tms_o,";
-		$sql.= " t.fk_product,";
-		$sql.= " t.fk_entrepot,";
-		$sql.= " t.fk_user_author_i,";
-		$sql.= " t.fk_user_author_o,";
-		$sql.= " t.serial,";
-		$sql.= " t.fk_serial_type,";
-		$sql.= " t.price,";
-		$sql.= " t.fk_invoice_line,";
-		$sql.= " t.fk_command_line,";
-		$sql.= " t.fk_supplier";
+        $sql.= " t.rowid,";
 
-		
-        $sql.= " FROM ".MAIN_DB_PREFIX."product_stock_det as t";
-        $sql.= " WHERE t.rowid = ".$id;
+        $sql.= " t.tms_i,";
+        $sql.= " t.tms_o,";
+        $sql.= " t.fk_product,";
+        $sql.= " t.fk_entrepot,";
+        $sql.= " t.fk_user_author_i,";
+        $sql.= " t.fk_user_author_o,";
+        $sql.= " t.serial,";
+        $sql.= " t.fk_serial_type,";
+        $sql.= " t.price,";
+        $sql.= " t.fk_invoice_line,";
+        $sql.= " t.fk_command_line,";
+        $sql.= " t.fk_supplier";
 
-    	dol_syslog(get_class($this)."::fetch sql=".$sql, LOG_DEBUG);
-        $resql=$this->db->query($sql);
-        if ($resql)
-        {
-            if ($this->db->num_rows($resql))
-            {
+
+        $sql.= " FROM " . MAIN_DB_PREFIX . "product_stock_det as t";
+        $sql.= " WHERE t.rowid = " . $id;
+
+        dol_syslog(get_class($this) . "::fetch sql=" . $sql, LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            if ($this->db->num_rows($resql)) {
                 $obj = $this->db->fetch_object($resql);
 
-                $this->id    = $obj->rowid;
-                
-				$this->tms_i = $this->db->jdate($obj->tms_i);
-				$this->tms_o = $this->db->jdate($obj->tms_o);
-				$this->fk_product = $obj->fk_product;
-				$this->fk_entrepot = $obj->fk_entrepot;
-				$this->fk_user_author_i = $obj->fk_user_author_i;
-				$this->fk_user_author_o = $obj->fk_user_author_o;
-				$this->serial = $obj->serial;
-				$this->fk_serial_type = $obj->fk_serial_type;
-				$this->price = $obj->price;
-				$this->fk_invoice_line = $obj->fk_invoice_line;
-				$this->fk_command_line = $obj->fk_command_line;
-				$this->fk_supplier = $obj->fk_supplier;
+                $this->id = $obj->rowid;
 
-                
+                $this->tms_i = $this->db->jdate($obj->tms_i);
+                $this->tms_o = $this->db->jdate($obj->tms_o);
+                $this->fk_product = $obj->fk_product;
+                $this->fk_entrepot = $obj->fk_entrepot;
+                $this->fk_user_author_i = $obj->fk_user_author_i;
+                $this->fk_user_author_o = $obj->fk_user_author_o;
+                $this->serial = $obj->serial;
+                $this->fk_serial_type = $obj->fk_serial_type;
+                $this->price = $obj->price;
+                $this->fk_invoice_line = $obj->fk_invoice_line;
+                $this->fk_command_line = $obj->fk_command_line;
+                $this->fk_supplier = $obj->fk_supplier;
             }
             $this->db->free($resql);
 
             return 1;
-        }
-        else
-        {
-      	    $this->error="Error ".$this->db->lasterror();
-            dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
+        } else {
+            $this->error = "Error " . $this->db->lasterror();
+            dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
             return -1;
         }
     }
 
-
     /**
      *  Update object into database
      *
-     *  @param	User	$user        User that modify
-     *  @param  int		$notrigger	 0=launch triggers after, 1=disable triggers
-     *  @return int     		   	 <0 if KO, >0 if OK
+     *  @param  User    $user        User that modify
+     *  @param  int     $notrigger   0=launch triggers after, 1=disable triggers
+     *  @return int                  <0 if KO, >0 if OK
      */
-    function update($user=0, $notrigger=0)
+    function update($user = 0, $notrigger = 0)
     {
-    	global $conf, $langs;
-		$error=0;
+        global $conf, $langs;
+        $error = 0;
 
-		// Clean parameters
-        
-		if (isset($this->fk_product)) $this->fk_product=trim($this->fk_product);
-		if (isset($this->fk_entrepot)) $this->fk_entrepot=trim($this->fk_entrepot);
-		if (isset($this->fk_user_author_i)) $this->fk_user_author_i=trim($this->fk_user_author_i);
-		if (isset($this->fk_user_author_o)) $this->fk_user_author_o=trim($this->fk_user_author_o);
-		if (isset($this->serial)) $this->serial=trim($this->serial);
-		if (isset($this->fk_serial_type)) $this->fk_serial_type=trim($this->fk_serial_type);
-		if (isset($this->price)) $this->price=trim($this->price);
-		if (isset($this->fk_invoice_line)) $this->fk_invoice_line=trim($this->fk_invoice_line);
-		if (isset($this->fk_command_line)) $this->fk_command_line=trim($this->fk_command_line);
-		if (isset($this->fk_supplier)) $this->fk_supplier=trim($this->fk_supplier);
+        // Clean parameters
 
-        
+        if (isset($this->fk_product)) $this->fk_product = trim($this->fk_product);
+        if (isset($this->fk_entrepot)) $this->fk_entrepot = trim($this->fk_entrepot);
+        if (isset($this->fk_user_author_i)) $this->fk_user_author_i = trim($this->fk_user_author_i);
+        if (isset($this->fk_user_author_o)) $this->fk_user_author_o = trim($this->fk_user_author_o);
+        if (isset($this->serial)) $this->serial = trim($this->serial);
+        if (isset($this->fk_serial_type)) $this->fk_serial_type = trim($this->fk_serial_type);
+        if (isset($this->price)) $this->price = trim($this->price);
+        if (isset($this->fk_invoice_line)) $this->fk_invoice_line = trim($this->fk_invoice_line);
+        if (isset($this->fk_command_line)) $this->fk_command_line = trim($this->fk_command_line);
+        if (isset($this->fk_supplier)) $this->fk_supplier = trim($this->fk_supplier);
 
-		// Check parameters
-		// Put here code to add control on parameters values
 
+
+        // Check parameters
+        // Put here code to add control on parameters values
         // Update request
-        $sql = "UPDATE ".MAIN_DB_PREFIX."product_stock_det SET";
-        
-		$sql.= " tms_i=".(dol_strlen($this->tms_i)!=0 ? "'".$this->db->idate($this->tms_i)."'" : 'null').",";
-		$sql.= " tms_o=".(dol_strlen($this->tms_o)!=0 ? "'".$this->db->idate($this->tms_o)."'" : 'null').",";
-		$sql.= " fk_product=".(isset($this->fk_product)?$this->fk_product:"null").",";
-		$sql.= " fk_entrepot=".(isset($this->fk_entrepot)?$this->fk_entrepot:"null").",";
-		$sql.= " fk_user_author_i=".(isset($this->fk_user_author_i)?$this->fk_user_author_i:"null").",";
-		$sql.= " fk_user_author_o=".(isset($this->fk_user_author_o)?$this->fk_user_author_o:"null").",";
-		$sql.= " serial=".(isset($this->serial)?"'".$this->db->escape($this->serial)."'":"null").",";
-		$sql.= " fk_serial_type=".(isset($this->fk_serial_type)?$this->fk_serial_type:"null").",";
-		$sql.= " price=".(isset($this->price)?$this->price:"null").",";
-		$sql.= " fk_invoice_line=".(isset($this->fk_invoice_line)?$this->fk_invoice_line:"null").",";
-		$sql.= " fk_command_line=".(isset($this->fk_command_line)?$this->fk_command_line:"null").",";
-		$sql.= " fk_supplier=".(isset($this->fk_supplier)?$this->fk_supplier:"null")."";
+        $sql = "UPDATE " . MAIN_DB_PREFIX . "product_stock_det SET";
 
-        
-        $sql.= " WHERE rowid=".$this->id;
+        $sql.= " tms_i=" . (dol_strlen($this->tms_i) != 0 ? "'" . $this->db->idate($this->tms_i) . "'" : 'null') . ",";
+        $sql.= " tms_o=" . (dol_strlen($this->tms_o) != 0 ? "'" . $this->db->idate($this->tms_o) . "'" : 'null') . ",";
+        $sql.= " fk_product=" . (isset($this->fk_product) ? $this->fk_product : "null") . ",";
+        $sql.= " fk_entrepot=" . (isset($this->fk_entrepot) ? $this->fk_entrepot : "null") . ",";
+        $sql.= " fk_user_author_i=" . (isset($this->fk_user_author_i) ? $this->fk_user_author_i : "null") . ",";
+        $sql.= " fk_user_author_o=" . (isset($this->fk_user_author_o) ? $this->fk_user_author_o : "null") . ",";
+        $sql.= " serial=" . (isset($this->serial) ? "'" . $this->db->escape($this->serial) . "'" : "null") . ",";
+        $sql.= " fk_serial_type=" . (isset($this->fk_serial_type) ? $this->fk_serial_type : "null") . ",";
+        $sql.= " price=" . (isset($this->price) ? $this->price : "null") . ",";
+        $sql.= " fk_invoice_line=" . (isset($this->fk_invoice_line) ? $this->fk_invoice_line : "null") . ",";
+        $sql.= " fk_command_line=" . (isset($this->fk_command_line) ? $this->fk_command_line : "null") . ",";
+        $sql.= " fk_supplier=" . (isset($this->fk_supplier) ? $this->fk_supplier : "null") . "";
 
-		$this->db->begin();
 
-		dol_syslog(get_class($this)."::update sql=".$sql, LOG_DEBUG);
+        $sql.= " WHERE rowid=" . $this->id;
+
+        $this->db->begin();
+
+        dol_syslog(get_class($this) . "::update sql=" . $sql, LOG_DEBUG);
         $resql = $this->db->query($sql);
-    	if (! $resql) { $error++; $this->errors[]="Error ".$this->db->lasterror(); }
+        if ( ! $resql) {
+            $error ++;
+            $this->errors[] = "Error " . $this->db->lasterror();
+        }
 
-		if (! $error)
-		{
-			if (! $notrigger)
-			{
-	            // Uncomment this and change MYOBJECT to your own tag if you
-	            // want this action call a trigger.
-
-	            //// Call triggers
-	            //include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
-	            //$interface=new Interfaces($this->db);
-	            //$result=$interface->run_triggers('MYOBJECT_MODIFY',$this,$user,$langs,$conf);
-	            //if ($result < 0) { $error++; $this->errors=$interface->errors; }
-	            //// End call triggers
-	    	}
-		}
+        if ( ! $error) {
+            if ( ! $notrigger) {
+                // Uncomment this and change MYOBJECT to your own tag if you
+                // want this action call a trigger.
+                //// Call triggers
+                //include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+                //$interface=new Interfaces($this->db);
+                //$result=$interface->run_triggers('MYOBJECT_MODIFY',$this,$user,$langs,$conf);
+                //if ($result < 0) { $error++; $this->errors=$interface->errors; }
+                //// End call triggers
+            }
+        }
 
         // Commit or rollback
-		if ($error)
-		{
-			foreach($this->errors as $errmsg)
-			{
-	            dol_syslog(get_class($this)."::update ".$errmsg, LOG_ERR);
-	            $this->error.=($this->error?', '.$errmsg:$errmsg);
-			}
-			$this->db->rollback();
-			return -1*$error;
-		}
-		else
-		{
-			$this->db->commit();
-			return 1;
-		}
+        if ($error) {
+            foreach ($this->errors as $errmsg) {
+                dol_syslog(get_class($this) . "::update " . $errmsg, LOG_ERR);
+                $this->error.=($this->error ? ', ' . $errmsg : $errmsg);
+            }
+            $this->db->rollback();
+            return -1 * $error;
+        } else {
+            $this->db->commit();
+            return 1;
+        }
     }
 
+    /**
+     *  Delete object in database
+     *
+     *  @param  User    $user       User that delete
+     *  @param  int     $notrigger  0=launch triggers after, 1=disable triggers
+     *  @return int                  <0 if KO, >0 if OK
+     */
+    function delete($user, $notrigger = 0)
+    {
+        global $conf, $langs;
+        $error = 0;
 
- 	/**
-	 *  Delete object in database
-	 *
-     *	@param  User	$user        User that delete
-     *  @param  int		$notrigger	 0=launch triggers after, 1=disable triggers
-	 *  @return	int					 <0 if KO, >0 if OK
-	 */
-	function delete($user, $notrigger=0)
-	{
-		global $conf, $langs;
-		$error=0;
+        $this->db->begin();
 
-		$this->db->begin();
+        if ( ! $error) {
+            if ( ! $notrigger) {
+                // Uncomment this and change MYOBJECT to your own tag if you
+                // want this action call a trigger.
+                //// Call triggers
+                //include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+                //$interface=new Interfaces($this->db);
+                //$result=$interface->run_triggers('MYOBJECT_DELETE',$this,$user,$langs,$conf);
+                //if ($result < 0) { $error++; $this->errors=$interface->errors; }
+                //// End call triggers
+            }
+        }
 
-		if (! $error)
-		{
-			if (! $notrigger)
-			{
-				// Uncomment this and change MYOBJECT to your own tag if you
-		        // want this action call a trigger.
+        if ( ! $error) {
+            $sql = "DELETE FROM " . MAIN_DB_PREFIX . "product_stock_det";
+            $sql.= " WHERE rowid=" . $this->id;
 
-		        //// Call triggers
-		        //include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
-		        //$interface=new Interfaces($this->db);
-		        //$result=$interface->run_triggers('MYOBJECT_DELETE',$this,$user,$langs,$conf);
-		        //if ($result < 0) { $error++; $this->errors=$interface->errors; }
-		        //// End call triggers
-			}
-		}
-
-		if (! $error)
-		{
-    		$sql = "DELETE FROM ".MAIN_DB_PREFIX."product_stock_det";
-    		$sql.= " WHERE rowid=".$this->id;
-
-    		dol_syslog(get_class($this)."::delete sql=".$sql);
-    		$resql = $this->db->query($sql);
-        	if (! $resql) { $error++; $this->errors[]="Error ".$this->db->lasterror(); }
-		}
+            dol_syslog(get_class($this) . "::delete sql=" . $sql);
+            $resql = $this->db->query($sql);
+            if ( ! $resql) {
+                $error ++;
+                $this->errors[] = "Error " . $this->db->lasterror();
+            }
+        }
 
         // Commit or rollback
-		if ($error)
-		{
-			foreach($this->errors as $errmsg)
-			{
-	            dol_syslog(get_class($this)."::delete ".$errmsg, LOG_ERR);
-	            $this->error.=($this->error?', '.$errmsg:$errmsg);
-			}
-			$this->db->rollback();
-			return -1*$error;
-		}
-		else
-		{
-			$this->db->commit();
-			return 1;
-		}
-	}
-
-
-
-	/**
-	 *	Load an object from its id and create a new one in database
-	 *
-	 *	@param	int		$fromid     Id of object to clone
-	 * 	@return	int					New id of clone
-	 */
-	function createFromClone($fromid)
-	{
-		global $user,$langs;
-
-		$error=0;
-
-		$object=new Productstockdet($this->db);
-
-		$this->db->begin();
-
-		// Load source object
-		$object->fetch($fromid);
-		$object->id=0;
-		$object->statut=0;
-
-		// Clear fields
-		// ...
-
-		// Create clone
-		$result=$object->create($user);
-
-		// Other options
-		if ($result < 0)
-		{
-			$this->error=$object->error;
-			$error++;
-		}
-
-		if (! $error)
-		{
-
-
-		}
-
-		// End
-		if (! $error)
-		{
-			$this->db->commit();
-			return $object->id;
-		}
-		else
-		{
-			$this->db->rollback();
-			return -1;
-		}
-	}
-
-
-	/**
-	 *	Initialise object with example values
-	 *	Id must be 0 if object instance is a specimen
-	 *
-	 *	@return	void
-	 */
-	function initAsSpecimen()
-	{
-		$this->id=0;
-		
-		$this->tms_i='';
-		$this->tms_o='';
-		$this->fk_product='';
-		$this->fk_entrepot='';
-		$this->fk_user_author_i='';
-		$this->fk_user_author_o='';
-		$this->serial='';
-		$this->fk_serial_type='';
-		$this->price='';
-		$this->fk_invoice_line='';
-		$this->fk_command_line='';
-		$this->fk_supplier='';
-
-		
-	}
-    
-    function getSerialTypeLabel(){
-      $sql = 'select label from '.MAIN_DB_PREFIX.'c_serial_type where rowid = '.$this->fk_serial_type;
-      $resql = $this->db->query($sql);
-      if($resql){
-        $label = '';
-        if($this->db->num_rows($resql) > 0){
-          $res = $this->db->fetch_object($resql);
-          $label = $res->label;
+        if ($error) {
+            foreach ($this->errors as $errmsg) {
+                dol_syslog(get_class($this) . "::delete " . $errmsg, LOG_ERR);
+                $this->error.=($this->error ? ', ' . $errmsg : $errmsg);
+            }
+            $this->db->rollback();
+            return -1 * $error;
+        } else {
+            $this->db->commit();
+            return 1;
         }
-        return $label;
-      }
-      else{
-        $this->error="Error ".$this->db->lasterror();
-        dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
-        return -1;
-      }
     }
-    
-    function selectSerialType($selected, $htmlname){
-      $return = '';
-      $sql = 'select rowid, label from '.MAIN_DB_PREFIX.'c_serial_type';
-      $resql = $this->db->query($sql);
-      if($resql && $this->db->num_rows($resql) > 0){
-        $return = '<select class="flat" name="'.$htmlname.'">';
-        $return .= '<option value="0" selected="selected"></option>';
-        while($obj = $this->db->fetch_object($resql)){
-          $option = '<option value="'.$obj->rowid.'" ';
-          if($obj->rowid == $selected) $option .= "selected=selected";
-          $option .= '>'.$obj->label.'</option>';
-          $return .= $option;
+
+    /**
+     *  Load an object from its id and create a new one in database
+     *
+     *  @param  int     $fromid     Id of object to clone
+     *  @return int                 New id of clone
+     */
+    function createFromClone($fromid)
+    {
+        global $user, $langs;
+
+        $error = 0;
+
+        $object = new Productstockdet($this->db);
+
+        $this->db->begin();
+
+        // Load source object
+        $object->fetch($fromid);
+        $object->id = 0;
+        $object->statut = 0;
+
+        // Clear fields
+        // ...
+        // Create clone
+        $result = $object->create($user);
+
+        // Other options
+        if ($result < 0) {
+            $this->error = $object->error;
+            $error ++;
         }
-        $return .= '</select>';
-        return $return;
-      }
-      else{
-        $this->error="Error ".$this->db->lasterror();
-        dol_syslog(get_class($this)."::fetch ".$this->error, LOG_ERR);
-        return -1;
-      }
+
+        if ( ! $error) {
+
+        }
+
+        // End
+        if ( ! $error) {
+            $this->db->commit();
+            return $object->id;
+        } else {
+            $this->db->rollback();
+            return -1;
+        }
+    }
+
+    /**
+     *  Initialise object with example values
+     *  Id must be 0 if object instance is a specimen
+     *
+     *  @return void
+     */
+    function initAsSpecimen()
+    {
+        $this->id = 0;
+
+        $this->tms_i = '';
+        $this->tms_o = '';
+        $this->fk_product = '';
+        $this->fk_entrepot = '';
+        $this->fk_user_author_i = '';
+        $this->fk_user_author_o = '';
+        $this->serial = '';
+        $this->fk_serial_type = '';
+        $this->price = '';
+        $this->fk_invoice_line = '';
+        $this->fk_command_line = '';
+        $this->fk_supplier = '';
+    }
+
+    function getSerialTypeLabel()
+    {
+        $sql = 'select label from ' . MAIN_DB_PREFIX . 'c_serial_type where rowid = ' . $this->fk_serial_type;
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            $label = '';
+            if ($this->db->num_rows($resql) > 0) {
+                $res = $this->db->fetch_object($resql);
+                $label = $res->label;
+            }
+            return $label;
+        } else {
+            $this->error = "Error " . $this->db->lasterror();
+            dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
+            return -1;
+        }
+    }
+
+    function selectSerialType($selected, $htmlname)
+    {
+        $return = '';
+        $sql = 'select rowid, label from ' . MAIN_DB_PREFIX . 'c_serial_type';
+        $resql = $this->db->query($sql);
+        if ($resql && $this->db->num_rows($resql) > 0) {
+            $return = '<select class="flat" name="' . $htmlname . '">';
+            $return .= '<option value="0" selected="selected"></option>';
+            while ($obj = $this->db->fetch_object($resql)) {
+                $option = '<option value="' . $obj->rowid . '" ';
+                if ($obj->rowid == $selected) $option .= "selected=selected";
+                $option .= '>' . $obj->label . '</option>';
+                $return .= $option;
+            }
+            $return .= '</select>';
+            return $return;
+        }
+        else {
+            $this->error = "Error " . $this->db->lasterror();
+            dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
+            return -1;
+        }
     }
 
 }
+
 ?>
