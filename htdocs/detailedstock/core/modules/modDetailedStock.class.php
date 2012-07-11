@@ -67,22 +67,24 @@ class modDetailedStock extends DolibarrModules
         // If file is in module/img directory under name object_pictovalue.png, use this->picto='pictovalue@module'
         $this->picto = 'generic';
 
-        // Defined all module parts (triggers, login, substitutions, menus, css, etc...)
-        // for default path (eg: /detailedstock/core/xxxxx) (0=disable, 1=enable)
-        // for specific path of parts (eg: /detailedstock/core/modules/barcode)
-        // for specific css file (eg: /detailedstock/css/detailedStock.css.php)
-        //$this->module_parts = array(
-        //                        	'triggers' => 0,                                 // Set this to 1 if module has its own trigger directory
-        //							'login' => 0,                                    // Set this to 1 if module has its own login method directory
-        //							'substitutions' => 0,                            // Set this to 1 if module has its own substitution function file
-        //							'menus' => 0,                                    // Set this to 1 if module has its own menus handler directory
-        //							'barcode' => 0,                                  // Set this to 1 if module has its own barcode directory
-        //							'models' => 0,                                   // Set this to 1 if module has its own models directory
-        //							'css' => '/detailedStock/css/detailedStock.css.php',       // Set this to relative path of css if module has its own css file
-        //							'hooks' => array('hookcontext1','hookcontext2')  // Set here all hooks context managed by module
-        //							'workflow' => array('order' => array('WORKFLOW_ORDER_AUTOCREATE_INVOICE')) // Set here all workflow context managed by module
-        //                        );
-        $this->module_parts = array();
+		// Defined all module parts (triggers, login, substitutions, menus, css, etc...)
+		// for default path (eg: /detailedstock/core/xxxxx) (0=disable, 1=enable)
+		// for specific path of parts (eg: /detailedstock/core/modules/barcode)
+		// for specific css file (eg: /detailedstock/css/detailedStock.css.php)
+		//$this->module_parts = array(
+		//                        	'triggers' => 0,                                 // Set this to 1 if module has its own trigger directory
+		//							'login' => 0,                                    // Set this to 1 if module has its own login method directory
+		//							'substitutions' => 0,                            // Set this to 1 if module has its own substitution function file
+		//							'menus' => 0,                                    // Set this to 1 if module has its own menus handler directory
+		//							'barcode' => 0,                                  // Set this to 1 if module has its own barcode directory
+		//							'models' => 0,                                   // Set this to 1 if module has its own models directory
+		//							'css' => '/detailedStock/css/detailedStock.css.php',       // Set this to relative path of css if module has its own css file
+		//							'hooks' => array('hookcontext1','hookcontext2')  // Set here all hooks context managed by module
+		//							'workflow' => array('order' => array('WORKFLOW_ORDER_AUTOCREATE_INVOICE')) // Set here all workflow context managed by module
+		//                        );
+		$this->module_parts = array(
+            'hooks' => array('ordersuppliercard', 'invoicecard', 'productcard')
+        );
 
         // Data directories to create when module is enabled.
         // Example: this->dirs = array("/detailedStock/temp");
@@ -91,12 +93,12 @@ class modDetailedStock extends DolibarrModules
         // Config pages. Put here list of php page, stored into detailedStock/admin directory, to use to setup module.
         $this->config_page_url = array("detailedStockConfiguration.php@detailedstock");
 
-        // Dependencies
-        $this->depends = array();  // List of modules id that must be enabled if this module is enabled
-        $this->requiredby = array(); // List of modules id to disable if this one is disabled
-        $this->phpmin = array(5, 0);     // Minimum version of PHP required by module
-        $this->need_dolibarr_version = array(3, 0); // Minimum version of Dolibarr required by module
-        $this->langfiles = array("langfiles@detailedstock");
+		// Dependencies
+		$this->depends = array("modProduct", "modFacture", "modFournisseur", "modStock");		// List of modules id that must be enabled if this module is enabled
+		$this->requiredby = array("modWholesalerRemuneration");	// List of modules id to disable if this one is disabled
+		$this->phpmin = array(5,0);					// Minimum version of PHP required by module
+		$this->need_dolibarr_version = array(3,0);	// Minimum version of Dolibarr required by module
+		$this->langfiles = array("detailedStock@detailedstock");
 
         // Constants
         // List of particular constants to add when module is enabled (key, 'chaine', value, desc, visible, 'current' or 'allentities', deleteonunactive)
@@ -125,7 +127,7 @@ class modDetailedStock extends DolibarrModules
         // 'group'            to add a tab in group view
         // 'contact'          to add a tab in contact view
         // 'categories_x'	  to add a tab in category view (replace 'x' by type of category (0=product, 1=supplier, 2=customer, 3=member)
-        $this->tabs = array();
+        $this->tabs = array('product:+detail:DetailedStock:detailedStock@detailedstock:/detailedstock/detail.php?id=__ID__');
 
         // Dictionnaries
         if (!isset($conf->detailedStock->enabled)) $conf->detailedStock->enabled = 0;
