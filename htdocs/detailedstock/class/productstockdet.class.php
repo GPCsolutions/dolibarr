@@ -34,31 +34,31 @@ require_once(DOL_DOCUMENT_ROOT . "/core/class/commonobject.class.php");
 class Productstockdet extends CommonObject
 {
 
-    var $db;                                //!< To store db handler
-    var $error;                             //!< To return error code (or message)
-    var $errors = array();                  //!< To return several error codes (or messages)
+    public $db;                                //!< To store db handler
+    public $error;                             //!< To return error code (or message)
+    public $errors = array();                  //!< To return several error codes (or messages)
     //var $element='productstockdet';       //!< Id that identify managed objects
     //var $table_element='productstockdet'; //!< Name of table without prefix where object is stored
-    var $id;
-    var $tms_i = '';
-    var $tms_o = '';
-    var $fk_product;
-    var $fk_entrepot;
-    var $fk_user_author_i;
-    var $fk_user_author_o;
-    var $serial;
-    var $fk_serial_type;
-    var $price;
-    var $fk_invoice_line;
-    var $fk_command_line;
-    var $fk_supplier;
+    public  $id;
+    public $tms_i = '';
+    public $tms_o = '';
+    public $fk_product;
+    public $fk_entrepot;
+    public $fk_user_author_i;
+    public $fk_user_author_o;
+    public $serial;
+    public $fk_serial_type;
+    public $price;
+    public $fk_invoice_line;
+    public $fk_command_line;
+    public $fk_supplier;
 
     /**
      *  Constructor
      *
      *  @param  DoliDb      $db      Database handler
      */
-    function __construct($db)
+    public function __construct($db)
     {
         $this->db = $db;
         return 1;
@@ -71,7 +71,7 @@ class Productstockdet extends CommonObject
      *  @param  int     $notrigger   0=launch triggers after, 1=disable triggers
      *  @return int                  <0 if KO, Id of created object if OK
      */
-    function create($user, $notrigger = 0)
+    public function create($user, $notrigger = 0)
     {
         global $conf, $langs;
         $error = 0;
@@ -172,7 +172,7 @@ class Productstockdet extends CommonObject
      *  @param  int     $id    Id object
      *  @return int             <0 if KO, >0 if OK
      */
-    function fetch($id)
+    public function fetch($id)
     {
         global $langs;
         $sql = "SELECT";
@@ -233,7 +233,7 @@ class Productstockdet extends CommonObject
      *  @param  int     $notrigger   0=launch triggers after, 1=disable triggers
      *  @return int                  <0 if KO, >0 if OK
      */
-    function update($user = 0, $notrigger = 0)
+    public function update($user = 0, $notrigger = 0)
     {
         global $conf, $langs;
         $error = 0;
@@ -317,7 +317,7 @@ class Productstockdet extends CommonObject
      *  @param  int     $notrigger  0=launch triggers after, 1=disable triggers
      *  @return int                  <0 if KO, >0 if OK
      */
-    function delete($user, $notrigger = 0)
+    public function delete($user, $notrigger = 0)
     {
         global $conf, $langs;
         $error = 0;
@@ -369,7 +369,7 @@ class Productstockdet extends CommonObject
      *  @param  int     $fromid     Id of object to clone
      *  @return int                 New id of clone
      */
-    function createFromClone($fromid)
+    public function createFromClone($fromid)
     {
         global $user, $langs;
 
@@ -415,7 +415,7 @@ class Productstockdet extends CommonObject
      *
      *  @return void
      */
-    function initAsSpecimen()
+    public function initAsSpecimen()
     {
         $this->id = 0;
 
@@ -433,7 +433,7 @@ class Productstockdet extends CommonObject
         $this->fk_supplier = '';
     }
 
-    function getSerialTypeLabel()
+    public function getSerialTypeLabel()
     {
         $sql = 'select label from ' . MAIN_DB_PREFIX . 'c_serial_type where rowid = ' . $this->fk_serial_type;
         $resql = $this->db->query($sql);
@@ -451,7 +451,7 @@ class Productstockdet extends CommonObject
         }
     }
 
-    function selectSerialType($selected, $htmlname)
+    public function selectSerialType($selected, $htmlname)
     {
         $return = '';
         $sql = 'select rowid, label from ' . MAIN_DB_PREFIX . 'c_serial_type';

@@ -37,7 +37,7 @@ class modDetailedStock extends DolibarrModules
      *
      *   @param      DoliDB     $db      Database handler
      */
-    function modDetailedStock($db)
+    public function modDetailedStock($db)
     {
         global $langs, $conf;
 
@@ -245,7 +245,7 @@ class modDetailedStock extends DolibarrModules
      *      @param      string  $options    Options when enabling module ('', 'noboxes')
      *      @return     int                 1 if OK, 0 if KO
      */
-    function init($options = '')
+    public function init($options = '')
     {
         $sql = array();
 
@@ -262,7 +262,7 @@ class modDetailedStock extends DolibarrModules
      *      @param      string  $options    Options when enabling module ('', 'noboxes')
      *      @return     int                 1 if OK, 0 if KO
      */
-    function remove($options = '')
+    public function remove($options = '')
     {
         $sql = array();
 
@@ -277,7 +277,7 @@ class modDetailedStock extends DolibarrModules
      *
      *      @return     int     <=0 if KO, >0 if OK
      */
-    function load_tables()
+    public function load_tables()
     {
         return $this->_load_tables('/detailedstock/sql/');
     }
