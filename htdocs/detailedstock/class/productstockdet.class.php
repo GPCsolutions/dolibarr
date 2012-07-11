@@ -433,6 +433,10 @@ class Productstockdet extends CommonObject
         $this->fk_supplier = '';
     }
 
+    /**
+     *Returns the label of the associated serial type
+     * @return string $label 
+     */
     public function getSerialTypeLabel(){
     $label = '';
     if ($this->fk_serial_type) {
@@ -453,6 +457,12 @@ class Productstockdet extends CommonObject
     return $label;
   }
 
+  /**
+   * Creates an html select element to choose which serial type to use
+   * @param int $selected  id of the selected option
+   * @param string $htmlname  the select html name
+   * @return string an html select
+   */
     public function selectSerialType($selected, $htmlname)
     {
         $return = '';
@@ -484,6 +494,7 @@ class Productstockdet extends CommonObject
  * If fk_product is not 0, we do not use cache
  *
  * @param	int		$fk_product		Add quantity of stock in label for product with id fk_product. Nothing if 0.
+ * @param   string  $filter         Additional filter option
  * @return  int  		    		Nb of loaded lines, 0 if already loaded, <0 if KO
  */
   function loadWarehouses($fk_product = 0, $filter='')
@@ -502,7 +513,8 @@ class Productstockdet extends CommonObject
     }
     $sql.= " WHERE e.entity = " . $conf->entity;
     $sql.= " AND e.statut = 1";
-    $sql.= " AND ".$filter;
+    //if a filter is defined, use it
+    if(!empty($filter))$sql.= " AND ".$filter;
     $sql.= " ORDER BY e.label";
 
     dol_syslog(get_class($this) . '::loadWarehouses sql=' . $sql, LOG_DEBUG);
@@ -526,6 +538,19 @@ class Productstockdet extends CommonObject
     }
   }
 
+
+  /**
+   * Creates an html select element to choose a warehouse
+   * @global $langs
+   * @global User $user
+   * @param int $selected       id of the selected option
+   * @param string $htmlname    html name of the select
+   * @param string $filter      optional filter
+   * @param int $empty
+   * @param int $disabled
+   * @param int $fk_product     product id
+   * @return string   html select element
+   */
 function selectWarehouses($selected = '', $htmlname = 'idwarehouse', $filter = '', $empty = 0, $disabled = 0, $fk_product = 0){
     global $langs, $user;
 
