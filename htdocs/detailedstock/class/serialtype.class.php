@@ -366,19 +366,16 @@ class Serialtype extends CommonObject
   }
 
   /**
-   * Checks the IMEI of a mobile phone using the Luhn algorithm
-   * @param $imei IMEI to validate
+   * Checks the serial using the Luhn algorithm
+   * @param $serial serial to validate
    */
-  function is_IMEI_valid($imei)
+  function Luhn_valid($serial, $len)
   {
-    if (!ctype_digit($imei)) return false;
-    $len = strlen($imei);
-    if ($len != 15) return false;
-
+    if (!ctype_digit($serial)) return false;
     for ($ii = 1, $sum = 0; $ii < $len; $ii++) {
       if ($ii % 2 == 0) $prod = 2;
       else $prod = 1;
-      $num = $prod * $imei[$ii - 1];
+      $num = $prod * $serial[$ii - 1];
       if ($num > 9) {
         $numstr = strval($num);
         $sum += $numstr[0] + $numstr[1];
@@ -388,7 +385,7 @@ class Serialtype extends CommonObject
     $sumlast = intval(10 * (($sum / 10) - floor($sum / 10))); //The last digit of $sum
     $dif = (10 - $sumlast);
     $diflast = intval(10 * (($dif / 10) - floor($dif / 10))); //The last digit of $dif
-    $CD = intval($imei[$len - 1]); //check digit
+    $CD = intval($serial[$len - 1]); //check digit
 
     /* ugly
       if($diflast == $CD) return true;
@@ -404,8 +401,18 @@ class Serialtype extends CommonObject
    */
   function validate($serial)
   {
-    if ($this->algo_valid == 1) return $this->is_IMEI_valid($serial);
+    //$this->algo_valid =1 ==>validate using the Luhn algorithm
+    if ($this->algo_valid == 1) {
+      $len = strlen($serial);
+      if(($this->code =='imei' && $len == 15) || ($this->code == 'iccid' && ($len == 19 || $len == 20))){
+        return $this->Luhn_valid($serial, $len);
+      }
+      else{
+        return false;
+      }
+    }
   }
+
 
 }
 
