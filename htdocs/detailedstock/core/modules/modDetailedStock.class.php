@@ -83,7 +83,7 @@ class modDetailedStock extends DolibarrModules
         //      'workflow' => array('order' => array('WORKFLOW_ORDER_AUTOCREATE_INVOICE'))  // Set here all workflow context managed by module
         //                        );
         $this->module_parts = array(
-            'hooks' => array('ordersuppliercard', 'invoicecard', 'productcard')
+            'triggers' => 1
         );
 
         // Data directories to create when module is enabled.
