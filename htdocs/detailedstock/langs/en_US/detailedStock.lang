@@ -19,3 +19,5 @@ SerialType=Serial number type
 SerialNumber=Serial number
 UndetailledStock=Undetailled stock
 InvalidCode=Invalid serial number
+InputInfos=Added by
+OutputInfos=Removed by

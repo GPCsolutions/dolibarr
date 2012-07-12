@@ -25,6 +25,7 @@
  */
 // Put here all includes required by your class file
 require_once(DOL_DOCUMENT_ROOT . "/core/class/commonobject.class.php");
+require_once(DOL_DOCUMENT_ROOT . "/user/class/user.class.php");
 //require_once(DOL_DOCUMENT_ROOT."/societe/class/societe.class.php");
 //require_once(DOL_DOCUMENT_ROOT."/product/class/product.class.php");
 
@@ -38,7 +39,7 @@ class Productstockdet extends CommonObject
     public $error;                             //!< To return error code (or message)
     public $errors = array();                  //!< To return several error codes (or messages)
     //var $element='productstockdet';       //!< Id that identify managed objects
-    //var $table_element='productstockdet'; //!< Name of table without prefix where object is stored
+    public $table_element='product_stock_det'; //!< Name of table without prefix where object is stored
     public  $id;
     public $tms_i = '';
     public $tms_o = '';
@@ -551,7 +552,9 @@ class Productstockdet extends CommonObject
    * @param int $fk_product     product id
    * @return string   html select element
    */
-function selectWarehouses($selected = '', $htmlname = 'idwarehouse', $filter = '', $empty = 0, $disabled = 0, $fk_product = 0){
+  function selectWarehouses($selected = '', $htmlname = 'idwarehouse', $filter = '', $empty = 0, $disabled = 0,
+      $fk_product = 0)
+  {
     global $langs, $user;
 
     dol_syslog(get_class($this) . "::selectWarehouses $selected, $htmlname, $filter, $empty, $disabled, $fk_product",
@@ -567,13 +570,32 @@ function selectWarehouses($selected = '', $htmlname = 'idwarehouse', $filter = '
       if ($selected == $id) $out.=' selected="selected"';
       $out.='>';
       $out.=$arraytypes['label'];
-      if ($fk_product) $out.=' (' . $langs->trans("Stock") . ': ' . ($arraytypes['stock'] > 0 ? $arraytypes['stock'] : '?') . ')';
+      if ($fk_product)
+          $out.=' (' . $langs->trans("Stock") . ': ' . ($arraytypes['stock'] > 0 ? $arraytypes['stock'] : '?') . ')';
       $out.='</option>';
     }
     $out.='</select>';
     if ($disabled) $out.='<input type="hidden" name="' . $htmlname . '" value="' . $selected . '">';
 
     return $out;
+  }
+
+  function getInfos($subject){
+    $date ='';
+    $author='';
+    $doluser = new User($this->db);
+    if($subject == 'input'){
+      $date = date('d/m/y',$this->tms_i);
+      $id = $this->fk_user_author_i;
+    }
+    else{
+      $date = $this->tms_o;
+      $id = $this->fk_user_author_o;
+    }
+    $doluser->fetch($id);
+    $author = $doluser->getFullName($langs, 0, 1);
+    $infos = $author.' ('.$date.')';
+    return $infos;
   }
 
 }

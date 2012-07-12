@@ -228,7 +228,8 @@ if ($_GET["id"] || $_GET["ref"]) {
           $det = new Productstockdet($db);
           $res = $det->fetch($obj->rowid);
           if ($res) {
-            print '<tr><td align=>' . $det->id . '</td>';
+            $detId = '<a href="/detailedstock/fiche.php?id='.$det->id.'">'.$det->id.'</a>';
+            print '<tr><td align=>' . $detId . '</td>';
             print '<td align="right">' . $form->textwithpicto($det->serial, $det->getSerialTypeLabel(), 1) . '</td>';
             $soc = new Societe($db);
             $infosoc = $soc->fetch($det->fk_supplier);

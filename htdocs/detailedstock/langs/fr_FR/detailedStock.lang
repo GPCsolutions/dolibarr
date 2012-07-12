@@ -19,3 +19,5 @@ SerialType=Type de N° de série
 SerialNumber=N° de série
 UndetailledStock=Stock non détaillé
 InvalidCode=N° de série invalide
+InputInfos=Ajouté par
+OutputInfos=Retiré par
