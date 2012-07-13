@@ -51,7 +51,7 @@ class Productstockdet extends CommonObject
     public $fk_serial_type;
     public $price;
     public $fk_invoice_line;
-    public $fk_command_line;
+    public $fk_dispatch_line;
     public $fk_supplier;
 
     /**
@@ -87,7 +87,7 @@ class Productstockdet extends CommonObject
         if (isset($this->fk_serial_type)) $this->fk_serial_type = trim($this->fk_serial_type);
         if (isset($this->price)) $this->price = trim($this->price);
         if (isset($this->fk_invoice_line)) $this->fk_invoice_line = trim($this->fk_invoice_line);
-        if (isset($this->fk_command_line)) $this->fk_command_line = trim($this->fk_command_line);
+        if (isset($this->fk_dispatch_line)) $this->fk_dispatch_line = trim($this->fk_dispatch_line);
         if (isset($this->fk_supplier)) $this->fk_supplier = trim($this->fk_supplier);
 
 
@@ -107,7 +107,7 @@ class Productstockdet extends CommonObject
         $sql.= "fk_serial_type,";
         $sql.= "price,";
         $sql.= "fk_invoice_line,";
-        $sql.= "fk_command_line,";
+        $sql.= "fk_dispatch_line,";
         $sql.= "fk_supplier";
 
 
@@ -123,7 +123,7 @@ class Productstockdet extends CommonObject
         $sql.= " " . ( ! isset($this->fk_serial_type) ? 'NULL' : "'" . $this->fk_serial_type . "'") . ",";
         $sql.= " " . ( ! isset($this->price) ? 'NULL' : "'" . $this->price . "'") . ",";
         $sql.= " " . ( ! isset($this->fk_invoice_line) ? 'NULL' : "'" . $this->fk_invoice_line . "'") . ",";
-        $sql.= " " . ( ! isset($this->fk_command_line) ? 'NULL' : "'" . $this->fk_command_line . "'") . ",";
+        $sql.= " " . ( ! isset($this->fk_dispatch_line) ? 'NULL' : "'" . $this->fk_dispatch_line . "'") . ",";
         $sql.= " " . ( ! isset($this->fk_supplier) ? 'NULL' : "'" . $this->fk_supplier . "'") . "";
 
 
@@ -189,7 +189,7 @@ class Productstockdet extends CommonObject
         $sql.= " t.fk_serial_type,";
         $sql.= " t.price,";
         $sql.= " t.fk_invoice_line,";
-        $sql.= " t.fk_command_line,";
+        $sql.= " t.fk_dispatch_line,";
         $sql.= " t.fk_supplier";
 
 
@@ -214,7 +214,7 @@ class Productstockdet extends CommonObject
                 $this->fk_serial_type = $obj->fk_serial_type;
                 $this->price = $obj->price;
                 $this->fk_invoice_line = $obj->fk_invoice_line;
-                $this->fk_command_line = $obj->fk_command_line;
+                $this->fk_dispatch_line = $obj->fk_dispatch_line;
                 $this->fk_supplier = $obj->fk_supplier;
             }
             $this->db->free($resql);
@@ -249,7 +249,7 @@ class Productstockdet extends CommonObject
         if (isset($this->fk_serial_type)) $this->fk_serial_type = trim($this->fk_serial_type);
         if (isset($this->price)) $this->price = trim($this->price);
         if (isset($this->fk_invoice_line)) $this->fk_invoice_line = trim($this->fk_invoice_line);
-        if (isset($this->fk_command_line)) $this->fk_command_line = trim($this->fk_command_line);
+        if (isset($this->fk_dispatch_line)) $this->fk_dispatch_line = trim($this->fk_dispatch_line);
         if (isset($this->fk_supplier)) $this->fk_supplier = trim($this->fk_supplier);
 
 
@@ -269,7 +269,7 @@ class Productstockdet extends CommonObject
         $sql.= " fk_serial_type=" . (isset($this->fk_serial_type) ? $this->fk_serial_type : "null") . ",";
         $sql.= " price=" . (isset($this->price) ? $this->price : "null") . ",";
         $sql.= " fk_invoice_line=" . (isset($this->fk_invoice_line) ? $this->fk_invoice_line : "null") . ",";
-        $sql.= " fk_command_line=" . (isset($this->fk_command_line) ? $this->fk_command_line : "null") . ",";
+        $sql.= " fk_dispatch_line=" . (isset($this->fk_dispatch_line) ? $this->fk_dispatch_line : "null") . ",";
         $sql.= " fk_supplier=" . (isset($this->fk_supplier) ? $this->fk_supplier : "null") . "";
 
 
@@ -430,7 +430,7 @@ class Productstockdet extends CommonObject
         $this->fk_serial_type = '';
         $this->price = '';
         $this->fk_invoice_line = '';
-        $this->fk_command_line = '';
+        $this->fk_dispatch_line = '';
         $this->fk_supplier = '';
     }
 
@@ -596,6 +596,19 @@ class Productstockdet extends CommonObject
     $author = $doluser->getFullName($langs, 0, 1);
     $infos = $author.' ('.$date.')';
     return $infos;
+  }
+
+  function exists($fk_dispatch_line){
+    $sql = 'select rowid from '.MAIN_DB_PREFIX.'product_stock_det where fk_dispatch_line = '.$fk_dispatch_line;
+    $resql = $this->db->query($sql);
+    if($resql){
+      return $this->db->num_rows($resql);
+    }
+    else{
+      $this->error = "Error " . $this->db->lasterror();
+      dol_syslog(get_class($this) . "::exists " . $this->error, LOG_ERR);
+      return -1;
+    }
   }
 
 }

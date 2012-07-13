@@ -26,6 +26,6 @@ CREATE TABLE IF NOT EXISTS llx_product_stock_det (
     fk_serial_type integer NULL ,
     price DOUBLE NULL ,
     fk_invoice_line integer NULL,
-    fk_command_line integer NULL,
+    fk_dispatch_line integer NULL,
     fk_supplier integer NOT NULL)
 ENGINE = innodb;

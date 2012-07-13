@@ -61,11 +61,10 @@ $mesg='';
 /*
  * Actions
  */
-if ($_POST["action"] ==	'dispatch' && $user->rights->fournisseur->commande->receptionner)
+if ($_POST["action"] =='dispatch' && $user->rights->fournisseur->commande->receptionner)
 {
 	$commande = new CommandeFournisseur($db);
 	$commande->fetch($_GET["id"]);
-
 	foreach($_POST as $key => $value)
 	{
 		if ( preg_match('/^product_([0-9]+)$/i', $key, $reg) )
@@ -103,7 +102,7 @@ if ($_POST["action"] ==	'dispatch' && $user->rights->fournisseur->commande->rece
 
 llxHeader('',$langs->trans("OrderCard"),"CommandeFournisseur");
 
-$form =	new Form($db);
+$form =new Form($db);
 $warehouse_static = new Entrepot($db);
 
 $now=dol_now();
@@ -350,6 +349,8 @@ if ($id > 0 || ! empty($ref))
 				print '<tr class="liste_titre">';
 				print '<td>'.$langs->trans("Description").'</td>';
 				print '<td align="right">'.$langs->trans("QtyDispatched").'</td>';
+                //TODO HOOK
+                print '<td>&nbsp;</td>';
 				print '<td align="right">'.$langs->trans("Warehouse").'</td>';
 				print "</tr>\n";
 
@@ -365,6 +366,19 @@ if ($id > 0 || ! empty($ref))
 					print "</td>\n";
 
 					print '<td align="right">'.$objp->qty.'</td>';
+                    //TODO: CPT HOOK
+                    require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
+                    $det = new Productstockdet($db);
+                    if(!$det->exists($objp->rowid) <= 0){
+                      print '<form method="post" action="/detailedstock/ventil.php?id='.$objp->rowid.'">';
+                      print '<input type="hidden" name="action" value="add"/>';
+                    }
+                    print '<td align="right">';
+                    if($det->exists($objp->rowid) <= 0)
+                      print '<input type="submit" name="detail" value="detail"/>';
+                    print '</td>';
+                    if(!$det->exists($objp->rowid) <= 0)
+                      print '</form>';
 					print '<td align="right">';
 					$warehouse_static->id=$objp->warehouse_id;
 					$warehouse_static->libelle=$objp->entrepot;
