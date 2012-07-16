@@ -29,5 +29,5 @@ ALTER TABLE llx_product_stock_det ADD CONSTRAINT fk_product_stock_det_fk_product
 ALTER TABLE llx_product_stock_det ADD CONSTRAINT fk_product_stock_det_fk_entrepot FOREIGN KEY(fk_entrepot) REFERENCES llx_entrepot (rowid);
 ALTER TABLE llx_product_stock_det ADD CONSTRAINT fk_product_stock_det_fk_user_author_i FOREIGN KEY(fk_user_author_i) REFERENCES llx_user (rowid);
 ALTER TABLE llx_product_stock_det ADD CONSTRAINT fk_product_stock_det_fk_user_author_o FOREIGN KEY(fk_user_author_o) REFERENCES llx_user (rowid);
-ALTER TABLE llx_product_stock_det ADD CONSTRAINT fk_product_stock_det_fk_dispatch_line FOREIGN KEY(fk_dispatch_line) REFERENCES llx_commandedet (rowid);
+ALTER TABLE llx_product_stock_det ADD CONSTRAINT fk_product_stock_det_fk_dispatch_line FOREIGN KEY(fk_dispatch_line) REFERENCES llx_commande_fournisseur_dispatch (rowid);
 ALTER TABLE llx_product_stock_det ADD CONSTRAINT fk_product_stock_det_fk_serial_type FOREIGN KEY(fk_serial_type) REFERENCES llx_c_serial_type (rowid);

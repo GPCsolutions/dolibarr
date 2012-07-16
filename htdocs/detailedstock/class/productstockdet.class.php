@@ -598,7 +598,7 @@ class Productstockdet extends CommonObject
     return $infos;
   }
 
-  function exists($fk_dispatch_line){
+  function records($fk_dispatch_line){
     $sql = 'select rowid from '.MAIN_DB_PREFIX.'product_stock_det where fk_dispatch_line = '.$fk_dispatch_line;
     $resql = $this->db->query($sql);
     if($resql){

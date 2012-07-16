@@ -21,3 +21,4 @@ UndetailledStock=Undetailled stock
 InvalidCode=Invalid serial number
 InputInfos=Added by
 OutputInfos=Removed by
+QtyDispatchedUndetailed=Undetailed dispatched quantity

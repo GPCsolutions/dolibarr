@@ -350,6 +350,8 @@ if ($id > 0 || ! empty($ref))
 				print '<td>'.$langs->trans("Description").'</td>';
 				print '<td align="right">'.$langs->trans("QtyDispatched").'</td>';
                 //TODO HOOK
+                $langs->load("detailedStock@detailedstock");
+                print '<td align="right">'.$langs->trans("QtyDispatchedUndetailed").'</td>';
                 print '<td>&nbsp;</td>';
 				print '<td align="right">'.$langs->trans("Warehouse").'</td>';
 				print "</tr>\n";
@@ -369,15 +371,20 @@ if ($id > 0 || ! empty($ref))
                     //TODO: CPT HOOK
                     require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
                     $det = new Productstockdet($db);
-                    if(!$det->exists($objp->rowid) <= 0){
+                    $records = $det->records($objp->rowid);
+                    $reste = $objp->qty - $records;
+                    print '<td align="right">'.$reste.'</td>';
+                    if($reste > 0){
                       print '<form method="post" action="/detailedstock/ventil.php?id='.$objp->rowid.'">';
                       print '<input type="hidden" name="action" value="add"/>';
+                      print '<input type="hidden" name="commandid" value="'.$id.'"/>';
+                      print '<input type="hidden" name="supplierid" value="'.$commande->socid.'"/>';
                     }
                     print '<td align="right">';
-                    if($det->exists($objp->rowid) <= 0)
+                    if($reste > 0)
                       print '<input type="submit" name="detail" value="detail"/>';
                     print '</td>';
-                    if(!$det->exists($objp->rowid) <= 0)
+                    if($reste > 0)
                       print '</form>';
 					print '<td align="right">';
 					$warehouse_static->id=$objp->warehouse_id;

@@ -36,6 +36,8 @@ $langs->load("detailedStock@detailedstock");
 
 $id = GETPOST('id');
 $action = GETPOST('action');
+$commandid = GETPOST('commandid');
+$suppid = GETPOST('supplierid');
 
 if ($id) {
   $dispatchline = new Commandefournisseurdispatch($db);
@@ -52,8 +54,9 @@ if ($id) {
       if (GETPOST('serialNumber') != '') $newDet->serial = GETPOST('serialNumber');
       if (GETPOST('serialType') > 0) $newDet->fk_serial_type = GETPOST('serialType');
       //calculer le prix d'après la ligne de dispatch
-      $newDet->price = price2num(GETPOST('buyingPrice'), 'MT');
-      $newDet->fk_supplier = GETPOST('supplier');
+      $newDet->price = price2num(GETPOST('price'), 'MT');
+      $newDet->fk_supplier = $suppid;
+      $newDet->fk_dispatch_line = $id;
       //default $valid value is 1 in case we don't need to go through the validation process
       $valid = 1;
       //if a serial type is defined
@@ -84,8 +87,8 @@ if ($id) {
     unset($_POST['serialNumber']);
     unset($_POST['serialType']);
     unset($_POST['buyingPrice']);
-    unset($_POST['supplier']);
-    if ($action != 'add') Header("Location: dispatch.php?id=" . $commandid);
+    unset($_POST['commandid']);
+    if ($action != 'add') Header('Location: ../fourn/commande/dispatch.php?id=' . $commandid);
   }
   /*
    * View
@@ -98,8 +101,10 @@ if ($id) {
   if ($action == 'add') {
     $det = new Productstockdet($db);
     $form = new Form($db);
-    print '<br><form action="' . $_SERVER['PHP_SELF'] . '?id=' . $id . '" method="post"><table class="noborder" width="100%">';
+    print '<form action="' . $_SERVER['PHP_SELF'] . '?id=' . $id . '" method="post"><table class="noborder" width="100%">';
     print '<input type="hidden" name="action" value="create"/>';
+    print '<input type="hidden" name="commandid" value="'.$commandid.'"/>';
+    print '<input type="hidden" name="supplierid" value="'.$suppid.'"/>';
     print '<tr class="liste_titre"><td>' . $langs->trans("SerialType") . '</td>';
     print '<td>' . $langs->trans("SerialNumber") . '</td>';
     print '<td>' . $langs->trans("Supplier") . '</td>';
@@ -110,9 +115,33 @@ if ($id) {
     print '<tr>';
     print '<td>' . $det->selectSerialType($newDet->fk_serial_type, 'serialType') . '</td>';
     print '<td><input type="text" name="serialNumber" value="' . $newDet->serial . '"/></td>';
-    print '<td>' . $form->select_company($newDet->fk_supplier, 'supplier', 's.fournisseur=1') . '</td>';
-    print '<td><input type="text" name="buyingPrice" value="' . $newDet->price . '"/></td>';
-    print '<td>' . $det->selectWarehouses($newDet->fk_entrepot, 'warehouse', 'ps.reel > 0', 0, 0, $fk_product) . '</td>';
+    $supplier = '';
+    $soc = new Societe($db);
+    $infosoc = $soc->fetch($suppid);
+    if ($infosoc) {
+      $supplier = $soc->getNomUrl();
+    }
+    else {
+      $this->error = "Error " . $this->db->lasterror();
+      dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
+    }
+    print '<td>'.$supplier.'</td>';
+    $prod = new Product($db);
+    $prod->fetch($dispatchline->fk_product);
+    $price = $prod->price;
+    print '<td>'.price($price).'</td>';
+    print '<input type="hidden" name="price" value="'.$price.'"/>';
+    $warehouse = '';
+    $ware = new Entrepot($db);
+    $wareinfo = $ware->fetch($dispatchline->fk_entrepot);
+    if ($wareinfo) {
+      $warehouse = $ware->getNomUrl();
+    }
+    else {
+      $this->error = "Error " . $this->db->lasterror();
+      dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
+    }
+    print '<td>'.$warehouse.'</td>';
     print '<td><input type="submit" name ="valid" value="' . $langs->trans("Valid") . '"/></td><td><input type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
     print '</tr>';
     print '</table></form>';
