@@ -41,6 +41,8 @@ if (GETPOST('id')) {
   $result = $det->fetch($_GET["id"]);
   if($result){
     dol_fiche_head('', 'info', $langs->trans('DetailedStock'), 1, 'product');
+    $product = new Product($db);
+    $product->fetch($det->fk_product);
     print '<div class="tabBar">';
     print '<table class="border" width="100%">';
     //id
@@ -48,6 +50,10 @@ if (GETPOST('id')) {
     print '<td>ID</td>';
     $det->ref = $det->id;
     print '<td>'.$form->showrefnav($det, 'id', '', 1, 'rowid', 'id')./*$det->id.*/'</td>';
+    print '</tr>';
+
+    // Label
+    print '<tr><td>' . $langs->trans("Label") . '</td><td>' . $product->libelle . '</td>';
     print '</tr>';
 
     //serial number
@@ -117,6 +123,7 @@ if (GETPOST('id')) {
 
     
     print '</table></div>';
+    print '<table width="100%"><tr><td align="right"><a class="butAction" href="/detailedstock/detail.php?id=' . $product->id . '">' . $langs->trans("Return") . '</a></td></tr></table>';
   }
   else{
     //error
