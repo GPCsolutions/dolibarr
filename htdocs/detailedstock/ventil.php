@@ -44,6 +44,7 @@ if ($id) {
   $dispatchline = new Commandefournisseurdispatch($db);
   $dispatchline->fetch($id);
   //after the user hit the valid button
+  if ($action == 'create') {
     if (GETPOST('valid') == $langs->trans('Valid') || GETPOST('valid') ==$langs->trans('Next')) {
       $newDet = new Productstockdet($db);
       //create a new detailled stock object with the input parameters
