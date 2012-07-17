@@ -142,7 +142,7 @@ if ($id) {
       dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
     }
     print '<td>'.$warehouse.'</td>';
-    print '<td><input type="submit" name ="valid" value="' . $langs->trans("Valid") . '"/></td><td><input type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
+    print '<td><input class = "button" type="submit" name ="valid" value="' . $langs->trans("Valid") . '"/></td><td><input class ="button" type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
     print '</tr>';
     print '</table></form>';
   }

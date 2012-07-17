@@ -382,7 +382,7 @@ if ($id > 0 || ! empty($ref))
                     }
                     print '<td align="right">';
                     if($reste > 0)
-                      print '<input type="submit" name="detail" value="detail"/>';
+                      print '<input class="button" type="submit" name="detail" value="detail"/>';
                     print '</td>';
                     if($reste > 0)
                       print '</form>';
