@@ -377,6 +377,7 @@ if ($id > 0 || ! empty($ref))
                     if($reste > 0){
                       print '<form method="post" action="/detailedstock/ventil.php?id='.$objp->rowid.'">';
                       print '<input type="hidden" name="action" value="add"/>';
+                      print '<input type="hidden" name="reste" value="'.$reste.'"/>';
                       print '<input type="hidden" name="commandid" value="'.$id.'"/>';
                       print '<input type="hidden" name="supplierid" value="'.$commande->socid.'"/>';
                     }

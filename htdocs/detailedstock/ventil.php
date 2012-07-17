@@ -38,13 +38,13 @@ $id = GETPOST('id');
 $action = GETPOST('action');
 $commandid = GETPOST('commandid');
 $suppid = GETPOST('supplierid');
+$reste = GETPOST('reste');
 
 if ($id) {
   $dispatchline = new Commandefournisseurdispatch($db);
   $dispatchline->fetch($id);
   //after the user hit the valid button
-  if ($action == 'create') {
-    if (GETPOST('valid') == $langs->trans('Valid')) {
+    if (GETPOST('valid') == $langs->trans('Valid') || GETPOST('valid') ==$langs->trans('Next')) {
       $newDet = new Productstockdet($db);
       //create a new detailled stock object with the input parameters
       $newDet->tms_i = dol_now();
@@ -74,8 +74,13 @@ if ($id) {
       }
       //if nothing went wrong, the object is saved in the database
       if ($valid) {
-        $id = $newDet->create($user);
+        $newid = $newDet->create($user);
+        $reste --;
         unset($action);
+        if($reste > 0) {
+          $action = 'add';
+          $mesg = '<div class="ok">' . $langs->trans('DetailedLineAdded') . '</div>';
+        }
       } else {
         //else, prepare the error message and go back to add mode
         $mesg = '<div class="error">' . $langs->trans('InvalidCode') . '</div>';
@@ -105,6 +110,7 @@ if ($id) {
     print '<input type="hidden" name="action" value="create"/>';
     print '<input type="hidden" name="commandid" value="'.$commandid.'"/>';
     print '<input type="hidden" name="supplierid" value="'.$suppid.'"/>';
+    print '<input type="hidden" name="reste" value="'.$reste.'"/>';
     print '<tr class="liste_titre"><td>' . $langs->trans("SerialType") . '</td>';
     print '<td>' . $langs->trans("SerialNumber") . '</td>';
     print '<td>' . $langs->trans("Supplier") . '</td>';
@@ -142,7 +148,13 @@ if ($id) {
       dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
     }
     print '<td>'.$warehouse.'</td>';
-    print '<td><input class = "button" type="submit" name ="valid" value="' . $langs->trans("Valid") . '"/></td><td><input class ="button" type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
+    if($reste > 1){
+      $label = $langs->trans("Next");
+    }
+    else{
+      $label =$langs->trans("Valid");
+    }
+    print '<td><input class = "button" type="submit" name ="valid" value="' . $label . '"/></td><td><input class ="button" type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
     print '</tr>';
     print '</table></form>';
   }
