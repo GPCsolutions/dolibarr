@@ -218,7 +218,7 @@ if ($_GET["id"] || $_GET["ref"]) {
       //display each detailled stock line related to this product
       if ($db->num_rows($resql) > 0) {
         print '<br><table class="noborder" width="100%">';
-        print '<tr class="liste_titre"><td>' . $langs->trans("Id") . '</td>';
+        print '<tr class="liste_titre"><td>&nbsp;</td>';
         print '<td align="right">' . $langs->trans("N°") . '</td>';
         print '<td align="right">' . $langs->trans("Supplier") . '</td>';
         print '<td align="right">' . $langs->trans("BuyingPrice") . '</td>';
@@ -228,7 +228,7 @@ if ($_GET["id"] || $_GET["ref"]) {
           $det = new Productstockdet($db);
           $res = $det->fetch($obj->rowid);
           if ($res) {
-            $detId = '<a href="/detailedstock/fiche.php?id='.$det->id.'">'.$det->id.'</a>';
+            $detId = '<a href="/detailedstock/fiche.php?id='.$det->id.'">'.img_object($langs->trans("ShowProduct"),'product').'</a>';
             print '<tr><td align=>' . $detId . '</td>';
             print '<td align="right">' . $form->textwithpicto($det->serial, $det->getSerialTypeLabel(), 1) . '</td>';
             $soc = new Societe($db);
