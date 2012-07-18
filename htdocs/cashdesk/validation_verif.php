@@ -143,7 +143,7 @@ switch ($action)
 		$user->fetch($_SESSION['uid']);
 		$user->getrights();
         //TODO hook
-        if($conf->global->MAIN_MODULE_DETAILEDSTOCK){
+        if($conf->global->MAIN_MODULE_DETAILEDSTOCK && $obj_facturation->lineid > 0){
           require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
           $det = new Productstockdet($db);
           $det->fetch($obj_facturation->lineid);
