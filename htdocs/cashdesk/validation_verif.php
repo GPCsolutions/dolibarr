@@ -142,6 +142,15 @@ switch ($action)
 
 		$user->fetch($_SESSION['uid']);
 		$user->getrights();
+        //TODO hook
+        if($conf->global->MAIN_MODULE_DETAILEDSTOCK){
+          require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
+          $det = new Productstockdet($db);
+          $det->fetch($obj_facturation->lineid);
+          $det->tms_o = $now;
+          $det->fk_user_author_o = $user->id;
+          $det->update($user);
+        }
 
 		$thirdpartyid = $_SESSION['CASHDESK_ID_THIRDPARTY'];
 		$societe = new Societe($db);

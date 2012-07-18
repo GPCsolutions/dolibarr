@@ -35,7 +35,15 @@ $langs->load("cashdesk");
 		<input type="hidden" name="hdnSource" value="NULL" />
 
 		<table>
-			<tr><th class="label1"><?php echo $langs->trans("Code"); ?></th><th class="label1"><?php echo $langs->trans("Designation"); ?></th></tr>
+			<tr><th class="label1"><?php echo $langs->trans("Code"); ?></th><th class="label1"><?php echo $langs->trans("Designation"); ?></th>
+              <!--TODO hook -->
+            <?php 
+            if($conf->global->MAIN_MODULE_DETAILEDSTOCK) {
+              $langs->load('detailedStock@detailedstock');
+              print '<th class="label1">'.$langs->trans('SerialNumber').'</th>';
+            }
+            ?>
+            </tr>
 			<tr>
 			<!-- Affichage de la reference et de la designation -->
 			<td><input class="texte_ref" type="text" id ="txtRef" name="txtRef" value="<?php echo $obj_facturation->ref() ?>"
@@ -102,6 +110,19 @@ $langs->load("cashdesk");
 					?>
 				</select>
 			</td>
+            <!-- TODO hook-->
+            <?php
+            if($conf->global->MAIN_MODULE_DETAILEDSTOCK){
+              require_once(DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php');
+              require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
+              $det = new Productstockdet($db);
+              //HERE
+              print '<td>';
+              print $det->selectSerial('', $id);
+              //print ajax_combobox('serial');
+              print '</td>';
+            }
+            ?>
 			</tr>
 			  <tr><td><div id="resultats_dhtml"></div></td></tr>
 		</table>
@@ -109,6 +130,12 @@ $langs->load("cashdesk");
 
 	<form id="frmQte" class="formulaire1" method="post" action="facturation_verif.php?action=ajout_article" onsubmit ="javascript: return verifSaisie();">
 		<input type="hidden" name="token" value="<?php echo $_SESSION['newtoken']; ?>" />
+        <!-- TODO hook-->
+        <?php
+        if($conf->global->MAIN_MODULE_DETAILEDSTOCK){
+          print '<input type="hidden" name="serial" />';
+        }
+        ?>
 		<table>
 			<tr><th><?php echo $langs->trans("Qty"); ?></th>
 			<th><?php echo $langs->trans("Stock"); ?></th>
@@ -224,5 +251,16 @@ $langs->load("cashdesk");
 		document.getElementById('frmFacturation').txtRef.focus();
 
 	}
+    
+              function lockQte(){
+                document.getElementById("frmQte").serial.value = document.getElementById('serial').value;
+                if(document.getElementById('serial').value > 0){
+                  document.getElementById("frmQte").txtQte.value = 1;
+                  document.getElementById("frmQte").txtQte.readOnly = true;
+                }
+                else{
+                  document.getElementById("frmQte").txtQte.readOnly = false;
+                }
+              }
 
 </script>

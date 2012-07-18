@@ -140,6 +140,10 @@ switch ( $_GET['action'] )
 			$obj_facturation->tva($_POST['selTva']);
 			$obj_facturation->remisePercent($_POST['txtRemise']);
 			$obj_facturation->ajoutArticle();
+            //TODO HOOK
+            if($conf->global->MAIN_MODULE_DETAILEDSTOCK){
+              $obj_facturation->lineid = $_POST['serial'];
+            }
 
 		}
 

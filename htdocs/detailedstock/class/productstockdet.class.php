@@ -589,7 +589,7 @@ class Productstockdet extends CommonObject
       $id = $this->fk_user_author_i;
     }
     else{
-      $date = $this->tms_o;
+      $date = date('d/m/y',$this->tms_o);
       $id = $this->fk_user_author_o;
     }
     $doluser->fetch($id);
@@ -609,6 +609,21 @@ class Productstockdet extends CommonObject
       dol_syslog(get_class($this) . "::exists " . $this->error, LOG_ERR);
       return -1;
     }
+  }
+  
+  function selectSerial($selected, $idproduct){
+    $res ='<select onchange="javascript: lockQte();" id="serial" name="serial">';
+    $res .= '<option value="0" ></option>';
+    $sql = 'select rowid, serial from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product=' . $idproduct;
+    $resql = $this->db->query($sql);
+    if ($resql && $this->db->num_rows($resql) > 0) {
+      while ($obj = $this->db->fetch_object($resql)) {
+        if ($selected == $obj->rowid) $sel = 'selected="selected" ';
+        $res .='<option '.$sel.'value="' . $obj->rowid . '">' . $obj->serial . '</option>';
+      }
+    }
+    $res .= '</select>';
+    return $res;
   }
 
 }
