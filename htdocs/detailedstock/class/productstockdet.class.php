@@ -617,7 +617,7 @@ class Productstockdet extends CommonObject
     $res .= '<option value="0" >'.$langs->trans('SerialNumber').'</option>';
     if($idproduct){
       $sql = 'select rowid, serial from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product=' . $idproduct;
-      $sql .= ' and tms_o = null';
+      $sql .= ' and tms_o is NULL';
       $resql = $this->db->query($sql);
       if ($resql && $this->db->num_rows($resql) > 0) {
         while ($obj = $this->db->fetch_object($resql)) {
