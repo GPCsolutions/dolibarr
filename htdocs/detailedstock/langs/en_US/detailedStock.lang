@@ -24,3 +24,4 @@ OutputInfos=Removed by
 QtyDispatchedUndetailed=Undetailed dispatched quantity
 Return=Return
 DetailedLineAdded=The line has been added
+UnavailableForServices=Fonctionnality unavailable for services
