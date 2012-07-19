@@ -67,13 +67,14 @@ $idprod = $match[0];
 // When used from jQuery, the search term is added as GET param "term".
 $searchkey=$_GET[$idprod];
 if (empty($searchkey)) $searchkey=$_GET[$htmlname];
+
 $outjson=isset($_GET['outjson'])?$_GET['outjson']:0;
 
 // Get list of product.
 
 $det = new Productstockdet($db);
 
-$arrayresult=$det->selectSerialJSON("",$_GET['fk_product']);
+$arrayresult=$det->selectSerialJSON("",4, $searchkey);
 
 
 $db->close();

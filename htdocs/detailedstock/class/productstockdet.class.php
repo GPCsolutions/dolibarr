@@ -629,13 +629,16 @@ class Productstockdet extends CommonObject
     return $res;
   }
   
-  function selectSerialJSON($selected, $idproduct){
+  function selectSerialJSON($selected, $idproduct, $searchkey=''){
     global $langs;
     $res ='<select id="serial" name="serial">';
     $res .= '<option value="0" >'.$langs->trans('SerialNumber').'</option>';
     if($idproduct){
-      $sql = 'select rowid, serial from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product=' . $idproduct;
-      $sql .= ' and tms_o is NULL';
+      $sql = 'select rowid, serial from ' . MAIN_DB_PREFIX . 'product_stock_det';
+      $sql .= ' where tms_o is NULL';
+      if($searchkey != ''){
+        $sql .= ' and serial like "%'.$searchkey.'%"';
+      }
       $outjson = array();
       $resql = $this->db->query($sql);
       if ($resql && $this->db->num_rows($resql) > 0) {
@@ -644,7 +647,9 @@ class Productstockdet extends CommonObject
           $res .='<option '.$sel.'value="' . $obj->rowid . '">' . $obj->serial . '</option>';
           $outkey = $obj->rowid;
           $outval = $obj->serial;
-          array_push($outjson,array('key'=>$outkey,'value'=>$outval, 'label'=>$outval));
+          $label = $obj->serial;
+          if ($searchkey && $searchkey != '') $label=preg_replace('/('.preg_quote($searchkey).')/i','<strong>$1</strong>',$label,1);
+          array_push($outjson,array('key'=>$outkey,'value'=>$outval, 'label'=>$label));
         }
       }
     }

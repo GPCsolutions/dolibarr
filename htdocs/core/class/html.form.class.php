@@ -1078,14 +1078,15 @@ class Form
                 $selected_input_value=$product->ref;
             }
             // mode=1 means customers products
+            
             print ajax_autocompleter($selected, $htmlname, DOL_URL_ROOT.'/product/ajaxproducts.php', 'htmlname='.$htmlname.'&outjson=1&price_level='.$price_level.'&type='.$filtertype.'&mode=1&status='.$status.'&finished='.$finished, $conf->global->PRODUIT_USE_SEARCH_TO_SELECT);
             if (! $hidelabel) print $langs->trans("RefOrLabel").' : ';
             print '<input type="text" size="20" name="search_'.$htmlname.'" id="search_'.$htmlname.'" value="'.$selected_input_value.'" />';
             //TODO hook
             if($conf->global->MAIN_MODULE_DETAILEDSTOCK){
               $langs->load('detailedStock@detailedstock');
-              print $langs->trans('SerialNumber');
-              print ajax_autocompleter('', 'idDetail', DOL_URL_ROOT.'/detailedstock/ajaxDetailedStock.php', 'htmlname=idDetail&outjson=1&fk_product=4', $conf->global->PRODUIT_USE_SEARCH_TO_SELECT);
+              print '  '.$langs->trans('SerialNumber');
+              print ajax_autocompleter('', 'idDetail', DOL_URL_ROOT.'/detailedstock/ajaxDetailedStock.php', 'htmlname=idDetail&outjson=1', $conf->global->PRODUIT_USE_SEARCH_TO_SELECT);
               print '<input type="text" size="20" name="search_idDetail" id="search_idDetail" value="'.$selected_input_value.'" />';
             }
         }
