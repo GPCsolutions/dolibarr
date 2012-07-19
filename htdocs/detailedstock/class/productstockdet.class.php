@@ -274,7 +274,6 @@ class Productstockdet extends CommonObject
 
 
         $sql.= " WHERE rowid=" . $this->id;
-
         $this->db->begin();
 
         dol_syslog(get_class($this) . "::update sql=" . $sql, LOG_DEBUG);
@@ -628,6 +627,96 @@ class Productstockdet extends CommonObject
     }
     $res .= '</select>';
     return $res;
+  }
+  
+  function selectSerialJSON($selected, $idproduct){
+    global $langs;
+    $res ='<select id="serial" name="serial">';
+    $res .= '<option value="0" >'.$langs->trans('SerialNumber').'</option>';
+    if($idproduct){
+      $sql = 'select rowid, serial from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product=' . $idproduct;
+      $sql .= ' and tms_o is NULL';
+      $outjson = array();
+      $resql = $this->db->query($sql);
+      if ($resql && $this->db->num_rows($resql) > 0) {
+        while ($obj = $this->db->fetch_object($resql)) {
+          if ($selected == $obj->rowid) $sel = 'selected="selected" ';
+          $res .='<option '.$sel.'value="' . $obj->rowid . '">' . $obj->serial . '</option>';
+          $outkey = $obj->rowid;
+          $outval = $obj->serial;
+          array_push($outjson,array('key'=>$outkey,'value'=>$outval, 'label'=>$outval));
+        }
+      }
+    }
+    $res .= '</select>';
+    //print $res;
+    return $outjson;
+  }
+  
+  function exists($serial){
+    $sql = 'select rowid from '.MAIN_DB_PREFIX.'product_stock_det where serial = '.$serial;
+    $resql = $this->db->query($sql);
+    if($resql && $this->db->num_rows($resql) > 0){
+      $obj = $this->db->fetch_object($db);
+      return $obj->rowid;
+    }
+    else{
+      return -1;
+    }
+  }
+  
+  public function fetchByFkInvoiceline($fk_invoiceline)
+  {
+    global $langs;
+    $sql = "SELECT";
+    $sql.= " t.rowid,";
+
+    $sql.= " t.tms_i,";
+    $sql.= " t.tms_o,";
+    $sql.= " t.fk_product,";
+    $sql.= " t.fk_entrepot,";
+    $sql.= " t.fk_user_author_i,";
+    $sql.= " t.fk_user_author_o,";
+    $sql.= " t.serial,";
+    $sql.= " t.fk_serial_type,";
+    $sql.= " t.price,";
+    $sql.= " t.fk_invoice_line,";
+    $sql.= " t.fk_dispatch_line,";
+    $sql.= " t.fk_supplier";
+
+
+    $sql.= " FROM " . MAIN_DB_PREFIX . "product_stock_det as t";
+    $sql.= " WHERE t.fk_invoice_line = " . $fk_invoiceline;
+
+    dol_syslog(get_class($this) . "::fetch sql=" . $sql, LOG_DEBUG);
+    $resql = $this->db->query($sql);
+    if ($resql) {
+      if ($this->db->num_rows($resql)) {
+        $obj = $this->db->fetch_object($resql);
+
+        $this->id = $obj->rowid;
+
+        $this->tms_i = $this->db->jdate($obj->tms_i);
+        $this->tms_o = $this->db->jdate($obj->tms_o);
+        $this->fk_product = $obj->fk_product;
+        $this->fk_entrepot = $obj->fk_entrepot;
+        $this->fk_user_author_i = $obj->fk_user_author_i;
+        $this->fk_user_author_o = $obj->fk_user_author_o;
+        $this->serial = $obj->serial;
+        $this->fk_serial_type = $obj->fk_serial_type;
+        $this->price = $obj->price;
+        $this->fk_invoice_line = $obj->fk_invoice_line;
+        $this->fk_dispatch_line = $obj->fk_dispatch_line;
+        $this->fk_supplier = $obj->fk_supplier;
+      }
+      $this->db->free($resql);
+
+      return 1;
+    } else {
+      $this->error = "Error " . $this->db->lasterror();
+      dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
+      return -1;
+    }
   }
 
 }

@@ -82,7 +82,7 @@ class modDetailedStock extends DolibarrModules
         //      'hooks' => array('hookcontext1','hookcontext2')                             // Set here all hooks context managed by module
         //      'workflow' => array('order' => array('WORKFLOW_ORDER_AUTOCREATE_INVOICE'))  // Set here all workflow context managed by module
         //                        );
-        $this->module_parts = array();
+        $this->module_parts = array('triggers' => 1);
 
         // Data directories to create when module is enabled.
         // Example: this->dirs = array("/detailedStock/temp");

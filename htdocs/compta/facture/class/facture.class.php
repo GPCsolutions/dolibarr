@@ -3704,14 +3704,14 @@ class FactureLigne
 
 		$sql = "DELETE FROM ".MAIN_DB_PREFIX."facturedet WHERE rowid = ".$this->rowid;
 		dol_syslog(get_class($this)."::delete sql=".$sql, LOG_DEBUG);
-		if ($this->db->query($sql) )
-		{
-			// Appel des triggers
-			include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+        include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
 			$interface=new Interfaces($this->db);
 			$result = $interface->run_triggers('LINEBILL_DELETE',$this,$user,$langs,$conf);
 			if ($result < 0) { $error++; $this->errors=$interface->errors; }
 			// Fin appel triggers
+		if ($this->db->query($sql) && $result >=0)
+		{
+			// Appel des triggers
 
 			$this->db->commit();
 
