@@ -118,8 +118,8 @@ $langs->load("cashdesk");
               $det = new Productstockdet($db);
               //HERE
               print '<td>';
-              print $det->selectSerial('', $id);
-              //print ajax_combobox('serial');
+              print ajax_autocompleter('', 'idDetail', DOL_URL_ROOT.'/detailedstock/ajaxDetailedStock.php', 'htmlname=idDetail&outjson=1&fk_product='.$id, $conf->global->PRODUIT_USE_SEARCH_TO_SELECT);
+              print '<input onkeyup="javascript: lockQte();" onmouseout="javascript: lockQte();"  type="text" size="20" name="search_idDetail" id="search_idDetail" value="'.$selected_input_value.'" />';
               print '</td>';
             }
             ?>
@@ -253,8 +253,8 @@ $langs->load("cashdesk");
 	}
     
               function lockQte(){
-                document.getElementById("frmQte").serial.value = document.getElementById('serial').value;
-                if(document.getElementById('serial').value > 0){
+                document.getElementById("frmQte").serial.value = document.getElementById('idDetail').value;
+                if(document.getElementById('search_idDetail').value > 0){
                   document.getElementById("frmQte").txtQte.value = 1;
                   document.getElementById("frmQte").txtQte.readOnly = true;
                 }
