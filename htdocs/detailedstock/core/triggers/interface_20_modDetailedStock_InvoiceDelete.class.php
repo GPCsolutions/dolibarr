@@ -19,20 +19,12 @@
 
 /**
  *  \file       htdocs/detailedstock/core/triggers/interface_20_modDetailedStock_InvoiceDelete.class.php
- *  \ingroup    core
- *  \brief      Fichier de InvoiceDelete de personalisation des actions du workflow
- *  \remarks    Son propre fichier d'actions peut etre cree par recopie de celui-ci:
- *              - Le nom du fichier doit etre: interface_99_modMymodule_Mytrigger.class.php
- *				                           ou: interface_99_all_Mytrigger.class.php
- *              - Le fichier doit rester stocke dans core/triggers
- *              - Le nom de la classe doit etre InterfaceMytrigger
- *              - Le nom de la methode constructeur doit etre InterfaceMytrigger
- *              - Le nom de la propriete name doit etre Mytrigger
+ *  \ingroup    detailedStock
  */
 require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
 
 /**
- *  Class of triggers for InvoiceDelete module
+ *  Class of triggers for detailedStock module to react to invoices and invoice lines deletion
  */
 class InterfaceInvoiceDelete
 {
@@ -49,7 +41,7 @@ class InterfaceInvoiceDelete
     
         $this->name = preg_replace('/^Interface/i','',get_class($this));
         $this->family = "InvoiceDelete";
-        $this->description = "Placeholder";
+        $this->description = "Reacts to invoices and invoice lines deletion";
         $this->version = 'development';            // 'development', 'experimental', 'dolibarr' or version
         $this->picto = 'technic';
     }
@@ -114,6 +106,7 @@ class InterfaceInvoiceDelete
             dol_syslog("Trigger '".$this->name."' for action '$action' launched by ".__FILE__.". id=".$object->id);
             $object->fetch_lines();
             $result = 0;
+            //when the invoice is deleted, go through each line to delete the output informations of the related detailedstock lines
             foreach($object->lines as $line){
               $det = new Productstockdet($db);
               $det->fetchByFkInvoiceline($line->rowid);
@@ -128,6 +121,7 @@ class InterfaceInvoiceDelete
         {
             dol_syslog("Trigger '".$this->name."' for action '$action' launched by ".__FILE__.". id=".$object->id);
             $det = new Productstockdet($db);
+            //delete the output informations of the related detailedstock line
             $det->fetchByFkInvoiceline($object->rowid);
             $det->tms_o = NULL;
             $det->fk_user_author_o = NULL;

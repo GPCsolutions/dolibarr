@@ -118,6 +118,7 @@ $langs->load("cashdesk");
               $det = new Productstockdet($db);
               //HERE
               print '<td>';
+              //input with autocompletion to browse through the available serial numbers
               print ajax_autocompleter('', 'idDetail', DOL_URL_ROOT.'/detailedstock/ajaxDetailedStock.php', 'htmlname=idDetail&outjson=1&fk_product='.$id, $conf->global->PRODUIT_USE_SEARCH_TO_SELECT);
               print '<input onkeyup="javascript: lockQte();" onmouseout="javascript: lockQte();"  type="text" size="20" name="search_idDetail" id="search_idDetail" value="'.$selected_input_value.'" />';
               print '</td>';
@@ -251,16 +252,19 @@ $langs->load("cashdesk");
 		document.getElementById('frmFacturation').txtRef.focus();
 
 	}
-    
-              function lockQte(){
-                document.getElementById("frmQte").serial.value = document.getElementById('idDetail').value;
-                if(document.getElementById('search_idDetail').value > 0){
-                  document.getElementById("frmQte").txtQte.value = 1;
-                  document.getElementById("frmQte").txtQte.readOnly = true;
-                }
-                else{
-                  document.getElementById("frmQte").txtQte.readOnly = false;
-                }
-              }
+    /**
+     * locks quantity to 1 if there's a serial number
+     * passes the detailedstock line id to the frmQte form
+     */
+      function lockQte(){
+        document.getElementById("frmQte").serial.value = document.getElementById('idDetail').value;
+        if(document.getElementById('search_idDetail').value > 0){
+          document.getElementById("frmQte").txtQte.value = 1;
+          document.getElementById("frmQte").txtQte.readOnly = true;
+        }
+        else{
+          document.getElementById("frmQte").txtQte.readOnly = false;
+        }
+      }
 
 </script>

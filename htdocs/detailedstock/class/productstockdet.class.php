@@ -18,19 +18,14 @@
  */
 
 /**
- *  \file       dev/skeletons/productstockdet.class.php
- *  \ingroup    mymodule othermodule1 othermodule2
- *  \brief      This file is an example for a CRUD class file (Create/Read/Update/Delete)
- *              Initialy built by build_class_from_table on 2012-07-09 17:36
+ *  \file       htdocs/detailedStock/class/productstockdet.class.php
+ *  \ingroup    detailedStock
  */
-// Put here all includes required by your class file
 require_once(DOL_DOCUMENT_ROOT . "/core/class/commonobject.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/user/class/user.class.php");
-//require_once(DOL_DOCUMENT_ROOT."/societe/class/societe.class.php");
-//require_once(DOL_DOCUMENT_ROOT."/product/class/product.class.php");
 
 /**
- *  Put here description of your class
+ *  Handles the detailedStock lines
  */
 class Productstockdet extends CommonObject
 {
@@ -38,21 +33,21 @@ class Productstockdet extends CommonObject
     public $db;                                //!< To store db handler
     public $error;                             //!< To return error code (or message)
     public $errors = array();                  //!< To return several error codes (or messages)
-    //var $element='productstockdet';       //!< Id that identify managed objects
+    //public $element='productstockdet';       //!< Id that identify managed objects
     public $table_element='product_stock_det'; //!< Name of table without prefix where object is stored
-    public  $id;
-    public $tms_i = '';
-    public $tms_o = '';
-    public $fk_product;
-    public $fk_entrepot;
-    public $fk_user_author_i;
-    public $fk_user_author_o;
-    public $serial;
-    public $fk_serial_type;
+    public $id; //line id
+    public $tms_i = ''; //date of addition to the stock
+    public $tms_o = ''; //date of removal from the stock
+    public $fk_product; //id of the related product
+    public $fk_entrepot; //id of the warehouse where the product is stocked
+    public $fk_user_author_i; //id of the user who created the line
+    public $fk_user_author_o; //id of the user who "removed" the product from the stock
+    public $serial; //serial number
+    public $fk_serial_type; //serial number type(ex:IMEI, ICCID...)
     public $price;
-    public $fk_invoice_line;
-    public $fk_dispatch_line;
-    public $fk_supplier;
+    public $fk_invoice_line; //invoice line id
+    public $fk_dispatch_line; //dispatch line id
+    public $fk_supplier; //supplier id
 
     /**
      *  Constructor
@@ -497,7 +492,7 @@ class Productstockdet extends CommonObject
  * @param   string  $filter         Additional filter option
  * @return  int  		    		Nb of loaded lines, 0 if already loaded, <0 if KO
  */
-  function loadWarehouses($fk_product = 0, $filter='')
+  public function loadWarehouses($fk_product = 0, $filter='')
   {
     global $conf, $langs;
 
@@ -551,7 +546,7 @@ class Productstockdet extends CommonObject
    * @param int $fk_product     product id
    * @return string   html select element
    */
-  function selectWarehouses($selected = '', $htmlname = 'idwarehouse', $filter = '', $empty = 0, $disabled = 0,
+  public function selectWarehouses($selected = '', $htmlname = 'idwarehouse', $filter = '', $empty = 0, $disabled = 0,
       $fk_product = 0)
   {
     global $langs, $user;
@@ -579,11 +574,16 @@ class Productstockdet extends CommonObject
     return $out;
   }
 
-  function getInfos($subject){
+  /**
+   *Gets the date and author of the action
+   * @param string $action input or output
+   * @return string date and author of the action 
+   */
+  public function getInfos($action){
     $date ='';
     $author='';
     $doluser = new User($this->db);
-    if($subject == 'input'){
+    if($action == 'input'){
       $date = date('d/m/y',$this->tms_i);
       $id = $this->fk_user_author_i;
     }
@@ -597,7 +597,12 @@ class Productstockdet extends CommonObject
     return $infos;
   }
 
-  function records($fk_dispatch_line){
+  /**
+   *Counts how many detailedstock lines are related to the dispatch line
+   * @param int $fk_dispatch_line
+   * @return int  -1 if error, >=0 if ok
+   */
+  public function records($fk_dispatch_line){
     $sql = 'select rowid from '.MAIN_DB_PREFIX.'product_stock_det where fk_dispatch_line = '.$fk_dispatch_line;
     $resql = $this->db->query($sql);
     if($resql){
@@ -610,7 +615,14 @@ class Productstockdet extends CommonObject
     }
   }
   
-  function selectSerial($selected, $idproduct){
+  /**
+   *old serial number selector, might get deleted
+   * @global $langs $langs
+   * @param int $selected
+   * @param int $idproduct
+   * @return string 
+   */
+  public function selectSerial($selected, $idproduct){
     global $langs;
     $res ='<select class="flat" onchange="javascript: lockQte();" id="serial" name="serial">';
     $res .= '<option value="0" >'.$langs->trans('SerialNumber').'</option>';
@@ -629,7 +641,15 @@ class Productstockdet extends CommonObject
     return $res;
   }
   
-  function selectSerialJSON($selected, $idproduct, $searchkey=''){
+  /**
+   * Prepares the options to display in the text field
+   * @global $langs $langs
+   * @param int $selected
+   * @param int $idproduct
+   * @param string $searchkey
+   * @return array values to use to display the options in the field
+   */
+  public function selectSerialJSON($selected, $idproduct, $searchkey=''){
     global $langs;
     $res ='<select id="serial" name="serial">';
     $res .= '<option value="0" >'.$langs->trans('SerialNumber').'</option>';
@@ -655,12 +675,21 @@ class Productstockdet extends CommonObject
       }
     }
     $res .= '</select>';
-    //print $res;
     return $outjson;
   }
   
-  function exists($serial){
-    $sql = 'select rowid from '.MAIN_DB_PREFIX.'product_stock_det where serial = '.$serial;
+  /**
+   * checks if there's a detailedstock line with this serial
+   * @param string $serial
+   * @return integer -1 if $serial doesn't exist; else returns the related detailedstock line id 
+   */
+  public function exists($serial){
+    if($serial=='') {
+      $sql = 'select rowid from '.MAIN_DB_PREFIX.'product_stock_det where serial is null ';
+    }
+    else{
+      $sql = 'select rowid from '.MAIN_DB_PREFIX.'product_stock_det where serial = '.$serial;
+    }
     $resql = $this->db->query($sql);
     if($resql && $this->db->num_rows($resql) > 0){
       $obj = $this->db->fetch_object($db);
@@ -671,6 +700,12 @@ class Productstockdet extends CommonObject
     }
   }
   
+  /**
+   *Same as the fetch method, except it uses the invoice line id to retrieve the object
+   * @global $langs $langs
+   * @param int $fk_invoiceline
+   * @return int 1 if ok, else -1
+   */
   public function fetchByFkInvoiceline($fk_invoiceline)
   {
     global $langs;
