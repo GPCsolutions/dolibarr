@@ -27,3 +27,4 @@ DetailedLineAdded=The line has been added
 UnavailableForServices=Fonctionnality unavailable for services
 SerialNotRelatedToProduct=This serial number is not related to this product
 SerialDoesNotExist=This serial number does not exist
+QtyMustBe1=Quantity should be 1

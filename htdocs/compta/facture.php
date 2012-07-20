@@ -1070,14 +1070,20 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
           $detid = $det->exists($serial);
           if($detid > 0){
             $det->fetch($detid);
-            if($det->fk_product != GETPOST('idprod')){
-              $result = -1;
-              $mesg = '<div class="error">'.$langs->trans('SerialNotRelatedToProduct').'</div>';
+            if($serial != ''){
+              if($det->fk_product != GETPOST('idprod')){
+                $result = -1;
+                $mesg = '<div class="error">'.$langs->trans('SerialNotRelatedToProduct').'</div>';
+              }
+              if($_POST['qty']>1){
+                $result = -1;
+                $mesg = '<div class="warning">'.$langs->trans('QtyMustBe1').'</div>';              
+              }
             }
-          }
-          else{
-            $result = -1;
-            $mesg = '<div class="error">'.$langs->trans('SerialDoesNotExist').'</div>';
+            else{
+              $result = -1;
+              $mesg = '<div class="error">'.$langs->trans('SerialDoesNotExist').'</div>';
+            }
           }
         }
         if ($result >= 0)
