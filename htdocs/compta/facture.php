@@ -1061,7 +1061,25 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
         $info_bits=0;
         if ($tva_npr) $info_bits |= 0x01;
 
-
+        //TODO hook
+        if($conf->global->MAIN_MODULE_DETAILEDSTOCK){
+          $serial = GETPOST('search_idDetail');
+          require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
+          $langs->load('detailedStock@detailedstock');
+          $det = new Productstockdet($db);
+          $detid = $det->exists($serial);
+          if($detid > 0){
+            $det->fetch($detid);
+            if($det->fk_product != GETPOST('idprod')){
+              $result = -1;
+              $mesg = '<div class="error">'.$langs->trans('SerialNotRelatedToProduct').'</div>';
+            }
+          }
+          else{
+            $result = -1;
+            $mesg = '<div class="error">'.$langs->trans('SerialDoesNotExist').'</div>';
+          }
+        }
         if ($result >= 0)
         {
             if($price_min && (price2num($pu_ht)*(1-price2num($_POST['remise_percent'])/100) < price2num($price_min)))
@@ -1098,23 +1116,13 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
                 );
                 //TODO hook
                 if($conf->global->MAIN_MODULE_DETAILEDSTOCK){
-                  $serial = GETPOST('search_idDetail');
-                  require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
-                  $det = new Productstockdet($db);
-                  $detid = $det->exists($serial);
-                  if($detid > 0){
-                    $det->fetch($detid);
-                    $det->tms_o = dol_now();
-                    $det->fk_user_author_o = $user->id;
-                    $det->fk_invoice_line = $result;
-                    $result = $det->update($user);
-                }
-                else{
-                  $result = -1;
+                  $det->tms_o = dol_now();
+                  $det->fk_user_author_o = $user->id;
+                  $det->fk_invoice_line = $result;
+                  $result = $det->update($user);
                 }
               }
-            }
-        }
+          }
     }
 
     if ($result > 0)
