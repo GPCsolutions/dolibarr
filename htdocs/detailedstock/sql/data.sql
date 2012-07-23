@@ -14,10 +14,5 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-CREATE TABLE IF NOT EXISTS llx_c_serial_type (
-    rowid integer NOT NULL primary key ,
-    code VARCHAR(30),
-    label VARCHAR(60),
-    algo_valid TINYINT(4),
-    active TINYINT(4)
-)ENGINE = innodb;
+INSERT INTO llx_c_serial_type(rowid, code, label, algo_valid, active) values (1, 'imei', 'IMEI', 1, 1);
+INSERT INTO llx_c_serial_type(rowid, code, label, algo_valid, active) values (2, 'iccid', 'ICCID(SIM)', 1, 1);

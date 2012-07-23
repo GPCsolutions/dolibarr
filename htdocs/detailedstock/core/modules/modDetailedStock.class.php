@@ -128,8 +128,18 @@ class modDetailedStock extends DolibarrModules
         $this->tabs = array('product:+detail:DetailedStock:detailedStock@detailedstock:/detailedstock/detail.php?id=__ID__');
 
         // Dictionnaries
-        if ( ! isset($conf->detailedStock->enabled)) $conf->detailedStock->enabled = 0;
-        $this->dictionnaries = array();
+        if ( ! isset($conf->detailedstock->enabled)) $conf->detailedstock->enabled = 0;
+        $this->dictionnaries = array('langs'=>'detailedStock@detailedstock',
+            'tabname'=>array(MAIN_DB_PREFIX.'c_serial_type'),
+            'tablib'=>array('DictionnarySerialType'),
+            'tabsql'=>array('select rowid, code, label, algo_valid, active from '.MAIN_DB_PREFIX.'c_serial_type'),
+            'tabsqlsort'=>array('label ASC'),
+            'tabfield'=>array('code,label,algo_valid'),
+            'tabfieldvalue'=>array('code,label,algo_valid'),
+            'tabfieldinsert'=>array('code,label,algo_valid'),
+            'tabrowid'=>array('rowid'),
+            'tabcond'=>array($conf->detailedstock->enabled)
+            );
         /* Example:
           if (! isset($conf->detailedStock->enabled)) $conf->detailedStock->enabled=0;  // This is to avoid warnings
           $this->dictionnaries=array(
