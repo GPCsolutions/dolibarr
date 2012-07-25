@@ -31,3 +31,4 @@ QtyMustBe1=La quantité doit être égale à 1
 Generic=Générique
 DictionnarySerialType=Types de numéros de série
 Algo_valid=Algorithme de vérification
+NewDetailCreated=Ce produit n'était pas en stock. Il a été crée.

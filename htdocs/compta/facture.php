@@ -1062,7 +1062,7 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
         if ($tva_npr) $info_bits |= 0x01;
 
         //TODO hook
-        if ($conf->global->MAIN_MODULE_DETAILEDSTOCK && isset($_POST['serial'])) {
+        if ($conf->global->MAIN_MODULE_DETAILEDSTOCK && isset($_POST['search_idDetail'])) {
             //check if the new line serial number and quantity are correct
             $serial = GETPOST('search_idDetail');
             require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
@@ -1087,8 +1087,20 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
                     }
                 }
             } else {
+              if(($_POST['qty'] > 1)) {
                 $result = -1;
-                $mesg = '<div class="error">' . $langs->trans('SerialDoesNotExist') . '</div>';
+                $mesg = '<div class="warning">' . $langs->trans('QtyMustBe1') . '</div>';
+              }
+              else{
+                $det->tms_i = dol_now();
+                $det->fk_product = GETPOST('idprod');
+                $det->fk_user_author_i = $user->id;
+                $det->serial = $serial;
+                $det->fk_serial_type = 0;
+                $det->price = $pu_ht;
+                $det->create($user);
+                $mesg = '<div class="warning">' . $langs->trans('NewDetailCreated') . '</div>';
+              }
             }
         }
         if ($result >= 0)

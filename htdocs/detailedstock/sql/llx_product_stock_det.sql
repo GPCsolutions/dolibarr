@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS llx_product_stock_det (
     tms_i TIMESTAMP NOT NULL ,
     tms_o TIMESTAMP NULL ,
     fk_product integer NOT NULL ,
-    fk_entrepot integer NOT NULL ,
+    fk_entrepot integer NULL ,
     fk_user_author_i integer NOT NULL ,
     fk_user_author_o integer NULL ,
     serial VARCHAR(128) NULL ,
@@ -27,5 +27,5 @@ CREATE TABLE IF NOT EXISTS llx_product_stock_det (
     price DOUBLE NULL ,
     fk_invoice_line integer NULL,
     fk_dispatch_line integer NULL,
-    fk_supplier integer NOT NULL)
+    fk_supplier integer NULL)
 ENGINE = innodb;

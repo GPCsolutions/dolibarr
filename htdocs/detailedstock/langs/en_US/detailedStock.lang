@@ -31,3 +31,4 @@ QtyMustBe1=Quantity should be 1
 Generic=Generic
 DictionnarySerialType=Serial numbers types
 Algo_valid=Validation algorithm
+NewDetailCreated=This product wasn't in stock. It has been created.
