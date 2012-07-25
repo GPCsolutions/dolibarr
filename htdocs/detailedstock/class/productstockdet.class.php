@@ -455,12 +455,14 @@ class Productstockdet extends CommonObject
      */
     public function selectSerialType($selected, $htmlname)
     {
+        global $langs;
         $return = '';
         $sql = 'select rowid, label from ' . MAIN_DB_PREFIX . 'c_serial_type';
         $resql = $this->db->query($sql);
         if ($resql && $this->db->num_rows($resql) > 0) {
             $return = '<select class="flat" name="' . $htmlname . '">';
-            $return .= '<option value="0" selected="selected"></option>';
+            // Default type is generic
+            $return .= '<option value="0" selected="selected">'.$langs->trans("Generic").'</option>';
             while ($obj = $this->db->fetch_object($resql)) {
                 $option = '<option value="' . $obj->rowid . '" ';
                 if ($obj->rowid == $selected) $option .= "selected=selected";

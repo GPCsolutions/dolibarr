@@ -28,3 +28,4 @@ UnavailableForServices=Fonctionnalité non disponible pour les services
 SerialNotRelatedToProduct=Ce numéro de série n'est pas lié à ce produit
 SerialDoesNotExist=Ce numéro de série n'existe pas
 QtyMustBe1=La quantité doit être égale à 1
+Generic=Générique
