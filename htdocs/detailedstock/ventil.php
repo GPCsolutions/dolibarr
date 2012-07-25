@@ -52,7 +52,7 @@ if ($id) {
             $newDet->fk_entrepot = $dispatchline->fk_entrepot;
             $newDet->fk_user_author_i = $user->id;
             if (GETPOST('serialNumber') != '') $newDet->serial = GETPOST('serialNumber');
-            if (GETPOST('serialType') > 0) $newDet->fk_serial_type = GETPOST('serialType');
+            if (GETPOST('serialType') >= 0) $newDet->fk_serial_type = GETPOST('serialType');
             //calculer le prix d'après la ligne de dispatch
             $newDet->price = price2num(GETPOST('price'), 'MT');
             $newDet->fk_supplier = $suppid;

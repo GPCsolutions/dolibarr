@@ -61,7 +61,7 @@ if ($_GET["id"] || $_GET["ref"]) {
                 $newDet->fk_entrepot = GETPOST('warehouse');
                 $newDet->fk_user_author_i = $user->id;
                 if (GETPOST('serialNumber') != '') $newDet->serial = GETPOST('serialNumber');
-                if (GETPOST('serialType') > 0) $newDet->fk_serial_type = GETPOST('serialType');
+                if (GETPOST('serialType') >= 0) $newDet->fk_serial_type = GETPOST('serialType');
                 $newDet->price = price2num(GETPOST('buyingPrice'), 'MT');
                 $newDet->fk_supplier = GETPOST('supplier');
                 //default $valid value is 1 in case we don't need to go through the validation process

@@ -13,6 +13,6 @@
 --
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+INSERT INTO llx_c_serial_type(rowid, code, label, algo_valid, active) values (0, 'gen', 'GENERIQUE', 0, 1);
 INSERT INTO llx_c_serial_type(rowid, code, label, algo_valid, active) values (1, 'imei', 'IMEI', 1, 1);
 INSERT INTO llx_c_serial_type(rowid, code, label, algo_valid, active) values (2, 'iccid', 'ICCID (SIM)', 1, 1);

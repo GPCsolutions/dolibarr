@@ -462,7 +462,6 @@ class Productstockdet extends CommonObject
         if ($resql && $this->db->num_rows($resql) > 0) {
             $return = '<select class="flat" name="' . $htmlname . '">';
             // Default type is generic
-            $return .= '<option value="0" selected="selected">'.$langs->trans("Generic").'</option>';
             while ($obj = $this->db->fetch_object($resql)) {
                 $option = '<option value="' . $obj->rowid . '" ';
                 if ($obj->rowid == $selected) $option .= "selected=selected";
