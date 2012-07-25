@@ -31,102 +31,102 @@ $langs->load("orders");
 $langs->load("bills");
 $langs->load("stocks");
 $langs->load("detailedStock@detailedstock");
+
 /*
  * View
  */
+
 llxHeader();
+
 if (GETPOST('id')) {
-  $det = new Productstockdet($db);
-  $form = new Form($db);
-  $result = $det->fetch($_GET["id"]);
-  if($result){
-    dol_fiche_head('', 'info', $langs->trans('DetailedStock'), 1, 'product');
-    $product = new Product($db);
-    $product->fetch($det->fk_product);
-    print '<div class="tabBar">';
-    print '<table class="border" width="100%">';
-    //id
-    print '<tr>';
-    print '<td>ID</td>';
-    $det->ref = $det->id;
-    print '<td>'.$form->showrefnav($det, 'id', '', 1, 'rowid', 'id')./*$det->id.*/'</td>';
-    print '</tr>';
+    $det = new Productstockdet($db);
+    $form = new Form($db);
+    $result = $det->fetch($_GET["id"]);
+    if ($result) {
+        dol_fiche_head('', 'info', $langs->trans('DetailedStock'), 1, 'product');
+        $product = new Product($db);
+        $product->fetch($det->fk_product);
+        print '<div class="tabBar">';
+        print '<table class="border" width="100%">';
+        //id
+        print '<tr>';
+        print '<td>ID</td>';
+        $det->ref = $det->id;
+        print '<td>' . $form->showrefnav($det, 'id', '', 1, 'rowid', 'id') . /* $det->id. */'</td>';
+        print '</tr>';
 
-    // Label
-    print '<tr><td>' . $langs->trans("Label") . '</td><td>' . $product->libelle . '</td>';
-    print '</tr>';
+        // Label
+        print '<tr><td>' . $langs->trans("Label") . '</td><td>' . $product->libelle . '</td>';
+        print '</tr>';
 
-    //serial number
-    print '<tr>';
-    print '<td>'.$langs->trans('SerialNumber').'</td>';
-    print '<td>'.$det->serial.'</td>';
-    print '</tr>';
+        //serial number
+        print '<tr>';
+        print '<td>' . $langs->trans('SerialNumber') . '</td>';
+        print '<td>' . $det->serial . '</td>';
+        print '</tr>';
 
-    //serial type
-    print '<tr>';
-    print '<td>'.$langs->trans('SerialType').'</td>';
-    print '<td>'.$det->getSerialTypeLabel().'</td>';
-    print '</tr>';
+        //serial type
+        print '<tr>';
+        print '<td>' . $langs->trans('SerialType') . '</td>';
+        print '<td>' . $det->getSerialTypeLabel() . '</td>';
+        print '</tr>';
 
-    //supplier
-    print '<tr>';
-    print '<td>'.$langs->trans('Supplier').'</td>';
-    $supplier = '';
-    $soc = new Societe($db);
-    $infosoc = $soc->fetch($det->fk_supplier);
-    if ($infosoc) {
-      $supplier = $soc->getNomUrl();
+        //supplier
+        print '<tr>';
+        print '<td>' . $langs->trans('Supplier') . '</td>';
+        $supplier = '';
+        $soc = new Societe($db);
+        $infosoc = $soc->fetch($det->fk_supplier);
+        if ($infosoc) {
+            $supplier = $soc->getNomUrl();
+        } else {
+            $this->error = "Error " . $this->db->lasterror();
+            dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
+        }
+        print '<td>' . $supplier . '</td>';
+        print '</tr>';
+
+        //buying price
+        print '<tr>';
+        print '<td>' . $langs->trans('BuyingPrice') . '</td>';
+        print '<td>' . price($det->price) . ' HT</td>';
+        print '</tr>';
+
+        //warehouse
+        print '<tr>';
+        print '<td>' . $langs->trans('Warehouse') . '</td>';
+        $warehouse = '';
+        $ware = new Entrepot($db);
+        $wareinfo = $ware->fetch($det->fk_entrepot);
+        if ($wareinfo) {
+            $warehouse = $ware->getNomUrl();
+        } else {
+            $this->error = "Error " . $this->db->lasterror();
+            dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
+        }
+        print '<td>' . $warehouse . '</td>';
+        print '</tr>';
+
+        //input infos
+        print '<tr>';
+        print '<td>' . $langs->trans('InputInfos') . '</td>';
+        print '<td>' . $det->getInfos('input') . '</td>';
+        print '</tr>';
+
+        //output infos
+        //only print this if the element has been removed from the stock
+        if ($det->tms_o) {
+            print '<tr>';
+            print '<td>' . $langs->trans('OutputInfos') . '</td>';
+            print '<td>' . $det->getInfos('output') . '</td>';
+            print '</tr>';
+        }
+
+        print '</table></div>';
+        print '<table width="100%"><tr><td align="right"><a class="butAction" href="/detailedstock/detail.php?id=' . $product->id . '">' . $langs->trans("Return") . '</a></td></tr></table>';
+    } else {
+        //error
     }
-    else {
-      $this->error = "Error " . $this->db->lasterror();
-      dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
-    }
-    print '<td>'.$supplier.'</td>';
-    print '</tr>';
-
-    //buying price
-    print '<tr>';
-    print '<td>'.$langs->trans('BuyingPrice').'</td>';
-    print '<td>'.price($det->price).' HT</td>';
-    print '</tr>';
-
-    //warehouse
-    print '<tr>';
-    print '<td>'.$langs->trans('Warehouse').'</td>';
-    $warehouse = '';
-    $ware = new Entrepot($db);
-    $wareinfo = $ware->fetch($det->fk_entrepot);
-    if ($wareinfo) {
-      $warehouse = $ware->getNomUrl();
-    }
-    else {
-      $this->error = "Error " . $this->db->lasterror();
-      dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
-    }
-    print '<td>'.$warehouse.'</td>';
-    print '</tr>';
-
-    //input infos
-    print '<tr>';
-    print '<td>'.$langs->trans('InputInfos').'</td>';
-    print '<td>'.$det->getInfos('input').'</td>';
-    print '</tr>';
-
-    //output infos
-    //only print this if the element has been removed from the stock
-    if($det->tms_o){
-      print '<tr>';
-      print '<td>'.$langs->trans('OutputInfos').'</td>';
-      print '<td>'.$det->getInfos('output').'</td>';
-      print '</tr>';
-    }
-
-    
-    print '</table></div>';
-    print '<table width="100%"><tr><td align="right"><a class="butAction" href="/detailedstock/detail.php?id=' . $product->id . '">' . $langs->trans("Return") . '</a></td></tr></table>';
-  }
-  else{
-    //error
-  }
 }
+
 ?>

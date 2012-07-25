@@ -36,11 +36,11 @@ $langs->load("cashdesk");
 
 		<table>
 			<tr><th class="label1"><?php echo $langs->trans("Code"); ?></th><th class="label1"><?php echo $langs->trans("Designation"); ?></th>
-              <!--TODO hook -->
-            <?php 
+            <?php
+            //TODO HOOK
             if($conf->global->MAIN_MODULE_DETAILEDSTOCK) {
-              $langs->load('detailedStock@detailedstock');
-              print '<th class="label1">'.$langs->trans('SerialNumber').'</th>';
+                $langs->load('detailedStock@detailedstock');
+                print '<th class="label1">'.$langs->trans('SerialNumber').'</th>';
             }
             ?>
             </tr>
@@ -110,18 +110,17 @@ $langs->load("cashdesk");
 					?>
 				</select>
 			</td>
-            <!-- TODO hook-->
             <?php
+            //TODO HOOK
             if($conf->global->MAIN_MODULE_DETAILEDSTOCK){
-              require_once(DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php');
-              require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
-              $det = new Productstockdet($db);
-              //HERE
-              print '<td>';
-              //input with autocompletion to browse through the available serial numbers
-              print ajax_autocompleter('', 'idDetail', DOL_URL_ROOT.'/detailedstock/ajaxDetailedStock.php', 'htmlname=idDetail&outjson=1&fk_product='.$id, $conf->global->PRODUIT_USE_SEARCH_TO_SELECT);
-              print '<input onkeyup="javascript: lockQte();" onmouseout="javascript: lockQte();"  type="text" size="20" name="search_idDetail" id="search_idDetail" value="'.$selected_input_value.'" />';
-              print '</td>';
+                require_once(DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php');
+                require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
+                $det = new Productstockdet($db);
+                print '<td>';
+                //input with autocompletion to browse through the available serial numbers
+                print ajax_autocompleter('', 'idDetail', DOL_URL_ROOT.'/detailedstock/ajaxDetailedStock.php', 'htmlname=idDetail&outjson=1&fk_product='.$id, $conf->global->PRODUIT_USE_SEARCH_TO_SELECT);
+                print '<input onkeyup="javascript: lockQte();" onmouseout="javascript: lockQte();"  type="text" size="20" name="search_idDetail" id="search_idDetail" value="'.$selected_input_value.'" />';
+                print '</td>';
             }
             ?>
 			</tr>
@@ -131,10 +130,10 @@ $langs->load("cashdesk");
 
 	<form id="frmQte" class="formulaire1" method="post" action="facturation_verif.php?action=ajout_article" onsubmit ="javascript: return verifSaisie();">
 		<input type="hidden" name="token" value="<?php echo $_SESSION['newtoken']; ?>" />
-        <!-- TODO hook-->
         <?php
+        //TODO HOOK
         if($conf->global->MAIN_MODULE_DETAILEDSTOCK){
-          print '<input type="hidden" name="serial" />';
+            print '<input type="hidden" name="serial" />';
         }
         ?>
 		<table>
@@ -256,15 +255,14 @@ $langs->load("cashdesk");
      * locks quantity to 1 if there's a serial number
      * passes the detailedstock line id to the frmQte form
      */
-      function lockQte(){
+    function lockQte(){
         document.getElementById("frmQte").serial.value = document.getElementById('idDetail').value;
         if(document.getElementById('search_idDetail').value > 0){
-          document.getElementById("frmQte").txtQte.value = 1;
-          document.getElementById("frmQte").txtQte.readOnly = true;
+            document.getElementById("frmQte").txtQte.value = 1;
+            document.getElementById("frmQte").txtQte.readOnly = true;
+        } else {
+            document.getElementById("frmQte").txtQte.readOnly = false;
         }
-        else{
-          document.getElementById("frmQte").txtQte.readOnly = false;
-        }
-      }
+    }
 
 </script>

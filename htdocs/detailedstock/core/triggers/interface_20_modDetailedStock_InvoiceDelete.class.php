@@ -28,8 +28,9 @@ require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php
  */
 class InterfaceInvoiceDelete
 {
+
     var $db;
-    
+
     /**
      *   Constructor
      *
@@ -38,15 +39,14 @@ class InterfaceInvoiceDelete
     function InterfaceInvoiceDelete($db)
     {
         $this->db = $db;
-    
-        $this->name = preg_replace('/^Interface/i','',get_class($this));
+
+        $this->name = preg_replace('/^Interface/i', '', get_class($this));
         $this->family = "InvoiceDelete";
         $this->description = "Reacts to invoices and invoice lines deletion";
         $this->version = 'development';            // 'development', 'experimental', 'dolibarr' or version
         $this->picto = 'technic';
     }
-    
-    
+
     /**
      *   Return name of trigger file
      *
@@ -56,7 +56,7 @@ class InterfaceInvoiceDelete
     {
         return $this->name;
     }
-    
+
     /**
      *   Return description of trigger file
      *
@@ -83,7 +83,7 @@ class InterfaceInvoiceDelete
         elseif ($this->version) return $this->version;
         else return $langs->trans("Unknown");
     }
-    
+
     /**
      *      Function called when a Dolibarrr business event is done.
      *      All functions "run_trigger" are triggered if file is inside directory htdocs/core/triggers
@@ -95,31 +95,28 @@ class InterfaceInvoiceDelete
      *      @param  conf		$conf       Object conf
      *      @return int         			<0 if KO, 0 if no triggered ran, >0 if OK
      */
-	function run_trigger($action,$object,$user,$langs,$conf)
+    function run_trigger($action, $object, $user, $langs, $conf)
     {
         // Put here code you want to execute when a Dolibarr business events occurs.
         // Data and type of action are stored into $object and $action
         global $db;
         // Bills
-        if ($action == 'BILL_DELETE')
-        {
-            dol_syslog("Trigger '".$this->name."' for action '$action' launched by ".__FILE__.". id=".$object->id);
+        if ($action == 'BILL_DELETE') {
+            dol_syslog("Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . ". id=" . $object->id);
             $object->fetch_lines();
             $result = 0;
             //when the invoice is deleted, go through each line to delete the output informations of the related detailedstock lines
-            foreach($object->lines as $line){
-              $det = new Productstockdet($db);
-              $det->fetchByFkInvoiceline($line->rowid);
-              unset($det->tms_o);
-              unset($det->fk_user_author_o);
-              unset($det->fk_invoice_line);
-              $result = $det->update($user);
+            foreach ($object->lines as $line) {
+                $det = new Productstockdet($db);
+                $det->fetchByFkInvoiceline($line->rowid);
+                unset($det->tms_o);
+                unset($det->fk_user_author_o);
+                unset($det->fk_invoice_line);
+                $result = $det->update($user);
             }
             return $result;
-        }
-		elseif ($action == 'LINEBILL_DELETE')
-        {
-            dol_syslog("Trigger '".$this->name."' for action '$action' launched by ".__FILE__.". id=".$object->id);
+        } elseif ($action == 'LINEBILL_DELETE') {
+            dol_syslog("Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . ". id=" . $object->id);
             $det = new Productstockdet($db);
             //delete the output informations of the related detailedstock line
             $det->fetchByFkInvoiceline($object->rowid);
@@ -130,8 +127,9 @@ class InterfaceInvoiceDelete
             return $result;
         }
 
-		return 0;
+        return 0;
     }
 
 }
+
 ?>

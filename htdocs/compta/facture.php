@@ -1062,35 +1062,34 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
         if ($tva_npr) $info_bits |= 0x01;
 
         //TODO hook
-        if($conf->global->MAIN_MODULE_DETAILEDSTOCK){
-          //check if the new line serial number and quantity are correct
-          $serial = GETPOST('search_idDetail');
-          require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
-          $langs->load('detailedStock@detailedstock');
-          $det = new Productstockdet($db);
-          //get the detailedstock line id
-          $detid = $det->exists($serial);
-          //check if the serial exists
-          if($detid > 0){
-            $det->fetch($detid);
-            //check only if the serial field wasn't empty
-            if($serial != ''){
-              //check if the serial number is related to the product we added
-              if($det->fk_product != GETPOST('idprod')){
+        if ($conf->global->MAIN_MODULE_DETAILEDSTOCK) {
+            //check if the new line serial number and quantity are correct
+            $serial = GETPOST('search_idDetail');
+            require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
+            $langs->load('detailedStock@detailedstock');
+            $det = new Productstockdet($db);
+            //get the detailedstock line id
+            $detid = $det->exists($serial);
+            //check if the serial exists
+            if ($detid > 0) {
+                $det->fetch($detid);
+                //check only if the serial field wasn't empty
+                if ($serial != '') {
+                    //check if the serial number is related to the product we added
+                    if ($det->fk_product != GETPOST('idprod')) {
+                        $result = -1;
+                        $mesg = '<div class="error">' . $langs->trans('SerialNotRelatedToProduct') . '</div>';
+                    }
+                    //quantity has to be 1 if there's a serial number
+                    if ($_POST['qty'] > 1) {
+                        $result = -1;
+                        $mesg = '<div class="warning">' . $langs->trans('QtyMustBe1') . '</div>';
+                    }
+                }
+            } else {
                 $result = -1;
-                $mesg = '<div class="error">'.$langs->trans('SerialNotRelatedToProduct').'</div>';
-              }
-              //quantity has to be 1 if there's a serial number
-              if($_POST['qty']>1){
-                $result = -1;
-                $mesg = '<div class="warning">'.$langs->trans('QtyMustBe1').'</div>';              
-              }
+                $mesg = '<div class="error">' . $langs->trans('SerialDoesNotExist') . '</div>';
             }
-          }
-          else{
-            $result = -1;
-            $mesg = '<div class="error">'.$langs->trans('SerialDoesNotExist').'</div>';
-          }
         }
         if ($result >= 0)
         {
@@ -1127,15 +1126,15 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
                     GETPOST('fk_parent_line')
                 );
                 //TODO hook
-                if($conf->global->MAIN_MODULE_DETAILEDSTOCK && $serial!=''){
-                  //set the date and author and the related invoice line id, update
-                  $det->tms_o = dol_now();
-                  $det->fk_user_author_o = $user->id;
-                  $det->fk_invoice_line = $result;
-                  $result = $det->update($user);
+                if ($conf->global->MAIN_MODULE_DETAILEDSTOCK && $serial != '') {
+                    //set the date and author and the related invoice line id, update
+                    $det->tms_o = dol_now();
+                    $det->fk_user_author_o = $user->id;
+                    $det->fk_invoice_line = $result;
+                    $result = $det->update($user);
                 }
-              }
-          }
+            }
+        }
     }
 
     if ($result > 0)

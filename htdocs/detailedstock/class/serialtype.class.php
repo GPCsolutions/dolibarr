@@ -1,5 +1,4 @@
 <?php
-
 /* Copyright (C) 2007-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2012      Cédric Salvador      <csalvador@gpcsolutions.fr>
  *
@@ -21,7 +20,7 @@
  *  \file       dev/skeletons/Serialtype.class.php
  *  \ingroup    mymodule othermodule1 othermodule2
  *  \brief      This file is an example for a CRUD class file (Create/Read/Update/Delete)
- * 				Initialy built by build_class_from_table on 2012-07-11 09:56
+ *              Initialy built by build_class_from_table on 2012-07-11 09:56
  */
 // Put here all includes required by your class file
 require_once(DOL_DOCUMENT_ROOT . "/core/class/commonobject.class.php");
@@ -34,385 +33,371 @@ require_once(DOL_DOCUMENT_ROOT . "/core/class/commonobject.class.php");
 class Serialtype extends CommonObject
 {
 
-  var $db;       //!< To store db handler
-  var $error;       //!< To return error code (or message)
-  var $errors = array();    //!< To return several error codes (or messages)
-  //var $element='Serialtype';			//!< Id that identify managed objects
-  //var $table_element='Serialtype';	//!< Name of table without prefix where object is stored
-  var $id;
-  var $code;
-  var $label;
-  var $algo_valid;
-  var $active;
+    var $db;       //!< To store db handler
+    var $error;       //!< To return error code (or message)
+    var $errors = array();    //!< To return several error codes (or messages)
+    //var $element='Serialtype';			//!< Id that identify managed objects
+    //var $table_element='Serialtype';	//!< Name of table without prefix where object is stored
+    var $id;
+    var $code;
+    var $label;
+    var $algo_valid;
+    var $active;
 
-  /**
-   *  Constructor
-   *
-   *  @param	DoliDb		$db      Database handler
-   */
-  function __construct($db)
-  {
-    $this->db = $db;
-    return 1;
-  }
-
-  /**
-   *  Create object into database
-   *
-   *  @param	User	$user        User that create
-   *  @param  int		$notrigger   0=launch triggers after, 1=disable triggers
-   *  @return int      		   	 <0 if KO, Id of created object if OK
-   */
-  function create($user, $notrigger = 0)
-  {
-    global $conf, $langs;
-    $error = 0;
-
-    // Clean parameters
-
-    if (isset($this->code)) $this->code = trim($this->code);
-    if (isset($this->label)) $this->label = trim($this->label);
-    if (isset($this->algo_valid)) $this->algo_valid = trim($this->algo_valid);
-    if (isset($this->active)) $this->active = trim($this->active);
-
-
-
-    // Check parameters
-    // Put here code to add control on parameters values
-    // Insert request
-    $sql = "INSERT INTO " . MAIN_DB_PREFIX . "c_serial_type(";
-
-    $sql.= "code,";
-    $sql.= "label,";
-    $sql.= "algo_valid,";
-    $sql.= "active";
-
-
-    $sql.= ") VALUES (";
-
-    $sql.= " " . (!isset($this->code) ? 'NULL' : "'" . $this->db->escape($this->code) . "'") . ",";
-    $sql.= " " . (!isset($this->label) ? 'NULL' : "'" . $this->db->escape($this->label) . "'") . ",";
-    $sql.= " " . (!isset($this->algo_valid) ? 'NULL' : "'" . $this->algo_valid . "'") . ",";
-    $sql.= " " . (!isset($this->active) ? 'NULL' : "'" . $this->active . "'") . "";
-
-
-    $sql.= ")";
-
-    $this->db->begin();
-
-    dol_syslog(get_class($this) . "::create sql=" . $sql, LOG_DEBUG);
-    $resql = $this->db->query($sql);
-    if (!$resql) {
-      $error++;
-      $this->errors[] = "Error " . $this->db->lasterror();
+    /**
+     *  Constructor
+     *
+     *  @param	DoliDb		$db      Database handler
+     */
+    function __construct($db)
+    {
+        $this->db = $db;
+        return 1;
     }
 
-    if (!$error) {
-      $this->id = $this->db->last_insert_id(MAIN_DB_PREFIX . "c_serial_type");
+    /**
+     *  Create object into database
+     *
+     *  @param	User	$user        User that create
+     *  @param  int		$notrigger   0=launch triggers after, 1=disable triggers
+     *  @return int      		   	 <0 if KO, Id of created object if OK
+     */
+    function create($user, $notrigger = 0)
+    {
+        global $conf, $langs;
+        $error = 0;
 
-      if (!$notrigger) {
-        // Uncomment this and change MYOBJECT to your own tag if you
-        // want this action call a trigger.
-        //// Call triggers
-        //include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
-        //$interface=new Interfaces($this->db);
-        //$result=$interface->run_triggers('MYOBJECT_CREATE',$this,$user,$langs,$conf);
-        //if ($result < 0) { $error++; $this->errors=$interface->errors; }
-        //// End call triggers
-      }
+        // Clean parameters
+
+        if (isset($this->code)) $this->code = trim($this->code);
+        if (isset($this->label)) $this->label = trim($this->label);
+        if (isset($this->algo_valid)) $this->algo_valid = trim($this->algo_valid);
+        if (isset($this->active)) $this->active = trim($this->active);
+
+        // Check parameters
+        // Put here code to add control on parameters values
+        // Insert request
+        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "c_serial_type(";
+
+        $sql.= "code,";
+        $sql.= "label,";
+        $sql.= "algo_valid,";
+        $sql.= "active";
+
+        $sql.= ") VALUES (";
+
+        $sql.= " " . ( ! isset($this->code) ? 'NULL' : "'" . $this->db->escape($this->code) . "'") . ",";
+        $sql.= " " . ( ! isset($this->label) ? 'NULL' : "'" . $this->db->escape($this->label) . "'") . ",";
+        $sql.= " " . ( ! isset($this->algo_valid) ? 'NULL' : "'" . $this->algo_valid . "'") . ",";
+        $sql.= " " . ( ! isset($this->active) ? 'NULL' : "'" . $this->active . "'") . "";
+
+        $sql.= ")";
+
+        $this->db->begin();
+
+        dol_syslog(get_class($this) . "::create sql=" . $sql, LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        if ( ! $resql) {
+            $error ++;
+            $this->errors[] = "Error " . $this->db->lasterror();
+        }
+
+        if ( ! $error) {
+            $this->id = $this->db->last_insert_id(MAIN_DB_PREFIX . "c_serial_type");
+
+            if ( ! $notrigger) {
+                // Uncomment this and change MYOBJECT to your own tag if you
+                // want this action call a trigger.
+                //// Call triggers
+                //include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+                //$interface=new Interfaces($this->db);
+                //$result=$interface->run_triggers('MYOBJECT_CREATE',$this,$user,$langs,$conf);
+                //if ($result < 0) { $error++; $this->errors=$interface->errors; }
+                //// End call triggers
+            }
+        }
+
+        // Commit or rollback
+        if ($error) {
+            foreach ($this->errors as $errmsg) {
+                dol_syslog(get_class($this) . "::create " . $errmsg, LOG_ERR);
+                $this->error.=($this->error ? ', ' . $errmsg : $errmsg);
+            }
+            $this->db->rollback();
+            return -1 * $error;
+        } else {
+            $this->db->commit();
+            return $this->id;
+        }
     }
 
-    // Commit or rollback
-    if ($error) {
-      foreach ($this->errors as $errmsg) {
-        dol_syslog(get_class($this) . "::create " . $errmsg, LOG_ERR);
-        $this->error.=($this->error ? ', ' . $errmsg : $errmsg);
-      }
-      $this->db->rollback();
-      return -1 * $error;
-    } else {
-      $this->db->commit();
-      return $this->id;
-    }
-  }
+    /**
+     *  Load object in memory from database
+     *
+     *  @param	int		$id    Id object
+     *  @return int          	<0 if KO, >0 if OK
+     */
+    function fetch($id)
+    {
+        global $langs;
+        $sql = "SELECT";
+        $sql.= " t.rowid,";
 
-  /**
-   *  Load object in memory from database
-   *
-   *  @param	int		$id    Id object
-   *  @return int          	<0 if KO, >0 if OK
-   */
-  function fetch($id)
-  {
-    global $langs;
-    $sql = "SELECT";
-    $sql.= " t.rowid,";
+        $sql.= " t.code,";
+        $sql.= " t.label,";
+        $sql.= " t.algo_valid,";
+        $sql.= " t.active";
 
-    $sql.= " t.code,";
-    $sql.= " t.label,";
-    $sql.= " t.algo_valid,";
-    $sql.= " t.active";
+        $sql.= " FROM " . MAIN_DB_PREFIX . "c_serial_type as t";
+        $sql.= " WHERE t.rowid = " . $id;
 
+        dol_syslog(get_class($this) . "::fetch sql=" . $sql, LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            if ($this->db->num_rows($resql)) {
+                $obj = $this->db->fetch_object($resql);
 
-    $sql.= " FROM " . MAIN_DB_PREFIX . "c_serial_type as t";
-    $sql.= " WHERE t.rowid = " . $id;
+                $this->id = $obj->rowid;
 
-    dol_syslog(get_class($this) . "::fetch sql=" . $sql, LOG_DEBUG);
-    $resql = $this->db->query($sql);
-    if ($resql) {
-      if ($this->db->num_rows($resql)) {
-        $obj = $this->db->fetch_object($resql);
+                $this->code = $obj->code;
+                $this->label = $obj->label;
+                $this->algo_valid = $obj->algo_valid;
+                $this->active = $obj->active;
+            }
+            $this->db->free($resql);
 
-        $this->id = $obj->rowid;
-
-        $this->code = $obj->code;
-        $this->label = $obj->label;
-        $this->algo_valid = $obj->algo_valid;
-        $this->active = $obj->active;
-      }
-      $this->db->free($resql);
-
-      return 1;
-    } else {
-      $this->error = "Error " . $this->db->lasterror();
-      dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
-      return -1;
-    }
-  }
-
-  /**
-   *  Update object into database
-   *
-   *  @param	User	$user        User that modify
-   *  @param  int		$notrigger	 0=launch triggers after, 1=disable triggers
-   *  @return int     		   	 <0 if KO, >0 if OK
-   */
-  function update($user = 0, $notrigger = 0)
-  {
-    global $conf, $langs;
-    $error = 0;
-
-    // Clean parameters
-
-    if (isset($this->code)) $this->code = trim($this->code);
-    if (isset($this->label)) $this->label = trim($this->label);
-    if (isset($this->algo_valid)) $this->algo_valid = trim($this->algo_valid);
-    if (isset($this->active)) $this->active = trim($this->active);
-
-
-
-    // Check parameters
-    // Put here code to add control on parameters values
-    // Update request
-    $sql = "UPDATE " . MAIN_DB_PREFIX . "c_serial_type SET";
-
-    $sql.= " code=" . (isset($this->code) ? "'" . $this->db->escape($this->code) . "'" : "null") . ",";
-    $sql.= " label=" . (isset($this->label) ? "'" . $this->db->escape($this->label) . "'" : "null") . ",";
-    $sql.= " algo_valid=" . (isset($this->algo_valid) ? $this->algo_valid : "null") . ",";
-    $sql.= " active=" . (isset($this->active) ? $this->active : "null") . "";
-
-
-    $sql.= " WHERE rowid=" . $this->id;
-
-    $this->db->begin();
-
-    dol_syslog(get_class($this) . "::update sql=" . $sql, LOG_DEBUG);
-    $resql = $this->db->query($sql);
-    if (!$resql) {
-      $error++;
-      $this->errors[] = "Error " . $this->db->lasterror();
+            return 1;
+        } else {
+            $this->error = "Error " . $this->db->lasterror();
+            dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
+            return -1;
+        }
     }
 
-    if (!$error) {
-      if (!$notrigger) {
-        // Uncomment this and change MYOBJECT to your own tag if you
-        // want this action call a trigger.
-        //// Call triggers
-        //include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
-        //$interface=new Interfaces($this->db);
-        //$result=$interface->run_triggers('MYOBJECT_MODIFY',$this,$user,$langs,$conf);
-        //if ($result < 0) { $error++; $this->errors=$interface->errors; }
-        //// End call triggers
-      }
+    /**
+     *  Update object into database
+     *
+     *  @param	User	$user        User that modify
+     *  @param  int		$notrigger	 0=launch triggers after, 1=disable triggers
+     *  @return int     		   	 <0 if KO, >0 if OK
+     */
+    function update($user = 0, $notrigger = 0)
+    {
+        global $conf, $langs;
+        $error = 0;
+
+        // Clean parameters
+
+        if (isset($this->code)) $this->code = trim($this->code);
+        if (isset($this->label)) $this->label = trim($this->label);
+        if (isset($this->algo_valid)) $this->algo_valid = trim($this->algo_valid);
+        if (isset($this->active)) $this->active = trim($this->active);
+
+        // Check parameters
+        // Put here code to add control on parameters values
+        // Update request
+        $sql = "UPDATE " . MAIN_DB_PREFIX . "c_serial_type SET";
+
+        $sql.= " code=" . (isset($this->code) ? "'" . $this->db->escape($this->code) . "'" : "null") . ",";
+        $sql.= " label=" . (isset($this->label) ? "'" . $this->db->escape($this->label) . "'" : "null") . ",";
+        $sql.= " algo_valid=" . (isset($this->algo_valid) ? $this->algo_valid : "null") . ",";
+        $sql.= " active=" . (isset($this->active) ? $this->active : "null") . "";
+
+        $sql.= " WHERE rowid=" . $this->id;
+
+        $this->db->begin();
+
+        dol_syslog(get_class($this) . "::update sql=" . $sql, LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        if ( ! $resql) {
+            $error ++;
+            $this->errors[] = "Error " . $this->db->lasterror();
+        }
+
+        if ( ! $error) {
+            if ( ! $notrigger) {
+                // Uncomment this and change MYOBJECT to your own tag if you
+                // want this action call a trigger.
+                //// Call triggers
+                //include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+                //$interface=new Interfaces($this->db);
+                //$result=$interface->run_triggers('MYOBJECT_MODIFY',$this,$user,$langs,$conf);
+                //if ($result < 0) { $error++; $this->errors=$interface->errors; }
+                //// End call triggers
+            }
+        }
+
+        // Commit or rollback
+        if ($error) {
+            foreach ($this->errors as $errmsg) {
+                dol_syslog(get_class($this) . "::update " . $errmsg, LOG_ERR);
+                $this->error.=($this->error ? ', ' . $errmsg : $errmsg);
+            }
+            $this->db->rollback();
+            return -1 * $error;
+        } else {
+            $this->db->commit();
+            return 1;
+        }
     }
 
-    // Commit or rollback
-    if ($error) {
-      foreach ($this->errors as $errmsg) {
-        dol_syslog(get_class($this) . "::update " . $errmsg, LOG_ERR);
-        $this->error.=($this->error ? ', ' . $errmsg : $errmsg);
-      }
-      $this->db->rollback();
-      return -1 * $error;
-    } else {
-      $this->db->commit();
-      return 1;
-    }
-  }
+    /**
+     *  Delete object in database
+     *
+     * 	@param  User	$user        User that delete
+     *  @param  int		$notrigger	 0=launch triggers after, 1=disable triggers
+     *  @return	int					 <0 if KO, >0 if OK
+     */
+    function delete($user, $notrigger = 0)
+    {
+        global $conf, $langs;
+        $error = 0;
 
-  /**
-   *  Delete object in database
-   *
-   * 	@param  User	$user        User that delete
-   *  @param  int		$notrigger	 0=launch triggers after, 1=disable triggers
-   *  @return	int					 <0 if KO, >0 if OK
-   */
-  function delete($user, $notrigger = 0)
-  {
-    global $conf, $langs;
-    $error = 0;
+        $this->db->begin();
 
-    $this->db->begin();
+        if ( ! $error) {
+            if ( ! $notrigger) {
+                // Uncomment this and change MYOBJECT to your own tag if you
+                // want this action call a trigger.
+                //// Call triggers
+                //include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+                //$interface=new Interfaces($this->db);
+                //$result=$interface->run_triggers('MYOBJECT_DELETE',$this,$user,$langs,$conf);
+                //if ($result < 0) { $error++; $this->errors=$interface->errors; }
+                //// End call triggers
+            }
+        }
 
-    if (!$error) {
-      if (!$notrigger) {
-        // Uncomment this and change MYOBJECT to your own tag if you
-        // want this action call a trigger.
-        //// Call triggers
-        //include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
-        //$interface=new Interfaces($this->db);
-        //$result=$interface->run_triggers('MYOBJECT_DELETE',$this,$user,$langs,$conf);
-        //if ($result < 0) { $error++; $this->errors=$interface->errors; }
-        //// End call triggers
-      }
-    }
+        if ( ! $error) {
+            $sql = "DELETE FROM " . MAIN_DB_PREFIX . "c_serial_type";
+            $sql.= " WHERE rowid=" . $this->id;
 
-    if (!$error) {
-      $sql = "DELETE FROM " . MAIN_DB_PREFIX . "c_serial_type";
-      $sql.= " WHERE rowid=" . $this->id;
+            dol_syslog(get_class($this) . "::delete sql=" . $sql);
+            $resql = $this->db->query($sql);
+            if ( ! $resql) {
+                $error ++;
+                $this->errors[] = "Error " . $this->db->lasterror();
+            }
+        }
 
-      dol_syslog(get_class($this) . "::delete sql=" . $sql);
-      $resql = $this->db->query($sql);
-      if (!$resql) {
-        $error++;
-        $this->errors[] = "Error " . $this->db->lasterror();
-      }
-    }
-
-    // Commit or rollback
-    if ($error) {
-      foreach ($this->errors as $errmsg) {
-        dol_syslog(get_class($this) . "::delete " . $errmsg, LOG_ERR);
-        $this->error.=($this->error ? ', ' . $errmsg : $errmsg);
-      }
-      $this->db->rollback();
-      return -1 * $error;
-    } else {
-      $this->db->commit();
-      return 1;
-    }
-  }
-
-  /**
-   * 	Load an object from its id and create a new one in database
-   *
-   * 	@param	int		$fromid     Id of object to clone
-   * 	@return	int					New id of clone
-   */
-  function createFromClone($fromid)
-  {
-    global $user, $langs;
-
-    $error = 0;
-
-    $object = new Serialtype($this->db);
-
-    $this->db->begin();
-
-    // Load source object
-    $object->fetch($fromid);
-    $object->id = 0;
-    $object->statut = 0;
-
-    // Clear fields
-    // ...
-    // Create clone
-    $result = $object->create($user);
-
-    // Other options
-    if ($result < 0) {
-      $this->error = $object->error;
-      $error++;
+        // Commit or rollback
+        if ($error) {
+            foreach ($this->errors as $errmsg) {
+                dol_syslog(get_class($this) . "::delete " . $errmsg, LOG_ERR);
+                $this->error.=($this->error ? ', ' . $errmsg : $errmsg);
+            }
+            $this->db->rollback();
+            return -1 * $error;
+        } else {
+            $this->db->commit();
+            return 1;
+        }
     }
 
-    if (!$error) {
-      
+    /**
+     * 	Load an object from its id and create a new one in database
+     *
+     * 	@param	int		$fromid     Id of object to clone
+     * 	@return	int					New id of clone
+     */
+    function createFromClone($fromid)
+    {
+        global $user, $langs;
+
+        $error = 0;
+
+        $object = new Serialtype($this->db);
+
+        $this->db->begin();
+
+        // Load source object
+        $object->fetch($fromid);
+        $object->id = 0;
+        $object->statut = 0;
+
+        // Clear fields
+        // ...
+        // Create clone
+        $result = $object->create($user);
+
+        // Other options
+        if ($result < 0) {
+            $this->error = $object->error;
+            $error ++;
+        }
+
+        // End
+        if ( ! $error) {
+            $this->db->commit();
+            return $object->id;
+        } else {
+            $this->db->rollback();
+            return -1;
+        }
     }
 
-    // End
-    if (!$error) {
-      $this->db->commit();
-      return $object->id;
-    } else {
-      $this->db->rollback();
-      return -1;
-    }
-  }
+    /**
+     * 	Initialise object with example values
+     * 	Id must be 0 if object instance is a specimen
+     *
+     * 	@return	void
+     */
+    function initAsSpecimen()
+    {
+        $this->id = 0;
 
-  /**
-   * 	Initialise object with example values
-   * 	Id must be 0 if object instance is a specimen
-   *
-   * 	@return	void
-   */
-  function initAsSpecimen()
-  {
-    $this->id = 0;
-
-    $this->code = '';
-    $this->label = '';
-    $this->algo_valid = '';
-    $this->active = '';
-  }
-
-  /**
-   * Checks the serial using the Luhn algorithm
-   * @param $serial serial to validate
-   */
-  function Luhn_valid($serial, $len)
-  {
-    if (!ctype_digit($serial)) return false;
-    for ($ii = 1, $sum = 0; $ii < $len; $ii++) {
-      if ($ii % 2 == 0) $prod = 2;
-      else $prod = 1;
-      $num = $prod * $serial[$ii - 1];
-      if ($num > 9) {
-        $numstr = strval($num);
-        $sum += $numstr[0] + $numstr[1];
-      }else $sum += $num;
+        $this->code = '';
+        $this->label = '';
+        $this->algo_valid = '';
+        $this->active = '';
     }
 
-    $sumlast = intval(10 * (($sum / 10) - floor($sum / 10))); //The last digit of $sum
-    $dif = (10 - $sumlast);
-    $diflast = intval(10 * (($dif / 10) - floor($dif / 10))); //The last digit of $dif
-    $CD = intval($serial[$len - 1]); //check digit
+    /**
+     * Checks the serial using the Luhn algorithm
+     * @param $serial serial to validate
+     */
+    function Luhn_valid($serial, $len)
+    {
+        if ( ! ctype_digit($serial)) return false;
+        for ($ii = 1, $sum = 0; $ii < $len; $ii ++ ) {
+            if ($ii % 2 == 0) $prod = 2;
+            else $prod = 1;
+            $num = $prod * $serial[$ii - 1];
+            if ($num > 9) {
+                $numstr = strval($num);
+                $sum += $numstr[0] + $numstr[1];
+            }else $sum += $num;
+        }
 
-    /* ugly
-      if($diflast == $CD) return true;
+        $sumlast = intval(10 * (($sum / 10) - floor($sum / 10))); //The last digit of $sum
+        $dif = (10 - $sumlast);
+        $diflast = intval(10 * (($dif / 10) - floor($dif / 10))); //The last digit of $dif
+        $CD = intval($serial[$len - 1]); //check digit
 
-      return false; */
-    return ($diflast == $CD);
-  }
+        /* ugly
+          if($diflast == $CD) return true;
 
-  /**
-   * Checks if a serial is valid by calling the appropriate validation method
-   * @param $serial serial to validate
-   * @return false or true
-   */
-  function validate($serial)
-  {
-    //$this->algo_valid =1 ==>validate using the Luhn algorithm
-    if ($this->algo_valid == 1) {
-      $len = strlen($serial);
-      if(($this->code =='imei' && $len == 15) || ($this->code == 'iccid' && ($len == 19 || $len == 20))){
-        return $this->Luhn_valid($serial, $len);
-      }
-      else{
-        return false;
-      }
+          return false; */
+        return ($diflast == $CD);
     }
-  }
 
+    /**
+     * Checks if a serial is valid by calling the appropriate validation method
+     * @param $serial serial to validate
+     * @return false or true
+     */
+    function validate($serial)
+    {
+        //$this->algo_valid =1 ==>validate using the Luhn algorithm
+        if ($this->algo_valid == 1) {
+            $len = strlen($serial);
+            if (($this->code == 'imei' && $len == 15) || ($this->code == 'iccid' && ($len == 19 || $len == 20))) {
+                return $this->Luhn_valid($serial, $len);
+            } else {
+                return false;
+            }
+        }
+    }
 
 }
 

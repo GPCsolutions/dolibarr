@@ -21,7 +21,6 @@
  *      \file       htdocs/detailedstock/productstockdet.php
  *      \ingroup    detailedstock
  *      \brief
- *      Put here some comments
  */
 //if (! defined('NOREQUIREUSER'))  define('NOREQUIREUSER','1');
 //if (! defined('NOREQUIREDB'))    define('NOREQUIREDB','1');
@@ -54,11 +53,9 @@ if ($user->societe_id > 0) {
     //accessforbidden();
 }
 
-/*******************************************************************
- * ACTIONS
- *
- * Put here all code to do according to value of "action" parameter
- ********************************************************************/
+/*
+ * Actions
+ */
 
 if ($action == 'add') {
     $myobject = new Productstockdet($db);
@@ -73,11 +70,9 @@ if ($action == 'add') {
     }
 }
 
-/***************************************************
- * VIEW
- *
- * Put here all code to build page
- ****************************************************/
+/*
+ * View
+ */
 
 llxHeader('', 'MyPageName', '');
 
@@ -104,5 +99,7 @@ $somethingshown = $myobject->showLinkedObjectBlock();
 
 // End of page
 llxFooter();
+
 $db->close();
+
 ?>

@@ -142,8 +142,8 @@ switch ( $_GET['action'] )
 			$obj_facturation->ajoutArticle();
             //TODO HOOK
             if($conf->global->MAIN_MODULE_DETAILEDSTOCK){
-              //detailedstock line id
-              $obj_facturation->lineid = $_POST['serial'];
+                //detailedstock line id
+                $obj_facturation->lineid = $_POST['serial'];
             }
 
 		}

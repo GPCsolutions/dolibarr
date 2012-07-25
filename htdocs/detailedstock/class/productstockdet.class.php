@@ -34,7 +34,7 @@ class Productstockdet extends CommonObject
     public $error;                             //!< To return error code (or message)
     public $errors = array();                  //!< To return several error codes (or messages)
     //public $element='productstockdet';       //!< Id that identify managed objects
-    public $table_element='product_stock_det'; //!< Name of table without prefix where object is stored
+    public $table_element = 'product_stock_det'; //!< Name of table without prefix where object is stored
     public $id; //line id
     public $tms_i = ''; //date of addition to the stock
     public $tms_o = ''; //date of removal from the stock
@@ -54,6 +54,7 @@ class Productstockdet extends CommonObject
      *
      *  @param  DoliDb      $db      Database handler
      */
+
     public function __construct($db)
     {
         $this->db = $db;
@@ -84,8 +85,6 @@ class Productstockdet extends CommonObject
         if (isset($this->fk_invoice_line)) $this->fk_invoice_line = trim($this->fk_invoice_line);
         if (isset($this->fk_dispatch_line)) $this->fk_dispatch_line = trim($this->fk_dispatch_line);
         if (isset($this->fk_supplier)) $this->fk_supplier = trim($this->fk_supplier);
-
-
 
         // Check parameters
         // Put here code to add control on parameters values
@@ -120,7 +119,6 @@ class Productstockdet extends CommonObject
         $sql.= " " . ( ! isset($this->fk_invoice_line) ? 'NULL' : "'" . $this->fk_invoice_line . "'") . ",";
         $sql.= " " . ( ! isset($this->fk_dispatch_line) ? 'NULL' : "'" . $this->fk_dispatch_line . "'") . ",";
         $sql.= " " . ( ! isset($this->fk_supplier) ? 'NULL' : "'" . $this->fk_supplier . "'") . "";
-
 
         $sql.= ")";
 
@@ -187,7 +185,6 @@ class Productstockdet extends CommonObject
         $sql.= " t.fk_dispatch_line,";
         $sql.= " t.fk_supplier";
 
-
         $sql.= " FROM " . MAIN_DB_PREFIX . "product_stock_det as t";
         $sql.= " WHERE t.rowid = " . $id;
 
@@ -247,8 +244,6 @@ class Productstockdet extends CommonObject
         if (isset($this->fk_dispatch_line)) $this->fk_dispatch_line = trim($this->fk_dispatch_line);
         if (isset($this->fk_supplier)) $this->fk_supplier = trim($this->fk_supplier);
 
-
-
         // Check parameters
         // Put here code to add control on parameters values
         // Update request
@@ -266,7 +261,6 @@ class Productstockdet extends CommonObject
         $sql.= " fk_invoice_line=" . (isset($this->fk_invoice_line) ? $this->fk_invoice_line : "null") . ",";
         $sql.= " fk_dispatch_line=" . (isset($this->fk_dispatch_line) ? $this->fk_dispatch_line : "null") . ",";
         $sql.= " fk_supplier=" . (isset($this->fk_supplier) ? $this->fk_supplier : "null") . "";
-
 
         $sql.= " WHERE rowid=" . $this->id;
         $this->db->begin();
@@ -429,35 +423,36 @@ class Productstockdet extends CommonObject
     }
 
     /**
-     *Returns the label of the associated serial type
-     * @return string $label 
+     * Returns the label of the associated serial type
+     * @return string $label
      */
-    public function getSerialTypeLabel(){
-    $label = '';
-    if ($this->fk_serial_type) {
-      $sql = 'select label from ' . MAIN_DB_PREFIX . 'c_serial_type where rowid = ' . $this->fk_serial_type;
-      $resql = $this->db->query($sql);
-      if ($resql) {
-        if ($this->db->num_rows($resql) > 0) {
-          $res = $this->db->fetch_object($resql);
-          $label = $res->label;
+    public function getSerialTypeLabel()
+    {
+        $label = '';
+        if ($this->fk_serial_type) {
+            $sql = 'select label from ' . MAIN_DB_PREFIX . 'c_serial_type where rowid = ' . $this->fk_serial_type;
+            $resql = $this->db->query($sql);
+            if ($resql) {
+                if ($this->db->num_rows($resql) > 0) {
+                    $res = $this->db->fetch_object($resql);
+                    $label = $res->label;
+                }
+                return $label;
+            } else {
+                $this->error = "Error " . $this->db->lasterror();
+                dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
+                return -1;
+            }
         }
         return $label;
-      } else {
-        $this->error = "Error " . $this->db->lasterror();
-        dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
-        return -1;
-      }
     }
-    return $label;
-  }
 
-  /**
-   * Creates an html select element to choose which serial type to use
-   * @param int $selected  id of the selected option
-   * @param string $htmlname  the select html name
-   * @return string an html select
-   */
+    /**
+     * Creates an html select element to choose which serial type to use
+     * @param int $selected  id of the selected option
+     * @param string $htmlname  the select html name
+     * @return string an html select
+     */
     public function selectSerialType($selected, $htmlname)
     {
         $return = '';
@@ -485,280 +480,281 @@ class Productstockdet extends CommonObject
     //had to copy 2 functions from html.formproduct.class.php to modify because they're terrible and I don't want to modify dolibarr core files.
 
     /**
- * Load in cache array list of warehouses
- * If fk_product is not 0, we do not use cache
- *
- * @param	int		$fk_product		Add quantity of stock in label for product with id fk_product. Nothing if 0.
- * @param   string  $filter         Additional filter option
- * @return  int  		    		Nb of loaded lines, 0 if already loaded, <0 if KO
- */
-  public function loadWarehouses($fk_product = 0, $filter='')
-  {
-    global $conf, $langs;
+     * Load in cache array list of warehouses
+     * If fk_product is not 0, we do not use cache
+     *
+     * @param	int		$fk_product		Add quantity of stock in label for product with id fk_product. Nothing if 0.
+     * @param   string  $filter         Additional filter option
+     * @return  int  		    		Nb of loaded lines, 0 if already loaded, <0 if KO
+     */
+    public function loadWarehouses($fk_product = 0, $filter = '')
+    {
+        global $conf, $langs;
 
-    if (empty($fk_product) && count($this->cache_warehouses))
-        return 0;    // Cache already loaded and we do not want a list with information specific to a product
+        if (empty($fk_product) && count($this->cache_warehouses))
+                return 0;    // Cache already loaded and we do not want a list with information specific to a product
 
-    $sql = "SELECT e.rowid, e.label";
-    if ($fk_product) $sql.= ", ps.reel";
-    $sql.= " FROM " . MAIN_DB_PREFIX . "entrepot as e";
-    if ($fk_product) {
-      $sql.= " LEFT JOIN " . MAIN_DB_PREFIX . "product_stock as ps on ps.fk_entrepot = e.rowid";
-      $sql.= " AND ps.fk_product = '" . $fk_product . "'";
-    }
-    $sql.= " WHERE e.entity = " . $conf->entity;
-    $sql.= " AND e.statut = 1";
-    //if a filter is defined, use it
-    if(!empty($filter))$sql.= " AND ".$filter;
-    $sql.= " ORDER BY e.label";
-
-    dol_syslog(get_class($this) . '::loadWarehouses sql=' . $sql, LOG_DEBUG);
-    $resql = $this->db->query($sql);
-    if ($resql) {
-      $num = $this->db->num_rows($resql);
-      $i = 0;
-      while ($i < $num) {
-        $obj = $this->db->fetch_object($resql);
-
-        $this->cache_warehouses[$obj->rowid]['id'] = $obj->rowid;
-        $this->cache_warehouses[$obj->rowid]['label'] = $obj->label;
-        if ($fk_product) $this->cache_warehouses[$obj->rowid]['stock'] = $obj->reel;
-        $i++;
-      }
-      return $num;
-    }
-    else {
-      dol_print_error($this->db);
-      return -1;
-    }
-  }
-
-
-  /**
-   * Creates an html select element to choose a warehouse
-   * @global $langs
-   * @global User $user
-   * @param int $selected       id of the selected option
-   * @param string $htmlname    html name of the select
-   * @param string $filter      optional filter
-   * @param int $empty
-   * @param int $disabled
-   * @param int $fk_product     product id
-   * @return string   html select element
-   */
-  public function selectWarehouses($selected = '', $htmlname = 'idwarehouse', $filter = '', $empty = 0, $disabled = 0,
-      $fk_product = 0)
-  {
-    global $langs, $user;
-
-    dol_syslog(get_class($this) . "::selectWarehouses $selected, $htmlname, $filter, $empty, $disabled, $fk_product",
-        LOG_DEBUG);
-
-    $this->loadWarehouses($fk_product, $filter);
-
-    $out = '<select class="flat"' . ($disabled ? ' disabled="disabled"' : '') . ' id="' . $htmlname . '" name="' . ($htmlname . ($disabled ? '_disabled' : '')) . '">';
-    if ($empty) $out.='<option value="">&nbsp;</option>';
-    foreach ($this->cache_warehouses as $id => $arraytypes) {
-      $out.='<option value="' . $id . '"';
-      // Si selected est text, on compare avec code, sinon avec id
-      if ($selected == $id) $out.=' selected="selected"';
-      $out.='>';
-      $out.=$arraytypes['label'];
-      if ($fk_product)
-          $out.=' (' . $langs->trans("Stock") . ': ' . ($arraytypes['stock'] > 0 ? $arraytypes['stock'] : '?') . ')';
-      $out.='</option>';
-    }
-    $out.='</select>';
-    if ($disabled) $out.='<input type="hidden" name="' . $htmlname . '" value="' . $selected . '">';
-
-    return $out;
-  }
-
-  /**
-   *Gets the date and author of the action
-   * @param string $action input or output
-   * @return string date and author of the action 
-   */
-  public function getInfos($action){
-    $date ='';
-    $author='';
-    $doluser = new User($this->db);
-    if($action == 'input'){
-      $date = date('d/m/y',$this->tms_i);
-      $id = $this->fk_user_author_i;
-    }
-    else{
-      $date = date('d/m/y',$this->tms_o);
-      $id = $this->fk_user_author_o;
-    }
-    $doluser->fetch($id);
-    $author = $doluser->getFullName($langs, 0, 1);
-    $infos = $author.' ('.$date.')';
-    return $infos;
-  }
-
-  /**
-   *Counts how many detailedstock lines are related to the dispatch line
-   * @param int $fk_dispatch_line
-   * @return int  -1 if error, >=0 if ok
-   */
-  public function records($fk_dispatch_line){
-    $sql = 'select rowid from '.MAIN_DB_PREFIX.'product_stock_det where fk_dispatch_line = '.$fk_dispatch_line;
-    $resql = $this->db->query($sql);
-    if($resql){
-      return $this->db->num_rows($resql);
-    }
-    else{
-      $this->error = "Error " . $this->db->lasterror();
-      dol_syslog(get_class($this) . "::exists " . $this->error, LOG_ERR);
-      return -1;
-    }
-  }
-  
-  /**
-   *old serial number selector, might get deleted
-   * @global $langs $langs
-   * @param int $selected
-   * @param int $idproduct
-   * @return string 
-   */
-  public function selectSerial($selected, $idproduct){
-    global $langs;
-    $res ='<select class="flat" onchange="javascript: lockQte();" id="serial" name="serial">';
-    $res .= '<option value="0" >'.$langs->trans('SerialNumber').'</option>';
-    if($idproduct){
-      $sql = 'select rowid, serial from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product=' . $idproduct;
-      $sql .= ' and tms_o is NULL';
-      $resql = $this->db->query($sql);
-      if ($resql && $this->db->num_rows($resql) > 0) {
-        while ($obj = $this->db->fetch_object($resql)) {
-          if ($selected == $obj->rowid) $sel = 'selected="selected" ';
-          $res .='<option '.$sel.'value="' . $obj->rowid . '">' . $obj->serial . '</option>';
+        $sql = "SELECT e.rowid, e.label";
+        if ($fk_product) $sql.= ", ps.reel";
+        $sql.= " FROM " . MAIN_DB_PREFIX . "entrepot as e";
+        if ($fk_product) {
+            $sql.= " LEFT JOIN " . MAIN_DB_PREFIX . "product_stock as ps on ps.fk_entrepot = e.rowid";
+            $sql.= " AND ps.fk_product = '" . $fk_product . "'";
         }
-      }
-    }
-    $res .= '</select>';
-    return $res;
-  }
-  
-  /**
-   * Prepares the options to display in the text field
-   * @global $langs $langs
-   * @param int $selected
-   * @param int $idproduct
-   * @param string $searchkey
-   * @return array values to use to display the options in the field
-   */
-  public function selectSerialJSON($selected, $idproduct, $searchkey=''){
-    global $langs;
-    $res ='<select id="serial" name="serial">';
-    $res .= '<option value="0" >'.$langs->trans('SerialNumber').'</option>';
-    $sql = 'select rowid, serial from ' . MAIN_DB_PREFIX . 'product_stock_det';
-    $sql .= ' where tms_o is NULL';
-    if($idproduct != ''){
-      $sql .= ' and fk_product = '.$idproduct;
-    }
-    if($searchkey != ''){
-      $sql .= ' and serial like "%'.$searchkey.'%"';
-    }
-    $outjson = array();
-    $resql = $this->db->query($sql);
-    if ($resql && $this->db->num_rows($resql) > 0) {
-      while ($obj = $this->db->fetch_object($resql)) {
-        if ($selected == $obj->rowid) $sel = 'selected="selected" ';
-        $res .='<option '.$sel.'value="' . $obj->rowid . '">' . $obj->serial . '</option>';
-        $outkey = $obj->rowid;
-        $outval = $obj->serial;
-        $label = $obj->serial;
-        if ($searchkey && $searchkey != '') $label=preg_replace('/('.preg_quote($searchkey).')/i','<strong>$1</strong>',$label,1);
-        array_push($outjson,array('key'=>$outkey,'value'=>$outval, 'label'=>$label));
-      }
-    }
-    $res .= '</select>';
-    return $outjson;
-  }
-  
-  /**
-   * checks if there's a detailedstock line with this serial
-   * @param string $serial
-   * @return integer -1 if $serial doesn't exist; else returns the related detailedstock line id 
-   */
-  public function exists($serial){
-    if($serial=='') {
-      $sql = 'select rowid from '.MAIN_DB_PREFIX.'product_stock_det where serial is null ';
-    }
-    else{
-      $sql = 'select rowid from '.MAIN_DB_PREFIX.'product_stock_det where serial = '.$serial;
-    }
-    $resql = $this->db->query($sql);
-    if($resql && $this->db->num_rows($resql) > 0){
-      $obj = $this->db->fetch_object($db);
-      return $obj->rowid;
-    }
-    else{
-      return -1;
-    }
-  }
-  
-  /**
-   *Same as the fetch method, except it uses the invoice line id to retrieve the object
-   * @global $langs $langs
-   * @param int $fk_invoiceline
-   * @return int 1 if ok, else -1
-   */
-  public function fetchByFkInvoiceline($fk_invoiceline)
-  {
-    global $langs;
-    $sql = "SELECT";
-    $sql.= " t.rowid,";
+        $sql.= " WHERE e.entity = " . $conf->entity;
+        $sql.= " AND e.statut = 1";
+        //if a filter is defined, use it
+        if ( ! empty($filter)) $sql.= " AND " . $filter;
+        $sql.= " ORDER BY e.label";
 
-    $sql.= " t.tms_i,";
-    $sql.= " t.tms_o,";
-    $sql.= " t.fk_product,";
-    $sql.= " t.fk_entrepot,";
-    $sql.= " t.fk_user_author_i,";
-    $sql.= " t.fk_user_author_o,";
-    $sql.= " t.serial,";
-    $sql.= " t.fk_serial_type,";
-    $sql.= " t.price,";
-    $sql.= " t.fk_invoice_line,";
-    $sql.= " t.fk_dispatch_line,";
-    $sql.= " t.fk_supplier";
+        dol_syslog(get_class($this) . '::loadWarehouses sql=' . $sql, LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            $num = $this->db->num_rows($resql);
+            $i = 0;
+            while ($i < $num) {
+                $obj = $this->db->fetch_object($resql);
 
-
-    $sql.= " FROM " . MAIN_DB_PREFIX . "product_stock_det as t";
-    $sql.= " WHERE t.fk_invoice_line = " . $fk_invoiceline;
-
-    dol_syslog(get_class($this) . "::fetch sql=" . $sql, LOG_DEBUG);
-    $resql = $this->db->query($sql);
-    if ($resql) {
-      if ($this->db->num_rows($resql)) {
-        $obj = $this->db->fetch_object($resql);
-
-        $this->id = $obj->rowid;
-
-        $this->tms_i = $this->db->jdate($obj->tms_i);
-        $this->tms_o = $this->db->jdate($obj->tms_o);
-        $this->fk_product = $obj->fk_product;
-        $this->fk_entrepot = $obj->fk_entrepot;
-        $this->fk_user_author_i = $obj->fk_user_author_i;
-        $this->fk_user_author_o = $obj->fk_user_author_o;
-        $this->serial = $obj->serial;
-        $this->fk_serial_type = $obj->fk_serial_type;
-        $this->price = $obj->price;
-        $this->fk_invoice_line = $obj->fk_invoice_line;
-        $this->fk_dispatch_line = $obj->fk_dispatch_line;
-        $this->fk_supplier = $obj->fk_supplier;
-      }
-      $this->db->free($resql);
-
-      return 1;
-    } else {
-      $this->error = "Error " . $this->db->lasterror();
-      dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
-      return -1;
+                $this->cache_warehouses[$obj->rowid]['id'] = $obj->rowid;
+                $this->cache_warehouses[$obj->rowid]['label'] = $obj->label;
+                if ($fk_product) $this->cache_warehouses[$obj->rowid]['stock'] = $obj->reel;
+                $i ++;
+            }
+            return $num;
+        }
+        else {
+            dol_print_error($this->db);
+            return -1;
+        }
     }
-  }
+
+    /**
+     * Creates an html select element to choose a warehouse
+     * @global $langs
+     * @global User $user
+     * @param int $selected       id of the selected option
+     * @param string $htmlname    html name of the select
+     * @param string $filter      optional filter
+     * @param int $empty
+     * @param int $disabled
+     * @param int $fk_product     product id
+     * @return string   html select element
+     */
+    public function selectWarehouses($selected = '', $htmlname = 'idwarehouse', $filter = '', $empty = 0, $disabled = 0,
+        $fk_product = 0)
+    {
+        global $langs, $user;
+
+        dol_syslog(get_class($this) . "::selectWarehouses $selected, $htmlname, $filter, $empty, $disabled, $fk_product",
+            LOG_DEBUG);
+
+        $this->loadWarehouses($fk_product, $filter);
+
+        $out = '<select class="flat"' . ($disabled ? ' disabled="disabled"' : '') . ' id="' . $htmlname . '" name="' . ($htmlname . ($disabled ? '_disabled' : '')) . '">';
+        if ($empty) $out.='<option value="">&nbsp;</option>';
+        foreach ($this->cache_warehouses as $id => $arraytypes) {
+            $out.='<option value="' . $id . '"';
+            // Si selected est text, on compare avec code, sinon avec id
+            if ($selected == $id) $out.=' selected="selected"';
+            $out.='>';
+            $out.=$arraytypes['label'];
+            if ($fk_product)
+                    $out.=' (' . $langs->trans("Stock") . ': ' . ($arraytypes['stock'] > 0 ? $arraytypes['stock'] : '?') . ')';
+            $out.='</option>';
+        }
+        $out.='</select>';
+        if ($disabled) $out.='<input type="hidden" name="' . $htmlname . '" value="' . $selected . '">';
+
+        return $out;
+    }
+
+    /**
+     * Gets the date and author of the action
+     * @param string $action input or output
+     * @return string date and author of the action
+     */
+    public function getInfos($action)
+    {
+        $date = '';
+        $author = '';
+        $doluser = new User($this->db);
+        if ($action == 'input') {
+            $date = date('d/m/y', $this->tms_i);
+            $id = $this->fk_user_author_i;
+        } else {
+            $date = date('d/m/y', $this->tms_o);
+            $id = $this->fk_user_author_o;
+        }
+        $doluser->fetch($id);
+        $author = $doluser->getFullName($langs, 0, 1);
+        $infos = $author . ' (' . $date . ')';
+        return $infos;
+    }
+
+    /**
+     * Counts how many detailedstock lines are related to the dispatch line
+     * @param int $fk_dispatch_line
+     * @return int  -1 if error, >=0 if ok
+     */
+    public function records($fk_dispatch_line)
+    {
+        $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_dispatch_line = ' . $fk_dispatch_line;
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            return $this->db->num_rows($resql);
+        } else {
+            $this->error = "Error " . $this->db->lasterror();
+            dol_syslog(get_class($this) . "::exists " . $this->error, LOG_ERR);
+            return -1;
+        }
+    }
+
+    /**
+     * old serial number selector, might get deleted
+     * @global $langs $langs
+     * @param int $selected
+     * @param int $idproduct
+     * @return string
+     */
+    public function selectSerial($selected, $idproduct)
+    {
+        global $langs;
+        $res = '<select class="flat" onchange="javascript: lockQte();" id="serial" name="serial">';
+        $res .= '<option value="0" >' . $langs->trans('SerialNumber') . '</option>';
+        if ($idproduct) {
+            $sql = 'select rowid, serial from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product=' . $idproduct;
+            $sql .= ' and tms_o is NULL';
+            $resql = $this->db->query($sql);
+            if ($resql && $this->db->num_rows($resql) > 0) {
+                while ($obj = $this->db->fetch_object($resql)) {
+                    if ($selected == $obj->rowid) $sel = 'selected="selected" ';
+                    $res .='<option ' . $sel . 'value="' . $obj->rowid . '">' . $obj->serial . '</option>';
+                }
+            }
+        }
+        $res .= '</select>';
+        return $res;
+    }
+
+    /**
+     * Prepares the options to display in the text field
+     * @global $langs $langs
+     * @param int $selected
+     * @param int $idproduct
+     * @param string $searchkey
+     * @return array values to use to display the options in the field
+     */
+    public function selectSerialJSON($selected, $idproduct, $searchkey = '')
+    {
+        global $langs;
+        $res = '<select id="serial" name="serial">';
+        $res .= '<option value="0" >' . $langs->trans('SerialNumber') . '</option>';
+        $sql = 'select rowid, serial from ' . MAIN_DB_PREFIX . 'product_stock_det';
+        $sql .= ' where tms_o is NULL';
+        if ($idproduct != '') {
+            $sql .= ' and fk_product = ' . $idproduct;
+        }
+        if ($searchkey != '') {
+            $sql .= ' and serial like "%' . $searchkey . '%"';
+        }
+        $outjson = array();
+        $resql = $this->db->query($sql);
+        if ($resql && $this->db->num_rows($resql) > 0) {
+            while ($obj = $this->db->fetch_object($resql)) {
+                if ($selected == $obj->rowid) $sel = 'selected="selected" ';
+                $res .='<option ' . $sel . 'value="' . $obj->rowid . '">' . $obj->serial . '</option>';
+                $outkey = $obj->rowid;
+                $outval = $obj->serial;
+                $label = $obj->serial;
+                if ($searchkey && $searchkey != '')
+                        $label = preg_replace('/(' . preg_quote($searchkey) . ')/i', '<strong>$1</strong>', $label, 1);
+                array_push($outjson, array('key' => $outkey, 'value' => $outval, 'label' => $label));
+            }
+        }
+        $res .= '</select>';
+        return $outjson;
+    }
+
+    /**
+     * checks if there's a detailedstock line with this serial
+     * @param string $serial
+     * @return integer -1 if $serial doesn't exist; else returns the related detailedstock line id
+     */
+    public function exists($serial)
+    {
+        if ($serial == '') {
+            $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where serial is null ';
+        } else {
+            $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where serial = ' . $serial;
+        }
+        $resql = $this->db->query($sql);
+        if ($resql && $this->db->num_rows($resql) > 0) {
+            $obj = $this->db->fetch_object($db);
+            return $obj->rowid;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * Same as the fetch method, except it uses the invoice line id to retrieve the object
+     * @global $langs $langs
+     * @param int $fk_invoiceline
+     * @return int 1 if ok, else -1
+     */
+    public function fetchByFkInvoiceline($fk_invoiceline)
+    {
+        global $langs;
+        $sql = "SELECT";
+        $sql.= " t.rowid,";
+
+        $sql.= " t.tms_i,";
+        $sql.= " t.tms_o,";
+        $sql.= " t.fk_product,";
+        $sql.= " t.fk_entrepot,";
+        $sql.= " t.fk_user_author_i,";
+        $sql.= " t.fk_user_author_o,";
+        $sql.= " t.serial,";
+        $sql.= " t.fk_serial_type,";
+        $sql.= " t.price,";
+        $sql.= " t.fk_invoice_line,";
+        $sql.= " t.fk_dispatch_line,";
+        $sql.= " t.fk_supplier";
+
+
+        $sql.= " FROM " . MAIN_DB_PREFIX . "product_stock_det as t";
+        $sql.= " WHERE t.fk_invoice_line = " . $fk_invoiceline;
+
+        dol_syslog(get_class($this) . "::fetch sql=" . $sql, LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            if ($this->db->num_rows($resql)) {
+                $obj = $this->db->fetch_object($resql);
+
+                $this->id = $obj->rowid;
+
+                $this->tms_i = $this->db->jdate($obj->tms_i);
+                $this->tms_o = $this->db->jdate($obj->tms_o);
+                $this->fk_product = $obj->fk_product;
+                $this->fk_entrepot = $obj->fk_entrepot;
+                $this->fk_user_author_i = $obj->fk_user_author_i;
+                $this->fk_user_author_o = $obj->fk_user_author_o;
+                $this->serial = $obj->serial;
+                $this->fk_serial_type = $obj->fk_serial_type;
+                $this->price = $obj->price;
+                $this->fk_invoice_line = $obj->fk_invoice_line;
+                $this->fk_dispatch_line = $obj->fk_dispatch_line;
+                $this->fk_supplier = $obj->fk_supplier;
+            }
+            $this->db->free($resql);
+
+            return 1;
+        } else {
+            $this->error = "Error " . $this->db->lasterror();
+            dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
+            return -1;
+        }
+    }
 
 }
 

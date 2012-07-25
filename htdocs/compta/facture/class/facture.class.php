@@ -3709,7 +3709,7 @@ class FactureLigne
 		$interface=new Interfaces($this->db);
 		$result = $interface->run_triggers('LINEBILL_DELETE',$this,$user,$langs,$conf);
 		if ($result < 0) { $error++; $this->errors=$interface->errors; }
-			// Fin appel triggers
+        // Fin appel triggers
 		if ($this->db->query($sql) && $result >=0)
 		{
 

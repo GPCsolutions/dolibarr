@@ -19,52 +19,48 @@
 
 /**
  *       \file       htdocs/detailedstock/ajaxDetailedStock.php
- *       \brief      File to return Ajax response on serial numbers list request
+ *       \brief      Returns Ajax response on serial numbers list request
  */
-
-if (! defined('NOTOKENRENEWAL')) define('NOTOKENRENEWAL',1); // Disables token renewal
-if (! defined('NOREQUIREMENU'))  define('NOREQUIREMENU','1');
-if (! defined('NOREQUIREHTML'))  define('NOREQUIREHTML','1');
-if (! defined('NOREQUIREAJAX'))  define('NOREQUIREAJAX','1');
-if (! defined('NOREQUIRESOC'))   define('NOREQUIRESOC','1');
-if (! defined('NOCSRFCHECK'))    define('NOCSRFCHECK','1');
-if (empty($_GET['keysearch']) && ! defined('NOREQUIREHTML'))  define('NOREQUIREHTML','1');
+if ( ! defined('NOTOKENRENEWAL')) define('NOTOKENRENEWAL', 1); // Disables token renewal
+if ( ! defined('NOREQUIREMENU')) define('NOREQUIREMENU', '1');
+if ( ! defined('NOREQUIREHTML')) define('NOREQUIREHTML', '1');
+if ( ! defined('NOREQUIREAJAX')) define('NOREQUIREAJAX', '1');
+if ( ! defined('NOREQUIRESOC')) define('NOREQUIRESOC', '1');
+if ( ! defined('NOCSRFCHECK')) define('NOCSRFCHECK', '1');
+if (empty($_GET['keysearch']) && ! defined('NOREQUIREHTML')) define('NOREQUIREHTML', '1');
 
 require('../main.inc.php');
-require_once(DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php');
-require_once(DOL_DOCUMENT_ROOT.'/detailedstock/class/productstockdet.class.php');
+require_once(DOL_DOCUMENT_ROOT . '/core/class/html.form.class.php');
+require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
 
 $langs->load("products");
 $langs->load("main");
-
 
 /*
  * View
  */
 
-
 top_httphead();
 
-dol_syslog(join(',',$_GET));
+dol_syslog(join(',', $_GET));
 
-if (! isset($_GET['htmlname'])) return;
+if ( ! isset($_GET['htmlname'])) return;
 
 $htmlname = $_GET['htmlname'];
-$match = preg_grep('/('.$htmlname.'[0-9]+)/',array_keys($_GET));
+$match = preg_grep('/(' . $htmlname . '[0-9]+)/', array_keys($_GET));
 sort($match);
 $idprod = $match[0];
 
 // When used from jQuery, the search term is added as GET param "term".
-$searchkey=$_GET[$idprod];
-if (empty($searchkey)) $searchkey=$_GET[$htmlname];
-$outjson=isset($_GET['outjson'])?$_GET['outjson']:0;
+$searchkey = $_GET[$idprod];
+if (empty($searchkey)) $searchkey = $_GET[$htmlname];
+$outjson = isset($_GET['outjson']) ? $_GET['outjson'] : 0;
 
 // Get list of serial numbers.
 
 $det = new Productstockdet($db);
 
-$arrayresult=$det->selectSerialJSON("",$_GET['fk_product'], $searchkey);
-
+$arrayresult = $det->selectSerialJSON("", $_GET['fk_product'], $searchkey);
 
 $db->close();
 

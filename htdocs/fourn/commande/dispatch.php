@@ -65,6 +65,7 @@ if ($_POST["action"] =='dispatch' && $user->rights->fournisseur->commande->recep
 {
 	$commande = new CommandeFournisseur($db);
 	$commande->fetch($_GET["id"]);
+
 	foreach($_POST as $key => $value)
 	{
 		if ( preg_match('/^product_([0-9]+)$/i', $key, $reg) )
@@ -102,7 +103,7 @@ if ($_POST["action"] =='dispatch' && $user->rights->fournisseur->commande->recep
 
 llxHeader('',$langs->trans("OrderCard"),"CommandeFournisseur");
 
-$form =new Form($db);
+$form = new Form($db);
 $warehouse_static = new Entrepot($db);
 
 $now=dol_now();
@@ -350,10 +351,10 @@ if ($id > 0 || ! empty($ref))
 				print '<td>'.$langs->trans("Description").'</td>';
 				print '<td align="right">'.$langs->trans("QtyDispatched").'</td>';
                 //TODO HOOK
-                if($conf->global->MAIN_MODULE_DETAILEDSTOCK){
-                  $langs->load("detailedStock@detailedstock");
-                  print '<td align="right">'.$langs->trans("QtyDispatchedUndetailed").'</td>';
-                  print '<td>&nbsp;</td>';
+                if ($conf->global->MAIN_MODULE_DETAILEDSTOCK) {
+                    $langs->load("detailedStock@detailedstock");
+                    print '<td align="right">' . $langs->trans("QtyDispatchedUndetailed") . '</td>';
+                    print '<td>&nbsp;</td>';
                 }
 				print '<td align="right">'.$langs->trans("Warehouse").'</td>';
 				print "</tr>\n";
@@ -370,26 +371,24 @@ if ($id > 0 || ! empty($ref))
 					print "</td>\n";
 
 					print '<td align="right">'.$objp->qty.'</td>';
-                    //TODO: CPT HOOK
-                    if($conf->global->MAIN_MODULE_DETAILEDSTOCK){
-                      require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
-                      $det = new Productstockdet($db);
-                      $records = $det->records($objp->rowid);
-                      $reste = $objp->qty - $records;
-                      print '<td align="right">'.$reste.'</td>';
-                      if($reste > 0){
-                        print '<form method="post" action="/detailedstock/ventil.php?id='.$objp->rowid.'">';
-                        print '<input type="hidden" name="action" value="add"/>';
-                        print '<input type="hidden" name="reste" value="'.$reste.'"/>';
-                        print '<input type="hidden" name="commandid" value="'.$id.'"/>';
-                        print '<input type="hidden" name="supplierid" value="'.$commande->socid.'"/>';
-                      }
-                      print '<td align="right">';
-                      if($reste > 0)
-                        print '<input class="button" type="submit" name="detail" value="detail"/>';
-                      print '</td>';
-                      if($reste > 0)
-                        print '</form>';
+                    //TODO HOOK
+                    if ($conf->global->MAIN_MODULE_DETAILEDSTOCK) {
+                        require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
+                        $det = new Productstockdet($db);
+                        $records = $det->records($objp->rowid);
+                        $reste = $objp->qty - $records;
+                        print '<td align="right">' . $reste . '</td>';
+                        if ($reste > 0) {
+                            print '<form method="post" action="/detailedstock/ventil.php?id=' . $objp->rowid . '">';
+                            print '<input type="hidden" name="action" value="add"/>';
+                            print '<input type="hidden" name="reste" value="' . $reste . '"/>';
+                            print '<input type="hidden" name="commandid" value="' . $id . '"/>';
+                            print '<input type="hidden" name="supplierid" value="' . $commande->socid . '"/>';
+                        }
+                        print '<td align="right">';
+                        if ($reste > 0) print '<input class="button" type="submit" name="detail" value="detail"/>';
+                        print '</td>';
+                        if ($reste > 0) print '</form>';
                     }
 					print '<td align="right">';
 					$warehouse_static->id=$objp->warehouse_id;

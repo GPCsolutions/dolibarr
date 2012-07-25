@@ -51,7 +51,7 @@ class modDetailedStock extends DolibarrModules
 
         // Family can be 'crm','financial','hr','projects','products','ecm','technic','other'
         // It is used to group modules in module setup page
-        $this->family = "other";
+        $this->family = "products";
         // Module label (no space allowed), used if translation string 'ModuleXXXName' not found (where XXX is value of numeric property 'numero' of module)
         $this->name = preg_replace('/^mod/i', '', get_class($this));
         // Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
@@ -129,17 +129,17 @@ class modDetailedStock extends DolibarrModules
 
         // Dictionnaries
         if ( ! isset($conf->detailedstock->enabled)) $conf->detailedstock->enabled = 0;
-        $this->dictionnaries = array('langs'=>'detailedStock@detailedstock',
-            'tabname'=>array(MAIN_DB_PREFIX.'c_serial_type'),
-            'tablib'=>array('DictionnarySerialType'),
-            'tabsql'=>array('select rowid, code, label, algo_valid, active from '.MAIN_DB_PREFIX.'c_serial_type'),
-            'tabsqlsort'=>array('label ASC'),
-            'tabfield'=>array('code,label,algo_valid'),
-            'tabfieldvalue'=>array('code,label,algo_valid'),
-            'tabfieldinsert'=>array('code,label,algo_valid'),
-            'tabrowid'=>array('rowid'),
-            'tabcond'=>array($conf->detailedstock->enabled)
-            );
+        $this->dictionnaries = array('langs' => 'detailedStock@detailedstock',
+            'tabname' => array(MAIN_DB_PREFIX . 'c_serial_type'),
+            'tablib' => array('DictionnarySerialType'),
+            'tabsql' => array('select rowid, code, label, algo_valid, active from ' . MAIN_DB_PREFIX . 'c_serial_type'),
+            'tabsqlsort' => array('label ASC'),
+            'tabfield' => array('code,label,algo_valid'),
+            'tabfieldvalue' => array('code,label,algo_valid'),
+            'tabfieldinsert' => array('code,label,algo_valid'),
+            'tabrowid' => array('rowid'),
+            'tabcond' => array($conf->detailedstock->enabled)
+        );
         /* Example:
           if (! isset($conf->detailedStock->enabled)) $conf->detailedStock->enabled=0;  // This is to avoid warnings
           $this->dictionnaries=array(

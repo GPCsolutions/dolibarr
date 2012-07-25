@@ -17,10 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-class ActionsDetailedStock {
-  
-  function doActions($parameters, $object, $action){
-    //Placeholder
-  }
+class ActionsDetailedStock
+{
+
+    function doActions($parameters, $object, $action)
+    {
+        //Placeholder
+    }
+
 }
+
 ?>

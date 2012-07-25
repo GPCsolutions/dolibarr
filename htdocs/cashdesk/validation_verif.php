@@ -144,12 +144,12 @@ switch ($action)
 		$user->getrights();
         //TODO hook
         if($conf->global->MAIN_MODULE_DETAILEDSTOCK && $obj_facturation->lineid > 0){
-          require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
-          $det = new Productstockdet($db);
-          $det->fetch($obj_facturation->lineid);
-          $det->tms_o = $now;
-          $det->fk_user_author_o = $user->id;
-          $det->update($user);
+            require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
+            $det = new Productstockdet($db);
+            $det->fetch($obj_facturation->lineid);
+            $det->tms_o = $now;
+            $det->fk_user_author_o = $user->id;
+            $det->update($user);
         }
 
 		$thirdpartyid = $_SESSION['CASHDESK_ID_THIRDPARTY'];
