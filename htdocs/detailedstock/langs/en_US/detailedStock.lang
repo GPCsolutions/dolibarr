@@ -29,3 +29,5 @@ SerialNotRelatedToProduct=This serial number is not related to this product
 SerialDoesNotExist=This serial number does not exist
 QtyMustBe1=Quantity should be 1
 Generic=Generic
+DictionnarySerialType=Serial numbers types
+Algo_valid=Validation algorithm
