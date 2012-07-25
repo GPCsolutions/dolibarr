@@ -120,11 +120,14 @@ class InterfaceInvoiceDelete
             $det = new Productstockdet($db);
             //delete the output informations of the related detailedstock line
             $det->fetchByFkInvoiceline($object->rowid);
+            if($det){
             $det->tms_o = NULL;
             $det->fk_user_author_o = NULL;
             unset($det->fk_invoice_line);
             $result = $det->update($user);
-            return $result;
+            }
+            
+            return 1;
         }
 
         return 0;
