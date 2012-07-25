@@ -65,7 +65,7 @@ class modDetailedStock extends DolibarrModules
         // Name of image file used for this module.
         // If file is in theme/yourtheme/img directory under name object_pictovalue.png, use this->picto='pictovalue'
         // If file is in module/img directory under name object_pictovalue.png, use this->picto='pictovalue@module'
-        $this->picto = 'generic';
+        $this->picto = 'stock';
 
         // Defined all module parts (triggers, login, substitutions, menus, css, etc...)
         // for default path (eg: /detailedstock/core/xxxxx) (0=disable, 1=enable)
@@ -94,8 +94,8 @@ class modDetailedStock extends DolibarrModules
         // Dependencies
         $this->depends = array("modProduct", "modFacture", "modFournisseur", "modStock");   // List of modules id that must be enabled if this module is enabled
         $this->requiredby = array("modWholesalerRemuneration");                             // List of modules id to disable if this one is disabled
-        $this->phpmin = array(5, 0);                                                        // Minimum version of PHP required by module
-        $this->need_dolibarr_version = array(3, 0);                                         // Minimum version of Dolibarr required by module
+        $this->phpmin = array(5, 3);                                                        // Minimum version of PHP required by module
+        $this->need_dolibarr_version = array(3, 2);                                         // Minimum version of Dolibarr required by module
         $this->langfiles = array("detailedStock@detailedstock");
 
         // Constants
