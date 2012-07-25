@@ -109,22 +109,24 @@ class InterfaceInvoiceDelete
             foreach ($object->lines as $line) {
                 $det = new Productstockdet($db);
                 $det->fetchByFkInvoiceline($line->rowid);
-                unset($det->tms_o);
-                unset($det->fk_user_author_o);
-                unset($det->fk_invoice_line);
-                $result = $det->update($user);
+                if($det){
+                  $det->tms_o = NULL;
+                  $det->fk_user_author_o = NULL;
+                  unset($det->fk_invoice_line);
+                  $result = $det->update($user);
+                }
             }
-            return $result;
+            return 1;
         } elseif ($action == 'LINEBILL_DELETE') {
             dol_syslog("Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . ". id=" . $object->id);
             $det = new Productstockdet($db);
             //delete the output informations of the related detailedstock line
             $det->fetchByFkInvoiceline($object->rowid);
             if($det){
-            $det->tms_o = NULL;
-            $det->fk_user_author_o = NULL;
-            unset($det->fk_invoice_line);
-            $result = $det->update($user);
+              $det->tms_o = NULL;
+              $det->fk_user_author_o = NULL;
+              unset($det->fk_invoice_line);
+              $result = $det->update($user);
             }
             
             return 1;
