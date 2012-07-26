@@ -1062,7 +1062,7 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
         if ($tva_npr) $info_bits |= 0x01;
 
         //TODO hook
-        if ($conf->global->MAIN_MODULE_DETAILEDSTOCK && isset($_POST['search_idDetail'])) {
+        if ($conf->global->MAIN_MODULE_DETAILEDSTOCK && isset($_POST['search_idDetail']) && $_POST['search_idDetail'] != '') {
             //check if the new line serial number and quantity are correct
             $serial = GETPOST('search_idDetail');
             require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
