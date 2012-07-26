@@ -2133,7 +2133,6 @@ class Facture extends CommonObject
         global $langs, $conf;
 
         dol_syslog(get_class($this)."::deleteline rowid=".$rowid, LOG_DEBUG);
-
         if (! $this->brouillon)
         {
             $this->error='ErrorBadStatus';
@@ -2158,10 +2157,8 @@ class Facture extends CommonObject
         }
 
         $line=new FactureLigne($this->db);
-
         // For triggers
-        $line->fetch($rowid);
-
+        $res = $line->fetch($rowid);
         if ($line->delete() > 0)
         {
         	$result=$this->update_price(1);
@@ -3407,7 +3404,6 @@ class FactureLigne
         if ($result)
         {
             $objp = $this->db->fetch_object($result);
-
             $this->rowid				= $objp->rowid;
             $this->fk_facture			= $objp->fk_facture;
             $this->fk_parent_line		= $objp->fk_parent_line;
@@ -3444,10 +3440,12 @@ class FactureLigne
             $this->product_desc			= $objp->product_desc;
 
             $this->db->free($result);
+            return 1;
         }
         else
         {
             dol_print_error($this->db);
+            return -1;
         }
     }
 
