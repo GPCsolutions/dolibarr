@@ -99,7 +99,7 @@ class InterfaceInvoiceDelete
     {
         // Put here code you want to execute when a Dolibarr business events occurs.
         // Data and type of action are stored into $object and $action
-        global $db;
+        //global $db;
         // Bills
         if ($action == 'BILL_DELETE') {
             dol_syslog("Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . ". id=" . $object->id);
@@ -107,9 +107,9 @@ class InterfaceInvoiceDelete
             $result = 0;
             //when the invoice is deleted, go through each line to delete the output informations of the related detailedstock lines
             foreach ($object->lines as $line) {
-                $det = new Productstockdet($db);
-                $det->fetchByFkInvoiceline($line->rowid);
-                if($det){
+                $det = new Productstockdet($this->db);
+                $res = $det->fetchByFkInvoiceline($line->rowid);
+                if($res){
                   $det->tms_o = NULL;
                   $det->fk_user_author_o = NULL;
                   unset($det->fk_invoice_line);
@@ -119,10 +119,10 @@ class InterfaceInvoiceDelete
             return 1;
         } elseif ($action == 'LINEBILL_DELETE') {
             dol_syslog("Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . ". id=" . $object->id);
-            $det = new Productstockdet($db);
+            $det = new Productstockdet($this->db);
             //delete the output informations of the related detailedstock line
-            $det->fetchByFkInvoiceline($object->rowid);
-            if($det){
+            $res = $det->fetchByFkInvoiceline($object->rowid);
+            if($res){
               $det->tms_o = NULL;
               $det->fk_user_author_o = NULL;
               unset($det->fk_invoice_line);
