@@ -732,11 +732,10 @@ class Productstockdet extends CommonObject
         $sql.= " FROM " . MAIN_DB_PREFIX . "product_stock_det as t";
         $sql.= " WHERE t.fk_invoice_line = " . $fk_invoiceline;
         $sql .= ' and t.entity = '.$conf->entity;
-
         dol_syslog(get_class($this) . "::fetch sql=" . $sql, LOG_DEBUG);
         $resql = $this->db->query($sql);
         if ($resql) {
-            if ($this->db->num_rows($resql)) {
+            if ($this->db->num_rows($resql) > 0) {
                 $obj = $this->db->fetch_object($resql);
 
                 $this->id = $obj->rowid;
@@ -753,10 +752,13 @@ class Productstockdet extends CommonObject
                 $this->fk_invoice_line = $obj->fk_invoice_line;
                 $this->fk_dispatch_line = $obj->fk_dispatch_line;
                 $this->fk_supplier = $obj->fk_supplier;
+                $this->db->free($resql);
+                return 1;
             }
-            $this->db->free($resql);
-
-            return 1;
+            else{
+              $this->db->free($resql);
+              return 0;
+            }
         } else {
             $this->error = "Error " . $this->db->lasterror();
             dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
