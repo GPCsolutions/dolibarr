@@ -16,6 +16,7 @@
 
 CREATE TABLE IF NOT EXISTS llx_product_stock_det (
     rowid integer NOT NULL auto_increment primary key ,
+    entity integer default 1 NOT NULL,
     tms_i TIMESTAMP NOT NULL ,
     tms_o TIMESTAMP NULL ,
     fk_product integer NOT NULL ,

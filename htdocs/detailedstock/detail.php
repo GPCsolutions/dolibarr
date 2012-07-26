@@ -26,7 +26,7 @@ require_once(DOL_DOCUMENT_ROOT . "/core/class/html.form.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/productstockdet.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/serialtype.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/lib/functions.lib.php");
-global $langs, $user;
+global $langs, $user, $conf;
 $langs->load("products");
 $langs->load("orders");
 $langs->load("bills");
@@ -38,7 +38,6 @@ $langs->load("stocks");
 
 $form = new Form($db);
 $action = GETPOST('action');
-
 if ($_GET["id"] || $_GET["ref"]) {
     $product = new Product($db);
     if ($_GET["ref"]) $result = $product->fetch('', $_GET["ref"]);
@@ -58,12 +57,12 @@ if ($_GET["id"] || $_GET["ref"]) {
                 //create a new detailled stock object with the input parameters
                 $newDet->tms_i = dol_now();
                 $newDet->fk_product = $product->id;
-                $newDet->fk_entrepot = GETPOST('warehouse');
+                if (GETPOST('warehouse')) $newDet->fk_entrepot = GETPOST('warehouse');
                 $newDet->fk_user_author_i = $user->id;
                 if (GETPOST('serialNumber') != '') $newDet->serial = GETPOST('serialNumber');
                 if (GETPOST('serialType') >= 0) $newDet->fk_serial_type = GETPOST('serialType');
                 $newDet->price = price2num(GETPOST('buyingPrice'), 'MT');
-                $newDet->fk_supplier = GETPOST('supplier');
+                if(GETPOST('supplier'))$newDet->fk_supplier = GETPOST('supplier');
                 //default $valid value is 1 in case we don't need to go through the validation process
                 $valid = 1;
                 //if a serial type is defined
@@ -148,7 +147,7 @@ if ($_GET["id"] || $_GET["ref"]) {
             print '</tr>';
 
             //undetailled stock
-            $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id;
+            $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id.' and entity = '.$conf->entity;
             $resql = $db->query($sql);
             $num = $db->num_rows($resql);
             $reste = $product->stock_reel - $num;

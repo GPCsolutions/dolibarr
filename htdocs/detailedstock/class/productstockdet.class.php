@@ -48,6 +48,7 @@ class Productstockdet extends CommonObject
     public $fk_invoice_line; //invoice line id
     public $fk_dispatch_line; //dispatch line id
     public $fk_supplier; //supplier id
+    protected $ismultientitymanaged = 1; // 0=No test on entity, 1=Test with field entity, 2=Test with link by societe
 
     /**
      *  Constructor
@@ -90,7 +91,7 @@ class Productstockdet extends CommonObject
         // Put here code to add control on parameters values
         // Insert request
         $sql = "INSERT INTO " . MAIN_DB_PREFIX . "product_stock_det(";
-
+        $sql .= "entity,";
         $sql.= "tms_i,";
         $sql.= "tms_o,";
         $sql.= "fk_product,";
@@ -106,7 +107,7 @@ class Productstockdet extends CommonObject
 
 
         $sql.= ") VALUES (";
-
+        $sql .= " ".$conf->entity.",";
         $sql.= " " . ( ! isset($this->tms_i) || dol_strlen($this->tms_i) == 0 ? 'NULL' : $this->db->idate($this->tms_i)) . ",";
         $sql.= " " . ( ! isset($this->tms_o) || dol_strlen($this->tms_o) == 0 ? 'NULL' : $this->db->idate($this->tms_o)) . ",";
         $sql.= " " . ( ! isset($this->fk_product) ? 'NULL' : "'" . $this->fk_product . "'") . ",";
@@ -168,7 +169,7 @@ class Productstockdet extends CommonObject
      */
     public function fetch($id)
     {
-        global $langs;
+        global $langs, $conf;
         $sql = "SELECT";
         $sql.= " t.rowid,";
 
@@ -187,10 +188,11 @@ class Productstockdet extends CommonObject
 
         $sql.= " FROM " . MAIN_DB_PREFIX . "product_stock_det as t";
         $sql.= " WHERE t.rowid = " . $id;
+        $sql.= ' AND t.entity = '.$conf->entity;
 
         dol_syslog(get_class($this) . "::fetch sql=" . $sql, LOG_DEBUG);
         $resql = $this->db->query($sql);
-        if ($resql) {
+        if ($resql && $this->db->num_rows($resql) > 0) {
             if ($this->db->num_rows($resql)) {
                 $obj = $this->db->fetch_object($resql);
 
@@ -619,12 +621,13 @@ class Productstockdet extends CommonObject
      */
     public function selectSerial($selected, $idproduct)
     {
-        global $langs;
+        global $langs, $conf;
         $res = '<select class="flat" onchange="javascript: lockQte();" id="serial" name="serial">';
         $res .= '<option value="0" >' . $langs->trans('SerialNumber') . '</option>';
         if ($idproduct) {
             $sql = 'select rowid, serial from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product=' . $idproduct;
             $sql .= ' and tms_o is NULL';
+            $sql .= ' and entity = '.$conf->entity;
             $resql = $this->db->query($sql);
             if ($resql && $this->db->num_rows($resql) > 0) {
                 while ($obj = $this->db->fetch_object($resql)) {
@@ -647,11 +650,12 @@ class Productstockdet extends CommonObject
      */
     public function selectSerialJSON($selected, $idproduct, $searchkey = '')
     {
-        global $langs;
+        global $langs, $conf;
         $res = '<select id="serial" name="serial">';
         $res .= '<option value="0" >' . $langs->trans('SerialNumber') . '</option>';
         $sql = 'select rowid, serial from ' . MAIN_DB_PREFIX . 'product_stock_det';
         $sql .= ' where tms_o is NULL';
+        $sql .= ' and entity = '.$conf->entity;
         if ($idproduct != '') {
             $sql .= ' and fk_product = ' . $idproduct;
         }
@@ -683,11 +687,13 @@ class Productstockdet extends CommonObject
      */
     public function exists($serial)
     {
+      global $conf;
         if ($serial == '') {
             $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where serial is null ';
         } else {
             $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where serial = ' . $serial;
         }
+        $sql .= ' and entity = '.$conf->entity;
         $resql = $this->db->query($sql);
         if ($resql && $this->db->num_rows($resql) > 0) {
             $obj = $this->db->fetch_object($db);
@@ -705,7 +711,7 @@ class Productstockdet extends CommonObject
      */
     public function fetchByFkInvoiceline($fk_invoiceline)
     {
-        global $langs;
+        global $langs, $conf;
         $sql = "SELECT";
         $sql.= " t.rowid,";
 
@@ -725,6 +731,7 @@ class Productstockdet extends CommonObject
 
         $sql.= " FROM " . MAIN_DB_PREFIX . "product_stock_det as t";
         $sql.= " WHERE t.fk_invoice_line = " . $fk_invoiceline;
+        $sql .= ' and t.entity = '.$conf->entity;
 
         dol_syslog(get_class($this) . "::fetch sql=" . $sql, LOG_DEBUG);
         $resql = $this->db->query($sql);

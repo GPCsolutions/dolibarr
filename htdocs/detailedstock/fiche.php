@@ -26,6 +26,7 @@ require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/productstockdet.class.php
 require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/serialtype.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/lib/functions.lib.php");
 global $langs, $user;
+$langs->load("errors");
 $langs->load("products");
 $langs->load("orders");
 $langs->load("bills");
@@ -42,7 +43,9 @@ if (GETPOST('id')) {
     $det = new Productstockdet($db);
     $form = new Form($db);
     $result = $det->fetch($_GET["id"]);
-    if ($result) {
+    //var_dump($result);
+    //var_dump($det);
+    if ($result > 0) {
         dol_fiche_head('', 'info', $langs->trans('DetailedStock'), 1, 'product');
         $product = new Product($db);
         $product->fetch($det->fk_product);
@@ -126,6 +129,8 @@ if (GETPOST('id')) {
         print '<table width="100%"><tr><td align="right"><a class="butAction" href="/detailedstock/detail.php?id=' . $product->id . '">' . $langs->trans("Return") . '</a></td></tr></table>';
     } else {
         //error
+      $mesg = '<div class="error">'.$langs->trans('ErrorForbidden').'</div>';
+      print ($mesg);
     }
 }
 
