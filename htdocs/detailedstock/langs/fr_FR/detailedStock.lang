@@ -32,3 +32,4 @@ Generic=Générique
 DictionnarySerialType=Types de numéros de série
 Algo_valid=Algorithme de vérification
 NewDetailCreated=Ce produit n'était pas en stock. Il a été crée.
+ModDetailedStockDescription=Permet de créer des lignes de stock détaillées

@@ -42,7 +42,7 @@ class modDetailedStock extends DolibarrModules
         global $langs, $conf;
 
         $this->db = $db;
-
+        $langs->load("detailedStock@detailedstock");
         // Id for module (must be unique).
         // Use here a free id (See in Home -> System information -> Dolibarr for list of used modules id).
         $this->numero = 51000;
@@ -53,9 +53,9 @@ class modDetailedStock extends DolibarrModules
         // It is used to group modules in module setup page
         $this->family = "products";
         // Module label (no space allowed), used if translation string 'ModuleXXXName' not found (where XXX is value of numeric property 'numero' of module)
-        $this->name = preg_replace('/^mod/i', '', get_class($this));
+        $this->name = $langs->trans(preg_replace('/^mod/i', '', get_class($this)));
         // Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
-        $this->description = "Description of module detailedStock";
+        $this->description = $langs->trans("ModDetailedStockDescription");
         // Possible values for version are: 'development', 'experimental', 'dolibarr' or version
         $this->version = 'development';
         // Key used in llx_const table to save module status enabled/disabled (where detailedStock is value of property name of module in uppercase)
