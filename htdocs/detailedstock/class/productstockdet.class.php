@@ -431,7 +431,7 @@ class Productstockdet extends CommonObject
     public function getSerialTypeLabel()
     {
         $label = '';
-        if ($this->fk_serial_type) {
+        if ($this->fk_serial_type >= 0) {
             $sql = 'select label from ' . MAIN_DB_PREFIX . 'c_serial_type where rowid = ' . $this->fk_serial_type;
             $resql = $this->db->query($sql);
             if ($resql) {
