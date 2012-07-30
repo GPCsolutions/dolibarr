@@ -1081,13 +1081,13 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
                         $mesg = '<div class="error">' . $langs->trans('SerialNotRelatedToProduct') . '</div>';
                     }
                     //quantity has to be 1 if there's a serial number
-                    if ($_POST['qty'] > 1) {
+                    if ($_POST['qty'] != 1) {
                         $result = -1;
                         $mesg = '<div class="warning">' . $langs->trans('QtyMustBe1') . '</div>';
                     }
                 }
             } else {
-              if(($_POST['qty'] > 1)) {
+              if(($_POST['qty'] != 1)) {
                 $result = -1;
                 $mesg = '<div class="warning">' . $langs->trans('QtyMustBe1') . '</div>';
               }
