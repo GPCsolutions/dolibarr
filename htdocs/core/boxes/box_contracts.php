@@ -44,11 +44,11 @@ class box_contracts extends ModeleBoxes
     /**
      *  Constructor
      */
-    function box_contracts()
+    function __construct()
     {
     	global $langs;
 
-    	$langs->load("contracts");
+    	$langs->load("boxes");
 
     	$this->boxlabel=$langs->transnoentitiesnoconv("BoxLastContracts");
     }

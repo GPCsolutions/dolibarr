@@ -1,7 +1,7 @@
 <?php
 /* Copyright (c) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (c) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (c) 2005-2011 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (c) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ class UserGroup extends CommonObject
      *
      *    @param   DoliDb  $db     Database handler
 	 */
-	function UserGroup($db)
+	function __construct($db)
 	{
 		$this->db = $db;
 
@@ -146,11 +146,14 @@ class UserGroup extends CommonObject
 		{
 			while ($obj = $this->db->fetch_object($result))
 			{
-				$newgroup=new UserGroup($this->db);
-				$newgroup->fetch($obj->rowid);
-				$newgroup->usergroup_entity = $obj->usergroup_entity;
+				if (! array_key_exists($obj->rowid, $ret))
+				{
+					$newgroup=new UserGroup($this->db);
+					$newgroup->fetch($obj->rowid);
+					$ret[$obj->rowid]=$newgroup;
+				}
 
-				$ret[]=$newgroup;
+				$ret[$obj->rowid]->usergroup_entity[]=$obj->usergroup_entity;
 			}
 
 			$this->db->free($result);
@@ -181,7 +184,7 @@ class UserGroup extends CommonObject
 		$sql.= " ".MAIN_DB_PREFIX."usergroup_user as ug";
 		$sql.= " WHERE ug.fk_user = u.rowid";
 		$sql.= " AND ug.fk_usergroup = ".$this->id;
-		if(! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
+		if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
 		{
 			$sql.= " AND u.entity IS NOT NULL";
 		}
@@ -189,17 +192,21 @@ class UserGroup extends CommonObject
 		{
 			$sql.= " AND u.entity IN (0,".$conf->entity.")";
 		}
+
 		dol_syslog(get_class($this)."::listUsersForGroup sql=".$sql,LOG_DEBUG);
 		$result = $this->db->query($sql);
 		if ($result)
 		{
 			while ($obj = $this->db->fetch_object($result))
 			{
-				$newuser=new User($this->db);
-				$newuser->fetch($obj->rowid);
-				$newuser->usergroup_entity = $obj->usergroup_entity;
+				if (! array_key_exists($obj->rowid, $ret))
+				{
+					$newuser=new User($this->db);
+					$newuser->fetch($obj->rowid);
+					$ret[$obj->rowid]=$newuser;
+				}
 
-				$ret[]=$newuser;
+				$ret[$obj->rowid]->usergroup_entity[]=$obj->usergroup_entity;
 			}
 
 			$this->db->free($result);
@@ -430,7 +437,7 @@ class UserGroup extends CommonObject
 			return;
 		}
 
-		if ($this->all_permissions_are_loaded)
+		if (! empty($this->all_permissions_are_loaded))
 		{
 			// Si les permissions ont deja ete chargees, on quitte
 			return;
@@ -463,8 +470,11 @@ class UserGroup extends CommonObject
 
 				if ($perms)
 				{
+					if (! isset($this->rights)) $this->rights = (object) array(); // For avoid error
+					if (! isset($this->rights->$module) || ! is_object($this->rights->$module)) $this->rights->$module = (object) array();
 					if ($subperms)
 					{
+						if (! isset($this->rights->$module->$perms) || ! is_object($this->rights->$module->$perms)) $this->rights->$module->$perms = (object) array();
 						$this->rights->$module->$perms->$subperms = 1;
 					}
 					else

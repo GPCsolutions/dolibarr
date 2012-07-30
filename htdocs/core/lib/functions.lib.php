@@ -733,7 +733,7 @@ function dol_format_address($object)
  *										"%d %b %Y",
  *										"%d/%m/%Y %H:%M",
  *										"%d/%m/%Y %H:%M:%S",
- *										"day", "daytext", "dayhour", "dayhourldap", "dayhourtext"
+ *										"day", "daytext", "dayhour", "dayhourldap", "dayhourtext", "dayrfc", "dayhourrfc"
  * 	@param	string		$tzoutput		true=output or 'gmt' => string is for Greenwich location
  * 										false or 'tzserver' => output string is for local PHP server TZ usage
  * 										'tzuser' => output string is for local browser TZ usage
@@ -821,12 +821,12 @@ function dol_print_date($time,$format='',$tzoutput='tzserver',$outputlangs='',$e
         // This part of code should not be used.
         dol_syslog("Functions.lib::dol_print_date function call with deprecated value of time in page ".$_SERVER["PHP_SELF"], LOG_WARNING);
         // Date has format 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM:SS' or 'YYYYMMDDHHMMSS'
-        $syear = $reg[1];
-        $smonth = $reg[2];
-        $sday = $reg[3];
-        $shour = $reg[4];
-        $smin = $reg[5];
-        $ssec = $reg[6];
+        $syear	= (! empty($reg[1]) ? $reg[1] : '');
+        $smonth	= (! empty($reg[2]) ? $reg[2] : '');
+        $sday	= (! empty($reg[3]) ? $reg[3] : '');
+        $shour	= (! empty($reg[4]) ? $reg[4] : '');
+        $smin	= (! empty($reg[5]) ? $reg[5] : '');
+        $ssec	= (! empty($reg[6]) ? $reg[6] : '');
 
         $time=dol_mktime($shour,$smin,$ssec,$smonth,$sday,$syear,true);
         $ret=adodb_strftime($format,$time+$offsettz+$offsetdst,$to_gmt);
@@ -960,13 +960,13 @@ function dol_mktime($hour,$minute,$second,$month,$day,$year,$gm=false,$check=1)
         if ($second< 0 || $second > 60) return '';
     }
 
-    if (method_exists('DateTime','getTimestamp') && ! empty($conf->global->MAIN_NEW_DATE))
+    if (method_exists('DateTime','getTimestamp') && empty($conf->global->MAIN_OLD_DATE))
     {
         if (empty($gm)) $localtz = new DateTimeZone(date_default_timezone_get());
         else $localtz = new DateTimeZone('UTC');
         $dt = new DateTime(null,$localtz);
         $dt->setDate($year,$month,$day);
-        $dt->setTime($hour,$minute,$second);
+        $dt->setTime((int) $hour, (int) $minute, (int) $second);
         $date=$dt->getTimestamp();
     }
     else
@@ -1177,19 +1177,22 @@ function dol_print_phone($phone,$country="FR",$cid=0,$socid=0,$addlink=0,$separ=
 
     if (! empty($addlink))
     {
-        if ($conf->clicktodial->enabled)
+        if (! empty($conf->clicktodial->enabled) && $addlink == 'AC_TEL')
         {
             if (empty($user->clicktodial_loaded)) $user->fetch_clicktodial();
 
             if (empty($conf->global->CLICKTODIAL_URL)) $urlmask='ErrorClickToDialModuleNotConfigured';
             else $urlmask=$conf->global->CLICKTODIAL_URL;
+            $clicktodial_poste=(! empty($user->clicktodial_poste)?urlencode($user->clicktodial_poste):'');
+            $clicktodial_login=(! empty($user->clicktodial_login)?urlencode($user->clicktodial_login):'');
+            $clicktodial_password=(! empty($user->clicktodial_password)?urlencode($user->clicktodial_password):'');
             // This line is for backward compatibility
-            $url = sprintf($urlmask, urlencode($phone), urlencode($user->clicktodial_poste), urlencode($user->clicktodial_login), urlencode($user->clicktodial_password));
+            $url = sprintf($urlmask, urlencode($phone), $clicktodial_poste, $clicktodial_login, $clicktodial_password);
             // Thoose lines are for substitution
-            $substitarray=array('__PHONEFROM__'=>urlencode($user->clicktodial_poste),
+            $substitarray=array('__PHONEFROM__'=>$clicktodial_poste,
 			               		'__PHONETO__'=>urlencode($phone),
-						   		'__LOGIN__'=>urlencode($user->clicktodial_login),
-			               		'__PASS__'=>urlencode($user->clicktodial_password));
+						   		'__LOGIN__'=>$clicktodial_login,
+			               		'__PASS__'=>$clicktodial_password);
             $url = make_substitutions($url, $substitarray);
             $newphonesav=$newphone;
             $newphone ='<a href="'.$url.'"';
@@ -1198,7 +1201,7 @@ function dol_print_phone($phone,$country="FR",$cid=0,$socid=0,$addlink=0,$separ=
         }
 
         //if (($cid || $socid) && $conf->agenda->enabled && $user->rights->agenda->myactions->create)
-        if ($conf->agenda->enabled && $user->rights->agenda->myactions->create)
+        if (! empty($conf->agenda->enabled) && $user->rights->agenda->myactions->create)
         {
             $type='AC_TEL'; $link='';
             if ($addlink == 'AC_FAX') $type='AC_FAX';
@@ -1292,12 +1295,12 @@ function dol_print_address($address, $htmlid, $mode, $id)
     {
         print nl2br($address);
         $showgmap=$showomap=0;
-        if ($mode=='thirdparty' && $conf->google->enabled && $conf->global->GOOGLE_ENABLE_GMAPS) $showgmap=1;
-        if ($mode=='contact' && $conf->google->enabled && $conf->global->GOOGLE_ENABLE_GMAPS_CONTACTS) $showgmap=1;
-        if ($mode=='member' && $conf->google->enabled && $conf->global->GOOGLE_ENABLE_GMAPS_MEMBERS) $showgmap=1;
-        if ($mode=='thirdparty' && $conf->openstreetmap->enabled && $conf->global->OPENSTREETMAP_ENABLE_MAPS) $showomap=1;
-        if ($mode=='contact' && $conf->openstreetmap->enabled && $conf->global->OPENSTREETMAP_ENABLE_MAPS_CONTACTS) $showomap=1;
-        if ($mode=='member' && $conf->openstreetmap->enabled && $conf->global->OPENSTREETMAP_ENABLE_MAPS_MEMBERS) $showomap=1;
+        if ($mode=='thirdparty' && ! empty($conf->google->enabled) && ! empty($conf->global->GOOGLE_ENABLE_GMAPS)) $showgmap=1;
+        if ($mode=='contact' && ! empty($conf->google->enabled) && ! empty($conf->global->GOOGLE_ENABLE_GMAPS_CONTACTS)) $showgmap=1;
+        if ($mode=='member' && ! empty($conf->google->enabled) && ! empty($conf->global->GOOGLE_ENABLE_GMAPS_MEMBERS)) $showgmap=1;
+        if ($mode=='thirdparty' && ! empty($conf->openstreetmap->enabled) && ! empty($conf->global->OPENSTREETMAP_ENABLE_MAPS)) $showomap=1;
+        if ($mode=='contact' && ! empty($conf->openstreetmap->enabled) && ! empty($conf->global->OPENSTREETMAP_ENABLE_MAPS_CONTACTS)) $showomap=1;
+        if ($mode=='member' && ! empty($conf->openstreetmap->enabled) && ! empty($conf->global->OPENSTREETMAP_ENABLE_MAPS_MEMBERS)) $showomap=1;
 
         // TODO Add a hook here
         if ($showgmap)
@@ -2066,9 +2069,9 @@ function info_admin($text,$infoonimgalt=0)
  *	Toutefois, il faut essayer de ne l'appeler qu'au sein de pages php, les classes devant
  *	renvoyer leur erreur par l'intermediaire de leur propriete "error".
  *
- *	@param	DoliDB	$db      	Database handler
+ *	@param	 DoliDB	$db      	Database handler
  *	@param  string	$error		String or array of errors strings to show
- *	@return	void
+ *	@return void
  *  @see    dol_htmloutput_errors
  */
 function dol_print_error($db='',$error='')
@@ -2757,11 +2760,11 @@ function get_product_vat_for_country($idprod, $thirdparty_seller, $idprodfournpr
     if (! $found)
     {
         // If vat of product for the country not found or not defined, we return higher vat of country.
-        $sql.="SELECT taux as vat_rate";
-        $sql.=" FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_pays as p";
-        $sql.=" WHERE t.active=1 AND t.fk_pays = p.rowid AND p.code='".$thirdparty_seller->country_code."'";
-        $sql.=" ORDER BY t.taux DESC, t.recuperableonly ASC";
-        $sql.=$db->plimit(1);
+        $sql = "SELECT taux as vat_rate";
+        $sql.= " FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_pays as p";
+        $sql.= " WHERE t.active=1 AND t.fk_pays = p.rowid AND p.code='".$thirdparty_seller->country_code."'";
+        $sql.= " ORDER BY t.taux DESC, t.recuperableonly ASC";
+        $sql.= $db->plimit(1);
 
         $resql=$db->query($sql);
         if ($resql)
@@ -2823,7 +2826,7 @@ function get_default_tva($societe_vendeuse, $societe_acheteuse, $idprod=0, $idpr
     if (!is_object($societe_vendeuse)) return -1;
     if (!is_object($societe_acheteuse)) return -1;
 
-    dol_syslog("get_default_tva: seller use vat=".$societe_vendeuse->tva_assuj.", seller country=".$societe_vendeuse->pays_code.", seller in cee=".$societe_vendeuse->isInEEC().", buyer country=".$societe_acheteuse->pays_code.", buyer in cee=".$societe_acheteuse->isInEEC().", idprod=".$idprod.", idprodfournprice=".$idprodfournprice.", SERVICE_ARE_ECOMMERCE_200238EC=".$conf->global->SERVICES_ARE_ECOMMERCE_200238EC);
+    dol_syslog("get_default_tva: seller use vat=".$societe_vendeuse->tva_assuj.", seller country=".$societe_vendeuse->pays_code.", seller in cee=".$societe_vendeuse->isInEEC().", buyer country=".$societe_acheteuse->pays_code.", buyer in cee=".$societe_acheteuse->isInEEC().", idprod=".$idprod.", idprodfournprice=".$idprodfournprice.", SERVICE_ARE_ECOMMERCE_200238EC=".(! empty($conf->global->SERVICES_ARE_ECOMMERCE_200238EC)?$conf->global->SERVICES_ARE_ECOMMERCE_200238EC:''));
 
     // Si vendeur non assujeti a TVA (tva_assuj vaut 0/1 ou franchise/reel)
     if (is_numeric($societe_vendeuse->tva_assuj) && ! $societe_vendeuse->tva_assuj)
@@ -3328,7 +3331,8 @@ function dol_textishtml($msg,$option=0)
         elseif (preg_match('/<img/i',$msg))				return true;
         elseif (preg_match('/<i>/i',$msg))				return true;
         elseif (preg_match('/<b>/i',$msg))				return true;
-        elseif (preg_match('/&[A-Z0-9]{1,6};/i',$msg))	return true;
+        elseif (preg_match('/&[A-Z0-9]{1,6};/i',$msg))	return true;    // Html entities names (http://www.w3schools.com/tags/ref_entities.asp)
+        elseif (preg_match('/&#[0-9]{2,3};/i',$msg))	return true;    // Html entities numbers (http://www.w3schools.com/tags/ref_entities.asp)
         return false;
     }
 }
@@ -3444,6 +3448,45 @@ function get_date_range($date_start,$date_end,$format = '',$outputlangs='')
     return $out;
 }
 
+/**
+ *	Set event message in dol_events session
+ *
+ *	@param	string	$mesgstring		 Message
+ *  @param  string	$style           Which style to use ('mesgs', 'warnings', 'errors')
+ *  @return	void
+ *  @see	dol_htmloutput_events
+ */
+function setEventMessage($mesgstring, $style='mesgs')
+{
+	$_SESSION['dol_events'][$style][] = $mesgstring;
+}
+
+/**
+ *	Print formated messages to output (Used to show messages on html output).
+ *
+ *  @return	void
+ *  @see    dol_htmloutput_mesg
+ */
+function dol_htmloutput_events()
+{
+	// Show mesgs
+	if (isset($_SESSION['dol_events']['mesgs'])) {
+		dol_htmloutput_mesg('', $_SESSION['dol_events']['mesgs']);
+		unset($_SESSION['dol_events']['mesgs']);
+	}
+
+	// Show errors
+	if (isset($_SESSION['dol_events']['errors'])) {
+		dol_htmloutput_mesg('', $_SESSION['dol_events']['errors'], 'error');
+		unset($_SESSION['dol_events']['errors']);
+	}
+
+	// Show warnings
+	if (isset($_SESSION['dol_events']['warnings'])) {
+		dol_htmloutput_mesg('', $_SESSION['dol_events']['warnings'], 'warning');
+		unset($_SESSION['dol_events']['warnings']);
+	}
+}
 
 /**
  *	Get formated messages to output (Used to show messages on html output).
@@ -3464,18 +3507,6 @@ function get_htmloutput_mesg($mesgstring='',$mesgarray='', $style='ok', $keepemb
     $ret='';
     $out='';
     $divstart=$divend='';
-
-    // Use session mesg
-    if (isset($_SESSION['mesg']))
-    {
-    	$mesgstring=$_SESSION['mesg'];
-    	unset($_SESSION['mesg']);
-    }
-	if (isset($_SESSION['mesgarray']))
-    {
-    	$mesgarray=$_SESSION['mesgarray'];
-    	unset($_SESSION['mesgarray']);
-    }
 
     // If inline message with no format, we add it.
     if ((empty($conf->use_javascript_ajax) || ! empty($conf->global->MAIN_DISABLE_JQUERY_JNOTIFY) || $keepembedded) && ! preg_match('/<div class=".*">/i',$out))
@@ -3852,7 +3883,7 @@ function picto_from_langcode($codelang)
  */
 function complete_head_from_modules($conf,$langs,$object,&$head,&$h,$type,$mode='add')
 {
-	if (is_array($conf->tabs_modules[$type]))
+	if (isset($conf->tabs_modules[$type]) && is_array($conf->tabs_modules[$type]))
 	{
 		foreach ($conf->tabs_modules[$type] as $value)
 		{
@@ -4024,7 +4055,7 @@ function getCurrencySymbol($currency_code)
 
 	$form->load_cache_currencies();
 
-	if (function_exists("mb_convert_encoding") && is_array($form->cache_currencies[$currency_code]['unicode']) && ! empty($form->cache_currencies[$currency_code]['unicode']))
+	if (function_exists("mb_convert_encoding") && isset($form->cache_currencies[$currency_code]) && is_array($form->cache_currencies[$currency_code]['unicode']) && ! empty($form->cache_currencies[$currency_code]['unicode']))
 	{
 		foreach($form->cache_currencies[$currency_code]['unicode'] as $unicode)
 		{

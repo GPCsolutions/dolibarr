@@ -47,11 +47,12 @@ $id=GETPOST('id', 'int');
 $action=GETPOST('action', 'alpha');
 $confirm=GETPOST('confirm', 'alpha');
 $userid=GETPOST('user', 'int');
+$message='';
 
 // Security check
 $result = restrictedArea($user, 'user', $id, 'usergroup&usergroup', 'user');
 
-if(! empty($conf->multicompany->enabled) && $conf->entity > 1 && $conf->multicompany->transverse_mode)
+if (! empty($conf->multicompany->enabled) && $conf->entity > 1 && $conf->multicompany->transverse_mode)
 {
     accessforbidden();
 }
@@ -83,9 +84,8 @@ if ($action == 'confirm_delete' && $confirm == "yes")
  */
 if ($action == 'add')
 {
-    if($caneditperms)
+    if ($caneditperms)
     {
-        $message="";
         if (! $_POST["nom"])
         {
             $message='<div class="error">'.$langs->trans("NameNotDefined").'</div>';
@@ -96,8 +96,8 @@ if ($action == 'add')
 		{
 			$object->nom	= trim($_POST["nom"]);
 			$object->note	= trim($_POST["note"]);
-			
-			if($conf->multicompany->enabled && ! empty($conf->multicompany->transverse_mode)) $object->entity = 0;
+
+			if ($conf->multicompany->enabled && ! empty($conf->multicompany->transverse_mode)) $object->entity = 0;
 			else $object->entity = $_POST["entity"];
 
             $db->begin();
@@ -108,7 +108,7 @@ if ($action == 'add')
             {
                 $db->commit();
 
-                Header("Location: fiche.php?id=".$object->id);
+                Header("Location: ".$_SERVER['PHP_SELF']."?id=".$object->id);
                 exit;
             }
             else
@@ -140,12 +140,12 @@ if ($action == 'adduser' || $action =='removeuser')
 
 			$edituser = new User($db);
 			$edituser->fetch($userid);
-			if ($action == 'adduser')    $result=$edituser->SetInGroup($object->id,($conf->multicompany->transverse_mode?GETPOST("entity"):$object->entity));
-			if ($action == 'removeuser') $result=$edituser->RemoveFromGroup($object->id,($conf->multicompany->transverse_mode?GETPOST("entity"):$object->entity));
+			if ($action == 'adduser')    $result=$edituser->SetInGroup($object->id,(! empty($conf->multicompany->transverse_mode)?GETPOST('entity','int'):$object->entity));
+			if ($action == 'removeuser') $result=$edituser->RemoveFromGroup($object->id,(! empty($conf->multicompany->transverse_mode)?GETPOST('entity','int'):$object->entity));
 
             if ($result > 0)
             {
-                header("Location: fiche.php?id=".$object->id);
+                header("Location: ".$_SERVER['PHP_SELF']."?id=".$object->id);
                 exit;
             }
             else
@@ -164,10 +164,8 @@ if ($action == 'adduser' || $action =='removeuser')
 
 if ($action == 'update')
 {
-    if($caneditperms)
+    if ($caneditperms)
     {
-        $message="";
-
         $db->begin();
 
         $object->fetch($id);
@@ -176,8 +174,8 @@ if ($action == 'update')
 
 		$object->nom	= trim($_POST["group"]);
 		$object->note	= dol_htmlcleanlastbr($_POST["note"]);
-		
-		if($conf->multicompany->enabled && !empty($conf->multicompany->transverse_mode)) $object->entity = 0;
+
+		if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode)) $object->entity = 0;
 		else $object->entity = $_POST["entity"];
 
         $ret=$object->update();
@@ -352,15 +350,15 @@ else
             // On selectionne les users qui ne sont pas deja dans le groupe
             $exclude = array();
 
-            if (! empty($object->members))
+            if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode))
             {
-                if( !($conf->multicompany->enabled && $conf->multicompany->transverse_mode))
-                {
-                    foreach($object->members as $useringroup)
-                    {
-                        $exclude[]=$useringroup->id;
-                    }
-                }
+            	if (! empty($object->members))
+            	{
+            		foreach($object->members as $useringroup)
+            		{
+            			$exclude[]=$useringroup->id;
+            		}
+            	}
             }
 
             if ($caneditperms)
@@ -404,7 +402,7 @@ else
             print '<td class="liste_titre">'.$langs->trans("Login").'</td>';
             print '<td class="liste_titre">'.$langs->trans("Lastname").'</td>';
             print '<td class="liste_titre">'.$langs->trans("Firstname").'</td>';
-			if(! empty($conf->multicompany->enabled) && $conf->entity == 1)
+			if (! empty($conf->multicompany->enabled) && $conf->entity == 1)
             {
             	print '<td class="liste_titre">'.$langs->trans("Entity").'</td>';
             }
@@ -428,17 +426,31 @@ else
             		print '</td>';
             		print '<td>'.$useringroup->lastname.'</td>';
             		print '<td>'.$useringroup->firstname.'</td>';
-            		if(! empty($conf->multicompany->enabled) && $conf->entity == 1)
+            		if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode) && $conf->entity == 1 && $user->admin && ! $user->entity)
             		{
-            			$mc->getInfo($useringroup->usergroup_entity);
-            			print '<td class="valeur">'.$mc->label."</td>";
+            			print '<td class="valeur">';
+            			if (! empty($useringroup->usergroup_entity))
+            			{
+            				$nb=0;
+            				foreach($useringroup->usergroup_entity as $group_entity)
+            				{
+            					$mc->getInfo($group_entity);
+            					print ($nb > 0 ? ', ' : '').$mc->label;
+            					print '<a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=removeuser&amp;user='.$useringroup->id.'&amp;entity='.$group_entity.'">';
+            					print img_delete($langs->trans("RemoveFromGroup"));
+            					print '</a>';
+            					$nb++;
+            				}
+            			}
+            			print '</td>';
             		}
             		print '<td align="center">'.$useringroup->getLibStatut(3).'</td>';
             		print '<td align="right">';
-            		if ($user->admin)
+            		if (! empty($user->admin) && empty($conf->multicompany->enabled))
             		{
-            			print '<a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=removeuser&amp;user='.$useringroup->id.'&amp;entity='.$useringroup->usergroup_entity.'">';
+            			print '<a href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;action=removeuser&amp;user='.$useringroup->id.'">';
             			print img_delete($langs->trans("RemoveFromGroup"));
+            			print '</a>';
             		}
             		else
             		{
@@ -504,7 +516,5 @@ else
 }
 
 llxFooter();
-
 $db->close();
-
 ?>

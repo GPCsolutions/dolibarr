@@ -122,7 +122,8 @@ if ($action == 'add')
             {
                 $ent = "entl".$i;
                 $idl = "idl".$i;
-                $entrepot_id = GETPOST($ent,'int')?GETPOST($ent,'int'):GETPOST('entrepot_id','int');
+                $entrepot_id = is_numeric(GETPOST($ent,'int'))?GETPOST($ent,'int'):GETPOST('entrepot_id','int');
+				if ($entrepot_id < 0) $entrepot_id='';
 
                 $ret=$object->addline($entrepot_id,GETPOST($idl,'int'),GETPOST($qty,'int'));
                 if ($ret < 0)
@@ -330,8 +331,7 @@ if (GETPOST('addfile','alpha'))
     $vardir=$conf->user->dir_output."/".$user->id;
     $upload_dir_tmp = $vardir.'/temp';
 
-    $mesg=dol_add_file_process($upload_dir_tmp,0,0);
-
+    dol_add_file_process($upload_dir_tmp,0,0);
     $action ='presend';
 }
 
@@ -347,8 +347,7 @@ if (GETPOST('removedfile','alpha'))
     $upload_dir_tmp = $vardir.'/temp';
 
     // TODO Delete only files that was uploaded from email form
-    $mesg=dol_remove_file_process(GETPOST('removedfile','int'),0);
-
+    dol_remove_file_process(GETPOST('removedfile','int'),0);
     $action ='presend';
 }
 
@@ -436,8 +435,6 @@ if ($action == 'send' && ! GETPOST('addfile','alpha') && ! GETPOST('removedfile'
                     $result=$mailfile->sendfile();
                     if ($result)
                     {
-                        $_SESSION['mesg']=$langs->trans('MailSuccessfulySent',$mailfile->getValidAddress($from,2),$mailfile->getValidAddress($sendto,2));
-
                         $error=0;
 
                         // Initialisation donnees
@@ -465,6 +462,8 @@ if ($action == 'send' && ! GETPOST('addfile','alpha') && ! GETPOST('removedfile'
                         {
                             // Redirect here
                             // This avoid sending mail twice if going out and then back to page
+                        	$mesg=$langs->trans('MailSuccessfulySent',$mailfile->getValidAddress($from,2),$mailfile->getValidAddress($sendto,2));
+                            setEventMessage($mesg);
                             Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
                             exit;
                         }
@@ -779,20 +778,18 @@ if ($action == 'create')
                     print '<td align="left">';
                     if ($line->product_type == 0 || ! empty($conf->global->STOCK_SUPPORTS_SERVICES))
                     {
-                        // Show warehous
-                        if (GETPOST('entrepot_id','int'))
+                        // Show warehouse combo list
+                    	$ent = "entl".$indiceAsked;
+                    	$idl = "idl".$indiceAsked;
+                    	$tmpentrepot_id = is_numeric(GETPOST($ent,'int'))?GETPOST($ent,'int'):GETPOST('entrepot_id','int');
+                        print $formproduct->selectWarehouses($tmpentrepot_id,'entl'.$indiceAsked,'',1,0,$line->fk_product);
+                    	if ($tmpentrepot_id && $tmpentrepot_id == GETPOST('entrepot_id','int'))
                         {
-                            print $formproduct->selectWarehouses(GETPOST('entrepot_id','int'),'entl'.$indiceAsked,'',1,0,$line->fk_product);
                             //print $stock.' '.$quantityToBeDelivered;
-                            //if ($stock >= 0 && $stock < $quantityToBeDelivered)
                             if ($stock < $quantityToBeDelivered)
                             {
-                                print ' '.img_warning($langs->trans("StockTooLow"));
+                                print ' '.img_warning($langs->trans("StockTooLow"));	// Stock too low for entrepot_id but we may have change warehouse
                             }
-                        }
-                        else
-                        {
-                            print $formproduct->selectWarehouses('','entl'.$indiceAsked,'',1,0,$line->fk_product);
                         }
                     }
                     else
@@ -871,9 +868,6 @@ else
 
             $soc = new Societe($db);
             $soc->fetch($object->socid);
-
-            // delivery link
-            $object->fetchObjectLinked($object->id,$object->element,-1,-1);
 
             $head=shipping_prepare_head($object);
             dol_fiche_head($head, 'shipping', $langs->trans("Sending"), 0, 'sending');
@@ -956,10 +950,12 @@ else
 
             print '<table class="border" width="100%">';
 
+            $linkback = '<a href="'.DOL_URL_ROOT.'/expedition/liste.php">'.$langs->trans("BackToList").'</a>';
+
             // Ref
             print '<tr><td width="20%">'.$langs->trans("Ref").'</td>';
             print '<td colspan="3">';
-            print $form->showrefnav($object,'ref','',1,'ref','ref');
+            print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref');
             print '</td></tr>';
 
             // Customer
@@ -1292,8 +1288,8 @@ else
                 else print '<a class="butActionRefused" href="#">'.$langs->trans('SendByMail').'</a>';
             }
 
-            // Create bill and Classify billed
-            if ($conf->facture->enabled && $object->statut > 0  && ! $object->billed)
+            // Create bill and Close shipment
+            if ($conf->facture->enabled && $object->statut > 0)
             {
                 if ($user->rights->facture->creer)
                 {
@@ -1302,10 +1298,12 @@ else
                     //print '<a class="butAction" href="'.DOL_URL_ROOT.'/compta/facture.php?action=create&amp;origin='.$object->origin.'&amp;originid='.$object->origin_id.'&amp;socid='.$object->socid.'">'.$langs->trans("CreateBill").'</a>';
                 }
 
-                // TODO add alternative status
-                if ($user->rights->expedition->creer && $object->statut > 0)
+                if ($user->rights->expedition->creer && $object->statut > 0 && ! $object->billed)
                 {
-                    print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=classifybilled">'.$langs->trans("ClassifyBilled").'</a>';
+                	$label="Close";
+                	// Label here should be "Close" or "ClassifyBilled" if we decided to make bill on shipments instead of orders
+                	if (! empty($conf->global->WORKFLOW_BILL_ON_SHIPMENT)) $label="ClassifyBilled";
+                    print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=classifybilled">'.$langs->trans($label).'</a>';
                 }
             }
 

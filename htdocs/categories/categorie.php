@@ -58,20 +58,20 @@ if ($id || $ref)
 		$dbtablename = 'product';
 		$fieldid = isset($ref)?'ref':'rowid';
 	}
-	if ($type == 1) {
+	elseif ($type == 1) {
 		$elementtype = 'fournisseur';
 		$objecttype = 'societe&categorie';
 		$objectid = isset($id)?$id:(isset($socid)?$socid:'');
 		$fieldid = 'rowid';
 	}
-	if ($type == 2) {
+	elseif ($type == 2) {
 		$elementtype = 'societe';
 		$objecttype = 'societe&categorie';
 		$objectid = isset($id)?$id:(isset($socid)?$socid:'');
 		$dbtablename = '&societe';
 		$fieldid = 'rowid';
 	}
-	if ($type == 3) {
+	elseif ($type == 3) {
 		$elementtype = 'member';
 		$objecttype = 'adherent&categorie';
 		$objectid = isset($id)?$id:(isset($ref)?$ref:'');
@@ -223,7 +223,7 @@ if ($socid)
 		print '</td></tr>';
 	}
 
-	if ($conf->global->MAIN_MODULE_BARCODE)
+	if (! empty($conf->global->MAIN_MODULE_BARCODE))
 	{
 		print '<tr><td>'.$langs->trans('Gencod').'</td><td colspan="3">'.$soc->barcode.'</td></tr>';
 	}
@@ -268,7 +268,7 @@ if ($socid)
 
 	print '</table>';
 
-	print '</div>';
+	dol_fiche_end();
 
 	dol_htmloutput_mesg($mesg);
 
@@ -328,7 +328,7 @@ else if ($id || $ref)
 
 		print '</table>';
 
-		print '</div>';
+		dol_fiche_end();
 
 		dol_htmloutput_mesg($mesg);
 
@@ -409,7 +409,7 @@ else if ($id || $ref)
 
 		print '</table>';
 
-		print '</div>';
+		dol_fiche_end();
 
 		dol_htmloutput_mesg($mesg);
 
@@ -482,6 +482,7 @@ function formCategory($db,$object,$typeid,$socid=0)
 		foreach ($cats as $cat)
 		{
 			$ways = $cat->print_all_ways();
+
 			foreach ($ways as $way)
 			{
 				$var = ! $var;

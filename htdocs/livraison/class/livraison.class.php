@@ -62,7 +62,7 @@ class Livraison extends CommonObject
 	 *
 	 * @param	DoliDB	$db		Database handler
 	 */
-	function Livraison($db)
+	function __construct($db)
 	{
 		$this->db = $db;
 		$this->lines = array();
@@ -345,7 +345,7 @@ class Livraison extends CommonObject
 				if (is_readable(DOL_DOCUMENT_ROOT .'/core/modules/livraison/'.$modName.'.php'))
 				{
 					require_once DOL_DOCUMENT_ROOT .'/core/modules/livraison/'.$modName.'.php';
-					
+
 					$now=dol_now();
 
 					// Recuperation de la nouvelle reference
@@ -397,7 +397,7 @@ class Livraison extends CommonObject
 							$file = $dir . "/" . $numref . ".pdf";
 							if (file_exists($file))
 							{
-								if (!dol_delete_file($file))
+								if (! dol_delete_file($file))
 								{
 									$this->error=$langs->trans("ErrorCanNotDeleteFile",$file);
 									return 0;
@@ -405,7 +405,7 @@ class Livraison extends CommonObject
 							}
 							if (file_exists($dir))
 							{
-								if (!dol_delete_dir($dir))
+								if (! dol_delete_dir($dir))
 								{
 									$this->error=$langs->trans("ErrorCanNotDeleteDir",$dir);
 									return 0;
@@ -552,7 +552,7 @@ class Livraison extends CommonObject
 	{
         require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
 		$this->db->begin();
-		
+
 		$error=0;
 
 		$sql = "DELETE FROM ".MAIN_DB_PREFIX."livraisondet";
@@ -562,7 +562,7 @@ class Livraison extends CommonObject
 			// Delete linked object
 			$res = $this->deleteObjectLinked();
 			if ($res < 0) $error++;
-			
+
 			if (! $error)
 			{
 				$sql = "DELETE FROM ".MAIN_DB_PREFIX."livraison";
@@ -581,7 +581,6 @@ class Livraison extends CommonObject
 						{
 							if (!dol_delete_file($file))
 							{
-								$this->error=$langs->trans("ErrorCanNotDeleteFile",$file);
 								return 0;
 							}
 						}
@@ -807,7 +806,7 @@ class Livraison extends CommonObject
 		global $langs;
 
 		// Get the linked object
-		$this->fetchObjectLinked(-1,-1,$this->id,$this->element);
+		$this->fetchObjectLinked('','',$this->id,$this->element);
 		//var_dump($this->linkedObjectIds);
 		// Get the product ref and qty in source
 		$sqlSourceLine = "SELECT st.rowid, st.description, st.qty";
@@ -901,7 +900,7 @@ class LivraisonLigne
 	 *
 	 *	@param	DoliDB	$db		Database handler
 	 */
-	function LivraisonLigne($db)
+	function __construct($db)
 	{
 		$this->db=$db;
 	}

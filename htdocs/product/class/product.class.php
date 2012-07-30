@@ -138,7 +138,7 @@ class Product extends CommonObject
 
 	//! Contains detail of stock of product into each warehouse
 	var $stock_warehouse=array();
-	
+
 	var $oldcopy;
 
 
@@ -147,7 +147,7 @@ class Product extends CommonObject
 	 *
 	 *  @param      DoliDB		$db      Database handler
 	 */
-	function Product($db)
+	function __construct($db)
 	{
 		global $langs;
 
@@ -277,6 +277,7 @@ class Product extends CommonObject
 				$sql.= "datec";
 				$sql.= ", entity";
 				$sql.= ", ref";
+				$sql.= ", ref_ext";
 				$sql.= ", price_min";
 				$sql.= ", price_min_ttc";
 				$sql.= ", label";
@@ -292,7 +293,8 @@ class Product extends CommonObject
 				$sql.= ") VALUES (";
 				$sql.= $this->db->idate($now);
 				$sql.= ", ".$conf->entity;
-				$sql.= ", '".$this->ref."'";
+				$sql.= ", '".$this->db->escape($this->ref)."'";
+				$sql.= ", ".($this->ref_ext?"'".$this->db->escape($this->ref_ext)."'":"null");
 				$sql.= ", ".price2num($price_min_ht);
 				$sql.= ", ".price2num($price_min_ttc);
 				$sql.= ", ".($this->libelle?"'".$this->db->escape($this->libelle)."'":"null");
@@ -405,7 +407,7 @@ class Product extends CommonObject
 		global $langs, $conf;
 
 		$error=0;
-		
+
 		$this->db->begin();
 
 		// Verification parametres
@@ -508,7 +510,7 @@ class Product extends CommonObject
 				if ($result < 0) { $error++; $this->errors=$interface->errors; }
 				// Fin appel triggers
 			}
-			
+
 			if (! $error && (is_object($this->oldcopy) && $this->oldcopy->ref != $this->ref))
 			{
 				// We remove directory
@@ -527,7 +529,7 @@ class Product extends CommonObject
 					}
 				}
 			}
-			
+
 			if (! $error)
 			{
 				$this->db->commit();
@@ -618,7 +620,7 @@ class Product extends CommonObject
     				    dol_syslog(get_class($this).'::delete error '.$this->error, LOG_ERR);
     				}
                 }
-                
+
                 if (! $error)
                 {
                 	// We remove directory
@@ -698,7 +700,7 @@ class Product extends CommonObject
 				}
 				if (!$this->db->query($sql2)) return -1;
 			}
-			else
+			else if (isset($this->multilangs["$key"]))
 			{
 				if ($this->db->num_rows($result)) // si aucune ligne dans la base
 				{
@@ -1042,7 +1044,7 @@ class Product extends CommonObject
 		// Check parameters
 		if (! $id && ! $ref && ! $ref_ext)
 		{
-			$this->error=$langs->trans('ErrorWrongParameters');
+			$this->error='ErrorWrongParameters';
 			dol_print_error(get_class($this)."::fetch ".$this->error, LOG_ERR);
 			return -1;
 		}
@@ -1991,11 +1993,15 @@ class Product extends CommonObject
 		{
 			if (is_array($desc_pere))	// If this parent desc is an array, this is an array of childs
 			{
-				if($multiply)
+				$id=(! empty($desc_pere[0]) ? $desc_pere[0] :'');
+				$nb=(! empty($desc_pere[1]) ? $desc_pere[1] :'');
+				$type=(! empty($desc_pere[2]) ? $desc_pere[2] :'');
+
+				if ($multiply)
 				{
 					//print "XXX ".$desc_pere[1]." multiply=".$multiply;
 					$img="";
-					$this->fetch($desc_pere[0]);
+					$this->fetch($id);
 					$this->load_stock();
 					if ($this->stock_warehouse[1]->real < $this->seuil_stock_alerte)
 					{
@@ -2007,13 +2013,13 @@ class Product extends CommonObject
                                 </a> (".$desc_pere[1].")</td><td align=\"center\"> ".($desc_pere[1]*$multiply)."</td><td>&nbsp</td><td>&nbsp</td>
                                 <td align=\"center\">".$this->stock_entrepot[1]." ".$img."</td></tr>",
 								$desc_pere[0],							// Id product
-*/								'id'=>$desc_pere[0],					// Id product
-								'nb'=>$desc_pere[1],					// Nb of units that compose parent product
-								'nb_total'=>$desc_pere[1]*$multiply,	// Nb of units for all nb of product
+*/								'id'=>$id,					// Id product
+								'nb'=>$nb,					// Nb of units that compose parent product
+								'nb_total'=>$nb*$multiply,	// Nb of units for all nb of product
 								'stock'=>$this->stock_warehouse[1]->real,		// Stock
 								'stock_alert'=>$this->seuil_stock_alerte,	// Stock alert
 								'fullpath' => $compl_path.$nom_pere,	// Label
-								'type'=>$desc_pere[2]					// Nb of units that compose parent product
+								'type'=>$type					// Nb of units that compose parent product
 								);
 				}
 				else
@@ -2023,13 +2029,13 @@ class Product extends CommonObject
 					$this->res[]= array(
 /*					$compl_path.$nom_pere." (".$desc_pere[1].")",
 					$desc_pere[0],							// Id product
-*/					'id'=>$desc_pere[0],					// Id product
-					'nb'=>$desc_pere[1],					// Nb of units that compose parent product
-					'nb_total'=>$desc_pere[1],				// Nb of units for all nb of product
+*/					'id'=>$id,					// Id product
+					'nb'=>$nb,					// Nb of units that compose parent product
+					'nb_total'=>$nb,				// Nb of units for all nb of product
 					'stock'=>$this->stock_warehouse[1]->real,		// Stock
 					'stock_alert'=>$this->seuil_stock_alerte,	// Stock alert
 					'fullpath' => $compl_path.$nom_pere,	// Label
-					'type'=>$desc_pere[2]					// Nb of units that compose parent product
+					'type'=>$type					// Nb of units that compose parent product
 					);
 				}
 			}
@@ -2076,13 +2082,12 @@ class Product extends CommonObject
 	function get_arbo_each_prod($multiply=1)
 	{
 		$this->res = array();
-		if (is_array($this -> sousprods))
+		if (isset($this->sousprods) && is_array($this->sousprods))
 		{
-			foreach($this -> sousprods as $nom_pere => $desc_pere)
+			foreach($this->sousprods as $nom_pere => $desc_pere)
 			{
 				if (is_array($desc_pere)) $this->fetch_prod_arbo($desc_pere,"",$multiply);
 			}
-			//			dol_sort($this->res,);
 		}
 		return $this->res;
 	}
@@ -2405,9 +2410,12 @@ class Product extends CommonObject
 	{
 		$this->stock_reel = 0;
 
-		$sql = "SELECT reel, fk_entrepot, pmp";
-		$sql.= " FROM ".MAIN_DB_PREFIX."product_stock";
-		$sql.= " WHERE fk_product = '".$this->id."'";
+		$sql = "SELECT ps.reel, ps.fk_entrepot, ps.pmp";
+		$sql.= " FROM ".MAIN_DB_PREFIX."product_stock as ps";
+		$sql.= ", ".MAIN_DB_PREFIX."entrepot as w";
+		$sql.= " WHERE w.entity IN (".getEntity('warehouse', 1).")";
+		$sql.= " AND w.rowid = ps.fk_entrepot";
+		$sql.= " AND ps.fk_product = ".$this->id;
 
 		dol_syslog(get_class($this)."::load_stock sql=".$sql);
 		$result = $this->db->query($sql);
@@ -2420,6 +2428,7 @@ class Product extends CommonObject
 				while ($i < $num)
 				{
 					$row = $this->db->fetch_object($result);
+					$this->stock_warehouse[$row->fk_entrepot] = (object) array();
 					$this->stock_warehouse[$row->fk_entrepot]->real = $row->reel;
 					$this->stock_warehouse[$row->fk_entrepot]->pmp = $row->pmp;
 					$this->stock_reel+=$row->reel;
@@ -2615,7 +2624,7 @@ class Product extends CommonObject
 
     				if (! utf8_check($file)) $file=utf8_encode($file);	// To be sure file is stored in UTF8 in memory
 
-    				if (dol_is_file($dir.$file) && preg_match('/(\.jpg|\.bmp|\.gif|\.png|\.tiff)$/i',$dir.$file))
+    				if (dol_is_file($dir.$file) && preg_match('/(\.jpg|\.bmp|\.gif|\.png|\.tiff)$/i', $dir.$file))
     				{
     					$nbphoto++;
     					$photo = $file;
@@ -2624,8 +2633,8 @@ class Product extends CommonObject
     					if ($size == 1) {   // Format vignette
     						// On determine nom du fichier vignette
     						$photo_vignette='';
-    						if (preg_match('/(\.jpg|\.bmp|\.gif|\.png|\.tiff)$/i',$photo,$regs)) {
-    							$photo_vignette=preg_replace('/'.$regs[0].'/i','',$photo)."_small".$regs[0];
+    						if (preg_match('/(\.jpg|\.bmp|\.gif|\.png|\.tiff)$/i', $photo, $regs)) {
+    							$photo_vignette=preg_replace('/'.$regs[0].'/i', '', $photo)."_small".$regs[0];
     							if (! dol_is_file($dirthumb.$photo_vignette)) $photo_vignette='';
     						}
 
@@ -2660,7 +2669,7 @@ class Product extends CommonObject
     						{
     							$return.= '<br>';
     							// On propose la generation de la vignette si elle n'existe pas et si la taille est superieure aux limites
-    							if ($photo_vignette && preg_match('/(\.bmp|\.gif|\.jpg|\.jpeg|\.png)$/i',$photo) && ($product->imgWidth > $maxWidth || $product->imgHeight > $maxHeight))
+    							if ($photo_vignette && preg_match('/(\.bmp|\.gif|\.jpg|\.jpeg|\.png)$/i', $photo) && ($product->imgWidth > $maxWidth || $product->imgHeight > $maxHeight))
     							{
     								$return.= '<a href="'.$_SERVER["PHP_SELF"].'?id='.$_GET["id"].'&amp;action=addthumb&amp;file='.urlencode($pdir.$viewfilename).'">'.img_picto($langs->trans('GenerateThumb'),'refresh').'&nbsp;&nbsp;</a>';
     							}
@@ -2747,16 +2756,16 @@ class Product extends CommonObject
 			while (($file = readdir($handle)) != false)
 			{
 				if (! utf8_check($file)) $file=utf8_encode($file);	// readdir returns ISO
-				if (dol_is_file($dir.$file))
+				if (dol_is_file($dir.$file) && preg_match('/(\.jpg|\.bmp|\.gif|\.png|\.tiff)$/i', $dir.$file))
 				{
 					$nbphoto++;
 
 					// On determine nom du fichier vignette
 					$photo=$file;
 					$photo_vignette='';
-					if (preg_match('/(\.jpg|\.bmp|\.gif|\.png|\.tiff)$/i',$photo,$regs))
+					if (preg_match('/(\.jpg|\.bmp|\.gif|\.png|\.tiff)$/i', $photo, $regs))
 					{
-						$photo_vignette=preg_replace('/'.$regs[0].'/i','',$photo).'_small'.$regs[0];
+						$photo_vignette=preg_replace('/'.$regs[0].'/i', '', $photo).'_small'.$regs[0];
 					}
 
 					$dirthumb = $dir.'thumbs/';

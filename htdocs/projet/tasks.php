@@ -56,7 +56,7 @@ $result = restrictedArea($user, 'projet', $id);
 
 $progress=GETPOST('progress', 'int');
 $label=GETPOST('label', 'alpha');
-$description=GETPOST('description', 'alpha');
+$description=GETPOST('description');
 
 $userAccess=0;
 
@@ -178,6 +178,8 @@ if ($id > 0 || ! empty($ref))
 
     print '<table class="border" width="100%">';
 
+    $linkback = '<a href="'.DOL_URL_ROOT.'/projet/liste.php">'.$langs->trans("BackToList").'</a>';
+
     // Ref
     print '<tr><td width="30%">';
     print $langs->trans("Ref");
@@ -188,7 +190,7 @@ if ($id > 0 || ! empty($ref))
         $projectsListId = $object->getProjectsAuthorizedForUser($user,$mine,0);
         $object->next_prev_filter=" rowid in (".(count($projectsListId)?join(',',array_keys($projectsListId)):'0').")";
     }
-    print $form->showrefnav($object,'ref','',1,'ref','ref','',$param);
+    print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref', '', $param);
     print '</td></tr>';
 
     print '<tr><td>'.$langs->trans("Label").'</td><td>'.$object->title.'</td></tr>';
@@ -207,7 +209,7 @@ if ($id > 0 || ! empty($ref))
 
  	// Date start
     print '<tr><td>'.$langs->trans("DateStart").'</td><td>';
-    print dol_print_date($object->date_start,'day'); 
+    print dol_print_date($object->date_start,'day');
     print '</td></tr>';
 
     // Date end

@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ include_once("./inc.php");
 if (file_exists($conffile)) include_once($conffile);
 require_once($dolibarr_main_document_root."/core/lib/admin.lib.php");
 require_once($dolibarr_main_document_root."/core/class/extrafields.class.php");
-
+require_once("lib/repair.lib.php");
 
 $grant_query='';
 $etape = 2;
@@ -181,7 +181,7 @@ if ($ok)
     foreach($filelist as $file)
     {
         print '<tr><td nowrap>';
-        print $langs->trans("ChoosedMigrateScript").'</td><td align="right">'.$file.'</td></tr>';
+        print $langs->trans("Script").'</td><td align="right">'.$file.'</td></tr>';
 
         $name = substr($file, 0, dol_strlen($file) - 4);
 
@@ -259,6 +259,33 @@ foreach($listofmodulesextra as $tablename => $elementtype)
 
         print "</td><td>&nbsp;</td></tr>\n";
     }
+}
+
+
+// Clean data into ecm_directories table
+clean_data_ecm_directories();
+
+
+// Check and clean linked elements
+if (GETPOST('clean_linked_elements'))
+{
+	// propal => order
+	print "</td><td>".checkLinkedElements('propal', 'commande')."</td></tr>\n";
+
+	// propal => invoice
+	print "</td><td>".checkLinkedElements('propal', 'facture')."</td></tr>\n";
+
+	// order => invoice
+	print "</td><td>".checkLinkedElements('commande', 'facture')."</td></tr>\n";
+
+	// order => shipping
+	print "</td><td>".checkLinkedElements('commande', 'shipping')."</td></tr>\n";
+
+	// shipping => delivery
+	print "</td><td>".checkLinkedElements('shipping', 'delivery')."</td></tr>\n";
+
+	// order_supplier => invoice_supplier
+	print "</td><td>".checkLinkedElements('order_supplier', 'invoice_supplier')."</td></tr>\n";
 }
 
 

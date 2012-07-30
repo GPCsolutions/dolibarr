@@ -131,7 +131,7 @@ if ($action == 'edit')
     print '</td>';
 
     print '<td colspan="2">'.$langs->trans("Alert").': ';
-    if ($object->birthday_alert)
+    if (! empty($object->birthday_alert))
     {
         print '<input type="checkbox" name="birthday_alert" checked="checked"></td>';
     }
@@ -158,9 +158,11 @@ else
      */
     print '<table class="border" width="100%">';
 
+    $linkback = '<a href="'.DOL_URL_ROOT.'/contact/list.php">'.$langs->trans("BackToList").'</a>';
+
     // Ref
     print '<tr><td width="20%">'.$langs->trans("Ref").'</td><td colspan="3">';
-    print $form->showrefnav($object,'id');
+    print $form->showrefnav($object, 'id', $linkback);
     print '</td></tr>';
 
     // Name
@@ -193,7 +195,7 @@ else
 
     // Date To Birth
     print '<tr>';
-    if ($object->birthday != '')
+    if (! empty($object->birthday))
     {
         include_once(DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php');
 
@@ -224,7 +226,6 @@ else
 }
 
 dol_fiche_end();
-
 
 if ($action != 'edit')
 {

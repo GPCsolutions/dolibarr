@@ -26,14 +26,14 @@
  *	\brief      File of class to manage suppliers orders
  */
 
+include_once(DOL_DOCUMENT_ROOT."/core/class/commonorder.class.php");
 require_once(DOL_DOCUMENT_ROOT."/product/class/product.class.php");
-require_once(DOL_DOCUMENT_ROOT."/commande/class/commande.class.php");
 
 
 /**
  *	Class to manage predefined suppliers products
  */
-class CommandeFournisseur extends Commande
+class CommandeFournisseur extends CommonOrder
 {
     public $element='order_supplier';
     public $table_element='commande_fournisseur';
@@ -119,7 +119,7 @@ class CommandeFournisseur extends Commande
         $sql.= " c.localtax1, c.localtax2, ";
         $sql.= " c.date_creation, c.date_valid, c.date_approve,";
         $sql.= " c.fk_user_author, c.fk_user_valid, c.fk_user_approve,";
-        $sql.= " c.date_commande as date_commande, c.date_livraison as date_livraison, c.fk_cond_reglement, c.fk_mode_reglement, c.fk_projet as fk_project, c.remise_percent, c.source, c.fk_methode_commande,";
+        $sql.= " c.date_commande as date_commande, c.date_livraison as date_livraison, c.fk_cond_reglement, c.fk_mode_reglement, c.fk_projet as fk_project, c.remise_percent, c.source, c.fk_input_method,";
         $sql.= " c.note as note_private, c.note_public, c.model_pdf, c.extraparams,";
         $sql.= " cm.libelle as methode_commande,";
         $sql.= " cr.code as cond_reglement_code, cr.libelle as cond_reglement_libelle,";
@@ -127,7 +127,7 @@ class CommandeFournisseur extends Commande
         $sql.= " FROM ".MAIN_DB_PREFIX."commande_fournisseur as c";
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_payment_term as cr ON (c.fk_cond_reglement = cr.rowid)";
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_paiement as p ON (c.fk_mode_reglement = p.id)";
-        $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_input_method as cm ON cm.rowid = c.fk_methode_commande";
+        $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_input_method as cm ON cm.rowid = c.fk_input_method";
         $sql.= " WHERE c.entity = ".$conf->entity;
         if ($ref) $sql.= " AND c.ref='".$ref."'";
         else $sql.= " AND c.rowid=".$id;
@@ -164,7 +164,7 @@ class CommandeFournisseur extends Commande
             $this->date_commande		= $this->db->jdate($obj->date_commande); // date a laquelle la commande a ete transmise
 			$this->date_livraison       = $this->db->jdate($obj->date_livraison);
             $this->remise_percent		= $obj->remise_percent;
-            $this->methode_commande_id	= $obj->fk_methode_commande;
+            $this->methode_commande_id	= $obj->fk_input_method;
             $this->methode_commande		= $obj->methode_commande;
 
             $this->source				= $obj->source;
@@ -347,7 +347,7 @@ class CommandeFournisseur extends Commande
             if (! $error)
             {
             	$this->oldref='';
-            	
+
                 // Rename directory if dir was a temporary ref
                 if (preg_match('/^[\(]?PROV/i', $this->ref))
                 {
@@ -364,7 +364,7 @@ class CommandeFournisseur extends Commande
                         if (@rename($dirsource, $dirdest))
                         {
                         	$this->oldref = $oldref;
-                        	
+
                             dol_syslog("Rename ok");
                             // Suppression ancien fichier PDF dans nouveau rep
                             dol_delete_file($dirdest.'/'.$oldref.'.*');
@@ -882,7 +882,7 @@ class CommandeFournisseur extends Commande
         $result = 0;
         if ($user->rights->fournisseur->commande->commander)
         {
-            $sql = "UPDATE ".MAIN_DB_PREFIX."commande_fournisseur SET fk_statut = 3, fk_methode_commande=".$methode.",date_commande=".$this->db->idate("$date");
+            $sql = "UPDATE ".MAIN_DB_PREFIX."commande_fournisseur SET fk_statut = 3, fk_input_method=".$methode.",date_commande=".$this->db->idate("$date");
             $sql .= " WHERE rowid = ".$this->id;
 
             dol_syslog(get_class($this)."::commande sql=".$sql, LOG_DEBUG);
@@ -1297,7 +1297,7 @@ class CommandeFournisseur extends Commande
         {
             $error++;
         }
-        
+
         if (! $error)
         {
         	// Appel des triggers
@@ -1309,7 +1309,7 @@ class CommandeFournisseur extends Commande
         	}
         	// Fin appel triggers
         }
-        
+
         if (! $error)
         {
         	// We remove directory
@@ -1337,7 +1337,7 @@ class CommandeFournisseur extends Commande
         		}
         	}
         }
-        
+
 		if (! $error)
 		{
 			dol_syslog(get_class($this)."::delete $this->id by $user->id", LOG_DEBUG);
@@ -1821,7 +1821,7 @@ class CommandeFournisseur extends Commande
 /**
  *  Classe de gestion des lignes de commande
  */
-class CommandeFournisseurLigne extends OrderLine
+class CommandeFournisseurLigne
 {
     // From llx_commandedet
     var $qty;

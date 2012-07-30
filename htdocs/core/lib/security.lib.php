@@ -89,7 +89,7 @@ function dol_hash($chain,$type=0)
  *
  *	@param	User	$user      	  	User to check
  *	@param  string	$features	    Features to check (in most cases, it's module name. Examples: 'societe', 'contact', 'produit|service', ...)
- *	@param  int		$objectid      	Object ID if we want to check permission on a particular record (optionnal)
+ *	@param  int		$objectid      	Object ID if we want to check a particular record (optionnal) is linked to a owned thirdparty (optionnal).
  *	@param  string	$dbtablename    'TableName&SharedElement' with Tablename is table where object is stored, SharedElement is key to define where to check entity. Not used if objectid is null (optionnal)
  *	@param  string	$feature2		Feature to check, second level of permission (optionnal)
  *  @param  string	$dbt_keyfield   Field name for socid foreign key if not fk_soc (optionnal)
@@ -115,10 +115,12 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
     if ($dbt_select != 'rowid') $objectid = "'".$objectid."'";
 
     // More features to check
-    $features = explode("&",$features);
+    $features = explode("&", $features);
 
     // More parameters
-    list($dbtablename, $sharedelement) = explode('&', $dbtablename);
+    $params = explode('&', $dbtablename);
+    $dbtablename=(! empty($params[0]) ? $params[0] : '');
+    $sharedelement=(! empty($params[1]) ? $params[1] : '');
 
     // Check read permission from module
     // TODO Replace "feature" param into caller by first level of permission
@@ -286,7 +288,7 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
         {
             $sql='';
 
-            $check = array('banque','user','usergroup','produit','service','produit|service','categorie'); // Test on entity only (Objects with no link to company)
+            $check = array('adherent','banque','user','usergroup','produit','service','produit|service','categorie'); // Test on entity only (Objects with no link to company)
             $checksoc = array('societe');	 // Test for societe object
             $checkother = array('contact');	 // Test on entity and link to societe. Allowed if link is empty (Ex: contacts...).
             $checkproject = array('projet'); // Test for project object
@@ -319,7 +321,7 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
                     if ($user->societe_id <> $objectid) accessforbidden();
                 }
                 // If internal user: Check permission for internal users that are restricted on their objects
-                else if (! $user->rights->societe->client->voir)
+                else if (! empty($conf->societe->enabled) && ($user->rights->societe->lire && ! $user->rights->societe->client->voir))
                 {
                     $sql = "SELECT sc.fk_soc";
                     $sql.= " FROM (".MAIN_DB_PREFIX."societe_commerciaux as sc";
@@ -349,7 +351,7 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
                     $sql.= " AND dbt.fk_soc = ".$user->societe_id;
                 }
                 // If internal user: Check permission for internal users that are restricted on their objects
-                else if (! $user->rights->societe->client->voir)
+                else if (! empty($conf->societe->enabled) && ($user->rights->societe->lire && ! $user->rights->societe->client->voir))
                 {
                     $sql = "SELECT dbt.rowid";
                     $sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";
@@ -369,7 +371,7 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
             }
             else if (in_array($feature,$checkproject))
             {
-                if (! $user->rights->projet->all->lire)
+                if (! empty($conf->projet->enabled) && ! $user->rights->projet->all->lire)
                 {
                     include_once(DOL_DOCUMENT_ROOT."/projet/class/project.class.php");
                     $projectstatic=new Project($db);
@@ -396,7 +398,7 @@ function restrictedArea($user, $features, $objectid=0, $dbtablename='', $feature
                     $sql.= " AND dbt.".$dbt_keyfield." = ".$user->societe_id;
                 }
                 // If internal user: Check permission for internal users that are restricted on their objects
-                else if (! $user->rights->societe->client->voir)
+                else if (! empty($conf->societe->enabled) && ($user->rights->societe->lire && ! $user->rights->societe->client->voir))
                 {
                     $sql = "SELECT sc.fk_soc";
                     $sql.= " FROM ".MAIN_DB_PREFIX.$dbtablename." as dbt";

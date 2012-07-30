@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2002-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2002-2003 Jean-Louis Bergamo   <jlb@j1b.org>
- * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
  *
@@ -52,7 +52,7 @@ if (! empty($conf->global->MAIN_USE_ADVANCED_PERMS))
 
 // Security check
 $socid=0;
-if ($user->societe_id > 0) $socid = $user->societe_id;
+if (isset($user->societe_id) && $user->societe_id > 0) $socid = $user->societe_id;
 $feature2 = (($socid && $user->rights->user->self->creer)?'':'user');
 if ($user->id == $id && (empty($conf->global->MAIN_USE_ADVANCED_PERMS) || $user->rights->user->self_advance->readperms))	// A user can always read its own card if not advanced perms enabled, or if he has advanced perms
 {
@@ -66,6 +66,7 @@ if ($user->id <> $id && ! $canreaduser) accessforbidden();
 /**
  * Actions
  */
+
 if ($action == 'addrights' && $caneditperms)
 {
     $edituser = new User($db);
@@ -96,11 +97,9 @@ if ($action == 'delrights' && $caneditperms)
 
 
 
-/* ************************************************************************** */
-/*                                                                            */
-/* Visu et edition                                                            */
-/*                                                                            */
-/* ************************************************************************** */
+/**
+ *	View
+ */
 
 llxHeader('',$langs->trans("Permissions"));
 
@@ -110,9 +109,6 @@ $fuser = new User($db);
 $fuser->fetch($id);
 $fuser->getrights();
 
-/*
- * Affichage onglets
- */
 $head = user_prepare_head($fuser);
 
 $title = $langs->trans("User");
@@ -152,8 +148,8 @@ foreach($modulesdir as $dir)
     	            // Load all permissions
     	            if ($objMod->rights_class)
     	            {
-    	                $ret=$objMod->insert_permissions(0);
-
+    	            	$entity=((! empty($conf->multicompany->enabled) && ! empty($fuser->entity)) ? $fuser->entity : null);
+    	                $ret=$objMod->insert_permissions(0, $entity);
     	                $modules[$objMod->rights_class]=$objMod;
     	                //print "modules[".$objMod->rights_class."]=$objMod;";
     	            }
@@ -276,19 +272,20 @@ if ($result)
     $num = $db->num_rows($result);
     $i = 0;
     $var = True;
+    $oldmod='';
 
     while ($i < $num)
     {
         $obj = $db->fetch_object($result);
 
         // Si la ligne correspond a un module qui n'existe plus (absent de includes/module), on l'ignore
-        if (! $modules[$obj->module])
+        if (empty($modules[$obj->module]))
         {
             $i++;
             continue;
         }
 
-        if ($oldmod <> $obj->module)
+        if (isset($obj->module) && ($oldmod <> $obj->module))
         {
             $oldmod = $obj->module;
             $var = !$var;
@@ -297,7 +294,7 @@ if ($result)
             $objMod=$modules[$obj->module];
             $picto=($objMod->picto?$objMod->picto:'generic');
 
-            if ($caneditperms && (! $objMod->rights_admin_allowed || ! $fuser->admin))
+            if ($caneditperms && (empty($objMod->rights_admin_allowed) || empty($fuser->admin)))
             {
                 // On affiche ligne pour modifier droits
                 print '<tr '. $bc[$var].'>';
@@ -320,7 +317,7 @@ if ($result)
         print '</td>';
 
         // Permission and tick
-        if ($fuser->admin && $objMod->rights_admin_allowed)    // Permission own because admin
+        if (! empty($fuser->admin) && ! empty($objMod->rights_admin_allowed))    // Permission own because admin
         {
             if ($caneditperms)
             {
@@ -374,6 +371,8 @@ if ($result)
 else dol_print_error($db);
 print '</table>';
 
+
+dol_fiche_end();
 
 llxFooter();
 

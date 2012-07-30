@@ -41,7 +41,7 @@ class modContrat extends DolibarrModules
 	 *
 	 *   @param      DoliDB		$db      Database handler
 	 */
-	function modContrat($db)
+	function __construct($db)
 	{
 		$this->db = $db;
 		$this->numero = 54;
@@ -62,7 +62,7 @@ class modContrat extends DolibarrModules
 		$this->dirs = array("/contracts/temp");
 
 		// Dependances
-		$this->depends = array("modService");
+		$this->depends = array("modSociete","modService");
 		$this->requiredby = array();
 
 		// Config pages

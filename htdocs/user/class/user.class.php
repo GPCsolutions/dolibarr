@@ -150,7 +150,7 @@ class User extends CommonObject
 		$sql.= " u.ref_int, u.ref_ext";
 		$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
 
-		if(! empty($conf->multicompany->enabled) && $conf->entity == 1)
+		if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode))
 		{
 			$sql.= " WHERE u.entity IS NOT NULL";
 		}
@@ -531,11 +531,11 @@ class User extends CommonObject
 
 				if ($perms)
 				{
-					if (! is_object($this->rights)) $this->rights = (object) array(); // For avoid error
-					if (! is_object($this->rights->$module)) $this->rights->$module = (object) array();
+					if (! isset($this->rights) || ! is_object($this->rights)) $this->rights = (object) array(); // For avoid error
+					if (! isset($this->rights->$module) || ! is_object($this->rights->$module)) $this->rights->$module = (object) array();
 					if ($subperms)
 					{
-						if (! is_object($this->rights->$module->$perms)) $this->rights->$module->$perms = (object) array();
+						if (! isset($this->rights->$module->$perms) || ! is_object($this->rights->$module->$perms)) $this->rights->$module->$perms = (object) array();
 						$this->rights->$module->$perms->$subperms = 1;
 					}
 					else
@@ -578,8 +578,11 @@ class User extends CommonObject
 
 				if ($perms)
 				{
+					if (! isset($this->rights) || ! is_object($this->rights)) $this->rights = (object) array(); // For avoid error
+					if (! isset($this->rights->$module) || ! is_object($this->rights->$module)) $this->rights->$module = (object) array();
 					if ($subperms)
 					{
+						if (! isset($this->rights->$module->$perms) || ! is_object($this->rights->$module->$perms)) $this->rights->$module->$perms = (object) array();
 						$this->rights->$module->$perms->$subperms = 1;
 					}
 					else
@@ -1996,7 +1999,7 @@ class User extends CommonObject
 		}
 		else
 		{
-			if ($all) $sql.= " WHERE entity = is not null";
+			if ($all) $sql.= " WHERE entity IS NOT NULL"; // all users except superadmin
 			else $sql.= " WHERE entity = ".$conf->entity;
 			if ($limitTo == 'active') $sql.= " AND statut = 1";
 		}

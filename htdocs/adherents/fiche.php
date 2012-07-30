@@ -938,7 +938,7 @@ if ($action == 'edit')
 	$morphys["phy"] = $langs->trans("Physical");
 	$morphys["mor"] = $langs->trans("Morale");
 	print '<tr><td><span class="fieldrequired">'.$langs->trans("Nature").'</span></td><td>';
-	print $form->selectarray("morphy",  $morphys, isset($_POST["morphy"])?$_POST["morphy"]:$object->morphy);
+	print $form->selectarray("morphy", $morphys, isset($_POST["morphy"])?$_POST["morphy"]:$object->morphy);
 	print "</td>";
     // Photo
     print '<td align="center" valign="middle" width="25%" rowspan="'.$rowspan.'">';
@@ -958,7 +958,7 @@ if ($action == 'edit')
     print '<tr><td><span class="fieldrequired">'.$langs->trans("Type").'</span></td><td>';
     if ($user->rights->adherent->creer)
     {
-        print $form->selectarray("typeid",  $adht->liste_array(), (isset($_POST["typeid"])?$_POST["typeid"]:$object->typeid));
+        print $form->selectarray("typeid", $adht->liste_array(), (isset($_POST["typeid"])?$_POST["typeid"]:$object->typeid));
     }
     else
     {
@@ -1272,10 +1272,12 @@ if ($rowid && $action != 'edit')
 
     print '<table class="border" width="100%">';
 
+    $linkback = '<a href="'.DOL_URL_ROOT.'/adherents/liste.php">'.$langs->trans("BackToList").'</a>';
+
     // Ref
     print '<tr><td width="20%">'.$langs->trans("Ref").'</td>';
 	print '<td class="valeur" colspan="2">';
-	print $form->showrefnav($object,'rowid');
+	print $form->showrefnav($object, 'rowid', $linkback);
 	print '</td></tr>';
 
     $showphoto='<td rowspan="'.$rowspan.'" align="center" valign="middle" width="25%">';

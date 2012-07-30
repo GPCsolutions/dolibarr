@@ -69,7 +69,8 @@ class Societe extends CommonObject
     var $country_code;
     var $country;
 
-    var $tel;
+    var $tel;        // deprecated
+    var $phone;
     var $fax;
     var $email;
     var $url;
@@ -146,7 +147,7 @@ class Societe extends CommonObject
      *
      *    @param	DoliDB		$db		Database handler
      */
-    public function Societe($db)
+    public function __construct($db)
     {
         global $conf;
 
@@ -209,12 +210,13 @@ class Societe extends CommonObject
 
         if ($result >= 0)
         {
-            $sql = "INSERT INTO ".MAIN_DB_PREFIX."societe (nom, entity, datec, datea, fk_user_creat, canvas, status, ref_int, fk_stcomm)";
+            $sql = "INSERT INTO ".MAIN_DB_PREFIX."societe (nom, entity, datec, datea, fk_user_creat, canvas, status, ref_int, ref_ext, fk_stcomm)";
             $sql.= " VALUES ('".$this->db->escape($this->name)."', ".$conf->entity.", '".$this->db->idate($now)."', '".$this->db->idate($now)."'";
             $sql.= ", ".($user->id > 0 ? "'".$user->id."'":"null");
             $sql.= ", ".($this->canvas ? "'".$this->canvas."'":"null");
             $sql.= ", ".$this->status;
             $sql.= ", ".($this->ref_int ? "'".$this->ref_int."'":"null");
+            $sql.= ", ".($this->ref_ext ? "'".$this->ref_ext."'":"null");
             $sql.= ", 0)";
 
             dol_syslog(get_class($this)."::create sql=".$sql);
@@ -388,6 +390,7 @@ class Societe extends CommonObject
         $this->id			= $id;
         $this->name=$this->name?trim($this->name):trim($this->nom);
         $this->nom=trim($this->nom);    // TODO obsolete
+        $this->ref_ext=trim($this->ref_ext);
         $this->address=$this->address?trim($this->address):trim($this->adresse);
         $this->adresse=$this->address;  // TODO obsolete
         $this->zip=$this->zip?trim($this->zip):trim($this->cp);
@@ -397,10 +400,11 @@ class Societe extends CommonObject
         $this->state_id=trim($this->state_id);
         $this->country_id	= ($this->country_id > 0)?$this->country_id:$this->pays_id;
         $this->pays_id      = $this->country_id;
-        $this->tel			= trim($this->tel);
+        $this->phone		= trim($this->phone?$this->phone:$this->tel);
+        $this->phone		= preg_replace("/\s/","",$this->phone);
+        $this->phone		= preg_replace("/\./","",$this->phone);
+        $this->tel          = $this->phone;
         $this->fax			= trim($this->fax);
-        $this->tel			= preg_replace("/\s/","",$this->tel);
-        $this->tel			= preg_replace("/\./","",$this->tel);
         $this->fax			= preg_replace("/\s/","",$this->fax);
         $this->fax			= preg_replace("/\./","",$this->fax);
         $this->email		= trim($this->email);
@@ -461,18 +465,19 @@ class Societe extends CommonObject
         {
             dol_syslog(get_class($this)."::Update verify ok");
 
-            $sql = "UPDATE ".MAIN_DB_PREFIX."societe";
-            $sql.= " SET nom = '" . $this->db->escape($this->name) ."'"; // Champ obligatoire
-            $sql.= ",datea = '".$this->db->idate($now)."'";
-            $sql.= ",address = '" . $this->db->escape($this->address) ."'";
+            $sql  = "UPDATE ".MAIN_DB_PREFIX."societe SET ";
+            $sql .= "nom = '" . $this->db->escape($this->name) ."'"; // Required
+            $sql .= ",ref_ext = " .($this->ref_ext?"'".$this->db->escape($this->ref_ext) ."'":"null");
+            $sql .= ",datea = '".$this->db->idate($now)."'";
+            $sql .= ",address = '" . $this->db->escape($this->address) ."'";
 
-            $sql.= ",cp = ".($this->zip?"'".$this->zip."'":"null");
-            $sql.= ",ville = ".($this->town?"'".$this->db->escape($this->town)."'":"null");
+            $sql .= ",cp = ".($this->zip?"'".$this->zip."'":"null");
+            $sql .= ",ville = ".($this->town?"'".$this->db->escape($this->town)."'":"null");
 
             $sql .= ",fk_departement = '" . ($this->state_id?$this->state_id:'0') ."'";
             $sql .= ",fk_pays = '" . ($this->country_id?$this->country_id:'0') ."'";
 
-            $sql .= ",tel = ".($this->tel?"'".$this->db->escape($this->tel)."'":"null");
+            $sql .= ",tel = ".($this->phone?"'".$this->db->escape($this->phone)."'":"null");
             $sql .= ",fax = ".($this->fax?"'".$this->db->escape($this->fax)."'":"null");
             $sql .= ",email = ".($this->email?"'".$this->db->escape($this->email)."'":"null");
             $sql .= ",url = ".($this->url?"'".$this->db->escape($this->url)."'":"null");
@@ -636,7 +641,7 @@ class Societe extends CommonObject
         $sql .= ', s.status';
         $sql .= ', s.price_level';
         $sql .= ', s.tms as date_update';
-        $sql .= ', s.tel, s.fax, s.email, s.url, s.cp as zip, s.ville as town, s.note, s.client, s.fournisseur';
+        $sql .= ', s.tel as phone, s.fax, s.email, s.url, s.cp as zip, s.ville as town, s.note, s.client, s.fournisseur';
         $sql .= ', s.siren as idprof1, s.siret as idprof2, s.ape as idprof3, s.idprof4, s.idprof5, s.idprof6';
         $sql .= ', s.capital, s.tva_intra';
         $sql .= ', s.fk_typent as typent_id';
@@ -721,8 +726,8 @@ class Societe extends CommonObject
 
                 $this->email = $obj->email;
                 $this->url = $obj->url;
-                $this->tel = $obj->tel; // TODO obsolete
-                $this->phone = $obj->tel;
+                $this->tel = $obj->phone; // TODO obsolete
+                $this->phone = $obj->phone;
                 $this->fax = $obj->fax;
 
                 $this->parent    = $obj->parent;
@@ -1417,12 +1422,14 @@ class Societe extends CommonObject
     {
         global $langs;
 
+        if (empty($this->phone) && ! empty($this->tel)) $this->phone=$this->tel;
+
         $contact_phone = $this->contact_property_array('mobile');
-        if ($this->tel)
+        if ($this->phone)
         {
             if (empty($this->name)) $this->name=$this->nom;
             // TODO: Tester si tel non deja present dans tableau contact
-            $contact_phone['thirdparty']=$langs->trans("ThirdParty").': '.dol_trunc($this->name,16)." &lt;".$this->tel."&gt;";
+            $contact_phone['thirdparty']=$langs->trans("ThirdParty").': '.dol_trunc($this->name,16)." &lt;".$this->phone."&gt;";
         }
         return $contact_phone;
     }
@@ -2261,7 +2268,8 @@ class Societe extends CommonObject
         $this->country_code=$member->country_code;
         $this->pays_id=$member->country_id;	// TODO obsolete
         $this->country_id=$member->country_id;
-        $this->tel=$member->phone;				// Prof phone
+        $this->tel=$member->phone;				// deprecated
+        $this->phone=$member->phone;       // Prof phone
         $this->email=$member->email;
 
         $this->client = 1;				// A member is a customer by default

@@ -274,7 +274,7 @@ if (! empty($conf->global->MAIN_SECURITY_CSRF))	// Check validity of token, only
     {
         if (($_POST['token'] != $_SESSION['token']))
         {
-            dol_syslog("Invalid token in ".$_SERVER['HTTP_REFERER'].", action=".$_POST['action'].", _POST['token']=".$_POST['token'].", _SESSION['token']=".$_SESSION['token'],LOG_WARNING);
+            dol_syslog("Invalid token in ".$_SERVER['HTTP_REFERER'].", action=".GETPOST('action').", _POST['token']=".GETPOST('token').", _SESSION['token']=".$_SESSION['token'],LOG_WARNING);
             //print 'Unset POST by CSRF protection in main.inc.php.';	// Do not output anything because this create problems when using the BACK button on browsers.
             unset($_POST);
         }
@@ -328,7 +328,7 @@ if (! defined('NOLOGIN'))
         include_once(DOL_DOCUMENT_ROOT.'/core/lib/security2.lib.php');
 
         // If in demo mode, we check we go to home page through the public/demo/index.php page
-        if ($dolibarr_main_demo && $_SERVER['PHP_SELF'] == DOL_URL_ROOT.'/index.php')  // We ask index page
+        if (! empty($dolibarr_main_demo) && $_SERVER['PHP_SELF'] == DOL_URL_ROOT.'/index.php')  // We ask index page
         {
             if (! preg_match('/public/',$_SERVER['HTTP_REFERER']))
             {
@@ -358,7 +358,7 @@ if (! defined('NOLOGIN'))
                 // Appel des triggers
                 include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
                 $interface=new Interfaces($db);
-                $result=$interface->run_triggers('USER_LOGIN_FAILED',$user,$user,$langs,$conf,GETPOST('entity'));
+                $result=$interface->run_triggers('USER_LOGIN_FAILED',$user,$user,$langs,$conf,GETPOST('entity','int'));
                 if ($result < 0) {
                     $error++;
                 }
@@ -367,8 +367,8 @@ if (! defined('NOLOGIN'))
         }
 
         $usertotest		= (! empty($_COOKIE['login_dolibarr']) ? $_COOKIE['login_dolibarr'] : GETPOST("username","alpha",2));
-        $passwordtotest	= (! empty($_COOKIE['password_dolibarr']) ? $_COOKIE['password_dolibarr'] : $_POST["password"]);
-        $entitytotest	= (! empty($_POST["entity"]) ? $_POST["entity"] : 1);
+        $passwordtotest	= (! empty($_COOKIE['password_dolibarr']) ? $_COOKIE['password_dolibarr'] : GETPOST('password'));
+        $entitytotest	= (GETPOST('entity','int') ? GETPOST('entity','int') : 1);
 
         // Validation of login/pass/entity
         // If ok, the variable login will be returned
@@ -556,7 +556,7 @@ if (! defined('NOLOGIN'))
         // Call triggers
         include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
         $interface=new Interfaces($db);
-        $result=$interface->run_triggers('USER_LOGIN',$user,$user,$langs,$conf,$_POST["entity"]);
+        $result=$interface->run_triggers('USER_LOGIN',$user,$user,$langs,$conf,GETPOST('entity','int'));
         if ($result < 0) {
             $error++;
         }
@@ -669,7 +669,7 @@ if (! defined('NOREQUIRETRAN'))
 }
 
 // Use php template engine
-if ($conf->global->MAIN_USE_TEMPLATE_ENGINE && ! defined('NOTEMPLATEENGINE'))
+if (! empty($conf->global->MAIN_USE_TEMPLATE_ENGINE) && ! defined('NOTEMPLATEENGINE'))
 {
 	require_once(DOL_DOCUMENT_ROOT.'/includes/savant/Savant3.php');
 
@@ -721,6 +721,11 @@ $bc=array(0=>'class="impair"',1=>'class="pair"');
 $bcdd=array(0=>'class="impair drag drop"',1=>'class="pair drag drop"');
 $bcnd=array(0=>'class="impair nodrag nodrop"',1=>'class="pair nodrag nodrop"');
 
+// Define messages variables
+$mesg=''; $warning=''; $error=0;
+// deprecated, see setEventMessage() and dol_htmloutput_events()
+$mesgs=array(); $warnings=array(); $errors=array();
+
 // Constants used to defined number of lines in textarea
 if (empty($conf->browser->firefox))
 {
@@ -752,7 +757,7 @@ $heightforframes=52;
 // Switch to another entity
 if (! empty($conf->multicompany->enabled) && GETPOST('action') == 'switchentity')
 {
-    if ($mc->switchEntity(GETPOST('entity')) >= 0)
+    if ($mc->switchEntity(GETPOST('entity','int')) > 0)
     {
         Header("Location: ".DOL_URL_ROOT.'/');
         exit;
@@ -893,14 +898,17 @@ function top_htmlhead($head, $title='', $disablejs=0, $disablehead=0, $arrayofjs
         //print 'themepath='.$themepath.' themeparam='.$themeparam;exit;
         print '<link rel="stylesheet" type="text/css" title="default" href="'.$themepath.$themeparam.'">'."\n";
         // CSS forced by modules (relative url starting with /)
-        $dircss=(array) $conf->modules_parts['css'];
-        foreach($dircss as $key => $cssfile)
+        if (isset($conf->modules_parts['css']))
         {
-            // cssfile is a relative path
-            print '<link rel="stylesheet" type="text/css" title="default" href="'.dol_buildpath($cssfile,1);
-            // We add params only if page is not static, because some web server setup does not return content type text/css if url has parameters, so browser cache is not used.
-            if (!preg_match('/\.css$/i',$cssfile)) print $themeparam;
-            print '"><!-- Added by module '.$key. '-->'."\n";
+        	$dircss=(array) $conf->modules_parts['css'];
+        	foreach($dircss as $key => $cssfile)
+        	{
+        		// cssfile is a relative path
+        		print '<link rel="stylesheet" type="text/css" title="default" href="'.dol_buildpath($cssfile,1);
+        		// We add params only if page is not static, because some web server setup does not return content type text/css if url has parameters, so browser cache is not used.
+        		if (!preg_match('/\.css$/i',$cssfile)) print $themeparam;
+        		print '"><!-- Added by module '.$key. '-->'."\n";
+        	}
         }
         // CSS forced by page in top_htmlhead call (relative url starting with /)
         if (is_array($arrayofcss))
@@ -1207,7 +1215,7 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
 
     print "\n".'<!-- Start top horizontal menu '.$top_menu.' -->'."\n";
 
-    if ($conf->use_javascript_ajax && $conf->global->MAIN_MENU_USE_JQUERY_LAYOUT) print '<div class="ui-layout-north"> <!-- Begin top layout -->'."\n";
+    if (! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print '<div class="ui-layout-north"> <!-- Begin top layout -->'."\n";
 
     print '<div id="tmenu_tooltip" class="tmenu">'."\n";
 
@@ -1241,7 +1249,7 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
     $loginhtmltext.='<br><b>'.$langs->trans("IPAddress").'</b>: '.$_SERVER["REMOTE_ADDR"];
     $loginhtmltext.='<br>';
     $loginhtmltext.='<br><u>'.$langs->trans("Connection").'</u>';
-    if ($conf->global->MAIN_MODULE_MULTICOMPANY) $loginhtmltext.='<br><b>'.$langs->trans("ConnectedOnMultiCompany").'</b>: '.$conf->entity.' (user entity '.$user->entity.')';
+    if (! empty($conf->global->MAIN_MODULE_MULTICOMPANY)) $loginhtmltext.='<br><b>'.$langs->trans("ConnectedOnMultiCompany").'</b>: '.$conf->entity.' (user entity '.$user->entity.')';
     $loginhtmltext.='<br><b>'.$langs->trans("ConnectedSince").'</b>: '.dol_print_date($user->datelastlogin,"dayhour");
     $loginhtmltext.='<br><b>'.$langs->trans("PreviousConnexion").'</b>: '.dol_print_date($user->datepreviouslogin,"dayhour");
     $loginhtmltext.='<br><b>'.$langs->trans("AuthenticationMode").'</b>: '.$_SESSION["dol_authmode"];
@@ -1253,7 +1261,7 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
     if (! empty($_SESSION["disablemodules"])) $loginhtmltext.='<br><b>'.$langs->trans("DisabledModules").'</b>: <br>'.join(', ',explode(',',$_SESSION["disablemodules"]));
 
     $appli='Dolibarr';
-    if (!empty($conf->global->MAIN_APPLICATION_TITLE)) $appli=$conf->global->MAIN_APPLICATION_TITLE;
+    if (! empty($conf->global->MAIN_APPLICATION_TITLE)) $appli=$conf->global->MAIN_APPLICATION_TITLE;
 
     // Link info
     $logouttext='';
@@ -1281,7 +1289,7 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
     print '<div class="login_block">'."\n";
     print '<table class="nobordernopadding" summary=""><tr>';
 
-    if (! is_object($form)) $form=new Form($db);
+    $form=new Form($db);
 
     $toprightmenu.=$form->textwithtooltip('',$loginhtmltext,2,1,$logintext,'',1);
 
@@ -1308,11 +1316,11 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
     print '</tr></table>'."\n";
     print "</div>\n";
 
-    if ($conf->use_javascript_ajax && $conf->global->MAIN_MENU_USE_JQUERY_LAYOUT) print "</div><!-- End top layout -->\n";
+    if (! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print "</div><!-- End top layout -->\n";
 
     print "<!-- End top horizontal menu -->\n";
 
-    if (! $conf->use_javascript_ajax || ! $conf->global->MAIN_MENU_USE_JQUERY_LAYOUT) print '<table width="100%" class="notopnoleftnoright" summary="leftmenutable" id="undertopmenu"><tr>';
+    if (empty($conf->use_javascript_ajax) || empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print '<table width="100%" class="notopnoleftnoright" summary="leftmenutable" id="undertopmenu"><tr>';
 
 
 }
@@ -1347,32 +1355,32 @@ function left_menu($menu_array_before, $helppagename='', $moresearchform='', $me
 	}
     $hookmanager->initHooks(array('searchform','leftblock'));
 
-    if ($conf->use_javascript_ajax && $conf->global->MAIN_MENU_USE_JQUERY_LAYOUT) print "\n".'<div class="ui-layout-west"> <!-- Begin left layout -->'."\n";
+    if (! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print "\n".'<div class="ui-layout-west"> <!-- Begin left layout -->'."\n";
     else print '<td class="vmenu" valign="top">';
 
     print "\n";
 
     // Define $searchform
-    if ($conf->societe->enabled && $conf->global->MAIN_SEARCHFORM_SOCIETE && $user->rights->societe->lire)
+    if (! empty($conf->societe->enabled) && ! empty($conf->global->MAIN_SEARCHFORM_SOCIETE) && $user->rights->societe->lire)
     {
         $langs->load("companies");
         $searchform.=printSearchForm(DOL_URL_ROOT.'/societe/societe.php', DOL_URL_ROOT.'/societe/societe.php', img_object('','company').' '.$langs->trans("ThirdParties"), 'soc', 'socname');
     }
 
-    if ($conf->societe->enabled && $conf->global->MAIN_SEARCHFORM_CONTACT && $user->rights->societe->lire)
+    if (! empty($conf->societe->enabled) && ! empty($conf->global->MAIN_SEARCHFORM_CONTACT) && $user->rights->societe->lire)
     {
         $langs->load("companies");
         $searchform.=printSearchForm(DOL_URL_ROOT.'/contact/list.php', DOL_URL_ROOT.'/contact/list.php', img_object('','contact').' '.$langs->trans("Contacts"), 'contact', 'contactname');
     }
 
-    if ((($conf->product->enabled && $user->rights->produit->lire) || ($conf->service->enabled && $user->rights->service->lire))
-    && $conf->global->MAIN_SEARCHFORM_PRODUITSERVICE)
+    if (((! empty($conf->product->enabled) && $user->rights->produit->lire) || (! empty($conf->service->enabled) && $user->rights->service->lire))
+    && ! empty($conf->global->MAIN_SEARCHFORM_PRODUITSERVICE))
     {
         $langs->load("products");
         $searchform.=printSearchForm(DOL_URL_ROOT.'/product/liste.php', DOL_URL_ROOT.'/product/liste.php', img_object('','product').' '.$langs->trans("Products")."/".$langs->trans("Services"), 'products', 'sall');
     }
 
-    if ($conf->adherent->enabled && $conf->global->MAIN_SEARCHFORM_ADHERENT && $user->rights->adherent->lire)
+    if (! empty($conf->adherent->enabled) && ! empty($conf->global->MAIN_SEARCHFORM_ADHERENT) && $user->rights->adherent->lire)
     {
         $langs->load("members");
         $searchform.=printSearchForm(DOL_URL_ROOT.'/adherents/liste.php', DOL_URL_ROOT.'/adherents/liste.php', img_object('','user').' '.$langs->trans("Members"), 'member', 'sall');
@@ -1504,7 +1512,7 @@ function left_menu($menu_array_before, $helppagename='', $moresearchform='', $me
     $leftblock=$hookmanager->executeHooks('printLeftBlock',$parameters);    // Note that $action and $object may have been modified by some hooks
     print $leftblock;
 
-    if ($conf->use_javascript_ajax && $conf->global->MAIN_MENU_USE_JQUERY_LAYOUT) print '</div> <!-- End left layout -->'."\n";
+    if (! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print '</div> <!-- End left layout -->'."\n";
     else print '</td>';
 
     print "\n";
@@ -1527,7 +1535,7 @@ function main_area($title='')
 {
     global $conf, $langs;
 
-    if ($conf->use_javascript_ajax && $conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)
+    if (! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT))
     {
         print '<div id="mainContent"><div class="ui-layout-center"> <!-- begin main layout -->'."\n";
         print '<table width="100%" class="notopnoleftnoright" summary="centermenutable" id="undertopmenu"><tr>';
@@ -1566,6 +1574,10 @@ function main_area($title='')
  */
 function getHelpParamFor($helppagename,$langs)
 {
+	$helpbaseurl='';
+	$helppage='';
+	$mode='';
+
     if (preg_match('/^http/i',$helppagename))
     {
         // If complete URL
@@ -1642,6 +1654,9 @@ if (! function_exists("llxFooter"))
     function llxFooter($foot='')
     {
         global $conf, $langs, $dolibarr_auto_user, $micro_start_time;
+
+        // Global html output events ($mesgs, $errors, $warnings)
+        dol_htmloutput_events();
 
         // Core error message
         if (defined("MAIN_CORE_ERROR") && constant("MAIN_CORE_ERROR") == 1)

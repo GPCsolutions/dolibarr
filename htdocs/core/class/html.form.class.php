@@ -49,7 +49,7 @@ class Form
     var $cache_conditions_paiements=array();
     var $cache_availability=array();
     var $cache_demand_reason=array();
-    var $cache_type_fees=array();
+    var $cache_types_fees=array();
     var $cache_currencies=array();
     var $cache_vatrates=array();
 
@@ -91,7 +91,7 @@ class Form
             if ($perm)
             {
                 $tmp=explode(':',$typeofdata);
-                $ret.= '<div class="editkey_'.$tmp[0].' '.$tmp[1].'" id="'.$htmlname.'">';
+                $ret.= '<div class="editkey_'.$tmp[0].(! empty($tmp[1]) ? ' '.$tmp[1] : '').'" id="'.$htmlname.'">';
                 $ret.= $langs->trans($text);
                 $ret.= '</div>'."\n";
             }
@@ -267,13 +267,15 @@ class Form
             if (preg_match('/^(string|email|numeric)/',$inputType))
             {
                 $tmp=explode(':',$inputType);
-                $inputType=$tmp[0]; $inputOption=$tmp[1];
+                $inputType=$tmp[0];
+                if (! empty($tmp[1])) $inputOption=$tmp[1];
                 if (! empty($tmp[2])) $savemethod=$tmp[2];
             }
             else if (preg_match('/^datepicker/',$inputType))
             {
                 $tmp=explode(':',$inputType);
-                $inputType=$tmp[0]; $inputOption=$tmp[1];
+                $inputType=$tmp[0];
+                if (! empty($tmp[1])) $inputOption=$tmp[1];
                 if (! empty($tmp[2])) $savemethod=$tmp[2];
 
                 $out.= '<input id="timestamp" type="hidden"/>'."\n"; // Use for timestamp format
@@ -318,8 +320,8 @@ class Form
             if (! empty($ext_element))	$out.= '<input id="ext_element_'.$htmlname.'" value="'.$ext_element.'" type="hidden"/>'."\n";
             if (! empty($success))		$out.= '<input id="success_'.$htmlname.'" value="'.$success.'" type="hidden"/>'."\n";
 
-            $out.= '<div id="viewval_'.$htmlname.'" class="viewval_'.$inputType.($button_only ? ' inactive' : ' active').'">'.$value.'</div>'."\n";
-            $out.= '<div id="editval_'.$htmlname.'" class="editval_'.$inputType.($button_only ? ' inactive' : ' active').' hideobject">'.(! empty($editvalue) ? $editvalue : $value).'</div>'."\n";
+            $out.= '<span id="viewval_'.$htmlname.'" class="viewval_'.$inputType.($button_only ? ' inactive' : ' active').'">'.$value.'</span>'."\n";
+            $out.= '<span id="editval_'.$htmlname.'" class="editval_'.$inputType.($button_only ? ' inactive' : ' active').' hideobject">'.(! empty($editvalue) ? $editvalue : $value).'</span>'."\n";
         }
         else
         {
@@ -669,6 +671,7 @@ class Form
         $sql.= " FROM ".MAIN_DB_PREFIX ."societe as s";
         if (!$user->rights->societe->client->voir && !$user->societe_id) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
         $sql.= " WHERE s.entity IN (".getEntity('societe', 1).")";
+        if (! empty($user->societe_id)) $sql.= " AND s.rowid = ".$user->societe_id;
         if ($filter) $sql.= " AND ".$filter;
         if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
         $sql.= " ORDER BY nom ASC";
@@ -929,7 +932,7 @@ class Form
      *  @param	int		$force_entity	Possibility to force entity
      * 	@return	void
      */
-    function select_users($selected='',$htmlname='userid',$show_empty=0,$exclude='',$disabled=0,$include='',$enableonly='',$force_entity=0)
+    function select_users($selected='',$htmlname='userid',$show_empty=0,$exclude='',$disabled=0,$include='',$enableonly='',$force_entity=false)
     {
         print $this->select_dolusers($selected,$htmlname,$show_empty,$exclude,$disabled,$include,$enableonly,$force_entity);
     }
@@ -947,7 +950,7 @@ class Form
      *  @param	int		$force_entity	Possibility to force entity
      * 	@return	string					HTML select string
      */
-    function select_dolusers($selected='',$htmlname='userid',$show_empty=0,$exclude='',$disabled=0,$include='',$enableonly='',$force_entity=0)
+    function select_dolusers($selected='',$htmlname='userid',$show_empty=0,$exclude='',$disabled=0,$include='',$enableonly='',$force_entity=false)
     {
         global $conf,$user,$langs;
 
@@ -968,9 +971,9 @@ class Form
             $sql.= ", e.label";
         }
         $sql.= " FROM ".MAIN_DB_PREFIX ."user as u";
-        if(! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
+        if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
         {
-            $sql.= " LEFT JOIN ".MAIN_DB_PREFIX ."entity as e on e.rowid=u.entity";
+            $sql.= " LEFT JOIN ".MAIN_DB_PREFIX ."entity as e ON e.rowid=u.entity";
             if ($force_entity) $sql.= " WHERE u.entity IN (0,".$force_entity.")";
             else $sql.= " WHERE u.entity IS NOT NULL";
         }
@@ -978,6 +981,7 @@ class Form
         {
             $sql.= " WHERE u.entity IN (0,".$conf->entity.")";
         }
+        if (! empty($user->societe_id)) $sql.= " AND u.fk_societe = ".$user->societe_id;
         if (is_array($exclude) && $excludeUsers) $sql.= " AND u.rowid NOT IN ('".$excludeUsers."')";
         if (is_array($include) && $includeUsers) $sql.= " AND u.rowid IN ('".$includeUsers."')";
         $sql.= " ORDER BY u.name ASC";
@@ -1020,7 +1024,7 @@ class Form
                     }
                     $out.= $userstatic->getFullName($langs);
 
-                    if(! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode) && $conf->entity == 1 && $user->admin && ! $user->entity)
+                    if (! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode) && $conf->entity == 1 && $user->admin && ! $user->entity)
                     {
                         if ($obj->admin && ! $obj->entity) $out.=" (".$langs->trans("AllEntities").")";
                         else $out.=" (".$obj->label.")";
@@ -1078,7 +1082,7 @@ class Form
                 $selected_input_value=$product->ref;
             }
             // mode=1 means customers products
-            print ajax_autocompleter($selected, $htmlname, DOL_URL_ROOT.'/product/ajaxproducts.php', 'htmlname='.$htmlname.'&outjson=1&price_level='.$price_level.'&type='.$filtertype.'&mode=1&status='.$status.'&finished='.$finished, $conf->global->PRODUIT_USE_SEARCH_TO_SELECT);
+            print ajax_autocompleter($selected, $htmlname, DOL_URL_ROOT.'/product/ajax/products.php', 'htmlname='.$htmlname.'&outjson=1&price_level='.$price_level.'&type='.$filtertype.'&mode=1&status='.$status.'&finished='.$finished, $conf->global->PRODUIT_USE_SEARCH_TO_SELECT);
             if (! $hidelabel) print $langs->trans("RefOrLabel").' : ';
             print '<input type="text" size="20" name="search_'.$htmlname.'" id="search_'.$htmlname.'" value="'.$selected_input_value.'" />';
         }
@@ -1325,7 +1329,7 @@ class Form
         if ($conf->global->PRODUIT_USE_SEARCH_TO_SELECT)
         {
             // mode=2 means suppliers products
-            print ajax_autocompleter('', $htmlname, DOL_URL_ROOT.'/product/ajaxproducts.php', ($socid > 0?'socid='.$socid.'&':'').'htmlname='.$htmlname.'&outjson=1&price_level='.$price_level.'&type='.$filtertype.'&mode=2&status='.$status.'&finished='.$finished, $conf->global->PRODUIT_USE_SEARCH_TO_SELECT);
+            print ajax_autocompleter('', $htmlname, DOL_URL_ROOT.'/product/ajax/products.php', ($socid > 0?'socid='.$socid.'&':'').'htmlname='.$htmlname.'&outjson=1&price_level='.$price_level.'&type='.$filtertype.'&mode=2&status='.$status.'&finished='.$finished, $conf->global->PRODUIT_USE_SEARCH_TO_SELECT);
             print $langs->trans("RefOrLabel").' : <input type="text" size="16" name="search_'.$htmlname.'" id="search_'.$htmlname.'">';
             print '<br>';
         }
@@ -1359,10 +1363,10 @@ class Form
         $sql.= " s.nom";
         $sql.= " FROM ".MAIN_DB_PREFIX."product as p";
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON p.rowid = pfp.fk_product";
+        if ($socid) $sql.= " AND pfp.fk_soc = ".$socid;
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON pfp.fk_soc = s.rowid";
         $sql.= " WHERE p.entity IN (".getEntity('product', 1).")";
         $sql.= " AND p.tobuy = 1";
-        if ($socid) $sql.= " AND pfp.fk_soc = ".$socid;
         if (strval($filtertype) != '') $sql.=" AND p.fk_product_type=".$filtertype;
         if (! empty($filtre)) $sql.=" ".$filtre;
         // Add criteria on ref/label
@@ -2150,21 +2154,23 @@ class Form
         $inputok=array();
         $inputko=array();
 
-        if (is_array($formquestion) && count($formquestion) > 0)
+        if (is_array($formquestion) && ! empty($formquestion))
         {
             $more.='<table class="paddingrightonly" width="100%">'."\n";
-            $more.='<tr><td colspan="3" valign="top">'.$formquestion['text'].'</td></tr>'."\n";
+            $more.='<tr><td colspan="3" valign="top">'.(! empty($formquestion['text'])?$formquestion['text']:'').'</td></tr>'."\n";
             foreach ($formquestion as $key => $input)
             {
-                if (is_array($input))
+                if (is_array($input) && ! empty($input))
                 {
+                	$size=(! empty($input['size'])?' size="'.$input['size'].'"':'');
+
                     if ($input['type'] == 'text')
                     {
-                        $more.='<tr><td valign="top">'.$input['label'].'</td><td valign="top" colspan="2" align="left"><input type="text" class="flat" id="'.$input['name'].'" name="'.$input['name'].'" size="'.$input['size'].'" value="'.$input['value'].'" /></td></tr>'."\n";
+                        $more.='<tr><td valign="top">'.$input['label'].'</td><td valign="top" colspan="2" align="left"><input type="text" class="flat" id="'.$input['name'].'" name="'.$input['name'].'"'.$size.' value="'.$input['value'].'" /></td></tr>'."\n";
                     }
                     else if ($input['type'] == 'password')
                     {
-                        $more.='<tr><td valign="top">'.$input['label'].'</td><td valign="top" colspan="2" align="left"><input type="password" class="flat" id="'.$input['name'].'" name="'.$input['name'].'" size="'.$input['size'].'" value="'.$input['value'].'" /></td></tr>'."\n";
+                        $more.='<tr><td valign="top">'.$input['label'].'</td><td valign="top" colspan="2" align="left"><input type="password" class="flat" id="'.$input['name'].'" name="'.$input['name'].'"'.$size.' value="'.$input['value'].'" /></td></tr>'."\n";
                     }
                     else if ($input['type'] == 'select')
                     {
@@ -2180,7 +2186,7 @@ class Form
                         $more.='<input type="checkbox" class="flat" id="'.$input['name'].'" name="'.$input['name'].'"';
                         if (! is_bool($input['value']) && $input['value'] != 'false') $more.=' checked="checked"';
                         if (is_bool($input['value']) && $input['value']) $more.=' checked="checked"';
-                        if ($input['disabled']) $more.=' disabled="disabled"';
+                        if (isset($input['disabled'])) $more.=' disabled="disabled"';
                         $more.=' /></td>';
                         $more.='<td valign="top" align="left">&nbsp;</td>';
                         $more.='</tr>'."\n";
@@ -2237,8 +2243,8 @@ class Form
             {
                 foreach ($formquestion as $key => $input)
                 {
-                    array_push($inputok,$input['name']);
-                    if ($input['inputko'] == 1) array_push($inputko,$input['name']);
+                    if (isset($input['name'])) array_push($inputok,$input['name']);
+                    if (isset($input['inputko']) && $input['inputko'] == 1) array_push($inputko,$input['name']);
                 }
             }
 
@@ -2679,9 +2685,14 @@ class Form
      *    @param	string	$page       Page
      *    @param    string	$selected   Id preselected
      *    @param    string	$htmlname	Name of HTML select
+     *  @param  string	$filter         Optionnal filters criteras
+     *	@param	int		$showempty		Add an empty field
+     * 	@param	int		$showtype		Show third party type in combolist (customer, prospect or supplier)
+     * 	@param	int		$forcecombo		Force to use combo box
+     *  @param	array	$event			Event options
      *    @return	void
      */
-    function form_thirdparty($page, $selected='', $htmlname='socid')
+    function form_thirdparty($page, $selected='', $htmlname='socid', $filter='',$showempty=0, $showtype=0, $forcecombo=0, $event=array())
     {
         global $langs;
 
@@ -2692,7 +2703,7 @@ class Form
             print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
             print '<table class="nobordernopadding" cellpadding="0" cellspacing="0">';
             print '<tr><td>';
-            print $this->select_company($selected, $htmlname);
+            print $this->select_company($selected, $htmlname, $filter, $showempty, $showtype, $forcecombo, $event);
             print '</td>';
             print '<td align="left"><input type="submit" class="button" value="'.$langs->trans("Modify").'"></td>';
             print '</tr></table></form>';
@@ -3058,11 +3069,11 @@ class Form
         if (preg_match('/^([0-9]+)\-([0-9]+)\-([0-9]+)\s?([0-9]+)?:?([0-9]+)?/',$set_time,$reg))
         {
             // Date format 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM:SS'
-            $syear = $reg[1];
-            $smonth = $reg[2];
-            $sday = $reg[3];
-            $shour = $reg[4];
-            $smin = $reg[5];
+            $syear	= (! empty($reg[1])?$reg[1]:'');
+            $smonth	= (! empty($reg[2])?$reg[2]:'');
+            $sday	= (! empty($reg[3])?$reg[3]:'');
+            $shour	= (! empty($reg[4])?$reg[4]:'');
+            $smin	= (! empty($reg[5])?$reg[5]:'');
         }
         elseif (strval($set_time) != '' && $set_time != -1)
         {
@@ -3086,8 +3097,9 @@ class Form
         if ($d)
         {
             // Show date with popup
-            if ($conf->use_javascript_ajax && (empty($conf->global->MAIN_POPUP_CALENDAR) || $conf->global->MAIN_POPUP_CALENDAR != "none"))
+            if (! empty($conf->use_javascript_ajax) && (empty($conf->global->MAIN_POPUP_CALENDAR) || $conf->global->MAIN_POPUP_CALENDAR != "none"))
             {
+            	$formated_date='';
                 //print "e".$set_time." t ".$conf->format_date_short;
                 if (strval($set_time) != '' && $set_time != -1)
                 {
@@ -3249,7 +3261,7 @@ class Form
             // Generate the date part, depending on the use or not of the javascript calendar
             if (empty($conf->global->MAIN_POPUP_CALENDAR) || $conf->global->MAIN_POPUP_CALENDAR == "eldy")
             {
-                $base=DOL_URL_ROOT.'/core/lib/';
+                $base=DOL_URL_ROOT.'/core/';
                 $reset_scripts .= 'resetDP(\''.$base.'\',\''.$prefix.'\',\''.$langs->trans("FormatDateShortJava").'\',\''.$langs->defaultlang.'\');';
             }
             else
@@ -3561,18 +3573,20 @@ class Form
      *    To add a particular filter on select, you must set $object->next_prev_filter to SQL criteria.
      *
      *    @param	Object	$object			Object to show
-     *    @param    int		$paramid   		Name of parameter to use to name the id into the URL link
-     *    @param    string	$morehtml  		More html content to output just before the nav bar
+     *    @param   string	$paramid   		Name of parameter to use to name the id into the URL link
+     *    @param   string	$morehtml  		More html content to output just before the nav bar
      *    @param	int		$shownav	  	Show Condition (navigation is shown if value is 1)
-     *    @param    int		$fieldid   		Nom du champ en base a utiliser pour select next et previous
-     *    @param    string	$fieldref   	Nom du champ objet ref (object->ref) a utiliser pour select next et previous
-     *    @param    string	$morehtmlref  	Code html supplementaire a afficher apres ref
-     *    @param    string	$moreparam  	More param to add in nav link url.
-     * 	  @return   tring    				Portion HTML avec ref + boutons nav
+     *    @param   string	$fieldid   		Nom du champ en base a utiliser pour select next et previous
+     *    @param   string	$fieldref   	Nom du champ objet ref (object->ref) a utiliser pour select next et previous
+     *    @param   string	$morehtmlref  	Code html supplementaire a afficher apres ref
+     *    @param   string	$moreparam  	More param to add in nav link url.
+     * 	  @return  tring    				Portion HTML avec ref + boutons nav
      */
     function showrefnav($object,$paramid,$morehtml='',$shownav=1,$fieldid='rowid',$fieldref='ref',$morehtmlref='',$moreparam='')
     {
         $ret='';
+        if (empty($fieldid))  $fieldid='rowid';
+        if (empty($fieldref)) $fieldref='ref';
 
         //print "paramid=$paramid,morehtml=$morehtml,shownav=$shownav,$fieldid,$fieldref,$morehtmlref,$moreparam";
         $object->load_previous_next_ref((isset($object->next_prev_filter)?$object->next_prev_filter:''),$fieldid);
@@ -3687,7 +3701,7 @@ class Form
             }
             else
             {
-                if ($conf->gravatar->enabled && $email)
+                if (! empty($conf->gravatar->enabled) && $email)
                 {
                     global $dolibarr_main_url_root;
                     $ret.='<!-- Put link to gravatar -->';
@@ -3754,14 +3768,14 @@ class Form
 
         // On recherche les groupes
         $sql = "SELECT ug.rowid, ug.nom ";
-        if(! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
+        if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
         {
             $sql.= ", e.label";
         }
         $sql.= " FROM ".MAIN_DB_PREFIX."usergroup as ug ";
-        if(! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
+        if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
         {
-            $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."entity as e on e.rowid=ug.entity";
+            $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."entity as e ON e.rowid=ug.entity";
             if ($force_entity) $sql.= " WHERE ug.entity IN (0,".$force_entity.")";
             else $sql.= " WHERE ug.entity IS NOT NULL";
         }
@@ -3799,7 +3813,7 @@ class Form
                     $out.= '>';
 
                     $out.= $obj->nom;
-                    if(! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode) && $conf->entity == 1)
+                    if (! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode) && $conf->entity == 1)
                     {
                         $out.= " (".$obj->label.")";
                     }

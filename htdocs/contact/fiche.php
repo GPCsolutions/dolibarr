@@ -50,7 +50,8 @@ $object = new Contact($db);
 
 // Get object canvas (By default, this is not defined, so standard usage of dolibarr)
 $object->getCanvas($id);
-$canvas = $object->canvas?$object->canvas:GETPOST("canvas");
+$objcanvas=null;
+$canvas = (! empty($object->canvas)?$object->canvas:GETPOST("canvas"));
 if (! empty($canvas))
 {
     require_once(DOL_DOCUMENT_ROOT."/core/class/canvas.class.php");
@@ -137,8 +138,6 @@ if (empty($reshook))
         $object->address		= $_POST["address"];
         $object->zip			= $_POST["zipcode"];
         $object->town			= $_POST["town"];
-        $object->fk_pays		= $_POST["country_id"];
-        $object->fk_departement = $_POST["departement_id"];
         $object->country_id		= $_POST["country_id"];
         $object->state_id       = $_POST["departement_id"];
         $object->email			= $_POST["email"];
@@ -229,8 +228,6 @@ if (empty($reshook))
             $object->address		= $_POST["address"];
             $object->zip			= $_POST["zipcode"];
             $object->town			= $_POST["town"];
-            $object->fk_departement	= $_POST["departement_id"];
-            $object->fk_pays		= $_POST["country_id"];
             $object->state_id   	= $_POST["departement_id"];
             $object->country_id		= $_POST["country_id"];
 
@@ -338,15 +335,13 @@ else
              */
             $object->canvas=$canvas;
 
-            $object->fk_departement = $_POST["departement_id"];
+            $object->state_id = $_POST["state_id"];
 
             // We set country_id, country_code and label for the selected country
             $object->country_id=$_POST["country_id"]?$_POST["country_id"]:$mysoc->country_id;
             if ($object->country_id)
             {
             	$tmparray=getCountry($object->country_id,'all');
-                $object->pays_code    = $tmparray['code'];
-                $object->pays         = $tmparray['label'];
                 $object->country_code = $tmparray['code'];
                 $object->country      = $tmparray['label'];
             }
@@ -414,8 +409,8 @@ else
             if (($objsoc->typent_code == 'TE_PRIVATE' || ! empty($conf->global->CONTACT_USE_COMPANY_ADDRESS)) && dol_strlen(trim($object->zip)) == 0) $object->zip = $objsoc->zip;			// Predefined with third party
             if (($objsoc->typent_code == 'TE_PRIVATE' || ! empty($conf->global->CONTACT_USE_COMPANY_ADDRESS)) && dol_strlen(trim($object->town)) == 0) $object->town = $objsoc->town;	// Predefined with third party
             print '<tr><td>'.$langs->trans("Zip").' / '.$langs->trans("Town").'</td><td colspan="3">';
-            print $formcompany->select_ziptown((isset($_POST["zipcode"])?$_POST["zipcode"]:$object->zip),'zipcode',array('town','selectcountry_id','departement_id'),6).'&nbsp;';
-            print $formcompany->select_ziptown((isset($_POST["town"])?$_POST["town"]:$object->town),'town',array('zipcode','selectcountry_id','departement_id'));
+            print $formcompany->select_ziptown((isset($_POST["zipcode"])?$_POST["zipcode"]:$object->zip),'zipcode',array('town','selectcountry_id','state_id'),6).'&nbsp;';
+            print $formcompany->select_ziptown((isset($_POST["town"])?$_POST["town"]:$object->town),'town',array('zipcode','selectcountry_id','state_id'));
             print '</td></tr>';
 
             // Country
@@ -431,7 +426,7 @@ else
                 print '<tr><td>'.$langs->trans('State').'</td><td colspan="3">';
                 if ($object->country_id)
                 {
-                    print $formcompany->select_state(isset($_POST["departement_id"])?$_POST["departement_id"]:$object->fk_departement,$object->country_code);
+                    print $formcompany->select_state(isset($_POST["state_id"])?$_POST["state_id"]:$object->state_id,$object->country_code,'state_id');
                 }
                 else
                 {
@@ -546,10 +541,11 @@ else
             print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
             print '<input type="hidden" name="id" value="'.$id.'">';
             print '<input type="hidden" name="action" value="update">';
-            print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
             print '<input type="hidden" name="contactid" value="'.$object->id.'">';
             print '<input type="hidden" name="old_name" value="'.$object->name.'">';
             print '<input type="hidden" name="old_firstname" value="'.$object->firstname.'">';
+            if (! empty($backtopage)) print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
+
             print '<table class="border" width="100%">';
 
             // Ref
@@ -583,8 +579,8 @@ else
 
             // Zip / Town
             print '<tr><td>'.$langs->trans("Zip").' / '.$langs->trans("Town").'</td><td colspan="3">';
-            print $formcompany->select_ziptown((isset($_POST["zipcode"])?$_POST["zipcode"]:$object->zip),'zipcode',array('town','selectcountry_id','departement_id'),6).'&nbsp;';
-            print $formcompany->select_ziptown((isset($_POST["town"])?$_POST["town"]:$object->town),'town',array('zipcode','selectcountry_id','departement_id'));
+            print $formcompany->select_ziptown((isset($_POST["zipcode"])?$_POST["zipcode"]:$object->zip),'zipcode',array('town','selectcountry_id','state_id'),6).'&nbsp;';
+            print $formcompany->select_ziptown((isset($_POST["town"])?$_POST["town"]:$object->town),'town',array('zipcode','selectcountry_id','state_id'));
             print '</td></tr>';
 
             // Country
@@ -597,7 +593,7 @@ else
             if (empty($conf->global->SOCIETE_DISABLE_STATE))
             {
                 print '<tr><td>'.$langs->trans('State').'</td><td colspan="3">';
-                print $formcompany->select_state($object->fk_departement,isset($_POST["country_id"])?$_POST["country_id"]:$object->country_id);
+                print $formcompany->select_state($object->state_id,isset($_POST["country_id"])?$_POST["country_id"]:$object->country_id,'state_id');
                 print '</td></tr>';
             }
 
@@ -731,9 +727,11 @@ else
 
         print '<table class="border" width="100%">';
 
+        $linkback = '<a href="'.DOL_URL_ROOT.'/contact/list.php">'.$langs->trans("BackToList").'</a>';
+
         // Ref
         print '<tr><td width="20%">'.$langs->trans("Ref").'</td><td colspan="3">';
-        print $form->showrefnav($object,'id');
+        print $form->showrefnav($object, 'id', $linkback);
         print '</td></tr>';
 
         // Name
@@ -785,7 +783,7 @@ else
         // State
         if (empty($conf->global->SOCIETE_DISABLE_STATE))
         {
-            print '<tr><td>'.$langs->trans('State').'</td><td colspan="3">'.$object->departement.'</td>';
+            print '<tr><td>'.$langs->trans('State').'</td><td colspan="3">'.$object->state.'</td>';
         }
 
         // Phone

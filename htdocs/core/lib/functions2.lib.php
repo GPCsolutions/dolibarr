@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2008-2011	Laurent Destailleur			<eldy@users.sourceforge.net>
- * Copyright (C) 2008-2011	Regis Houssin				<regis@dolibarr.fr>
+ * Copyright (C) 2008-2012	Regis Houssin				<regis@dolibarr.fr>
  * Copyright (C) 2008		Raphael Bertrand (Resultic)	<raphael.bertrand@resultic.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,32 +27,32 @@
 /**
  * Same function than javascript unescape() function but in PHP.
  *
- * @param 	string	$sourcetodecode		String to decode
- * @return
+ * @param 	string	$source		String to decode
+ * @return	string				Unescaped string
  */
 function jsUnEscape($source)
 {
     $decodedStr = "";
     $pos = 0;
-    $len = strlen ($source);
+    $len = strlen($source);
     while ($pos < $len) {
-        $charAt = substr ($source, $pos, 1);
+        $charAt = substr($source, $pos, 1);
         if ($charAt == '%') {
             $pos++;
-            $charAt = substr ($source, $pos, 1);
+            $charAt = substr($source, $pos, 1);
             if ($charAt == 'u') {
                 // we got a unicode character
                 $pos++;
-                $unicodeHexVal = substr ($source, $pos, 4);
-                $unicode = hexdec ($unicodeHexVal);
+                $unicodeHexVal = substr($source, $pos, 4);
+                $unicode = hexdec($unicodeHexVal);
                 $entity = "&#". $unicode . ';';
-                $decodedStr .= utf8_encode ($entity);
+                $decodedStr .= utf8_encode($entity);
                 $pos += 4;
             }
             else {
                 // we have an escaped ascii character
-                $hexVal = substr ($source, $pos, 2);
-                $decodedStr .= chr (hexdec ($hexVal));
+                $hexVal = substr($source, $pos, 2);
+                $decodedStr .= chr(hexdec($hexVal));
                 $pos += 2;
             }
         } else {
@@ -189,12 +189,12 @@ function dol_print_object_info($object)
 
     // Import key
     if (isset($object->import_key))
-    print $langs->trans("ImportedWithSet")." : " . $object->import_key . '<br>';
+    print $langs->trans("ImportedWithSet").': '.$object->import_key.'<br>';
 
     // User creation
     if (isset($object->user_creation))
     {
-        print $langs->trans("CreatedBy")." : ";
+        print $langs->trans("CreatedBy").': ';
         if (is_object($object->user_creation))
         {
             print $object->user_creation->getNomUrl(1);
@@ -211,7 +211,7 @@ function dol_print_object_info($object)
     // Date creation
     if (isset($object->date_creation))
     {
-        print $langs->trans("DateCreation")." : " . dol_print_date($object->date_creation,"dayhour");
+        print $langs->trans("DateCreation").': '.dol_print_date($object->date_creation, 'dayhour');
         if ($deltadateforuser) print ' '.$langs->trans("CurrentHour").' &nbsp; / &nbsp; '.dol_print_date($object->date_creation+($deltadateforuser*3600),"dayhour").' &nbsp;'.$langs->trans("ClientHour");
         print '<br>';
     }
@@ -219,7 +219,7 @@ function dol_print_object_info($object)
     // User change
     if (isset($object->user_modification))
     {
-        print $langs->trans("ModifiedBy")." : ";
+        print $langs->trans("ModifiedBy").': ';
         if (is_object($object->user_modification))
         {
             print $object->user_modification->getNomUrl(1);
@@ -236,7 +236,7 @@ function dol_print_object_info($object)
     // Date change
     if (isset($object->date_modification))
     {
-        print $langs->trans("DateLastModification")." : " . dol_print_date($object->date_modification,"dayhour");
+        print $langs->trans("DateLastModification").': '.dol_print_date($object->date_modification, 'dayhour');
         if ($deltadateforuser) print ' '.$langs->trans("CurrentHour").' &nbsp; / &nbsp; '.dol_print_date($object->date_modification+($deltadateforuser*3600),"dayhour").' &nbsp;'.$langs->trans("ClientHour");
         print '<br>';
     }
@@ -244,7 +244,7 @@ function dol_print_object_info($object)
     // User validation
     if (isset($object->user_validation))
     {
-        print $langs->trans("ValidatedBy")." : ";
+        print $langs->trans("ValidatedBy").': ';
         if (is_object($object->user_validation))
         {
             print $object->user_validation->getNomUrl(1);
@@ -261,7 +261,7 @@ function dol_print_object_info($object)
     // Date validation
     if (isset($object->date_validation))
     {
-        print $langs->trans("DateValidation")." : " . dol_print_date($object->date_validation,"dayhour");
+        print $langs->trans("DateValidation").': '.dol_print_date($object->date_validation, 'dayhour');
         if ($deltadateforuser) print ' '.$langs->trans("CurrentHour").' &nbsp; / &nbsp; '.dol_print_date($object->date_validation+($deltadateforuser*3600),"dayhour").' &nbsp;'.$langs->trans("ClientHour");
         print '<br>';
     }
@@ -269,7 +269,7 @@ function dol_print_object_info($object)
     // User approve
     if (isset($object->user_approve))
     {
-        print $langs->trans("ApprovedBy")." : ";
+        print $langs->trans("ApprovedBy").': ';
         if (is_object($object->user_approve))
         {
             print $object->user_approve->getNomUrl(1);
@@ -286,7 +286,7 @@ function dol_print_object_info($object)
     // Date approve
     if (isset($object->date_approve))
     {
-        print $langs->trans("DateApprove")." : " . dol_print_date($object->date_approve,"dayhour");
+        print $langs->trans("DateApprove").': '.dol_print_date($object->date_approve, 'dayhour');
         if ($deltadateforuser) print ' '.$langs->trans("CurrentHour").' &nbsp; / &nbsp; '.dol_print_date($object->date_approve+($deltadateforuser*3600),"dayhour").' &nbsp;'.$langs->trans("ClientHour");
         print '<br>';
     }
@@ -294,7 +294,7 @@ function dol_print_object_info($object)
     // User close
     if (isset($object->user_cloture))
     {
-        print $langs->trans("ClosedBy")." : ";
+        print $langs->trans("ClosedBy").': ';
         if (is_object($object->user_cloture))
         {
             print $object->user_cloture->getNomUrl(1);
@@ -311,7 +311,7 @@ function dol_print_object_info($object)
     // Date close
     if (isset($object->date_cloture))
     {
-        print $langs->trans("DateClosing")." : " . dol_print_date($object->date_cloture,"dayhour");
+        print $langs->trans("DateClosing").': '.dol_print_date($object->date_cloture, 'dayhour');
         if ($deltadateforuser) print ' '.$langs->trans("CurrentHour").' &nbsp; / &nbsp; '.dol_print_date($object->date_cloture+($deltadateforuser*3600),"dayhour").' &nbsp;'.$langs->trans("ClientHour");
         print '<br>';
     }
@@ -319,7 +319,7 @@ function dol_print_object_info($object)
     // User conciliate
     if (isset($object->user_rappro))
     {
-        print $langs->trans("ConciliatedBy")." : ";
+        print $langs->trans("ConciliatedBy").': ';
         if (is_object($object->user_rappro))
         {
             print $object->user_rappro->getNomUrl(1);
@@ -336,7 +336,7 @@ function dol_print_object_info($object)
     // Date conciliate
     if (isset($object->date_rappro))
     {
-        print $langs->trans("DateConciliating")." : " . dol_print_date($object->date_rappro,"dayhour");
+        print $langs->trans("DateConciliating").': '.dol_print_date($object->date_rappro, 'dayhour');
         if ($deltadateforuser) print ' '.$langs->trans("CurrentHour").' &nbsp; / &nbsp; '.dol_print_date($object->date_rappro+($deltadateforuser*3600),"dayhour").' &nbsp;'.$langs->trans("ClientHour");
         print '<br>';
     }
@@ -344,7 +344,7 @@ function dol_print_object_info($object)
     // Date send
     if (isset($object->date_envoi))
     {
-        print $langs->trans("DateLastSend")." : " . dol_print_date($object->date_envoi,"dayhour");
+        print $langs->trans("DateLastSend").': '.dol_print_date($object->date_envoi, 'dayhour');
         if ($deltadateforuser) print ' '.$langs->trans("CurrentHour").' &nbsp; / &nbsp; '.dol_print_date($object->date_envoi+($deltadateforuser*3600),"dayhour").' &nbsp;'.$langs->trans("ClientHour");
         print '<br>';
     }
@@ -531,7 +531,7 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
 
     // Extract value for mask counter, mask raz and mask offset
     if (! preg_match('/\{(0+)([@\+][0-9]+)?([@\+][0-9]+)?\}/i',$mask,$reg)) return 'ErrorBadMask';
-    $masktri=$reg[1].$reg[2].$reg[3];
+    $masktri=$reg[1].(! empty($reg[2])?$reg[2]:'').(! empty($reg[3])?$reg[3]:'');
     $maskcounter=$reg[1];
     $maskraz=-1;
     $maskoffset=0;
@@ -558,7 +558,11 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
         $masktype_value=substr(preg_replace('/^TE_/','',$objsoc->typent_code),0,dol_strlen($regType[1]));//get n first characters of client code where n is length in mask
         $masktype_value=str_pad($masktype_value,dol_strlen($regType[1]),"#",STR_PAD_RIGHT);
     }
-    else $masktype='';
+    else
+    {
+    	$masktype='';
+    	$masktype_value='';
+    }
 
     $maskwithonlyymcode=$mask;
     $maskwithonlyymcode=preg_replace('/\{(0+)([@\+][0-9]+)?([@\+][0-9]+)?\}/i',$maskcounter,$maskwithonlyymcode);
@@ -579,6 +583,7 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     if (! empty($reg[3]) && preg_match('/^\+/',$reg[3])) $maskoffset=preg_replace('/^\+/','',$reg[3]);
 
     // Define $sqlwhere
+    $sqlwhere='';
 
     // If a restore to zero after a month is asked we check if there is already a value for this year.
     if (! empty($reg[2]) && preg_match('/^@/',$reg[2]))	$maskraz=preg_replace('/^@/','',$reg[2]);
@@ -613,7 +618,6 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
         if (dol_strlen($reg[$posy]) == 4) $yearcomp=sprintf("%04d",date("Y",$date)+$yearoffset);
         if (dol_strlen($reg[$posy]) == 2) $yearcomp=sprintf("%02d",date("y",$date)+$yearoffset);
         if (dol_strlen($reg[$posy]) == 1) $yearcomp=substr(date("y",$date),2,1)+$yearoffset;
-        $sqlwhere='';
         if ($monthcomp > 1)	// Test with month is useless if monthcomp = 0 or 1 (0 is same as 1)
         {
             if (dol_strlen($reg[$posy]) == 4) $yearcomp1=sprintf("%04d",date("Y",$date)+$yearoffset+1);
@@ -716,7 +720,7 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     {
         $counter++;
 
-        if ($maskrefclient_maskcounter)
+        if (! empty($maskrefclient_maskcounter))
         {
             //print "maskrefclient_maskcounter=".$maskrefclient_maskcounter." maskwithnocode=".$maskwithnocode." maskrefclient=".$maskrefclient."\n<br>";
 
@@ -1087,9 +1091,9 @@ function dol_set_user_param($db, $conf, &$user, $tab)
         {
             $sql = "INSERT INTO ".MAIN_DB_PREFIX."user_param(fk_user,entity,param,value)";
             $sql.= " VALUES (".$user->id.",".$conf->entity.",";
-            $sql.= " '".$key."','".$db->escape($value)."');";
-            dol_syslog("functions2.lib::dol_set_user_param sql=".$sql, LOG_DEBUG);
+            $sql.= " '".$key."','".$db->escape($value)."')";
 
+            dol_syslog("functions2.lib::dol_set_user_param sql=".$sql, LOG_DEBUG);
             $result=$db->query($sql);
             if (! $result)
             {
