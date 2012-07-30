@@ -1144,6 +1144,15 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
                     $det->fk_user_author_o = $user->id;
                     $det->fk_invoice_line = $result;
                     $result = $det->update($user);
+                    if($conf->global->MAIN_MODULE_WHOLESALERREMUNERATION){
+                      $remproducts = explode(',', $conf->global->REMPRODUCTS);
+                      if(GETPOST('idprod') && in_array(GETPOST('idprod'), $remproducts)){
+                        $remline = new FactureLigne($db);
+                        $remline->fetch($det->fk_invoice_line + 1);
+                        $remline->desc .=' - '.$det->getSerialTypeLabel().':'.$det->serial;
+                        $remline->update($user, 1);
+                      }
+                    }
                 }
             }
         }
