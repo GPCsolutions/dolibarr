@@ -1093,6 +1093,14 @@ class Form
         else
         {
             $this->select_produits_do($selected,$htmlname,$filtertype,$limit,$price_level,'',$status,$finished,0);
+            //TODO hook
+            if ($conf->global->MAIN_MODULE_DETAILEDSTOCK) {
+                $langs->load('detailedStock@detailedstock');
+                print '  ' . $langs->trans('SerialNumber');
+                print ajax_autocompleter('', 'idDetail', DOL_URL_ROOT . '/detailedstock/ajaxDetailedStock.php',
+                        'htmlname=idDetail&outjson=1', $conf->global->PRODUIT_USE_SEARCH_TO_SELECT);
+                print '<input type="text" size="20" name="search_idDetail" id="search_idDetail" value="' . $selected_input_value . '" />';
+            }
         }
 
         print '<br>';
