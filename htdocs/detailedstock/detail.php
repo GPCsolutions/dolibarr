@@ -35,7 +35,7 @@ $langs->load("stocks");
 /*
  * View
  */
-
+if (!$conf->global->MAIN_MODULE_DETAILEDSTOCK) accessforbidden();
 $form = new Form($db);
 $action = GETPOST('action');
 if ($_GET["id"] || $_GET["ref"]) {

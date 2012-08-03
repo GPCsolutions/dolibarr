@@ -26,7 +26,7 @@ require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/productstockdet.class.php
 require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/serialtype.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/lib/functions.lib.php");
 require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/commandefournisseurdispatch.class.php");
-global $langs, $user;
+global $langs, $user, $conf;
 $langs->load("errors");
 $langs->load("products");
 $langs->load("orders");
@@ -39,6 +39,8 @@ $action = GETPOST('action');
 $commandid = GETPOST('commandid');
 $suppid = GETPOST('supplierid');
 $reste = GETPOST('reste');
+
+if (!$conf->global->MAIN_MODULE_DETAILEDSTOCK) accessforbidden();
 
 if ($id) {
     $dispatchline = new Commandefournisseurdispatch($db);

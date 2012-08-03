@@ -25,13 +25,15 @@ require_once(DOL_DOCUMENT_ROOT . "/core/class/html.form.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/productstockdet.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/serialtype.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/lib/functions.lib.php");
-global $langs, $user;
+global $langs, $user, $conf;
 $langs->load("errors");
 $langs->load("products");
 $langs->load("orders");
 $langs->load("bills");
 $langs->load("stocks");
 $langs->load("detailedStock@detailedstock");
+
+if (!$conf->global->MAIN_MODULE_DETAILEDSTOCK) accessforbidden();
 
 /*
  * View
