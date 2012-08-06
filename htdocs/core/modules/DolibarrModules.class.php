@@ -226,7 +226,6 @@ abstract class DolibarrModules
     {
         global $langs;
         $langs->load("admin");
-
         if ($langs->trans("Module".$this->numero."Name") != ("Module".$this->numero."Name"))
         {
             // Si traduction du nom du module existe
@@ -234,8 +233,20 @@ abstract class DolibarrModules
         }
         else
         {
-            // If translation of module with its numero does not exists, we take its name
-            return $this->name;
+            $langfiles = $this->getLangFilesArray();
+            if($langfiles){
+              foreach($langfiles as $langfile)
+                $langs->load($langfile);
+            }
+            if ($langs->trans("Module".$this->numero."Name") != ("Module".$this->numero."Name"))
+            {
+              // Si traduction du nom du module existe dans son fichier de langues
+              return $langs->trans("Module".$this->numero."Name");
+            }
+            else{
+                // If translation of module with its numero does not exists, we take its name
+                return $this->name;
+            }
         }
     }
 
