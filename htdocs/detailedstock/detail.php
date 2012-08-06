@@ -221,8 +221,8 @@ if ($_GET["id"] || $_GET["ref"]) {
                     //display each detailled stock line related to this product
                     if ($db->num_rows($resql) > 0) {
                         print '<br><table class="noborder" width="100%">';
-                        print '<tr class="liste_titre"><td>&nbsp;</td>';
-                        print '<td align="right">' . $langs->trans("N°") . '</td>';
+                        print '<tr class="liste_titre"><td>'.$langs->trans('Element').'</td>';
+                        print '<td align="right">' . $langs->trans("SerialNumber") . '</td>';
                         print '<td align="right">' . $langs->trans("Supplier") . '</td>';
                         print '<td align="right">' . $langs->trans("BuyingPrice") . '</td>';
                         print '<td align="right">' . $langs->trans("Warehouse") . '</td>';

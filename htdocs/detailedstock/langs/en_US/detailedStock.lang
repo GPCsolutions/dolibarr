@@ -36,3 +36,4 @@ Module51000Desc=Creation of detailed stock lines
 Module51000Name=Detailed stock
 StockLimitReached= Stock limit reached
 OnlyExistingStock= Only an existing stock can be detailed
+Element=Element
