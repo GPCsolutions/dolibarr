@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 DetailedStock=Stock détaillé
-SerialType=Type de N° de série
+SerialType=Type
 SerialNumber=N° de série
 UndetailledStock=Stock non détaillé
 InvalidCode=N° de série invalide
@@ -32,6 +32,7 @@ Generic=Générique
 DictionnarySerialType=Types de numéros de série
 Algo_valid=Algorithme de vérification
 NewDetailCreated=Ce produit n'était pas en stock. Il a été crée.
-Module51000Desc=Permet de créer des lignes de stock détaillées
+Module51000Desc=Gestion fine et détaillée des stocks
 Module51000Name=Stock détaillé
 StockLimitReached=Stock limite atteint
+OnlyExistingStock = Seul un stock existant peut être détaillé

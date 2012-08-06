@@ -216,6 +216,8 @@ if ($_GET["id"] || $_GET["ref"]) {
                 if ($resql) {
                     if ($db->num_rows($resql) < $product->stock_reel)
                             print '<table width="100%"><tr><td align="right"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?id=' . $product->id . '&action=add">' . $langs->trans("Add") . '</a></td></tr></table>';
+					else
+						print '<table width="100%"><tr><td align="right"><span class="butActionRefused" title="'.$langs->trans("OnlyExistingStock").'">'.$langs->trans('Add').'</span></td></tr></table>';
                     //display each detailled stock line related to this product
                     if ($db->num_rows($resql) > 0) {
                         print '<br><table class="noborder" width="100%">';
@@ -267,16 +269,16 @@ if ($_GET["id"] || $_GET["ref"]) {
                 $det = new Productstockdet($db);
                 print '<br><form action="' . $_SERVER['PHP_SELF'] . '?id=' . $product->id . '" method="post"><table class="noborder" width="100%">';
                 print '<input type="hidden" name="action" value="create"/>';
-                print '<tr class="liste_titre"><td>' . $langs->trans("SerialType") . '</td>';
-                print '<td>' . $langs->trans("SerialNumber") . '</td>';
+                print '<tr class="liste_titre"><td>' . $langs->trans("SerialNumber") . '</td>';
+				print '<td>' . $langs->trans("SerialType") . '</td>';
                 print '<td>' . $langs->trans("Supplier") . '</td>';
                 print '<td>' . $langs->trans("BuyingPrice") . '</td>';
                 print '<td>' . $langs->trans("Warehouse") . '</td>';
                 print '<td>&nbsp;</td><td>&nbsp;</td></tr>';
 
                 print '<tr>';
+				print '<td><input type="text" name="serialNumber" value="' . $newDet->serial . '"/></td>';
                 print '<td>' . $det->selectSerialType($newDet->fk_serial_type, 'serialType') . '</td>';
-                print '<td><input type="text" name="serialNumber" value="' . $newDet->serial . '"/></td>';
                 print '<td>' . $form->select_company($newDet->fk_supplier, 'supplier', 's.fournisseur=1') . '</td>';
                 print '<td><input type="text" name="buyingPrice" value="' . $newDet->price . '"/></td>';
                 print '<td>' . $det->selectWarehouses($newDet->fk_entrepot, 'warehouse', 'ps.reel > 0', 0, 0,

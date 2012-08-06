@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 DetailedStock=Detailed stock
-SerialType=Serial number type
+SerialType=Type
 SerialNumber=Serial number
 UndetailledStock=Undetailled stock
 InvalidCode=Invalid serial number
@@ -35,3 +35,4 @@ NewDetailCreated=This product wasn't in stock. It has been created.
 Module51000Desc=Creation of detailed stock lines
 Module51000Name=Detailed stock
 StockLimitReached= Stock limit reached
+OnlyExistingStock= Only an existing stock can be detailed
