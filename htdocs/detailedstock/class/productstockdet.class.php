@@ -234,7 +234,8 @@ class Productstockdet extends CommonObject
         $error = 0;
 
         // Clean parameters
-
+		if($this->fk_entrepot == '') unset($this->fk_entrepot);
+		if($this->fk_supplier == '' || $this->fk_supplier == -1) unset($this->fk_supplier);
         if (isset($this->fk_product)) $this->fk_product = trim($this->fk_product);
         if (isset($this->fk_entrepot)) $this->fk_entrepot = trim($this->fk_entrepot);
         if (isset($this->fk_user_author_i)) $this->fk_user_author_i = trim($this->fk_user_author_i);

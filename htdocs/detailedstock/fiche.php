@@ -222,7 +222,7 @@ if ($id && $action == 'modify' && $confirm == 'yes') {
 	print '<tr>';
 	print '<td><input type="text" name="serialNumber" value="' . $det->serial . '"/></td>';
 	print '<td>' . $det->selectSerialType($det->fk_serial_type, 'serialType') . '</td>';
-	print '<td>' . $form->select_company($det->fk_supplier, 'supplier', 's.fournisseur=1') . '</td>';
+	print '<td>' . $form->select_company($det->fk_supplier, 'supplier', 's.fournisseur=1', 1) . '</td>';
 	print '<td><input type="text" name="buyingPrice" value="' . $det->price . '"/></td>';
 	print '<td>' . $det->selectWarehouses($det->fk_entrepot, 'warehouse', 'ps.reel > 0', 1, 0, $product->id) . '</td>';
 	print '<td><input class="button" type="submit" name ="valid" value="' . $langs->trans("Valid") . '"/></td><td><input class="button" type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
