@@ -1064,7 +1064,15 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
         if ($tva_npr) $info_bits |= 0x01;
 
         //TODO hook
-        if ($conf->global->MAIN_MODULE_DETAILEDSTOCK && isset($_POST['search_idDetail']) && $_POST['search_idDetail'] != '') {
+        if($conf->global->MAIN_MODULE_WHOLESALERREMUNERATION && $_POST['remise_percent'] > 0){
+          $remproducts = explode(',', $conf->global->REMPRODUCTS);
+          if(GETPOST('idprod') && in_array(GETPOST('idprod'), $remproducts)){
+            $langs->load('wholesalerRemuneration@wholesalerremuneration');
+            $mesg='<div class="warning">'.$langs->trans('NoReducWithRemuneration').'</div>';
+            unset($_POST['remise_percent']);
+          }
+        }
+        if ($result >=0 && $conf->global->MAIN_MODULE_DETAILEDSTOCK && isset($_POST['search_idDetail']) && $_POST['search_idDetail'] != '') {
             //check if the new line serial number and quantity are correct
             $serial = GETPOST('search_idDetail');
             require_once(DOL_DOCUMENT_ROOT . '/detailedstock/class/productstockdet.class.php');
@@ -1093,15 +1101,26 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
                 $result = -1;
                 $mesg = '<div class="warning">' . $langs->trans('QtyMustBe1') . '</div>';
               }
+              
               else{
-                $det->tms_i = dol_now();
-                $det->fk_product = GETPOST('idprod');
-                $det->fk_user_author_i = $user->id;
-                $det->serial = $serial;
-                $det->fk_serial_type = 0;
-                $det->price = $pu_ht;
-                $det->create($user);
-                $mesg = '<div class="warning">' . $langs->trans('NewDetailCreated') . '</div>';
+                $idprod = GETPOST('idprod');
+                $prod = new Product($db);
+                $prod->fetch($idprod);
+                if($prod->stock_reel - $det->count($idprod) == 0){
+                  $result = -1;
+                  $mesg = '<div class="warning">' . $langs->trans('StockLimitReached') . '</div>';
+                }
+                else{
+                  //create a new detailed stock line
+                  $det->tms_i = dol_now();
+                  $det->fk_product = $idprod;
+                  $det->fk_user_author_i = $user->id;
+                  $det->serial = $serial;
+                  $det->fk_serial_type = 0;
+                  $det->price = $pu_ht;
+                  $det->create($user);
+                  $mesg = '<div class="warning">' . $langs->trans('NewDetailCreated') . '</div>';
+                }
               }
             }
         }
@@ -1146,6 +1165,16 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
                     $det->fk_user_author_o = $user->id;
                     $det->fk_invoice_line = $result;
                     $result = $det->update($user);
+                    if($conf->global->MAIN_MODULE_WHOLESALERREMUNERATION){
+                      //if there's a remuneration line, write the serial number into its label
+                      $remproducts = explode(',', $conf->global->REMPRODUCTS);
+                      if(GETPOST('idprod') && in_array(GETPOST('idprod'), $remproducts)){
+                        $remline = new FactureLigne($db);
+                        $remline->fetch($det->fk_invoice_line + 1);
+                        $remline->desc .=' - '.$det->getSerialTypeLabel().':'.$det->serial;
+                        $remline->update($user, 1);
+                      }
+                    }
                 }
             }
         }
@@ -1234,7 +1263,6 @@ else if ($action == 'updateligne' && $user->rights->facture->creer && $_POST['sa
     // Define params
     if (GETPOST('productid')) $type=$product->type;
     else $type=GETPOST("type");
-
     // Update line
     if ($result >= 0)
     {

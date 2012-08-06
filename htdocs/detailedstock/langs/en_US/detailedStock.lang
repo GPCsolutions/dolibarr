@@ -34,3 +34,4 @@ Algo_valid=Validation algorithm
 NewDetailCreated=This product wasn't in stock. It has been created.
 Module51000Desc=Creation of detailed stock lines
 Module51000Name=Detailed stock
+StockLimitReached= Stock limit reached
