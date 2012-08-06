@@ -1108,7 +1108,7 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
                   $det->fk_user_author_i = $user->id;
                   $det->serial = $serial;
                   $det->fk_serial_type = 0;
-                  $det->price = $pu_ht;
+                  $det->price = 0;
                   $det->create($user);
                   $mesg = '<div class="warning">' . $langs->trans('NewDetailCreated') . '</div>';
                 }
