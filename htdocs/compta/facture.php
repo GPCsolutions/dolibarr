@@ -1063,15 +1063,6 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
         $info_bits=0;
         if ($tva_npr) $info_bits |= 0x01;
 
-        //TODO hook
-        if($conf->global->MAIN_MODULE_WHOLESALERREMUNERATION && $_POST['remise_percent'] > 0){
-          $remproducts = explode(',', $conf->global->REMPRODUCTS);
-          if(GETPOST('idprod') && in_array(GETPOST('idprod'), $remproducts)){
-            $langs->load('wholesalerRemuneration@wholesalerremuneration');
-            $mesg='<div class="warning">'.$langs->trans('NoReducWithRemuneration').'</div>';
-            unset($_POST['remise_percent']);
-          }
-        }
         if ($result >=0 && $conf->global->MAIN_MODULE_DETAILEDSTOCK && isset($_POST['search_idDetail']) && $_POST['search_idDetail'] != '') {
             //check if the new line serial number and quantity are correct
             $serial = GETPOST('search_idDetail');
@@ -1165,16 +1156,6 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
                     $det->fk_user_author_o = $user->id;
                     $det->fk_invoice_line = $result;
                     $result = $det->update($user);
-                    if($conf->global->MAIN_MODULE_WHOLESALERREMUNERATION){
-                      //if there's a remuneration line, write the serial number into its label
-                      $remproducts = explode(',', $conf->global->REMPRODUCTS);
-                      if(GETPOST('idprod') && in_array(GETPOST('idprod'), $remproducts)){
-                        $remline = new FactureLigne($db);
-                        $remline->fetch($det->fk_invoice_line + 1);
-                        $remline->desc .=' - '.$det->getSerialTypeLabel().':'.$det->serial;
-                        $remline->update($user, 1);
-                      }
-                    }
                 }
             }
         }
