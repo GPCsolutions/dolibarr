@@ -38,15 +38,25 @@ if (!$conf->global->MAIN_MODULE_DETAILEDSTOCK) accessforbidden();
 /*
  * View
  */
+$action = GETPOST('action');
+$id = GETPOST('id');
+
+if ($action == 'delete' && GETPOST('confirm') == 'yes') {
+	$det = new productstockdet($db);
+    $det->fetch($id);
+	$product = new Product($db);
+    $product->fetch($det->fk_product);
+    $det->delete($user);
+    header('Location:detail.php?id=' . $product->id);
+    exit();
+}
 
 llxHeader();
 
-if (GETPOST('id')) {
+if ($id && $action != 'update') {
     $det = new Productstockdet($db);
     $form = new Form($db);
     $result = $det->fetch($_GET["id"]);
-    //var_dump($result);
-    //var_dump($det);
     if ($result > 0) {
         dol_fiche_head('', 'info', $langs->trans('DetailedStock'), 1, 'product');
         $product = new Product($db);
@@ -122,13 +132,22 @@ if (GETPOST('id')) {
         //only print this if the element has been removed from the stock
         if ($det->tms_o) {
             print '<tr>';
+			$suppr = '<span class="butActionRefused" title="'.$langs->trans("AlreadySold").'">'.$langs->trans('Delete').'</span>';
             print '<td>' . $langs->trans('OutputInfos') . '</td>';
             print '<td>' . $det->getInfos('output') . '</td>';
             print '</tr>';
         }
+		else{
+			$suppr = '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$det->id.'&action=ask_delete">'.$langs->trans('Delete').'</a>';
+		}
 
         print '</table></div>';
-        print '<table width="100%"><tr><td align="right"><a class="butAction" href="/detailedstock/detail.php?id=' . $product->id . '">' . $langs->trans("Return") . '</a></td></tr></table>';
+        print '<table width="100%"><tr><td align="right">'.$suppr.'<a class="butAction" href="/detailedstock/detail.php?id=' . $product->id . '&action="delete">' . $langs->trans("Return") . '</a></td></tr></table>';
+		// if the user clicks on the delete icon, show the confirmation pop-up
+		if ($action == 'ask_delete') {
+			// TODO textes
+			$formconfirm = $form->form_confirm($_SERVER["PHP_SELF"] . '?id=' . $det->id, $langs->trans('Delete'), $langs->trans('ConfirmDelete'), 'delete', '', 'no', 1);
+		}
     } else {
         //error
       $mesg = '<div class="error">'.$langs->trans('ErrorForbidden').'</div>';
