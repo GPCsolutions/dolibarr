@@ -17,7 +17,7 @@
 DetailedStock=Detailed stock
 SerialType=Type
 SerialNumber=Serial number
-UndetailledStock=Undetailled stock
+UndetailledStock=Undetailed stock
 InvalidCode=Invalid serial number
 InputInfos=Added by
 OutputInfos=Removed by
@@ -37,3 +37,6 @@ Module51000Name=Detailed stock
 StockLimitReached= Stock limit reached
 OnlyExistingStock= Only an existing stock can be detailed
 Element=Element
+AlreadySold=Already sold
+ConfirmDelete=Do you really want to delete this?
+ConfirmModify=Do you really want to edit this?

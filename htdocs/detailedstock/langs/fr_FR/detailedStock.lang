@@ -37,3 +37,6 @@ Module51000Name=Stock détaillé
 StockLimitReached=Stock limite atteint
 OnlyExistingStock = Seul un stock existant peut être détaillé
 Element=Élément
+AlreadySold=Déjà vendu
+ConfirmDelete=Voulez-vous vraiment effacer ceci?
+ConfirmModify=Voulez-vous vraiment modifier ceci?
