@@ -188,7 +188,7 @@ if ($id && $action != 'modify') {
 		}
 
         print '</table></div>';
-        print '<table width="100%"><tr><td align="right">'.$modify.$suppr.'<a class="butAction" href="/detailedstock/detail.php?id=' . $product->id . '&action="delete">' . $langs->trans("Return") . '</a></td></tr></table>';
+        print '<table width="100%"><tr><td align="right">'.$modify.$suppr.'<a class="butAction" href="/detailedstock/detail.php?id='.$product->id.'">' . $langs->trans("Return") . '</a></td></tr></table>';
 		// if the user clicks on the delete icon, show the confirmation pop-up
 		if ($action == 'ask_delete') {
 			$formconfirm = $form->form_confirm($_SERVER["PHP_SELF"] . '?id=' . $det->id, $langs->trans('Delete'), $langs->trans('ConfirmDelete'), 'delete', '', 'no', 1);
@@ -208,8 +208,6 @@ if ($id && $action == 'modify' && $confirm == 'yes') {
 	$det->fetch($id);
 	$form = new Form($db);
 	dol_fiche_head('', 'info', $langs->trans('DetailedStock'), 1, 'product');
-    $product = new Product($db);
-    $product->fetch($det->fk_product);
 	print '<br><form action="' . $_SERVER['PHP_SELF'] . '?id=' . $det->id . '" method="post"><table class="noborder" width="100%">';
 	print '<input type="hidden" name="action" value="update"/>';
 	print '<tr class="liste_titre"><td>' . $langs->trans("SerialNumber") . '</td>';
@@ -224,7 +222,7 @@ if ($id && $action == 'modify' && $confirm == 'yes') {
 	print '<td>' . $det->selectSerialType($det->fk_serial_type, 'serialType') . '</td>';
 	print '<td>' . $form->select_company($det->fk_supplier, 'supplier', 's.fournisseur=1', 1) . '</td>';
 	print '<td><input type="text" name="buyingPrice" value="' . $det->price . '"/></td>';
-	print '<td>' . $det->selectWarehouses($det->fk_entrepot, 'warehouse', 'ps.reel > 0', 1, 0, $product->id) . '</td>';
+	print '<td>' . $det->selectWarehouses($det->fk_entrepot, 'warehouse', 'ps.reel > 0', 1, 0, $det->fk_product) . '</td>';
 	print '<td><input class="button" type="submit" name ="valid" value="' . $langs->trans("Valid") . '"/></td><td><input class="button" type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
 	print '</tr>';
 	print '</table></form>';

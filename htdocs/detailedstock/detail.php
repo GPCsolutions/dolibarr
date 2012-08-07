@@ -62,7 +62,7 @@ if ($_GET["id"] || $_GET["ref"]) {
                 if (GETPOST('serialNumber') != '') $newDet->serial = GETPOST('serialNumber');
                 if (GETPOST('serialType') >= 0) $newDet->fk_serial_type = GETPOST('serialType');
                 $newDet->price = price2num(GETPOST('buyingPrice'), 'MT');
-                if(GETPOST('supplier'))$newDet->fk_supplier = GETPOST('supplier');
+                if(GETPOST('supplier') > 0)$newDet->fk_supplier = GETPOST('supplier');
                 //default $valid value is 1 in case we don't need to go through the validation process
                 $valid = 1;
                 //if a serial type is defined
@@ -101,118 +101,16 @@ if ($_GET["id"] || $_GET["ref"]) {
         dol_htmloutput_mesg($mesg);
 
 
-        print '<table class="border" width="100%">';
+        
 
         // Ref
         if ($product->isproduct()) {
-            print '<tr>';
-            print '<td width="30%">' . $langs->trans("Ref") . '</td><td>';
-            print $form->showrefnav($product, 'ref', '', 1, 'ref');
-            print '</td>';
-            print '</tr>';
-            // Label
-            print '<tr><td>' . $langs->trans("Label") . '</td><td>' . $product->libelle . '</td>';
-            print '</tr>';
-
-            // Status (to sell)
-            print '<tr><td>' . $langs->trans("Status") . ' (' . $langs->trans("Sell") . ')</td><td>';
-            print $product->getLibStatut(2, 0);
-            print '</td></tr>';
-
-            // Status (to buy)
-            print '<tr><td>' . $langs->trans("Status") . ' (' . $langs->trans("Buy") . ')</td><td>';
-            print $product->getLibStatut(2, 1);
-            print '</td></tr>';
-
-            // PMP
-            print '<tr><td>' . $langs->trans("AverageUnitPricePMP") . '</td>';
-            print '<td>' . price($product->pmp) . ' ' . $langs->trans("HT") . '</td>';
-            print '</tr>';
-
-            // Sell price
-            print '<tr><td>' . $langs->trans("SellPriceMin") . '</td>';
-            print '<td>';
-            if (empty($conf->global->PRODUIT_MULTIPRICES)) print price($product->price) . ' ' . $langs->trans("HT");
-            else print $langs->trans("Variable");
-            print '</td>';
-            print '</tr>';
-
-            // Real stock
-            $product->load_stock();
-            print '<tr><td>' . $langs->trans("PhysicalStock") . '</td>';
-            print '<td>' . $product->stock_reel;
-            if ($product->seuil_stock_alerte && ($product->stock_reel < $product->seuil_stock_alerte))
-                    print ' ' . img_warning($langs->trans("StockTooLow"));
-            print '</td>';
-            print '</tr>';
-
-            //undetailled stock
-            $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id.' and entity = '.$conf->entity;
-            $resql = $db->query($sql);
-            $num = $db->num_rows($resql);
-            $reste = $product->stock_reel - $num;
-            print '<tr><td>' . $langs->trans("UndetailledStock") . '</td>';
-            print '<td>' . $reste . '</td>';
-            print '</tr>';
-
-            // Calculating a theorical value of stock if stock increment is done on real sending
-            if ($conf->global->STOCK_CALCULATE_ON_SHIPMENT) {
-                $stock_commande_client = $stock_commande_fournisseur = 0;
-
-                if ($conf->commande->enabled) {
-                    $result = $product->load_stats_commande(0, '1,2');
-                    if ($result < 0) dol_print_error($db, $product->error);
-                    $stock_commande_client = $product->stats_commande['qty'];
-                }
-                if ($conf->fournisseur->enabled) {
-                    $result = $product->load_stats_commande_fournisseur(0, '3');
-                    if ($result < 0) dol_print_error($db, $product->error);
-                    $stock_commande_fournisseur = $product->stats_commande_fournisseur['qty'];
-                }
-
-                $product->stock_theorique = $product->stock_reel - ($stock_commande_client + $stock_sending_client) + $stock_commande_fournisseur;
-
-                // Stock theorique
-                print '<tr><td>' . $langs->trans("VirtualStock") . '</td>';
-                print "<td>" . $product->stock_theorique;
-                if ($product->stock_theorique < $product->seuil_stock_alerte) {
-                    print ' ' . img_warning($langs->trans("StockTooLow"));
-                }
-                print '</td>';
-                print '</tr>';
-
-                print '<tr><td>';
-                if ($product->stock_theorique != $product->stock_reel) print $langs->trans("StockDiffPhysicTeoric");
-                else print $langs->trans("RunningOrders");
-                print '</td>';
-                print '<td>';
-
-                $found = 0;
-
-                // Nbre de commande clients en cours
-                if ($conf->commande->enabled) {
-                    if ($found) print '<br>'; else $found = 1;
-                    print $langs->trans("CustomersOrdersRunning") . ': ' . ($stock_commande_client + $stock_sending_client);
-                    $result = $product->load_stats_commande(0, '0');
-                    if ($result < 0) dol_print_error($db, $product->error);
-                    print ' (' . $langs->trans("Draft") . ': ' . $product->stats_commande['qty'] . ')';
-                    //print '<br>';
-                    //print $langs->trans("CustomersSendingRunning").': '.$stock_sending_client;
-                }
-
-                // Nbre de commande fournisseurs en cours
-                if ($conf->fournisseur->enabled) {
-                    if ($found) print '<br>'; else $found = 1;
-                    print $langs->trans("SuppliersOrdersRunning") . ': ' . $stock_commande_fournisseur;
-                    $result = $product->load_stats_commande_fournisseur(0, '0,1,2');
-                    if ($result < 0) dol_print_error($db, $product->error);
-                    print ' (' . $langs->trans("DraftOrWaitingApproved") . ': ' . $product->stats_commande_fournisseur['qty'] . ')';
-                }
-            }
-            print '</td></tr></table>';
-            print '</div>';
+			print '<table class="border" width="100%">';
+            include(DOL_DOCUMENT_ROOT . '/detailedstock/tpl/infosProduct.tpl.php');
             //view mode
             if ($action != 'add') {
+				$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id.' and tms_o is null and entity = '.$conf->entity;
+				$resql = $db->query($sql);
                 if ($resql) {
                     if ($db->num_rows($resql) < $product->stock_reel)
                             print '<table width="100%"><tr><td align="right"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?id=' . $product->id . '&action=add">' . $langs->trans("Add") . '</a></td></tr></table>';
@@ -221,6 +119,7 @@ if ($_GET["id"] || $_GET["ref"]) {
                     //display each detailled stock line related to this product
                     if ($db->num_rows($resql) > 0) {
                         print '<br><table class="noborder" width="100%">';
+						print '<caption><b><u>'.$langs->trans('CurrentDetails').'</u></b></caption>';
                         print '<tr class="liste_titre"><td>'.$langs->trans('Element').'</td>';
                         print '<td align="right">' . $langs->trans("SerialNumber") . '</td>';
                         print '<td align="right">' . $langs->trans("Supplier") . '</td>';
@@ -233,7 +132,7 @@ if ($_GET["id"] || $_GET["ref"]) {
                             if ($res) {
                                 $detId = '<a href="/detailedstock/fiche.php?id=' . $det->id . '">' . img_object($langs->trans("ShowProduct"),
                                         'product') . '</a>';
-                                print '<tr><td align=>' . $detId . '</td>';
+                                print '<tr><td>' . $detId . '</td>';
                                 print '<td align="right">' . $form->textwithpicto($det->serial,
                                         $det->getSerialTypeLabel(), 1) . '</td>';
                                 $soc = new Societe($db);
@@ -259,6 +158,8 @@ if ($_GET["id"] || $_GET["ref"]) {
                                 dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
                             }
                         }
+						print '</table>';
+						print '<br><table width="100%"><tr><td align="right"><a class="butAction" href="/detailedstock/historique.php?id=' . $product->id . '">' . $langs->trans("SeeHistory") . '</a></td></tr></table>';
                     }
                 } else {
                     //error
