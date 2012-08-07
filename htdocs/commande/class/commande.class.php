@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2003-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
  * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@2byte.es>
@@ -31,8 +31,7 @@ require_once(DOL_DOCUMENT_ROOT."/product/class/product.class.php");
 require_once(DOL_DOCUMENT_ROOT ."/margin/lib/margins.lib.php");
 
 /**
- *  \class      Commande
- *  \brief      Class to manage customers orders
+ *  Class to manage customers orders
  */
 class Commande extends CommonOrder
 {
@@ -1009,7 +1008,7 @@ class Commande extends CommonOrder
      */
 	function addline($commandeid, $desc, $pu_ht, $qty, $txtva, $txlocaltax1=0, $txlocaltax2=0, $fk_product=0, $remise_percent=0, $info_bits=0, $fk_remise_except=0, $price_base_type='HT', $pu_ttc=0, $date_start='', $date_end='', $type=0, $rang=-1, $special_code=0, $fk_parent_line=0, $fk_fournprice=null, $pa_ht=0)
     {
-        dol_syslog("Commande::addline commandeid=$commandeid, desc=$desc, pu_ht=$pu_ht, qty=$qty, txtva=$txtva, fk_product=$fk_product, remise_percent=$remise_percent, info_bits=$info_bits, fk_remise_except=$fk_remise_except, price_base_type=$price_base_type, pu_ttc=$pu_ttc, date_start=$date_start, date_end=$date_end, type=$type", LOG_DEBUG);
+        dol_syslog(get_class($this)."::addline commandeid=$commandeid, desc=$desc, pu_ht=$pu_ht, qty=$qty, txtva=$txtva, fk_product=$fk_product, remise_percent=$remise_percent, info_bits=$info_bits, fk_remise_except=$fk_remise_except, price_base_type=$price_base_type, pu_ttc=$pu_ttc, date_start=$date_start, date_end=$date_end, type=$type", LOG_DEBUG);
 
         include_once(DOL_DOCUMENT_ROOT.'/core/lib/price.lib.php');
 
@@ -1135,7 +1134,7 @@ class Commande extends CommonOrder
             else
             {
                 $this->error=$this->line->error;
-                dol_syslog("Commande::addline error=".$this->error, LOG_ERR);
+                dol_syslog(get_class($this)."::addline error=".$this->error, LOG_ERR);
                 $this->db->rollback();
                 return -2;
             }
@@ -2743,10 +2742,9 @@ class Commande extends CommonOrder
         $lines = array();
 
         $sql = 'SELECT l.rowid, l.fk_product, l.product_type, l.description, l.price, l.qty, l.tva_tx, ';
-        $sql.= ' l.fk_remise_except, l.remise_percent, l.subprice, l.info_bits,l.rang,l.special_code,';
+        $sql.= ' l.fk_remise_except, l.remise_percent, l.subprice, l.info_bits, l.rang, l.special_code, l.fk_parent_line,';
         $sql.= ' l.total_ht, l.total_tva, l.total_ttc, l.fk_product_fournisseur_price as fk_fournprice, l.buy_price_ht as pa_ht, l.localtax1_tx, l.localtax2_tx,';
-        $sql.= ' l.date_start,';
-        $sql.= ' l.date_end,';
+        $sql.= ' l.date_start, l.date_end,';
         $sql.= ' p.label as product_label, p.ref, p.fk_product_type, p.rowid as prodid, ';
         $sql.= ' p.description as product_desc';
         $sql.= ' FROM '.MAIN_DB_PREFIX.'commandedet as l';
@@ -2781,15 +2779,16 @@ class Commande extends CommonOrder
                 $this->lines[$i]->total_ht			= $obj->total_ht;
                 $this->lines[$i]->total_tva			= $obj->total_tva;
                 $this->lines[$i]->total_ttc			= $obj->total_ttc;
+                $this->lines[$i]->fk_parent_line	= $obj->fk_parent_line;
                 $this->lines[$i]->special_code		= $obj->special_code;
                 $this->lines[$i]->rang				= $obj->rang;
                 $this->lines[$i]->date_start		= $this->db->jdate($obj->date_start);
                 $this->lines[$i]->date_end			= $this->db->jdate($obj->date_end);
-				  			$this->lines[$i]->fk_fournprice = $obj->fk_fournprice;
-				  			$marginInfos = getMarginInfos($obj->subprice, $obj->remise_percent, $obj->tva_tx, $obj->localtax1_tx, $obj->localtax2_tx, $this->lines[$i]->fk_fournprice, $obj->pa_ht);
-						    $this->lines[$i]->pa_ht = $marginInfos[0];
-								$this->lines[$i]->marge_tx			= $marginInfos[1];
-				 				$this->lines[$i]->marque_tx			= $marginInfos[2];
+				$this->lines[$i]->fk_fournprice		= $obj->fk_fournprice;
+				$marginInfos						= getMarginInfos($obj->subprice, $obj->remise_percent, $obj->tva_tx, $obj->localtax1_tx, $obj->localtax2_tx, $this->lines[$i]->fk_fournprice, $obj->pa_ht);
+				$this->lines[$i]->pa_ht				= $marginInfos[0];
+				$this->lines[$i]->marge_tx			= $marginInfos[1];
+				 $this->lines[$i]->marque_tx		= $marginInfos[2];
 
                 $i++;
             }
@@ -3001,13 +3000,13 @@ class OrderLine
         if (empty($this->special_code)) $this->special_code=0;
         if (empty($this->fk_parent_line)) $this->fk_parent_line=0;
 
-		    if (empty($this->pa_ht)) $this->pa_ht=0;
+		if (empty($this->pa_ht)) $this->pa_ht=0;
 
-				// si prix d'achat non renseign� et utilis� pour calcul des marges alors prix achat = prix vente (idem pour remises)
-				if ($this->pa_ht == 0) {
-		      if ($this->subprice < 0 || ($conf->global->CalculateMarginsOnLinesWithoutBuyingPrice == 1))
-		        $this->pa_ht = $this->subprice * (1 - $this->remise_percent / 100);
-		    }
+		// si prix d'achat non renseigne et utilise pour calcul des marges alors prix achat = prix vente (idem pour remises)
+		if ($this->pa_ht == 0) {
+			if ($this->subprice < 0 || ($conf->global->CalculateMarginsOnLinesWithoutBuyingPrice == 1))
+				$this->pa_ht = $this->subprice * (1 - $this->remise_percent / 100);
+		}
 
         // Check parameters
         if ($this->product_type < 0) return -1;
@@ -3027,34 +3026,28 @@ class OrderLine
         $sql.= " '".price2num($this->tva_tx)."',";
         $sql.= " '".price2num($this->localtax1_tx)."',";
         $sql.= " '".price2num($this->localtax2_tx)."',";
-        if ($this->fk_product) { $sql.= "'".$this->fk_product."',"; }
-        else { $sql.='null,'; }
+        $sql.= ' '.(! empty($this->fk_product)?$this->fk_product:"null").',';
         $sql.= " '".$this->product_type."',";
         $sql.= " '".price2num($this->remise_percent)."',";
         $sql.= " ".($this->subprice!=''?"'".price2num($this->subprice)."'":"null").",";
         $sql.= " ".($this->price!=''?"'".price2num($this->price)."'":"null").",";
         $sql.= " '".price2num($this->remise)."',";
-        if ($this->fk_remise_except) $sql.= $this->fk_remise_except.",";
-        else $sql.= 'null,';
+        $sql.= ' '.(! empty($this->fk_remise_except)?$this->fk_remise_except:"null").',';
         $sql.= ' '.$this->special_code.',';
         $sql.= ' '.$this->rang.',';
-				if (isset($this->fk_fournprice)) $sql.= ' '.$this->fk_fournprice.',';
-				else $sql.= ' null,';
-				if (isset($this->pa_ht)) $sql.= ' '.price2num($this->pa_ht).',';
-				else $sql.= ' null,';
+		$sql.= ' '.(! empty($this->fk_fournprice)?$this->fk_fournprice:"null").',';
+		$sql.= ' '.price2num($this->pa_ht).',';
         $sql.= " '".$this->info_bits."',";
         $sql.= " '".price2num($this->total_ht)."',";
         $sql.= " '".price2num($this->total_tva)."',";
         $sql.= " '".price2num($this->total_localtax1)."',";
         $sql.= " '".price2num($this->total_localtax2)."',";
         $sql.= " '".price2num($this->total_ttc)."',";
-        if ($this->date_start) { $sql.= "'".$this->db->idate($this->date_start)."',"; }
-        else { $sql.='null,'; }
-        if ($this->date_end)   { $sql.= "'".$this->db->idate($this->date_end)."'"; }
-        else { $sql.='null'; }
+        $sql.= " ".(! empty($this->date_start)?"'".$this->db->idate($this->date_start)."'":"null").',';
+        $sql.= " ".(! empty($this->date_end)?"'".$this->db->idate($this->date_end)."'":"null");
         $sql.= ')';
 
-        dol_syslog("OrderLine::insert sql=".$sql);
+        dol_syslog(get_class($this)."::insert sql=".$sql, LOG_DEBUG);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -3076,7 +3069,7 @@ class OrderLine
         else
         {
             $this->error=$this->db->error();
-            dol_syslog("OrderLine::insert Error ".$this->error, LOG_ERR);
+            dol_syslog(get_class($this)."::insert Error ".$this->error, LOG_ERR);
             $this->db->rollback();
             return -2;
         }
@@ -3140,9 +3133,8 @@ class OrderLine
 		$sql.= " , total_localtax1=".price2num($this->total_localtax1);
 		$sql.= " , total_localtax2=".price2num($this->total_localtax2);
 		$sql.= " , info_bits=".$this->info_bits;
-		if ($this->date_start) { $sql.= " , date_start='".$this->db->idate($this->date_start)."'"; }
-		else { $sql.=' , date_start=null'; }
-		if ($this->date_end) { $sql.= " , date_end='".$this->db->idate($this->date_end)."'"; }
+		$sql.= " , date_start=".(! empty($this->date_start)?"'".$this->db->idate($this->date_start)."'":"null");
+		$sql.= " , date_end=".(! empty($this->date_end)?"'".$this->db->idate($this->date_end)."'":"null");
 		$sql.= " , product_type=".$this->product_type;
 		$sql.= " , fk_parent_line=".(! empty($this->fk_parent_line)?$this->fk_parent_line:"null");
 		if (! empty($this->rang)) $sql.= ", rang=".$this->rang;

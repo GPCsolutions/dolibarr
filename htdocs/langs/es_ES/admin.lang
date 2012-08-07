@@ -910,7 +910,7 @@ UsersSetup=Configuración del módulo usuarios
 UserMailRequired=E-Mail necesario para crear un usuario nuevo
 ##### Company setup #####
 CompanySetup=Configuración del módulo empresas
-CompanyCodeChecker=Módulo de generación e control de los códigos de terceros (clientes/proveedores)
+CompanyCodeChecker=Módulo de generación y control de los códigos de terceros (clientes/proveedores)
 AccountCodeManager=Módulo de generación de los códigos contables (clientes/proveedores)
 ModuleCompanyCodeAquarium=Devuelve un código contable compuesto de<br>%s seguido del código tercero de proveedor para el código contable de proveedor,<br>%s seguido del código tercero de cliente para el código contable de cliente.
 ModuleCompanyCodePanicum=Devuelve un código contable vacío.
@@ -987,7 +987,7 @@ FreeLegalTextOnOrders=Texto libre en pedidos
 WatermarkOnDraftOrders=Marca de agua en pedidos borrador (en caso de estar vacío)
 ##### Clicktodial #####
 ClickToDialSetup=Configuración del módulo Click To Dial
-ClickToDialUrlDesc=Url de llamada haciendo click en el icono teléfono. <br>La 'url completa llamada será: URL?login=...&password=...&caller=...&called=telellamada
+ClickToDialUrlDesc=URL de llamada haciendo click en el icono teléfono. <br>La URL completa de llamada será: URL?login=...&password=...&caller=...&called=telellamada
 ##### Bookmark4u #####
 Bookmark4uSetup=Configuración del módulo Bookmark4u
 ##### Interventions #####
@@ -1161,6 +1161,7 @@ SyslogSimpleFile=Archivo
 SyslogFilename=Nombre y ruta del archivo
 YouCanUseDOL_DATA_ROOT=Puede utilizar DOL_DATA_ROOT/dolibarr.log para un registro en el directorio "documentos" de Dolibarr. Sin embargo, puede establecer un directorio diferente para guardar este archivo.
 ErrorUnknownSyslogConstant=La constante %s no es una constante syslog conocida
+OnlyWindowsLOG_USER=Windows sólo soporta LOG_USER
 ##### Donations #####
 DonationsSetup=Configuración del módulo donaciones
 DonationsReceiptModel=Modelo recepción de donaciones

@@ -287,7 +287,7 @@ function dol_mimetype($file,$default='application/octet-stream',$mode=0)
 	if ($mode == 1)
 	{
 		$tmp=explode('/',$mime);
-		return $tmp[1];
+		return (! empty($tmp[1])?$tmp[1]:$tmp[0]);
 	}
 	if ($mode == 2)
 	{
@@ -798,7 +798,8 @@ function dol_delete_preview($object)
     if ($object->element == 'order_supplier')   $dir = $conf->fournisseur->dir_output.'/commande';
     elseif ($object->element == 'invoice_supplier') $dir = $conf->fournisseur->dir_output.'/facture';
     elseif ($object->element == 'project')          $dir = $conf->projet->dir_output;
-    elseif ($object->element == 'delivery')         $dir = $conf->livraison->dir_output;
+    elseif ($object->element == 'shipping')         $dir = $conf->expedition->dir_output.'/sending';
+    elseif ($object->element == 'delivery')         $dir = $conf->expedition->dir_output.'/receipt';
 
     if (empty($dir)) return 'ErrorObjectNoSupportedByFunction';
 

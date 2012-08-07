@@ -77,7 +77,7 @@ if ($agentid > 0) {
 
       print '<tr><td width="20%">'.$langs->trans('CommercialAgent').'</td>';
       print '<td colspan="4">';
-      print $form->select_dolusers($selected=$agentid,$htmlname='agentid',$show_empty=1,$exclude='',$disabled=0,$include='',$enableonly='');
+      print $form->select_dolusers($agentid,'agentid',1,'',0,'','');
       print '</td></tr>';
 
       if (! $sortorder) $sortorder="ASC";
@@ -86,7 +86,7 @@ if ($agentid > 0) {
 else {
   print '<tr><td width="20%">'.$langs->trans('CommercialAgent').'</td>';
   print '<td colspan="4">';
-  print $form->select_dolusers($selected='',$htmlname='agentid',$show_empty=1,$exclude='',$disabled=0,$include='',$enableonly='');
+  print $form->select_dolusers('','agentid',1,'',0,'','');
    print '</td></tr>';
   if (! $sortorder) $sortorder="ASC";
   if (! $sortfield) $sortfield="u.login";
@@ -160,8 +160,6 @@ else
   $sql.= " AND f.fk_statut > 1";
 $sql.= " AND s.entity = ".$conf->entity;
 $sql.= " AND d.fk_facture = f.rowid";
-if ($conf->global->COMMISSION_BASE == "MARGIN")
-  $sql.= " AND d.buy_price_ht IS NOT NULL AND d.buy_price_ht <> 0";
 if ($agentid > 0)
   $sql.= " AND sc.fk_user = $agentid";
 if (!empty($startdate))

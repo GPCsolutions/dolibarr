@@ -506,7 +506,7 @@ class FormFile
                 {
                     $out.= '<td align="right">';
                     //$out.= '<a href="'.DOL_URL_ROOT.'/document.php?action=remove_file&amp;modulepart='.$modulepart.'&amp;file='.urlencode($relativepath);
-                    $out.= '<a href="'.$urlsource.'&action=remove_file&modulepart='.$modulepart.'&file='.urlencode($relativepath);
+                    $out.= '<a href="'.$urlsource.(strpos($urlsource,'?')?'&':'?').'action=remove_file&modulepart='.$modulepart.'&file='.urlencode($relativepath);
                     $out.= ($param?'&'.$param:'');
                     $out.= '&urlsource='.urlencode($urlsource);
                     $out.= '">'.img_delete().'</a></td>';
@@ -581,7 +581,8 @@ class FormFile
             && ! preg_match('/\.meta$/i',$file['name']))
             {
                 // Define relative path used to store the file
-                if (! $relativepath) $relativepath=dol_sanitizeFileName($object->ref).'/';
+                if (empty($relativepath))
+                	$relativepath=(! empty($object->ref)?dol_sanitizeFileName($object->ref):'').'/';
 
                 $var=!$var;
                 print '<tr '.$bc[$var].'>';
@@ -610,7 +611,7 @@ class FormFile
                 // Delete or view link
                 print '<td align="right">';
                 if ($useinecm)     print '<a href="'.DOL_URL_ROOT.'/ecm/docfile.php?urlfile='.urlencode($file['name']).$param.'" class="editfilelink" rel="'.urlencode($file['name']).'">'.img_view().'</a> &nbsp; ';
-                if ($permtodelete) print '<a href="'.(($useinecm && !empty($conf->use_javascript_ajax) && empty($conf->global->MAIN_ECM_DISABLE_JS))?'#':$url.'?id='.$object->id.'&action=delete&urlfile='.urlencode($file['name']).$param).'" class="deletefilelink" rel="'.urlencode($file['name']).'">'.img_delete().'</a>';
+                if ($permtodelete) print '<a href="'.(($useinecm && ! empty($conf->use_javascript_ajax) && empty($conf->global->MAIN_ECM_DISABLE_JS))?'#':$url.'?action=delete'.(isset($object->id)?'&id='.$object->id:'').'&urlfile='.urlencode($file['name']).$param).'" class="deletefilelink" rel="'.urlencode($file['name']).'">'.img_delete().'</a>';
                 else print '&nbsp;';
                 print "</td>";
                 print "</tr>\n";
@@ -725,14 +726,14 @@ class FormFile
                 $id=0; $ref=''; $label='';
 
                 // To show ref or specific information according to view to show (defined by $module)
-                if ($modulepart == 'company')          { preg_match('/(\d+)\/[^\/]+$/',$relativefile,$reg); $id=$reg[1]; }
-                if ($modulepart == 'invoice')          { preg_match('/(.*)\/[^\/]+$/',$relativefile,$reg);  $ref=$reg[1]; }
-                if ($modulepart == 'invoice_supplier') { preg_match('/(\d+)\/[^\/]+$/',$relativefile,$reg); $id=$reg[1]; }
-                if ($modulepart == 'propal')           { preg_match('/(.*)\/[^\/]+$/',$relativefile,$reg);  $ref=$reg[1]; }
-                if ($modulepart == 'order')            { preg_match('/(.*)\/[^\/]+$/',$relativefile,$reg);  $ref=$reg[1]; }
-                if ($modulepart == 'order_supplier')   { preg_match('/(.*)\/[^\/]+$/',$relativefile,$reg);  $ref=$reg[1]; }
-                if ($modulepart == 'contract')         { preg_match('/(.*)\/[^\/]+$/',$relativefile,$reg);  $ref=$reg[1]; }
-                if ($modulepart == 'tax')              { preg_match('/(\d+)\/[^\/]+$/',$relativefile,$reg); $id=$reg[1]; }
+                if ($modulepart == 'company')          { preg_match('/(\d+)\/[^\/]+$/',$relativefile,$reg); $id=(isset($reg[1])?$reg[1]:''); }
+                if ($modulepart == 'invoice')          { preg_match('/(.*)\/[^\/]+$/',$relativefile,$reg);  $ref=(isset($reg[1])?$reg[1]:''); }
+                if ($modulepart == 'invoice_supplier') { preg_match('/(\d+)\/[^\/]+$/',$relativefile,$reg); $id=(isset($reg[1])?$reg[1]:''); }
+                if ($modulepart == 'propal')           { preg_match('/(.*)\/[^\/]+$/',$relativefile,$reg);  $ref=(isset($reg[1])?$reg[1]:''); }
+                if ($modulepart == 'order')            { preg_match('/(.*)\/[^\/]+$/',$relativefile,$reg);  $ref=(isset($reg[1])?$reg[1]:''); }
+                if ($modulepart == 'order_supplier')   { preg_match('/(.*)\/[^\/]+$/',$relativefile,$reg);  $ref=(isset($reg[1])?$reg[1]:''); }
+                if ($modulepart == 'contract')         { preg_match('/(.*)\/[^\/]+$/',$relativefile,$reg);  $ref=(isset($reg[1])?$reg[1]:''); }
+                if ($modulepart == 'tax')              { preg_match('/(\d+)\/[^\/]+$/',$relativefile,$reg); $id=(isset($reg[1])?$reg[1]:''); }
 
                 if (! $id && ! $ref) continue;
 

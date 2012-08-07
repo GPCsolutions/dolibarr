@@ -29,9 +29,8 @@
  */
  require_once(DOL_DOCUMENT_ROOT."/core/class/commondocgenerator.class.php");
 
- /**
- *  \class      ModelePdfExpedition
- *  \brief      Parent class of sending receipts models
+/**
+ *	Parent class of sending receipts models
  */
 abstract class ModelePdfExpedition extends CommonDocGenerator
 {
@@ -61,8 +60,7 @@ abstract class ModelePdfExpedition extends CommonDocGenerator
 
 
 /**
- *  \class      ModelNumRefExpedition
- *  \brief      Classe mere des modeles de numerotation des references d expedition
+ *  Classe mere des modeles de numerotation des references d expedition
  */
 abstract class ModelNumRefExpedition
 {
@@ -152,7 +150,7 @@ abstract class ModelNumRefExpedition
  */
 function expedition_pdf_create($db, $object, $modele, $outputlangs)
 {
-	global $conf,$langs;
+	global $conf,$user,$langs;
 
 	$langs->load("sendings");
 
@@ -222,6 +220,16 @@ function expedition_pdf_create($db, $object, $modele, $outputlangs)
 			// we delete preview files
         	//require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
 			//dol_delete_preview($object);
+
+			// Appel des triggers
+			include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+			$interface=new Interfaces($db);
+			$result=$interface->run_triggers('SHIPPING_BUILDDOC',$object,$user,$langs,$conf);
+			if ($result < 0) {
+				$error++; $this->errors=$interface->errors;
+			}
+			// Fin appel triggers
+
 			return 1;
 		}
 		else
