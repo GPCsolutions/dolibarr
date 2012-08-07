@@ -210,7 +210,7 @@ if ($_GET["id"] || $_GET["ref"]) {
                         }
 						print '<tr><td colspan="9" align="right">'.$navig.'</td></tr>';
 						print '</table>';
-						print '<br><table width="100%"><tr><td align="right"><a class="butAction" href="/detailedstock/historique.php?id=' . $product->id . '">' . $langs->trans("SeeHistory") . '</a></td></tr></table>';
+						print '<br><table width="100%"><tr><td align="right"><a class="butAction" href="/detailedstock/hist.php?id=' . $product->id . '">' . $langs->trans("SeeHistory") . '</a></td></tr></table>';
                     }
                 } else {
                     //error

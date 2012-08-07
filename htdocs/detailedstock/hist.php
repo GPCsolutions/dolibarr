@@ -97,7 +97,7 @@ if ($_GET["id"] || $_GET["ref"]) {
 					// navigation
 					$navig.='<form action="'.$_SERVER["PHP_SELF"].'?id='.$product->id.'" name="newpage" method="GET">';
 					$nbpage=floor($total_lines/$viewline)+($total_lines % $viewline > 0?1:0);  // Nombre de page total
-					if ($limitsql > $viewline) $navig.='<a href="historique.php?id='.$product->id.'&amp;page='.($page+1).'">'.img_previous().'</a>';
+					if ($limitsql > $viewline) $navig.='<a href="'. $_SERVER["PHP_SELF"].'?id='.$product->id.'&amp;page='.($page+1).'">'.img_previous().'</a>';
 					$navig.= $langs->trans("Page")." "; // ' Page ';
 					$navig.='<input type="text" name="negpage" size="1" class="flat" value="'.($nbpage-$page).'">';
 					$navig.='<input type="hidden" name="nbpage"  value="'.$nbpage.'">';
@@ -105,7 +105,7 @@ if ($_GET["id"] || $_GET["ref"]) {
 					$navig.='/'.$nbpage.' ';
 					if ($total_lines > $limitsql )
 					{
-						$navig.= '<a href="historique.php?id='.$product->id.'&page='.($page-1).'">'.img_next().'</a>';
+						$navig.= '<a href="'. $_SERVER["PHP_SELF"].'?id='.$product->id.'&page='.($page-1).'">'.img_next().'</a>';
 					}
 					$navig.='</form>';
 					print '<caption><b><u>' . $langs->trans('History') . '</u></b></caption>';
