@@ -67,6 +67,7 @@ if ($_GET["id"] || $_GET["ref"]) {
 			
 			include(DOL_DOCUMENT_ROOT . '/detailedstock/tpl/infosProduct.tpl.php');
 			$det = new Productstockdet($db);
+			//pagination
 			$nbline = $det->count($product->id, 'tms_o is not null');
 			$viewline = empty($conf->global->MAIN_SIZE_LISTE_LIMIT)?20:$conf->global->MAIN_SIZE_LISTE_LIMIT;
 			$total_lines = $nbline;
@@ -93,10 +94,9 @@ if ($_GET["id"] || $_GET["ref"]) {
 			if ($resql) {
 				if ($db->num_rows($resql) > 0) {
 					print '<br><table class="noborder" width="100%">';
-					//$navig='';
+					// navigation
 					$navig.='<form action="'.$_SERVER["PHP_SELF"].'?id='.$product->id.'" name="newpage" method="GET">';
 					$nbpage=floor($total_lines/$viewline)+($total_lines % $viewline > 0?1:0);  // Nombre de page total
-					//print 'nbpage='.$nbpage.' viewline='.$viewline.' limitsql='.$limitsql;
 					if ($limitsql > $viewline) $navig.='<a href="historique.php?id='.$product->id.'&amp;page='.($page+1).'">'.img_previous().'</a>';
 					$navig.= $langs->trans("Page")." "; // ' Page ';
 					$navig.='<input type="text" name="negpage" size="1" class="flat" value="'.($nbpage-$page).'">';
