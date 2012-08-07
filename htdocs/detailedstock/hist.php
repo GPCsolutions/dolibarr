@@ -108,8 +108,7 @@ if ($_GET["id"] || $_GET["ref"]) {
 						$navig.= '<a href="'. $_SERVER["PHP_SELF"].'?id='.$product->id.'&page='.($page-1).'">'.img_next().'</a>';
 					}
 					$navig.='</form>';
-					print '<caption><b><u>' . $langs->trans('History') . '</u></b></caption>';
-					print '<tr><td colspan="9" align="right">'.$navig.'</td></tr>';
+					print '<caption><div class="titre">' . $langs->trans('History') . '</div></caption>';
 					print '<tr class="liste_titre"><td>' . $langs->trans('Element') . '</td>';
 					print '<td align="right">'.$langs->trans('Date').'</td>';
 					print '<td align="right">' . $langs->trans("SerialNumber") . '</td>';
@@ -145,6 +144,7 @@ if ($_GET["id"] || $_GET["ref"]) {
 						}
 						$i++;
 					}
+					print '<tr><td colspan="9" align="right">'.$navig.'</td></tr>';
 					print '</table>';
 				}
 			} else {

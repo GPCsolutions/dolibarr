@@ -165,7 +165,7 @@ if ($_GET["id"] || $_GET["ref"]) {
 						}
 						$navig.='</form>';
                         print '<br><table class="noborder" width="100%">';
-						print '<caption><b><u>'.$langs->trans('CurrentDetails').'</u></b></caption>';
+						print '<caption><div class="titre">'.$langs->trans('CurrentDetails').'</div></caption>';
                         print '<tr class="liste_titre"><td>'.$langs->trans('Element').'</td>';
                         print '<td align="right">' . $langs->trans("SerialNumber") . '</td>';
                         print '<td align="right">' . $langs->trans("Supplier") . '</td>';
