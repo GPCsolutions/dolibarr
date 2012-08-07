@@ -67,8 +67,9 @@ if ($_GET["id"] || $_GET["ref"]) {
 				if ($db->num_rows($resql) > 0) {
 					print '<br><table class="noborder" width="100%">';
 					print '<caption><b><u>' . $langs->trans('History') . '</u></b></caption>';
-					print '<tr class="liste_titre"><td width="33%">' . $langs->trans('Element') . '</td>';
-					print '<td align="center">' . $langs->trans("SerialNumber") . '</td>';
+					print '<tr class="liste_titre"><td>' . $langs->trans('Element') . '</td>';
+					print '<td align="right">'.$langs->trans('Date').'</td>';
+					print '<td align="right">' . $langs->trans("SerialNumber") . '</td>';
 					print '<td align="right">' . $langs->trans("Invoice") . '</td>';
 					print '</tr>';
 					while ($obj = $db->fetch_object($resql)) {
@@ -77,8 +78,9 @@ if ($_GET["id"] || $_GET["ref"]) {
 						if ($res) {
 							$detId = '<a href="/detailedstock/fiche.php?id=' . $det->id . '">' . img_object($langs->trans("ShowProduct"),
 									'product') . '</a>';
-							print '<tr><td width="33%">' . $detId . '</td>';
-							print '<td align="center">' . $form->textwithpicto($det->serial, $det->getSerialTypeLabel(), 1) . '</td>';
+							print '<tr><td>' . $detId . '</td>';
+							print '<td align="right">'.date('d/m/y', $det->tms_o).'</td>';
+							print '<td align="right">' . $form->textwithpicto($det->serial, $det->getSerialTypeLabel(), 1) . '</td>';
 							print '<td align="right">';
 							$invoiceline = new FactureLigne($db);
 							$fetchline = $invoiceline->fetch($det->fk_invoice_line);
