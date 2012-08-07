@@ -23,6 +23,7 @@ require_once(DOL_DOCUMENT_ROOT . "/product/stock/class/entrepot.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/product/class/product.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/lib/product.lib.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/class/html.form.class.php");
+require_once(DOL_DOCUMENT_ROOT . "/product/class/html.formproduct.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/productstockdet.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/serialtype.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/lib/functions.lib.php");
@@ -218,6 +219,7 @@ if ($_GET["id"] || $_GET["ref"]) {
             //add mode
             else {
                 $det = new Productstockdet($db);
+				$formprod = new Formproduct($db);
                 print '<br><form action="' . $_SERVER['PHP_SELF'] . '?id=' . $product->id . '" method="post"><table class="noborder" width="100%">';
                 print '<input type="hidden" name="action" value="create"/>';
                 print '<tr class="liste_titre"><td>' . $langs->trans("SerialNumber") . '</td>';
@@ -232,7 +234,7 @@ if ($_GET["id"] || $_GET["ref"]) {
                 print '<td>' . $det->selectSerialType($newDet->fk_serial_type, 'serialType') . '</td>';
                 print '<td>' . $form->select_company($newDet->fk_supplier, 'supplier', 's.fournisseur=1', 1) . '</td>';
                 print '<td><input type="text" name="buyingPrice" value="' . $newDet->price . '"/></td>';
-                print '<td>' . $det->selectWarehouses($newDet->fk_entrepot, 'warehouse', 'ps.reel > 0', 1, 0, $product->id) . '</td>';
+                print '<td>' . $formprod->selectWarehouses($newDet->fk_entrepot, 'warehouse', 'ps.reel > 0', 1, 0, $product->id) . '</td>';
                 print '<td><input class="button" type="submit" name ="valid" value="' . $langs->trans("Valid") . '"/></td><td><input class="button" type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
                 print '</tr>';
                 print '</table></form>';

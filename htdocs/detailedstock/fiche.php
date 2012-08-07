@@ -22,6 +22,7 @@ require_once(DOL_DOCUMENT_ROOT . "/product/stock/class/entrepot.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/product/class/product.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/lib/product.lib.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/class/html.form.class.php");
+require_once(DOL_DOCUMENT_ROOT . "/product/class/html.formproduct.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/productstockdet.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/detailedstock/class/serialtype.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/lib/functions.lib.php");
@@ -204,6 +205,7 @@ if ($id && $action == 'modify') {
     $det = new Productstockdet($db);
 	$det->fetch($id);
 	$form = new Form($db);
+	$formprod = new Formproduct($db);
 	dol_fiche_head('', 'info', $langs->trans('DetailedStock'), 1, 'product');
 	print '<br><form action="' . $_SERVER['PHP_SELF'] . '?id=' . $det->id . '" method="post"><table class="noborder" width="100%">';
 	print '<input type="hidden" name="action" value="update"/>';
@@ -219,7 +221,7 @@ if ($id && $action == 'modify') {
 	print '<td>' . $det->selectSerialType($det->fk_serial_type, 'serialType') . '</td>';
 	print '<td>' . $form->select_company($det->fk_supplier, 'supplier', 's.fournisseur=1', 1) . '</td>';
 	print '<td><input type="text" name="buyingPrice" value="' . $det->price . '"/></td>';
-	print '<td>' . $det->selectWarehouses($det->fk_entrepot, 'warehouse', 'ps.reel > 0', 1, 0, $det->fk_product) . '</td>';
+	print '<td>' . $formprod->selectWarehouses($det->fk_entrepot, 'warehouse', '', 1, 0, $det->fk_product) . '</td>';
 	print '<td><input class="button" type="submit" name ="valid" value="' . $langs->trans("Valid") . '"/></td><td><input class="button" type="submit" name="cancel" value="' . $langs->trans("Cancel") . '"/></td>';
 	print '</tr>';
 	print '</table></form>';
