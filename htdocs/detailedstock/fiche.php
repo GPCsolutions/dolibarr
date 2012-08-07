@@ -40,7 +40,6 @@ if (!$conf->global->MAIN_MODULE_DETAILEDSTOCK) accessforbidden();
  */
 $action = GETPOST('action');
 $id = GETPOST('id');
-$confirm = GETPOST('confirm');
 
 if ($action == 'delete' && GETPOST('confirm') == 'yes') {
 	$det = new productstockdet($db);
@@ -184,7 +183,7 @@ if ($id && $action != 'modify') {
         }
 		else{
 			$suppr = '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$det->id.'&action=ask_delete">'.$langs->trans('Delete').'</a>';
-			$modify = '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$det->id.'&action=ask_modify">'.$langs->trans('Modify').'</a>';
+			$modify = '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$det->id.'&action=modify">'.$langs->trans('Modify').'</a>';
 		}
 
         print '</table></div>';
@@ -193,9 +192,7 @@ if ($id && $action != 'modify') {
 		if ($action == 'ask_delete') {
 			$formconfirm = $form->form_confirm($_SERVER["PHP_SELF"] . '?id=' . $det->id, $langs->trans('Delete'), $langs->trans('ConfirmDelete'), 'delete', '', 'no', 1);
 		}// if the user clicks on the modify button, show the confirmation pop-up
-		else if ($action == 'ask_modify') {
-			$formconfirm = $form->form_confirm($_SERVER["PHP_SELF"] . '?id=' . $det->id, $langs->trans('Modify'), $langs->trans('ConfirmModify'), 'modify', '', 'no', 1);
-		}
+
     } else {
         //error
       $mesg = '<div class="error">'.$langs->trans('ErrorForbidden').'</div>';
@@ -203,7 +200,7 @@ if ($id && $action != 'modify') {
     }
 }
 
-if ($id && $action == 'modify' && $confirm == 'yes') {
+if ($id && $action == 'modify') {
     $det = new Productstockdet($db);
 	$det->fetch($id);
 	$form = new Form($db);
