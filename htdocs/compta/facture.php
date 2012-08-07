@@ -1072,21 +1072,27 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
             //get the detailedstock line id
             $detid = $det->exists($serial);
             //check if the serial exists
-            if ($detid > 0) {
-                $det->fetch($detid);
-                //check only if the serial field wasn't empty
-                if ($serial != '') {
-                    //check if the serial number is related to the product we added
-                    if ($det->fk_product != GETPOST('idprod')) {
-                        $result = -1;
-                        $mesg = '<div class="error">' . $langs->trans('SerialNotRelatedToProduct') . '</div>';
-                    }
-                    //quantity has to be 1 if there's a serial number
-                    if ($_POST['qty'] != 1) {
-                        $result = -1;
-                        $mesg = '<div class="warning">' . $langs->trans('QtyMustBe1') . '</div>';
-                    }
-                }
+            if ($detid > 0){
+				$det->fetch($detid);
+				if($det->fk_invoice_line){
+					$result = -1;
+					$mesg = '<div class="error">' . $langs->trans('SerialAlreadyExists') . '</div>';
+				}
+				else{
+					//check only if the serial field wasn't empty
+					if ($serial != '') {
+						//check if the serial number is related to the product we added
+						if ($det->fk_product != GETPOST('idprod')) {
+							$result = -1;
+							$mesg = '<div class="error">' . $langs->trans('SerialNotRelatedToProduct') . '</div>';
+						}
+						//quantity has to be 1 if there's a serial number
+						if ($_POST['qty'] != 1) {
+							$result = -1;
+							$mesg = '<div class="warning">' . $langs->trans('QtyMustBe1') . '</div>';
+						}
+					}
+				}
             } else {
               if(($_POST['qty'] != 1)) {
                 $result = -1;
