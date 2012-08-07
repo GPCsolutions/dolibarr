@@ -773,9 +773,10 @@ class Productstockdet extends CommonObject
 	 * @param type $fk_product
 	 * @return int number of results if ok, else -1 
 	 */
-	public function count($fk_product){
+	public function count($fk_product, $filter=''){
 		global $conf;
 		$sql = 'select rowid from '.MAIN_DB_PREFIX.'product_stock_det where fk_product = '.$fk_product .' and entity = '.$conf->entity;
+		if($filter != '') $sql .= ' and '.$filter;
 		$resql = $this->db->query($sql);
 		if($resql){
 			return $this->db->num_rows($resql);

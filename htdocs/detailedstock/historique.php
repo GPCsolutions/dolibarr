@@ -32,6 +32,13 @@ $langs->load("products");
 $langs->load("orders");
 $langs->load("bills");
 $langs->load("stocks");
+$page=GETPOST('page','int');
+$negpage=GETPOST('negpage','int');
+if ($negpage)
+{
+    $page=$_GET["nbpage"] - $negpage;
+    if ($page > $_GET["nbpage"]) $page = $_GET["nbpage"];
+}
 
 /*
  * View
@@ -59,44 +66,84 @@ if ($_GET["id"] || $_GET["ref"]) {
 		if ($product->isproduct()) {
 			
 			include(DOL_DOCUMENT_ROOT . '/detailedstock/tpl/infosProduct.tpl.php');
+			$det = new Productstockdet($db);
+			$nbline = $det->count($product->id, 'tms_o is not null');
+			$viewline = empty($conf->global->MAIN_SIZE_LISTE_LIMIT)?20:$conf->global->MAIN_SIZE_LISTE_LIMIT;
+			$total_lines = $nbline;
+		
+			if ($nbline > $viewline ) $limit = $nbline - $viewline ;
+			else $limit = $viewline;
+			
+			if ($page > 0)
+			{
+				$limitsql = $nbline - ($page * $viewline);
+				if ($limitsql < $viewline) $limitsql = $viewline;
+					$nbline = $limitsql;
+			}
+			else
+			{
+				$page = 0;
+				$limitsql = $nbline;
+			}
 
 			$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id . ' and tms_o is not null and entity = ' . $conf->entity;
 			$sql.= ' order by tms_o DESC';
+			$sql.= $db->plimit($limitsql, 0);
 			$resql = $db->query($sql);
 			if ($resql) {
 				if ($db->num_rows($resql) > 0) {
 					print '<br><table class="noborder" width="100%">';
+					//$navig='';
+					$navig.='<form action="'.$_SERVER["PHP_SELF"].'?id='.$product->id.'" name="newpage" method="GET">';
+					$nbpage=floor($total_lines/$viewline)+($total_lines % $viewline > 0?1:0);  // Nombre de page total
+					//print 'nbpage='.$nbpage.' viewline='.$viewline.' limitsql='.$limitsql;
+					if ($limitsql > $viewline) $navig.='<a href="historique.php?id='.$product->id.'&amp;page='.($page+1).'">'.img_previous().'</a>';
+					$navig.= $langs->trans("Page")." "; // ' Page ';
+					$navig.='<input type="text" name="negpage" size="1" class="flat" value="'.($nbpage-$page).'">';
+					$navig.='<input type="hidden" name="nbpage"  value="'.$nbpage.'">';
+					$navig.='<input type="hidden" name="id" value="'.$product->id.'">';
+					$navig.='/'.$nbpage.' ';
+					if ($total_lines > $limitsql )
+					{
+						$navig.= '<a href="historique.php?id='.$product->id.'&page='.($page-1).'">'.img_next().'</a>';
+					}
+					$navig.='</form>';
 					print '<caption><b><u>' . $langs->trans('History') . '</u></b></caption>';
+					print '<tr><td colspan="9" align="right">'.$navig.'</td></tr>';
 					print '<tr class="liste_titre"><td>' . $langs->trans('Element') . '</td>';
 					print '<td align="right">'.$langs->trans('Date').'</td>';
 					print '<td align="right">' . $langs->trans("SerialNumber") . '</td>';
 					print '<td align="right">' . $langs->trans("Invoice") . '</td>';
 					print '</tr>';
+					$i = 0;
 					while ($obj = $db->fetch_object($resql)) {
-						$det = new Productstockdet($db);
-						$res = $det->fetch($obj->rowid);
-						if ($res) {
-							$detId = '<a href="/detailedstock/fiche.php?id=' . $det->id . '">' . img_object($langs->trans("ShowProduct"),
-									'product') . '</a>';
-							print '<tr><td>' . $detId . '</td>';
-							print '<td align="right">'.date('d/m/y', $det->tms_o).'</td>';
-							print '<td align="right">' . $form->textwithpicto($det->serial, $det->getSerialTypeLabel(), 1) . '</td>';
-							print '<td align="right">';
-							$invoiceline = new FactureLigne($db);
-							$fetchline = $invoiceline->fetch($det->fk_invoice_line);
-							if($fetchline){
-								$invoice = new Facture($db);
-								$fetch = $invoice->fetch($invoiceline->fk_facture);
-								if($fetch){
-									print $invoice->getNomUrl();
+						if($i >= ($nbline - $viewline)){
+							$det = new Productstockdet($db);
+							$res = $det->fetch($obj->rowid);
+							if ($res) {
+								$detId = '<a href="/detailedstock/fiche.php?id=' . $det->id . '">' . img_object($langs->trans("ShowProduct"),
+										'product') . '</a>';
+								print '<tr><td>' . $detId . '</td>';
+								print '<td align="right">'.date('d/m/y', $det->tms_o).'</td>';
+								print '<td align="right">' . $form->textwithpicto($det->serial, $det->getSerialTypeLabel(), 1) . '</td>';
+								print '<td align="right">';
+								$invoiceline = new FactureLigne($db);
+								$fetchline = $invoiceline->fetch($det->fk_invoice_line);
+								if($fetchline){
+									$invoice = new Facture($db);
+									$fetch = $invoice->fetch($invoiceline->fk_facture);
+									if($fetch){
+										print $invoice->getNomUrl();
+									}
 								}
+								print '</td>';
+								print '</tr>';
+							} else {
+								$this->error = "Error " . $this->db->lasterror();
+								dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
 							}
-							print '</td>';
-							print '</tr>';
-						} else {
-							$this->error = "Error " . $this->db->lasterror();
-							dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
 						}
+						$i++;
 					}
 					print '</table>';
 				}
