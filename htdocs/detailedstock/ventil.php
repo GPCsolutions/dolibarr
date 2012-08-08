@@ -62,34 +62,41 @@ if ($id) {
               $newDet->fk_supplier = $suppid;
               $newDet->fk_dispatch_line = $id;
               //default $valid value is 1 in case we don't need to go through the validation process
-              $valid = 1;
-              //if a serial type is defined
-              if ($newDet->fk_serial_type) {
-                  //get the appropriate serial type object
-                  $serial = new Serialtype($db);
-                  if ($serial->fetch($newDet->fk_serial_type)) {
-                      //if the serial is active, check if it's valid
-                      if ($serial->active) {
-                          $valid = $serial->validate($newDet->serial);
-                      }
-                  } else {
-                      //error
-                  }
-              }
-              //if nothing went wrong, the object is saved in the database
-              if ($valid) {
-                  $newid = $newDet->create($user);
-                  $reste --;
-                  unset($action);
-                  if ($reste > 0) {
-                      $action = 'add';
-                      $mesg = '<div class="ok">' . $langs->trans('DetailedLineAdded') . '</div>';
-                  }
-              } else {
-                  //else, prepare the error message and go back to add mode
-                  $mesg = '<div class="error">' . $langs->trans('InvalidCode') . '</div>';
-                  $action = 'add';
-              }
+			  $doublons = $newDet->exists($newDet->serial, $newDet->fk_product, $newDet->fk_serial_type);
+			  if($doublons == -1){
+				$valid = 1;
+				//if a serial type is defined
+				if ($newDet->fk_serial_type) {
+					//get the appropriate serial type object
+					$serial = new Serialtype($db);
+					if ($serial->fetch($newDet->fk_serial_type)) {
+						//if the serial is active, check if it's valid
+						if ($serial->active) {
+							$valid = $serial->validate($newDet->serial);
+						}
+					} else {
+						//error
+					}
+				}
+				//if nothing went wrong, the object is saved in the database
+				if ($valid) {
+					$newid = $newDet->create($user);
+					$reste --;
+					unset($action);
+					if ($reste > 0) {
+						$action = 'add';
+						$mesg = '<div class="ok">' . $langs->trans('DetailedLineAdded') . '</div>';
+					}
+				} else {
+					//else, prepare the error message and go back to add mode
+					$mesg = '<div class="error">' . $langs->trans('InvalidCode') . '</div>';
+					$action = 'add';
+				}
+			  }
+			  else{
+				  $mesg = '<div class="error">' . $langs->trans('SerialAlreadyExists') . '</div>';
+				  $action = 'add';
+			  }
           }
           unset($_POST['action']);
           unset($_POST['warehouse']);
