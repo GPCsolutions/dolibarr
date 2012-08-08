@@ -31,7 +31,13 @@ $langs->load("products");
 $langs->load("orders");
 $langs->load("bills");
 $langs->load("stocks");
-
+$page=GETPOST('page','int');
+$negpage=GETPOST('negpage','int');
+if ($negpage)
+{
+    $page=$_GET["nbpage"] - $negpage;
+    if ($page > $_GET["nbpage"]) $page = $_GET["nbpage"];
+}
 /*
  * View
  */
@@ -105,11 +111,30 @@ if ($_GET["id"] || $_GET["ref"]) {
 
         // Ref
         if ($product->isproduct()) {
-			print '<table class="border" width="100%">';
             include(DOL_DOCUMENT_ROOT . '/detailedstock/tpl/infosProduct.tpl.php');
             //view mode
             if ($action != 'add') {
+				//pagination
+				$nbline = $det->count($product->id, 'tms_o is null');
+				$viewline = empty($conf->global->MAIN_SIZE_LISTE_LIMIT)?20:$conf->global->MAIN_SIZE_LISTE_LIMIT;
+				$total_lines = $nbline;
+
+				if ($nbline > $viewline ) $limit = $nbline - $viewline ;
+				else $limit = $viewline;
+
+				if ($page > 0)
+				{
+					$limitsql = $nbline - ($page * $viewline);
+					if ($limitsql < $viewline) $limitsql = $viewline;
+						$nbline = $limitsql;
+				}
+				else
+				{
+					$page = 0;
+					$limitsql = $nbline;
+				}
 				$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where fk_product = ' . $product->id.' and tms_o is null and entity = '.$conf->entity;
+				$sql.= $db->plimit($limitsql, 0);
 				$resql = $db->query($sql);
                 if ($resql) {
                     if ($db->num_rows($resql) < $product->stock_reel)
@@ -118,6 +143,19 @@ if ($_GET["id"] || $_GET["ref"]) {
 						print '<table width="100%"><tr><td align="right"><span class="butActionRefused" title="'.$langs->trans("OnlyExistingStock").'">'.$langs->trans('Add').'</span></td></tr></table>';
                     //display each detailled stock line related to this product
                     if ($db->num_rows($resql) > 0) {
+						$navig.='<form action="'.$_SERVER["PHP_SELF"].'?id='.$product->id.'" name="newpage" method="GET">';
+						$nbpage=floor($total_lines/$viewline)+($total_lines % $viewline > 0?1:0);  // Nombre de page total
+						if ($limitsql > $viewline) $navig.='<a href="'. $_SERVER["PHP_SELF"].'?id='.$product->id.'&amp;page='.($page+1).'">'.img_previous().'</a>';
+						$navig.= $langs->trans("Page")." "; // ' Page ';
+						$navig.='<input type="text" name="negpage" size="1" class="flat" value="'.($nbpage-$page).'">';
+						$navig.='<input type="hidden" name="nbpage"  value="'.$nbpage.'">';
+						$navig.='<input type="hidden" name="id" value="'.$product->id.'">';
+						$navig.='/'.$nbpage.' ';
+						if ($total_lines > $limitsql )
+						{
+							$navig.= '<a href="'. $_SERVER["PHP_SELF"].'?id='.$product->id.'&page='.($page-1).'">'.img_next().'</a>';
+						}
+						$navig.='</form>';
                         print '<br><table class="noborder" width="100%">';
 						print '<caption><b><u>'.$langs->trans('CurrentDetails').'</u></b></caption>';
                         print '<tr class="liste_titre"><td>'.$langs->trans('Element').'</td>';
@@ -126,38 +164,43 @@ if ($_GET["id"] || $_GET["ref"]) {
                         print '<td align="right">' . $langs->trans("BuyingPrice") . '</td>';
                         print '<td align="right">' . $langs->trans("Warehouse") . '</td>';
                         print '</tr>';
+						$i = 0;
                         while ($obj = $db->fetch_object($resql)) {
-                            $det = new Productstockdet($db);
-                            $res = $det->fetch($obj->rowid);
-                            if ($res) {
-                                $detId = '<a href="/detailedstock/fiche.php?id=' . $det->id . '">' . img_object($langs->trans("ShowProduct"),
-                                        'product') . '</a>';
-                                print '<tr><td>' . $detId . '</td>';
-                                print '<td align="right">' . $form->textwithpicto($det->serial,
-                                        $det->getSerialTypeLabel(), 1) . '</td>';
-                                $soc = new Societe($db);
-                                $infosoc = $soc->fetch($det->fk_supplier);
-                                if ($infosoc) {
-                                    print '<td align="right">' . $soc->getNomUrl() . '</td>';
-                                } else {
-                                    $this->error = "Error " . $this->db->lasterror();
-                                    dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
-                                }
-                                print '<td align="right">' . price($det->price) . ' HT</td>';
-                                $entrepot = new Entrepot($db);
-                                $infoentrepot = $entrepot->fetch($det->fk_entrepot);
-                                if ($infoentrepot) {
-                                    print '<td align="right">' . $entrepot->getNomUrl() . '</td>';
-                                } else {
-                                    $this->error = "Error " . $this->db->lasterror();
-                                    dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
-                                }
-                                print '</tr>';
-                            } else {
-                                $this->error = "Error " . $this->db->lasterror();
-                                dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
-                            }
+							if($i >= ($nbline - $viewline)){
+								$det = new Productstockdet($db);
+								$res = $det->fetch($obj->rowid);
+								if ($res) {
+									$detId = '<a href="/detailedstock/fiche.php?id=' . $det->id . '">' . img_object($langs->trans("ShowProduct"),
+											'product') . '</a>';
+									print '<tr><td>' . $detId . '</td>';
+									print '<td align="right">' . $form->textwithpicto($det->serial,
+											$det->getSerialTypeLabel(), 1) . '</td>';
+									$soc = new Societe($db);
+									$infosoc = $soc->fetch($det->fk_supplier);
+									if ($infosoc) {
+										print '<td align="right">' . $soc->getNomUrl() . '</td>';
+									} else {
+										$this->error = "Error " . $this->db->lasterror();
+										dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
+									}
+									print '<td align="right">' . price($det->price) . ' HT</td>';
+									$entrepot = new Entrepot($db);
+									$infoentrepot = $entrepot->fetch($det->fk_entrepot);
+									if ($infoentrepot) {
+										print '<td align="right">' . $entrepot->getNomUrl() . '</td>';
+									} else {
+										$this->error = "Error " . $this->db->lasterror();
+										dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
+									}
+									print '</tr>';
+								} else {
+									$this->error = "Error " . $this->db->lasterror();
+									dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
+								}
+							}
+							$i++;
                         }
+						print '<tr><td colspan="9" align="right">'.$navig.'</td></tr>';
 						print '</table>';
 						print '<br><table width="100%"><tr><td align="right"><a class="butAction" href="/detailedstock/historique.php?id=' . $product->id . '">' . $langs->trans("SeeHistory") . '</a></td></tr></table>';
                     }
