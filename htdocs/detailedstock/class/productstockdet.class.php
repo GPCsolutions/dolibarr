@@ -686,7 +686,7 @@ class Productstockdet extends CommonObject
      * @param string $serial
      * @return integer -1 if $serial doesn't exist; else returns the related detailedstock line id
      */
-    public function exists($serial)
+    public function exists($serial, $fk_product='', $fk_serial_type='')
     {
       global $conf;
         if ($serial == '') {
@@ -695,6 +695,8 @@ class Productstockdet extends CommonObject
             $sql = 'select rowid from ' . MAIN_DB_PREFIX . 'product_stock_det where serial = ' . $serial;
         }
         $sql .= ' and entity = '.$conf->entity;
+		if($fk_product) $sql .= ' and fk_product = '.$fk_product;
+		if($fk_serial_type) $sql .= ' and fk_serial_type = '.$fk_serial_type;
         $resql = $this->db->query($sql);
         if ($resql && $this->db->num_rows($resql) > 0) {
             $obj = $this->db->fetch_object($db);
