@@ -240,8 +240,9 @@ if ($_GET["id"] || $_GET["ref"]) {
                 print '</table></form>';
             }
         } else {
+			print '<table class="border" width="100%">';
             print '<tr>';
-            print '<td width="30%">' . $langs->trans("UnavailableForServices") . '</td><td>';
+            print '<td width="50%">' . $langs->trans("UnavailableForServices") . '</td><td>';
             print $form->showrefnav($product, 'ref', '', 1, 'ref', ' ');
             print '</td>';
             print '</tr>';
