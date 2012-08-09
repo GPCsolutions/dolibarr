@@ -143,11 +143,13 @@ if ($id) {
               dol_syslog(get_class($this) . "::fetch " . $this->error, LOG_ERR);
           }
           print '<td>' . $supplier . '</td>';
-          $prod = new Product($db);
-          $prod->fetch($dispatchline->fk_product);
-          $price = $prod->price;
-          print '<td>' . price($price) . '</td>';
-          print '<input type="hidden" name="price" value="' . $price . '"/>';
+		  $sql = 'select price from '.MAIN_DB_PREFIX.'product_fournisseur_price where fk_product = '.$dispatchline->fk_product.' and fk_soc = '.$suppid;
+		  $resql = $db->query($sql);
+		  if($resql && $db->num_rows($resql) > 0){
+			  $obj = $db->fetch_object($resql);
+		  }
+          print '<td>' . price($obj->price) . '</td>';
+          print '<input type="hidden" name="price" value="' . $obj->price . '"/>';
           $warehouse = '';
           $ware = new Entrepot($db);
           $wareinfo = $ware->fetch($dispatchline->fk_entrepot);
