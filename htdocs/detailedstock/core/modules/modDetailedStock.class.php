@@ -56,7 +56,7 @@ class modDetailedStock extends DolibarrModules
         // Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
         $this->description = "Stock détaillés";
         // Possible values for version are: 'development', 'experimental', 'dolibarr' or version
-        $this->version = 'Test';
+        $this->version = 'experimental';
         // Key used in llx_const table to save module status enabled/disabled (where detailedStock is value of property name of module in uppercase)
         $this->const_name = 'MAIN_MODULE_' . strtoupper($this->name);
         // Where to store the module in setup page (0=common,1=interface,2=others,3=very specific)
