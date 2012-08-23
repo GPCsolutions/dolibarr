@@ -20,7 +20,7 @@
  *	\ingroup    produit
  *	\brief      File with class of actions for canvas product
  */
-include_once(DOL_DOCUMENT_ROOT.'/product/class/product.class.php');
+include_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 
 
 /**
@@ -106,7 +106,7 @@ class ActionsCardProduct
 		$this->tpl['description'] = nl2br($this->description);
 
 		// Statut
-		$this->tpl['status'] = $this->getLibStatut(2);
+		$this->tpl['status'] = $this->object->getLibStatut(2);
 
 		// Note
 		$this->tpl['note'] = nl2br($this->note);

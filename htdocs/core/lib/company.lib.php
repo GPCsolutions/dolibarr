@@ -222,12 +222,18 @@ function getCountry($id,$withcode='',$dbtouse=0,$outputlangs='',$entconv=1)
 {
     global $db,$langs;
 
+    // Check parameters
+    if (empty($id))
+    {
+    	if ($withcode === 'all') return array('id'=>'','code'=>'','label'=>'');
+    	else return '';
+    }
     if (! is_object($dbtouse)) $dbtouse=$db;
     if (! is_object($outputlangs)) $outputlangs=$langs;
 
     $sql = "SELECT rowid, code, libelle FROM ".MAIN_DB_PREFIX."c_pays";
     if (is_numeric($id)) $sql.= " WHERE rowid=".$id;
-    else $sql.= " WHERE code='".$id."'";
+    else $sql.= " WHERE code='".$db->escape($id)."'";
 
     dol_syslog("Company.lib::getCountry sql=".$sql);
     $resql=$dbtouse->query($sql);
@@ -251,10 +257,11 @@ function getCountry($id,$withcode='',$dbtouse=0,$outputlangs='',$entconv=1)
         }
         else
         {
-            return "NotDefined";
+            return 'NotDefined';
         }
     }
     else dol_print_error($dbtouse,'');
+    return 'Error';
 }
 
 /**
@@ -424,7 +431,7 @@ function show_projects($conf,$langs,$db,$object,$backtopage='')
 
             if ($num > 0)
             {
-                require_once(DOL_DOCUMENT_ROOT."/projet/class/project.class.php");
+                require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 
                 $projectstatic = new Project($db);
 
@@ -613,7 +620,7 @@ function show_addresses($conf,$langs,$db,$object,$backtopage='')
 	global $user;
 	global $bc;
 
-	require_once(DOL_DOCUMENT_ROOT."/societe/class/address.class.php");
+	require_once DOL_DOCUMENT_ROOT.'/societe/class/address.class.php';
 
 	$addressstatic = new Address($db);
 	$num = $addressstatic->fetch_lines($object->id);
@@ -716,7 +723,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
 
     if ($conf->agenda->enabled)
     {
-        require_once(DOL_DOCUMENT_ROOT."/comm/action/class/actioncomm.class.php");
+        require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
         $actionstatic=new ActionComm($db);
         $userstatic=new User($db);
         $contactstatic = new Contact($db);
@@ -988,10 +995,10 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
 
     if ($conf->agenda->enabled || ($conf->mailing->enabled && ! empty($objcon->email)))
     {
-        require_once(DOL_DOCUMENT_ROOT."/comm/action/class/actioncomm.class.php");
-        require_once(DOL_DOCUMENT_ROOT."/comm/propal/class/propal.class.php");
-        require_once(DOL_DOCUMENT_ROOT."/commande/class/commande.class.php");
-        require_once(DOL_DOCUMENT_ROOT."/compta/facture/class/facture.class.php");
+        require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+        require_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
+        require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
+        require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
         $actionstatic=new ActionComm($db);
         $userstatic=new User($db);
         $contactstatic = new Contact($db);

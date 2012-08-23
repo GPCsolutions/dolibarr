@@ -25,7 +25,7 @@
  *	\ingroup    produit
  *	\brief      File of class to manage predefined products or services
  */
-require_once(DOL_DOCUMENT_ROOT ."/core/class/commonobject.class.php");
+require_once DOL_DOCUMENT_ROOT .'/core/class/commonobject.class.php';
 
 
 /**
@@ -330,7 +330,7 @@ class Product extends CommonObject
 							{
 								if ($this->catid > 0)
 								{
-									require_once(DOL_DOCUMENT_ROOT ."/categories/class/categorie.class.php");
+									require_once DOL_DOCUMENT_ROOT .'/categories/class/categorie.class.php';
 									$cat = new Categorie($this->db, $this->catid);
 									$cat->add_type($this,"product");
 								}
@@ -375,7 +375,7 @@ class Product extends CommonObject
 		if (! $error && ! $notrigger)
 		{
 			// Appel des triggers
-			include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
 			$interface=new Interfaces($this->db);
 			$result=$interface->run_triggers('PRODUCT_CREATE',$this,$user,$langs,$conf);
 			if ($result < 0) { $error++; $this->errors=$interface->errors; }
@@ -486,7 +486,7 @@ class Product extends CommonObject
 			}
 
 			// Actions on extra fields (by external module or standard code)
-			include_once(DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php');
+			include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
 			$hookmanager=new HookManager($this->db);
 			$hookmanager->initHooks(array('productdao'));
 			$parameters=array('id'=>$this->id);
@@ -504,7 +504,7 @@ class Product extends CommonObject
 			if (! $error && ! $notrigger)
 			{
 				// Appel des triggers
-				include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+				include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
 				$interface=new Interfaces($this->db);
 				$result=$interface->run_triggers('PRODUCT_MODIFY',$this,$user,$langs,$conf);
 				if ($result < 0) { $error++; $this->errors=$interface->errors; }
@@ -578,7 +578,7 @@ class Product extends CommonObject
 			    if (! $error)
 			    {
 			        // Appel des triggers
-			        include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+			        include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
 			        $interface=new Interfaces($this->db);
 			        $result=$interface->run_triggers('PRODUCT_DELETE',$this,$user,$langs,$conf);
 			        if ($result < 0) {
@@ -1035,7 +1035,7 @@ class Product extends CommonObject
 	 */
 	function fetch($id='',$ref='',$ref_ext='')
 	{
-	    include_once(DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php');
+	    include_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 
 		global $langs, $conf;
 
@@ -2379,7 +2379,7 @@ class Product extends CommonObject
 		{
 			$this->db->begin();
 
-			require_once(DOL_DOCUMENT_ROOT ."/product/stock/class/mouvementstock.class.php");
+			require_once DOL_DOCUMENT_ROOT .'/product/stock/class/mouvementstock.class.php';
 
 			$op[0] = "+".trim($nbpiece);
 			$op[1] = "-".trim($nbpiece);
@@ -2457,7 +2457,7 @@ class Product extends CommonObject
 	 */
 	function add_photo($sdir, $file, $maxWidth = 160, $maxHeight = 120)
 	{
-		require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
 		$dir = $sdir .'/'. get_exdir($this->id,2) . $this->id ."/photos";
 
@@ -2489,7 +2489,7 @@ class Product extends CommonObject
 	 */
 	function add_thumb($file, $maxWidth = 160, $maxHeight = 120)
 	{
-		require_once(DOL_DOCUMENT_ROOT ."/core/lib/images.lib.php");
+		require_once DOL_DOCUMENT_ROOT .'/core/lib/images.lib.php';
 
 		$file_osencoded=dol_osencode($file);
 		if (file_exists($file_osencoded))
@@ -2542,7 +2542,7 @@ class Product extends CommonObject
 	 */
 	function is_photo_available($sdir)
 	{
-		include_once(DOL_DOCUMENT_ROOT ."/core/lib/files.lib.php");
+		include_once DOL_DOCUMENT_ROOT .'/core/lib/files.lib.php';
 
 		$pdir = get_exdir($this->id,2) . $this->id ."/photos/";
 		$dir = $sdir . '/'. $pdir;
@@ -2584,8 +2584,8 @@ class Product extends CommonObject
 	{
 		global $conf,$user,$langs;
 
-		include_once(DOL_DOCUMENT_ROOT ."/core/lib/files.lib.php");
-		include_once(DOL_DOCUMENT_ROOT ."/core/lib/images.lib.php");
+		include_once DOL_DOCUMENT_ROOT .'/core/lib/files.lib.php';
+		include_once DOL_DOCUMENT_ROOT .'/core/lib/images.lib.php';
 
 		$pdir = get_exdir($this->id,2) . $this->id ."/photos/";
 		$dir = $sdir . '/'. $pdir;
@@ -2593,23 +2593,6 @@ class Product extends CommonObject
 		$pdirthumb = $pdir.'thumbs/';
 
 		$return ='<!-- Photo -->'."\n";
-        /*$return.="<script type=\"text/javascript\">
-        jQuery(function() {
-            jQuery('a.lightbox').lightBox({
-                overlayBgColor: '#888',
-                overlayOpacity: 0.6,
-                imageLoading: '".DOL_URL_ROOT."/theme/eldy/img/working.gif',
-                imageBtnClose: '".DOL_URL_ROOT."/theme/eldy/img/previous.png',
-                imageBtnPrev: '".DOL_URL_ROOT."/theme/eldy/img/1leftarrow.png',
-                imageBtnNext: '".DOL_URL_ROOT."/theme/eldy/img/1rightarrow.png',
-                containerResizeSpeed: 350,
-                txtImage: '".$langs->trans("Image")."',
-                txtOf: '".$langs->trans("on")."',
-                fixedNavigation:false
-            	});
-            });
-        </script>\n";
-        */
 		$nbphoto=0;
 
 		$dir_osencoded=dol_osencode($dir);
@@ -2647,7 +2630,7 @@ class Product extends CommonObject
     						if ($nbbyrow) $return.= '<td width="'.ceil(100/$nbbyrow).'%" class="photo">';
 
     						$return.= "\n";
-    						$return.= '<a href="'.DOL_URL_ROOT.'/viewimage.php?modulepart=product&entity='.$this->entity.'&file='.urlencode($pdir.$photo).'" class="lightbox" target="_blank">';
+    						$return.= '<a href="'.DOL_URL_ROOT.'/viewimage.php?modulepart=product&entity='.$this->entity.'&file='.urlencode($pdir.$photo).'" class="aphoto" target="_blank">';
 
     						// Show image (width height=$maxHeight)
     						// Si fichier vignette disponible et image source trop grande, on utilise la vignette, sinon on utilise photo origine
@@ -2744,7 +2727,7 @@ class Product extends CommonObject
 	 */
 	function liste_photos($dir,$nbmax=0)
 	{
-		include_once(DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php');
+		include_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
 		$nbphoto=0;
 		$tabobj=array();
@@ -2797,7 +2780,7 @@ class Product extends CommonObject
 	 */
 	function delete_photo($file)
 	{
-        require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
+        require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
         $dir = dirname($file).'/'; // Chemin du dossier contenant l'image d'origine
 		$dirthumb = $dir.'/thumbs/'; // Chemin du dossier contenant la vignette

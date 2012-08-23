@@ -25,10 +25,10 @@
  *	\ingroup    ficheinter
  *	\brief      Fichier de la classe permettant de generer les fiches d'intervention au modele Soleil
  */
-require_once(DOL_DOCUMENT_ROOT."/core/modules/fichinter/modules_fichinter.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/company.lib.php");
-require_once(DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php');
-require_once(DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php');
+require_once DOL_DOCUMENT_ROOT.'/core/modules/fichinter/modules_fichinter.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 
 
 /**
@@ -86,7 +86,8 @@ class pdf_soleil extends ModelePDFFicheinter
 
 		// Recupere emmetteur
 		$this->emetteur=$mysoc;
-		if (! $this->emetteur->code_pays) $this->emetteur->code_pays=substr($langs->defaultlang,-2);    // By default, if not defined
+		if (empty($this->emetteur->country_code))
+			$this->emetteur->country_code = substr($langs->defaultlang,-2);    // By default, if not defined
 
 		// Defini position des colonnes
 		$this->posxdesc=$this->marge_gauche+1;
@@ -134,6 +135,9 @@ class pdf_soleil extends ModelePDFFicheinter
 			if (file_exists($dir))
 			{
                 $pdf=pdf_getInstance($this->format);
+                $heightforinfotot = 80;	// Height reserved to output the info and total part (value include bottom margin)
+                $heightforfooter = 25;	// Height reserved to output the footer (value include bottom margin)
+                $pdf->SetAutoPageBreak(1,0);
 
                 if (class_exists('TCPDF'))
                 {
@@ -160,7 +164,6 @@ class pdf_soleil extends ModelePDFFicheinter
 				if ($conf->global->MAIN_DISABLE_PDF_COMPRESSION) $pdf->SetCompression(false);
 
 				$pdf->SetMargins($this->marge_gauche, $this->marge_haute, $this->marge_droite);   // Left, Top, Right
-				$pdf->SetAutoPageBreak(1,0);
 
 				// New page
 				$pdf->AddPage();
@@ -268,53 +271,38 @@ class pdf_soleil extends ModelePDFFicheinter
 
 						$nexY+=2;    // Passe espace entre les lignes
 
-						// Cherche nombre de lignes a venir pour savoir si place suffisante
-						if ($i < ($nblines - 1) && empty($hidedesc))	// If it's not last line
-						{
-							//on recupere la description du produit suivant
-							$follow_descproduitservice = $objectligne->desc;
-							//on compte le nombre de ligne afin de verifier la place disponible (largeur de ligne 52 caracteres)
-							$nblineFollowDesc = (dol_nboflines_bis($follow_descproduitservice,52,$outputlangs->charset_output)*3);
-						}
-						else	// If it's last line
-						{
-							$nblineFollowDesc = 0;
-						}
-
-						// Test if a new page is required
-						if ($pagenb == 1)
-						{
-							$tab_top_in_current_page=$tab_top;
-							$tab_height_in_current_page=$tab_height;
-						}
-						else
-						{
-							$tab_top_in_current_page=$tab_top_newpage;
-							$tab_height_in_current_page=$tab_height_middlepage;
-						}
-						if (($nexY+$nblineFollowDesc) > ($tab_top_in_current_page+$tab_height_in_current_page) && $i < ($nblines - 1))
+						// Detect if some page were added automatically and output _tableau for past pages
+						// FIXME $pageposafter not defined
+						while ($pagenb < $pageposafter)
 						{
 							if ($pagenb == 1)
 							{
-								$this->_tableau($pdf, $tab_top, $tab_height + 20, $nexY, $outputlangs);
+								$this->_tableau($pdf, $tab_top, $this->page_hauteur - $tab_top - $heightforfooter, 0, $outputlangs, 0, 1);
 							}
 							else
 							{
-								$this->_tableau($pdf, $tab_top_newpage, $tab_height_middlepage, $nexY, $outputlangs);
+								$this->_tableau($pdf, $tab_top_newpage, $this->page_hauteur - $tab_top_newpage - $heightforfooter, 0, $outputlangs, 1, 1);
 							}
-
 							$this->_pagefoot($pdf,$object,$outputlangs);
-
+							$pagenb++;
+							$pdf->setPage($pagenb);
+							$pdf->setPageOrientation('', 1, 0);	// The only function to edit the bottom margin of current page to set it.
+						}
+						if (isset($object->lines[$i+1]->pagebreak) && $object->lines[$i+1]->pagebreak)
+						{
+							if ($pagenb == 1)
+							{
+								$this->_tableau($pdf, $tab_top, $this->page_hauteur - $tab_top - $heightforfooter, 0, $outputlangs, 0, 1);
+							}
+							else
+							{
+								$this->_tableau($pdf, $tab_top_newpage, $this->page_hauteur - $tab_top_newpage - $heightforfooter, 0, $outputlangs, 1, 1);
+							}
+							$this->_pagefoot($pdf,$object,$outputlangs);
 							// New page
 							$pdf->AddPage();
-				            if (! empty($tplidx)) $pdf->useTemplate($tplidx);
+							if (! empty($tplidx)) $pdf->useTemplate($tplidx);
 							$pagenb++;
-							$this->_pagehead($pdf, $object, 0, $outputlangs);
-							$pdf->SetFont('','', $default_font_size - 1);
-							$pdf->MultiCell(0, 3, '');		// Set interline to 3
-							$pdf->SetTextColor(0,0,0);
-
-							$nexY = $tab_top_newpage + 7;
 						}
 					}
 				}
@@ -322,13 +310,13 @@ class pdf_soleil extends ModelePDFFicheinter
 				// Show square
 				if ($pagenb == 1)
 				{
-					$this->_tableau($pdf, $tab_top, $tab_height, $nexY, $outputlangs);
-					$bottomlasttab=$tab_top + $tab_height + 1;
+					$this->_tableau($pdf, $tab_top, $this->page_hauteur - $tab_top - $heightforinfotot, 0, $outputlangs, 0, 0);
+					$bottomlasttab=$this->page_hauteur - $heightforinfotot + 1;
 				}
 				else
 				{
-					$this->_tableau($pdf, $tab_top_newpage, $tab_height_newpage, $nexY, $outputlangs);
-					$bottomlasttab=$tab_top_newpage + $tab_height_newpage + 1;
+					$this->_tableau($pdf, $tab_top_newpage, $this->page_hauteur - $tab_top_newpage - $heightforinfotot, 0, $outputlangs, 1, 0);
+					$bottomlasttab=$this->page_hauteur - $heightforinfotot + 1;
 				}
 
 				$pdf->SetFont('','', $default_font_size - 1);   // On repositionne la police par defaut
@@ -367,9 +355,11 @@ class pdf_soleil extends ModelePDFFicheinter
 	 *   @param		string		$tab_height		Height of table (rectangle)
 	 *   @param		int			$nexY			Y
 	 *   @param		Translate	$outputlangs	Langs object
+	 *   @param		int			$hidetop		Hide top bar of array
+	 *   @param		int			$hidebottom		Hide bottom bar of array
 	 *   @return	void
 	 */
-	function _tableau(&$pdf, $tab_top, $tab_height, $nexY, $outputlangs)
+	function _tableau(&$pdf, $tab_top, $tab_height, $nexY, $outputlangs, $hidetop=0, $hidebottom=0)
 	{
 		global $conf;
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
@@ -406,13 +396,13 @@ class pdf_soleil extends ModelePDFFicheinter
 		$pdf->MultiCell(66,5, $outputlangs->transnoentities("NameAndSignatureOfInternalContact"),0,'L',0);
 
 		$pdf->SetXY(20,235);
-		$pdf->MultiCell(80,30, '', 1);
+		$pdf->MultiCell(80,25, '', 1);
 
 		$pdf->SetXY(110,230);
 		$pdf->MultiCell(80,5, $outputlangs->transnoentities("NameAndSignatureOfExternalContact"),0,'L',0);
 
 		$pdf->SetXY(110,235);
-		$pdf->MultiCell(80,30, '', 1);
+		$pdf->MultiCell(80,25, '', 1);
 	}
 
 	/**
@@ -565,7 +555,7 @@ class pdf_soleil extends ModelePDFFicheinter
 				$carac_client_name=$outputlangs->convToOutputCharset($object->client->nom);
 			}
 
-			$carac_client=pdf_build_address($outputlangs,$this->emetteur,$object->client,$object->contact,$usecontact,'target');
+			$carac_client=pdf_build_address($outputlangs, $this->emetteur, $object->client, (isset($object->contact)?$object->contact:''), $usecontact, 'target');
 
 			// Show recipient
 			$posy=42;

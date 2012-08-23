@@ -28,26 +28,26 @@
  *	\brief      Page to create/see an invoice
  */
 
-require('../main.inc.php');
-require_once(DOL_DOCUMENT_ROOT."/core/class/html.formfile.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/html.formother.class.php");
-require_once(DOL_DOCUMENT_ROOT.'/core/modules/facture/modules_facture.php');
-require_once(DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php');
-require_once(DOL_DOCUMENT_ROOT.'/core/class/discount.class.php');
-require_once(DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php');
-require_once(DOL_DOCUMENT_ROOT."/core/lib/functions2.lib.php");
-require_once(DOL_DOCUMENT_ROOT.'/core/lib/invoice.lib.php');
-require_once(DOL_DOCUMENT_ROOT."/core/lib/date.lib.php");
-if (! empty($conf->commande->enabled)) require_once(DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php');
-if (! empty($conf->projet->enabled))
-{
-	require_once(DOL_DOCUMENT_ROOT.'/projet/class/project.class.php');
-	require_once(DOL_DOCUMENT_ROOT.'/core/lib/project.lib.php');
+require '../main.inc.php';
+require DOL_DOCUMENT_ROOT . '/compta/facture/class/facture.class.php';
+require DOL_DOCUMENT_ROOT . '/compta/paiement/class/paiement.class.php';
+require DOL_DOCUMENT_ROOT . '/core/modules/facture/modules_facture.php';
+require DOL_DOCUMENT_ROOT . '/core/class/discount.class.php';
+require DOL_DOCUMENT_ROOT . '/core/class/html.formfile.class.php';
+require DOL_DOCUMENT_ROOT . '/core/class/html.formother.class.php';
+require DOL_DOCUMENT_ROOT . '/core/lib/invoice.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/functions2.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
+
+if (! empty($conf->commande->enabled)) {
+	require DOL_DOCUMENT_ROOT . '/commande/class/commande.class.php';
+}
+if (! empty($conf->projet->enabled)) {
+	require DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
+	require DOL_DOCUMENT_ROOT . '/core/lib/project.lib.php';
 }
 
 $langs->load('bills');
-//print 'ee'.$langs->trans('BillsCustomer');exit;
-
 $langs->load('companies');
 $langs->load('products');
 $langs->load('main');
@@ -93,7 +93,7 @@ if ($id > 0 || ! empty($ref))
 }
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
-include_once(DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php');
+include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
 $hookmanager=new HookManager($db);
 $hookmanager->initHooks(array('invoicecard'));
 
@@ -311,7 +311,7 @@ else if ($action == "setabsolutediscount" && $user->rights->facture->creer)
     }
     if (! empty($_POST["remise_id_for_payment"]))
     {
-        require_once(DOL_DOCUMENT_ROOT.'/core/class/discount.class.php');
+        require_once DOL_DOCUMENT_ROOT.'/core/class/discount.class.php';
         $discount = new DiscountAbsolute($db);
         $discount->fetch($_POST["remise_id_for_payment"]);
 
@@ -1317,7 +1317,7 @@ else if ($action == 'down' && $user->rights->facture->creer)
  */
 if (GETPOST('addfile'))
 {
-    require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
+    require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
     // Set tmp user directory
     $vardir=$conf->user->dir_output."/".$user->id;
@@ -1332,7 +1332,7 @@ if (GETPOST('addfile'))
  */
 if (! empty($_POST['removedfile']))
 {
-    require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
+    require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
     // Set tmp user directory
     $vardir=$conf->user->dir_output."/".$user->id;
@@ -1422,7 +1422,7 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
                 }
 
                 // Create form object
-                include_once(DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php');
+                include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
                 $formmail = new FormMail($db);
 
                 $attachedfiles=$formmail->get_attached_files();
@@ -1431,7 +1431,7 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
                 $mimetype = $attachedfiles['mimes'];
 
                 // Send mail
-                require_once(DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php');
+                require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
                 $mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,'',$deliveryreceipt,-1);
                 if ($mailfile->error)
                 {
@@ -1453,7 +1453,7 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
                         $object->elementtype	= $object->element;
 
                         // Appel des triggers
-                        include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+                        include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
                         $interface=new Interfaces($db);
                         $result=$interface->run_triggers('BILL_SENTBYMAIL',$object,$user,$langs,$conf);
                         if ($result < 0) { $error++; $this->errors=$interface->errors; }
@@ -1556,7 +1556,7 @@ else if ($action == 'remove_file')
 {
 	if ($object->fetch($id))
 	{
-		require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
 		$object->fetch_thirdparty();
 
@@ -1948,7 +1948,7 @@ if ($action == 'create')
     // Modele PDF
     print '<tr><td>'.$langs->trans('Model').'</td>';
     print '<td>';
-    include_once(DOL_DOCUMENT_ROOT.'/core/modules/facture/modules_facture.php');
+    include_once DOL_DOCUMENT_ROOT.'/core/modules/facture/modules_facture.php';
     $liste=ModelePDFFactures::liste_modeles($db);
     print $form->selectarray('model',$liste,$conf->global->FACTURE_ADDON_PDF);
     print "</td></tr>";
@@ -2195,7 +2195,7 @@ else if ($id > 0 || ! empty($ref))
             $text=$langs->trans('ConfirmValidateBill',$numref);
             if ($conf->notification->enabled)
             {
-                require_once(DOL_DOCUMENT_ROOT ."/core/class/notify.class.php");
+                require_once DOL_DOCUMENT_ROOT .'/core/class/notify.class.php';
                 $notify=new Notify($db);
                 $text.='<br>';
                 $text.=$notify->confirmMessage('NOTIFY_VAL_FAC',$object->socid);
@@ -2205,7 +2205,7 @@ else if ($id > 0 || ! empty($ref))
             if ($object->type != 3 && ! empty($conf->global->STOCK_CALCULATE_ON_BILL) && $object->hasProductsOrServices(1))
             {
                 $langs->load("stocks");
-                require_once(DOL_DOCUMENT_ROOT."/product/class/html.formproduct.class.php");
+                require_once DOL_DOCUMENT_ROOT.'/product/class/html.formproduct.class.php';
                 $formproduct=new FormProduct($db);
                 $label=$object->type==2?$langs->trans("SelectWarehouseForStockIncrease"):$langs->trans("SelectWarehouseForStockDecrease");
                 $formquestion=array(
@@ -2229,7 +2229,7 @@ else if ($id > 0 || ! empty($ref))
             if ($object->type != 3 && ! empty($conf->global->STOCK_CALCULATE_ON_BILL) && $object->hasProductsOrServices(1))
             {
                 $langs->load("stocks");
-                require_once(DOL_DOCUMENT_ROOT."/product/class/html.formproduct.class.php");
+                require_once DOL_DOCUMENT_ROOT.'/product/class/html.formproduct.class.php';
                 $formproduct=new FormProduct($db);
                 $label=$object->type==2?$langs->trans("SelectWarehouseForStockDecrease"):$langs->trans("SelectWarehouseForStockIncrease");
                 $formquestion=array(
@@ -2374,7 +2374,7 @@ else if ($id > 0 || ! empty($ref))
         print '<table class="nobordernopadding" width="100%"><tr><td>';
         print $langs->trans('RefCustomer');
         print '</td>';
-        if ($action != 'refclient' && $object->brouillon) print '<td align="right"><a href="'.$_SERVER['PHP_SELF'].'?action=refclient&amp;id='.$object->id.'">'.img_edit($langs->trans('Modify')).'</a></td>';
+        if ($action != 'refclient' && ! empty($object->brouillon)) print '<td align="right"><a href="'.$_SERVER['PHP_SELF'].'?action=refclient&amp;id='.$object->id.'">'.img_edit($langs->trans('Modify')).'</a></td>';
         print '</tr></table>';
         print '</td>';
         print '<td colspan="5">';
@@ -2547,7 +2547,7 @@ else if ($id > 0 || ! empty($ref))
         print '<table class="nobordernopadding" width="100%"><tr><td>';
         print $langs->trans('Date');
         print '</td>';
-        if ($object->type != 2 && $action != 'editinvoicedate' && $object->brouillon && $user->rights->facture->creer) print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editinvoicedate&amp;facid='.$object->id.'">'.img_edit($langs->trans('SetDate'),1).'</a></td>';
+        if ($object->type != 2 && $action != 'editinvoicedate' && ! empty($object->brouillon) && $user->rights->facture->creer) print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editinvoicedate&amp;facid='.$object->id.'">'.img_edit($langs->trans('SetDate'),1).'</a></td>';
         print '</tr></table>';
         print '</td><td colspan="3">';
 
@@ -2770,7 +2770,7 @@ else if ($id > 0 || ! empty($ref))
         print '<table class="nobordernopadding" width="100%"><tr><td>';
         print $langs->trans('DateMaxPayment');
         print '</td>';
-        if ($object->type != 2 && $action != 'editpaymentterm' && $object->brouillon && $user->rights->facture->creer) print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editpaymentterm&amp;facid='.$object->id.'">'.img_edit($langs->trans('SetDate'),1).'</a></td>';
+        if ($object->type != 2 && $action != 'editpaymentterm' && ! empty($object->brouillon) && $user->rights->facture->creer) print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editpaymentterm&amp;facid='.$object->id.'">'.img_edit($langs->trans('SetDate'),1).'</a></td>';
         print '</tr></table>';
         print '</td><td colspan="3">';
         if ($object->type != 2)
@@ -2782,7 +2782,7 @@ else if ($id > 0 || ! empty($ref))
             else
             {
                 print dol_print_date($object->date_lim_reglement,'daytext');
-                if ($object->date_lim_reglement < ($now - $conf->facture->client->warning_delay) && ! $object->paye && $object->statut == 1 && ! $object->am) print img_warning($langs->trans('Late'));
+                if ($object->date_lim_reglement < ($now - $conf->facture->client->warning_delay) && ! $object->paye && $object->statut == 1 && ! isset($object->am)) print img_warning($langs->trans('Late'));
             }
         }
         else
@@ -2796,7 +2796,7 @@ else if ($id > 0 || ! empty($ref))
         print '<table class="nobordernopadding" width="100%"><tr><td>';
         print $langs->trans('PaymentConditionsShort');
         print '</td>';
-        if ($object->type != 2 && $action != 'editconditions' && $object->brouillon && $user->rights->facture->creer) print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editconditions&amp;facid='.$object->id.'">'.img_edit($langs->trans('SetConditions'),1).'</a></td>';
+        if ($object->type != 2 && $action != 'editconditions' && ! empty($object->brouillon) && $user->rights->facture->creer) print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editconditions&amp;facid='.$object->id.'">'.img_edit($langs->trans('SetConditions'),1).'</a></td>';
         print '</tr></table>';
         print '</td><td colspan="3">';
         if ($object->type != 2)
@@ -2821,7 +2821,7 @@ else if ($id > 0 || ! empty($ref))
         print '<table class="nobordernopadding" width="100%"><tr><td>';
         print $langs->trans('PaymentMode');
         print '</td>';
-        if ($action != 'editmode' && $object->brouillon && $user->rights->facture->creer) print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editmode&amp;facid='.$object->id.'">'.img_edit($langs->trans('SetMode'),1).'</a></td>';
+        if ($action != 'editmode' && ! empty($object->brouillon) && $user->rights->facture->creer) print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editmode&amp;facid='.$object->id.'">'.img_edit($langs->trans('SetMode'),1).'</a></td>';
         print '</tr></table>';
         print '</td><td colspan="3">';
         if ($action == 'editmode')
@@ -2868,7 +2868,7 @@ else if ($id > 0 || ! empty($ref))
         print '<td align="left" colspan="3">'.($object->getLibStatut(4,$totalpaye)).'</td></tr>';
 
         // Project
-        if ($conf->projet->enabled)
+        if (! empty($conf->projet->enabled))
         {
             $langs->load('projects');
             print '<tr>';
@@ -2916,20 +2916,20 @@ else if ($id > 0 || ! empty($ref))
 
         if (! empty($conf->global->MAIN_DISABLE_CONTACTS_TAB))
         {
-        	require_once(DOL_DOCUMENT_ROOT."/contact/class/contact.class.php");
-        	require_once(DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php');
+        	require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+        	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
         	$formcompany= new FormCompany($db);
 
         	$blocname = 'contacts';
         	$title = $langs->trans('ContactsAddresses');
-        	include(DOL_DOCUMENT_ROOT.'/core/tpl/bloc_showhide.tpl.php');
+        	include DOL_DOCUMENT_ROOT.'/core/tpl/bloc_showhide.tpl.php';
         }
 
         if (! empty($conf->global->MAIN_DISABLE_NOTES_TAB))
         {
         	$blocname = 'notes';
         	$title = $langs->trans('Notes');
-        	include(DOL_DOCUMENT_ROOT.'/core/tpl/bloc_showhide.tpl.php');
+        	include DOL_DOCUMENT_ROOT.'/core/tpl/bloc_showhide.tpl.php';
         }
 
         /*
@@ -2939,7 +2939,7 @@ else if ($id > 0 || ! empty($ref))
 
         if ($conf->use_javascript_ajax && $object->statut == 0)
         {
-            include(DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php');
+            include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
         }
 
         print '<table id="tablelines" class="noborder noshadow" width="100%">';
@@ -3210,7 +3210,7 @@ else if ($id > 0 || ! empty($ref))
             // Link for paypal payment
             if ($conf->paypal->enabled && $object->statut != 0)
             {
-                include_once(DOL_DOCUMENT_ROOT.'/paypal/lib/paypal.lib.php');
+                include_once DOL_DOCUMENT_ROOT.'/paypal/lib/paypal.lib.php';
                 print showPaypalPaymentUrl('invoice',$object->ref);
             }
 
@@ -3219,7 +3219,7 @@ else if ($id > 0 || ! empty($ref))
             print '<br>';
 
             // List of actions on element
-            include_once(DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php');
+            include_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
             $formactions=new FormActions($db);
             $somethingshown=$formactions->showactions($object,'invoice',$socid);
 
@@ -3246,7 +3246,7 @@ else if ($id > 0 || ! empty($ref))
             }
 
             $ref = dol_sanitizeFileName($object->ref);
-            include_once(DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php');
+            include_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
             $fileparams = dol_most_recent_file($conf->facture->dir_output . '/' . $ref);
             $file=$fileparams['fullname'];
 
@@ -3278,7 +3278,7 @@ else if ($id > 0 || ! empty($ref))
             print_titre($langs->trans($titreform));
 
             // Cree l'objet formulaire mail
-            include_once(DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php');
+            include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
             $formmail = new FormMail($db);
             $formmail->fromtype = 'user';
             $formmail->fromid   = $user->id;

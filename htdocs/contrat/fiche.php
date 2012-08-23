@@ -26,16 +26,16 @@
  */
 
 require ("../main.inc.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/date.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/price.lib.php");
-require_once(DOL_DOCUMENT_ROOT.'/core/lib/contract.lib.php');
-require_once(DOL_DOCUMENT_ROOT."/contrat/class/contrat.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/modules/contract/modules_contract.php");
-if (! empty($conf->produit->enabled) || ! empty($conf->service->enabled))  require_once(DOL_DOCUMENT_ROOT."/product/class/product.class.php");
-if (! empty($conf->propal->enabled))  require_once(DOL_DOCUMENT_ROOT."/comm/propal/class/propal.class.php");
+require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/price.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/contract.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/contrat/class/contrat.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/modules/contract/modules_contract.php';
+if (! empty($conf->produit->enabled) || ! empty($conf->service->enabled))  require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+if (! empty($conf->propal->enabled))  require_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
 if ($conf->projet->enabled) {
-	require_once(DOL_DOCUMENT_ROOT."/projet/class/project.class.php");
-	require_once(DOL_DOCUMENT_ROOT."/core/lib/project.lib.php");
+	require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
+	require_once DOL_DOCUMENT_ROOT.'/core/lib/project.lib.php';
 }
 
 $langs->load("contracts");
@@ -57,6 +57,11 @@ if ($user->societe_id) $socid=$user->societe_id;
 $result=restrictedArea($user,'contrat',$id);
 
 $usehm=(! empty($conf->global->MAIN_USE_HOURMIN_IN_DATE_RANGE)?$conf->global->MAIN_USE_HOURMIN_IN_DATE_RANGE:0);
+
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+$hookmanager=new HookManager($db);
+$hookmanager->initHooks(array('contractcard'));
 
 $object = new Contrat($db);
 
@@ -633,6 +638,10 @@ if ($action == 'create')
         print '</textarea></td></tr>';
     }
 
+    // Other attributes
+    $parameters=array('colspan' => ' colspan="3"');
+    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
+
     print "</table>\n";
 
     print '<br><center><input type="submit" class="button" value="'.$langs->trans("Create").'"></center>';
@@ -779,6 +788,10 @@ else
             print "</td></tr>";
         }
 
+        // Other attributes
+        $parameters=array('colspan' => ' colspan="3"');
+        $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
+
         print "</table>";
 
         if (! empty($object->brouillon) && $user->rights->contrat->creer)
@@ -790,19 +803,19 @@ else
 
         if (! empty($conf->global->MAIN_DISABLE_CONTACTS_TAB))
         {
-        	require_once(DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php');
+        	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
         	$formcompany= new FormCompany($db);
 
         	$blocname = 'contacts';
         	$title = $langs->trans('ContactsAddresses');
-        	include(DOL_DOCUMENT_ROOT.'/core/tpl/bloc_showhide.tpl.php');
+        	include DOL_DOCUMENT_ROOT.'/core/tpl/bloc_showhide.tpl.php';
         }
 
         if (! empty($conf->global->MAIN_DISABLE_NOTES_TAB))
         {
         	$blocname = 'notes';
         	$title = $langs->trans('Notes');
-        	include(DOL_DOCUMENT_ROOT.'/core/tpl/bloc_showhide.tpl.php');
+        	include DOL_DOCUMENT_ROOT.'/core/tpl/bloc_showhide.tpl.php';
         }
 
 
@@ -1345,7 +1358,7 @@ else
                 else print '<a class="butActionRefused" href="#" title="'.$langs->trans("NotEnoughPermissions").'">'.$langs->trans("Validate").'</a>';
             }
 
-            if ($conf->facture->enabled && $object->statut > 0)
+            if ($conf->facture->enabled && $object->statut > 0 && $object->nbofservicesclosed < $nbofservices)
             {
                 $langs->load("bills");
                 if ($user->rights->facture->creer) print '<a class="butAction" href="'.DOL_URL_ROOT.'/compta/facture.php?action=create&amp;origin='.$object->element.'&amp;originid='.$object->id.'&amp;socid='.$object->thirdparty->id.'">'.$langs->trans("CreateBill").'</a>';

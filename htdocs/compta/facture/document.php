@@ -24,13 +24,13 @@
  *	\brief      Page for attached files on invoices
  */
 
-require("../../main.inc.php");
-require_once(DOL_DOCUMENT_ROOT."/compta/facture/class/facture.class.php");
-require_once(DOL_DOCUMENT_ROOT.'/core/class/discount.class.php');
-require_once(DOL_DOCUMENT_ROOT."/core/lib/invoice.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/images.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/html.formfile.class.php");
+require '../../main.inc.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/discount.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/invoice.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/images.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 
 $langs->load('propal');
 $langs->load('compta');
@@ -38,10 +38,11 @@ $langs->load('other');
 $langs->load("bills");
 
 
-$action		= GETPOST('action');
-$confirm	= GETPOST('confirm');
-$id			= GETPOST('facid','int');
-$ref		= GETPOST('ref');
+$id=(GETPOST('id','int')?GETPOST('id','int'):GETPOST('facid','int'));  // For backward compatibility
+$ref=GETPOST('ref','alpha');
+$socid=GETPOST('socid','int');
+$action=GETPOST('action','alpha');
+$confirm=GETPOST('confirm', 'alpha');
 
 // Security check
 if ($user->societe_id)
@@ -70,7 +71,7 @@ $object = new Facture($db);
  */
 
 // Envoi fichier
-if ($_POST["sendit"] && ! empty($conf->global->MAIN_UPLOAD_DOC))
+if (GETPOST('sendit') && ! empty($conf->global->MAIN_UPLOAD_DOC))
 {
 	if ($object->fetch($id))
 	{
@@ -106,8 +107,6 @@ llxHeader();
 
 $form = new Form($db);
 
-$id = $_GET['facid']?$_GET['facid']:$_GET['id'];
-$ref= $_GET['ref'];
 if ($id > 0 || ! empty($ref))
 {
 	if ($object->fetch($id,$ref) > 0)

@@ -23,9 +23,9 @@
  *	\brief      File to build cheque deposit receipts
  */
 
-require_once(DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php');
-require_once(DOL_DOCUMENT_ROOT."/core/lib/company.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/modules/cheque/pdf/modules_chequereceipts.php");
+require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/modules/cheque/pdf/modules_chequereceipts.php';
 
 
 /**
@@ -111,12 +111,13 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 			}
 		}
 
-		$month = sprintf("%02d",$month);
-		$year = sprintf("%04d",$year);
 		$_file = $dir . "/bordereau-".$number.".pdf";
 
 		// Create PDF instance
         $pdf=pdf_getInstance($this->format);
+        $heightforinfotot = 80;	// Height reserved to output the info and total part (value include bottom margin)
+        $heightforfooter = 25;	// Height reserved to output the footer (value include bottom margin)
+        $pdf->SetAutoPageBreak(1,0);
 
         if (class_exists('TCPDF'))
         {
@@ -137,7 +138,6 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 		if ($conf->global->MAIN_DISABLE_PDF_COMPRESSION) $pdf->SetCompression(false);
 
 		$pdf->SetMargins($this->marge_gauche, $this->marge_haute, $this->marge_droite);   // Left, Top, Right
-		$pdf->SetAutoPageBreak(1,0);
 
 		$nboflines=count($this->lines);
 		// Define nb of page

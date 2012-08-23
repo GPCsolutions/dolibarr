@@ -23,14 +23,14 @@
  *  \brief      	Page to show a trip card
  */
 
-require("../../main.inc.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/trip.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/compta/deplacement/class/deplacement.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/html.formfile.class.php");
+require '../../main.inc.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/trip.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/deplacement/class/deplacement.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 if ($conf->projet->enabled)
 {
-    require_once(DOL_DOCUMENT_ROOT."/core/lib/project.lib.php");
-    require_once(DOL_DOCUMENT_ROOT."/projet/class/project.class.php");
+    require_once DOL_DOCUMENT_ROOT.'/core/lib/project.lib.php';
+    require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 }
 
 $langs->load("trips");
@@ -47,6 +47,11 @@ $confirm = GETPOST('confirm','alpha');
 $mesg = '';
 
 $object = new Deplacement($db);
+
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+$hookmanager=new HookManager($db);
+$hookmanager->initHooks(array('tripsandexpensescard'));
 
 
 /*
@@ -256,7 +261,7 @@ $form = new Form($db);
 if ($action == 'create')
 {
     //WYSIWYG Editor
-    require_once(DOL_DOCUMENT_ROOT."/core/class/doleditor.class.php");
+    require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 
     print_fiche_titre($langs->trans("NewTrip"));
 
@@ -317,6 +322,10 @@ if ($action == 'create')
         print '</td></tr>';
     }
 
+    // Other attributes
+    $parameters=array('colspan' => ' colspan="2"');
+    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
+
     print '</table>';
 
     print '<br><center><input class="button" type="submit" value="'.$langs->trans("Save").'"> &nbsp; &nbsp; ';
@@ -338,7 +347,7 @@ else if ($id)
         if ($action == 'edit' && $user->rights->deplacement->creer)
         {
             //WYSIWYG Editor
-            require_once(DOL_DOCUMENT_ROOT."/core/class/doleditor.class.php");
+            require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 
             $soc = new Societe($db);
             if ($object->socid)
@@ -407,6 +416,10 @@ else if ($id)
 
                 print "</td></tr>";
             }
+
+            // Other attributes
+            $parameters=array('colspan' => ' colspan="3"');
+            $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
 
             print '</table>';
 
@@ -508,12 +521,16 @@ else if ($id)
             // Statut
             print '<tr><td>'.$langs->trans("Status").'</td><td>'.$object->getLibStatut(4).'</td></tr>';
 
+            // Other attributes
+            $parameters=array('colspan' => ' colspan="3"');
+            $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
+
             print "</table><br>";
 
             // Notes
             $blocname = 'notes';
             $title = $langs->trans('Notes');
-            include(DOL_DOCUMENT_ROOT.'/core/tpl/bloc_showhide.tpl.php');
+            include DOL_DOCUMENT_ROOT.'/core/tpl/bloc_showhide.tpl.php';
 
             print '</div>';
 

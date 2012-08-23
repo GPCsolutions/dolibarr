@@ -2,6 +2,7 @@
 /* Copyright (C) 2001-2002 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2003      Jean-Louis Bergamo   <jlb@j1b.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2012      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +24,9 @@
  *		\brief      Page to setup extra fields of third party
  */
 
-require("../../main.inc.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/product.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/extrafields.class.php");
+require '../../main.inc.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/product.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 
 $langs->load("companies");
 $langs->load("admin");
@@ -53,7 +54,7 @@ if (!$user->admin) accessforbidden();
  * Actions
  */
 
-require(DOL_DOCUMENT_ROOT."/core/admin_extrafields.inc.php");
+require DOL_DOCUMENT_ROOT.'/core/admin_extrafields.inc.php';
 
 
 
@@ -87,7 +88,7 @@ $head = product_admin_prepare_head();
 dol_fiche_head($head, 'attributes', $tab, 0, 'product');
 
 
-print $langs->trans("DefineHereComplementaryAttributes",$textobject).'<br>'."\n";
+print $langs->trans('DefineHereComplementaryAttributes', $tab).'<br>'."\n";
 print '<br>';
 
 dol_htmloutput_errors($mesg);

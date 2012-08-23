@@ -24,9 +24,9 @@
  *	\brief      File to build PDF with events
  */
 
-require_once(DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php');
-require_once(DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php');
-require_once(DOL_DOCUMENT_ROOT."/core/lib/company.lib.php");
+require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 
 /**
  *	Classe permettant la generation des rapports d'actions
@@ -112,6 +112,9 @@ class CommActionRapport
 		if (file_exists($dir))
 		{
             $pdf=pdf_getInstance($this->format);
+            $heightforinfotot = 80;	// Height reserved to output the info and total part (value include bottom margin)
+            $heightforfooter = 25;	// Height reserved to output the footer (value include bottom margin)
+            $pdf->SetAutoPageBreak(1,0);
 
             if (class_exists('TCPDF'))
             {
@@ -132,7 +135,6 @@ class CommActionRapport
 			$pdf->SetKeywords($outputlangs->convToOutputCharset($this->title." ".$this->subject));
 
 			$pdf->SetMargins($this->marge_gauche, $this->marge_haute, $this->marge_droite);   // Left, Top, Right
-			$pdf->SetAutoPageBreak(1,0);
 
 			$nbpage = $this->_pages($pdf, $outputlangs);
 

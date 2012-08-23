@@ -177,7 +177,7 @@ class Form
                 else if (preg_match('/^ckeditor/',$typeofdata))
                 {
                     $tmp=explode(':',$typeofdata);
-                    require_once(DOL_DOCUMENT_ROOT."/core/class/doleditor.class.php");
+                    require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
                     $doleditor=new DolEditor($htmlname, ($editvalue?$editvalue:$value), ($tmp[2]?$tmp[2]:''), ($tmp[3]?$tmp[3]:'100'), ($tmp[1]?$tmp[1]:'dolibarr_notes'), 'In', ($tmp[5]?$tmp[5]:0), true, true, ($tmp[6]?$tmp[6]:'20'), ($tmp[7]?$tmp[7]:'100'));
                     $ret.=$doleditor->Create(1);
                 }
@@ -866,7 +866,7 @@ class Form
             $i = 0;
             if ($num)
             {
-                include_once(DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php');
+                include_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
                 $contactstatic=new Contact($this->db);
 
                 while ($i < $num)
@@ -1092,7 +1092,7 @@ class Form
         {
             if ($selected && empty($selected_input_value))
             {
-                require_once(DOL_DOCUMENT_ROOT."/product/class/product.class.php");
+                require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
                 $product = new Product($this->db);
                 $product->fetch($selected);
                 $selected_input_value=$product->ref;
@@ -1335,9 +1335,10 @@ class Form
      *	@param  string	$htmlname       Name of HTML Select
      *  @param	string	$filtertype     Filter on product type (''=nofilter, 0=product, 1=service)
      *	@param  string	$filtre			For a SQL filter
+     *	@param	array	$ajaxoptions	Options for ajax_autocompleter
      *	@return	void
      */
-    function select_produits_fournisseurs($socid,$selected='',$htmlname='productid',$filtertype='',$filtre='')
+    function select_produits_fournisseurs($socid, $selected='', $htmlname='productid', $filtertype='', $filtre='', $ajaxoptions=array())
     {
         global $langs,$conf;
         global $price_level, $status, $finished;
@@ -1345,7 +1346,8 @@ class Form
         if ($conf->global->PRODUIT_USE_SEARCH_TO_SELECT)
         {
             // mode=2 means suppliers products
-            print ajax_autocompleter('', $htmlname, DOL_URL_ROOT.'/product/ajax/products.php', ($socid > 0?'socid='.$socid.'&':'').'htmlname='.$htmlname.'&outjson=1&price_level='.$price_level.'&type='.$filtertype.'&mode=2&status='.$status.'&finished='.$finished, $conf->global->PRODUIT_USE_SEARCH_TO_SELECT);
+            $urloption=($socid > 0?'socid='.$socid.'&':'').'htmlname='.$htmlname.'&outjson=1&price_level='.$price_level.'&type='.$filtertype.'&mode=2&status='.$status.'&finished='.$finished;
+            print ajax_autocompleter('', $htmlname, DOL_URL_ROOT.'/product/ajax/products.php', $urloption, $conf->global->PRODUIT_USE_SEARCH_TO_SELECT, 0, $ajaxoptions);
             print $langs->trans("RefOrLabel").' : <input type="text" size="16" name="search_'.$htmlname.'" id="search_'.$htmlname.'">';
             print '<br>';
         }
@@ -1422,10 +1424,11 @@ class Form
                 $outkey=$objp->idprodfournprice;
                 $outref=$objp->ref;
                 $outval='';
+                $outqty=1;
 
                 $opt = '<option value="'.$objp->idprodfournprice.'"';
-                if ($selected == $objp->idprodfournprice) $opt.= ' selected="selected"';
-                if ($objp->fprice == '') $opt.=' disabled="disabled"';
+                if ($selected && $selected == $objp->idprodfournprice) $opt.= ' selected="selected"';
+                if (empty($objp->idprodfournprice)) $opt.=' disabled="disabled"';
                 $opt.= '>';
 
                 $objRef = $objp->ref;
@@ -1440,7 +1443,7 @@ class Form
                 $opt.=dol_trunc($objp->label,18).' - ';
                 $outval.=dol_trunc($label,18).' - ';
 
-                if ($objp->fprice != '') 	// Keep != ''
+                if (! empty($objp->idprodfournprice))
                 {
                     $currencytext=$langs->trans("Currency".$conf->currency);
                     $currencytextnoent=$langs->transnoentities("Currency".$conf->currency);
@@ -1449,6 +1452,7 @@ class Form
 
                     $opt.= price($objp->fprice).' '.$currencytext."/".$objp->quantity;
                     $outval.= price($objp->fprice).' '.$currencytextnoent."/".$objp->quantity;
+                    $outqty=$objp->quantity;
                     if ($objp->quantity == 1)
                     {
                         $opt.= strtolower($langs->trans("Unit"));
@@ -1486,7 +1490,7 @@ class Form
                 // "key" value of json key array is used by jQuery automatically as selected value
                 // "label" value of json key array is used by jQuery automatically as text for combo box
                 $outselect.=$opt;
-                array_push($outjson,array('key'=>$outkey,'value'=>$outref,'label'=>$outval));
+                array_push($outjson, array('key'=>$outkey, 'value'=>$outref, 'label'=>$outval, 'qty'=>$outqty, 'disabled'=>(empty($objp->idprodfournprice)?true:false)));
 
                 $i++;
             }
@@ -2264,8 +2268,72 @@ class Form
                 }
             }
 
-            // Show JQuery confirm box. Note that global var $useglobalvars is used inside this template
-            include(DOL_DOCUMENT_ROOT.'/core/tpl/ajax/formconfirm.tpl.php');
+			// Show JQuery confirm box. Note that global var $useglobalvars is used inside this template
+            $formconfirm.= '<div id="'.$dialogconfirm.'" title="'.dol_escape_htmltag($title).'" style="display: none;">';
+            if (! empty($more)) {
+            	$formconfirm.= '<p>'.$more.'</p>';
+            }
+            $formconfirm.= img_help('','').' '.$question;
+            $formconfirm.= '</div>';
+
+            $formconfirm.= '<script type="text/javascript">';
+            $formconfirm.='
+            $(function() {
+            	$( "#'.$dialogconfirm.'" ).dialog({
+                    autoOpen: '.($autoOpen ? "true" : "false").',
+                    resizable: false,
+                    height: "'.$height.'",
+                    width: "'.$width.'",
+                    modal: true,
+                    closeOnEscape: false,
+                    buttons: {
+                        "'.dol_escape_js($langs->transnoentities("Yes")).'": function() {
+                        	var options="";
+                        	var inputok = '.json_encode($inputok).';
+                         	var pageyes = "'.dol_escape_js(! empty($pageyes)?$pageyes:'').'";
+                         	if (inputok.length>0) {
+                         		$.each(inputok, function(i, inputname) {
+                         			var more = "";
+                         			if ($("#" + inputname).attr("type") == "checkbox") { more = ":checked"; }
+                         			var inputvalue = $("#" + inputname + more).val();
+                         			if (typeof inputvalue == "undefined") { inputvalue=""; }
+                         			options += "&" + inputname + "=" + inputvalue;
+                         		});
+                         	}
+                         	var urljump = pageyes + (pageyes.indexOf("?") < 0 ? "?" : "") + options;
+                         	//alert(urljump);
+            				if (pageyes.length > 0) { location.href = urljump; }
+                            $(this).dialog("close");
+                        },
+                        "'.dol_escape_js($langs->transnoentities("No")).'": function() {
+                        	var options = "";
+                         	var inputko = '.json_encode($inputko).';
+                         	var pageno="'.dol_escape_js(! empty($pageno)?$pageno:'').'";
+                         	if (inputko.length>0) {
+                         		$.each(inputko, function(i, inputname) {
+                         			var more = "";
+                         			if ($("#" + inputname).attr("type") == "checkbox") { more = ":checked"; }
+                         			var inputvalue = $("#" + inputname + more).val();
+                         			if (typeof inputvalue == "undefined") { inputvalue=""; }
+                         			options += "&" + inputname + "=" + inputvalue;
+                         		});
+                         	}
+                         	var urljump=pageno + (pageno.indexOf("?") < 0 ? "?" : "") + options;
+                         	//alert(urljump);
+            				if (pageno.length > 0) { location.href = urljump; }
+                            $(this).dialog("close");
+                        }
+                    }
+                });
+
+            	var button = "'.$button.'";
+                if (button.length > 0) {
+                	$( "#" + button ).click(function() {
+                		$("#'.$dialogconfirm.'").dialog("open");
+                	});
+                }
+            });
+            </script>';
         }
         else
         {
@@ -2323,7 +2391,7 @@ class Form
     {
         global $langs;
 
-        require_once(DOL_DOCUMENT_ROOT."/core/lib/project.lib.php");
+        require_once DOL_DOCUMENT_ROOT.'/core/lib/project.lib.php';
 
         $langs->load("project");
         if ($htmlname != "none")
@@ -2537,7 +2605,7 @@ class Form
         {
             if ($selected)
             {
-                require_once(DOL_DOCUMENT_ROOT ."/user/class/user.class.php");
+                require_once DOL_DOCUMENT_ROOT .'/user/class/user.class.php';
                 //$this->load_cache_contacts();
                 //print $this->cache_contacts[$selected];
                 $theuser=new User($this->db);
@@ -2683,7 +2751,7 @@ class Form
         {
             if ($selected)
             {
-                require_once(DOL_DOCUMENT_ROOT ."/contact/class/contact.class.php");
+                require_once DOL_DOCUMENT_ROOT .'/contact/class/contact.class.php';
                 //$this->load_cache_contacts();
                 //print $this->cache_contacts[$selected];
                 $contact=new Contact($this->db);
@@ -2728,7 +2796,7 @@ class Form
         {
             if ($selected)
             {
-                require_once(DOL_DOCUMENT_ROOT ."/societe/class/societe.class.php");
+                require_once DOL_DOCUMENT_ROOT .'/societe/class/societe.class.php';
                 $soc = new Societe($this->db);
                 $soc->fetch($selected);
                 print $soc->getNomUrl($langs);
@@ -3305,7 +3373,7 @@ class Form
     {
         if ($iSecond)
         {
-            require_once(DOL_DOCUMENT_ROOT."/core/lib/date.lib.php");
+            require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 
             $hourSelected = convertSecondToTime($iSecond,'hour');
             $minSelected = convertSecondToTime($iSecond,'min');
@@ -3708,30 +3776,6 @@ class Form
             }
         }
         else dol_print_error('','Call of showphoto with wrong parameters');
-
-        /* Disabled. lightbox seems to not work. I don't know why.
-         $ret.="\n<script type=\"text/javascript\">
-        jQuery(function() {
-        jQuery('.photologo').lightBox();
-        });
-        </script>\n";
-
-        $ret.="\n<script type=\"text/javascript\">
-        jQuery(function() {
-        jQuery('.photologo').lightBox({
-        overlayBgColor: '#FFF',
-        overlayOpacity: 0.6,
-        imageLoading: '".DOL_URL_ROOT."/includes/jquery/plugins/lightbox/images/lightbox-ico-loading.gif',
-        imageBtnClose: '".DOL_URL_ROOT."/includes/jquery/plugins/lightbox/images/lightbox-btn-close.gif',
-        imageBtnPrev: '".DOL_URL_ROOT."/includes/jquery/plugins/lightbox/images/lightbox-btn-prev.gif',
-        imageBtnNext: '".DOL_URL_ROOT."/includes/jquery/plugins/lightbox/images/lightbox-btn-next.gif',
-        containerResizeSpeed: 350,
-        txtImage: 'Imagem',
-        txtOf: 'de'
-        });
-        });
-        </script>\n";
-        */
 
         return $ret;
     }

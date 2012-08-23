@@ -41,14 +41,14 @@
 	<?php
 	if (is_object($hookmanager))
 	{
-	    $parameters=array('fk_parent_line'=>$line->fk_parent_line);
-	    echo $hookmanager->executeHooks('formEditProductOptions',$parameters,$this,$action);
+	    $parameters=array('line'=>$line,'fk_parent_line'=>$line->fk_parent_line,'var'=>$var,'dateSelector'=>$dateSelector,'seller'=>$seller,'buyer'=>$buyer);
+	    $reshook=$hookmanager->executeHooks('formEditProductOptions',$parameters,$this,$action);
 	}
 
 	// editeur wysiwyg
     $nbrows=ROWS_2;
     if (! empty($conf->global->MAIN_INPUT_DESC_HEIGHT)) $nbrows=$conf->global->MAIN_INPUT_DESC_HEIGHT;
-    require_once(DOL_DOCUMENT_ROOT."/core/class/doleditor.class.php");
+    require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 	$doleditor=new DolEditor('desc',$line->description,'',164,'dolibarr_details','',false,true,$conf->global->FCKEDITOR_ENABLE_DETAILS,$nbrows,70);
 	$doleditor->Create();
 	?>
@@ -75,7 +75,7 @@
 	</td>
 
 <?php
-if (! empty($conf->margin->enabled)) { 
+if (! empty($conf->margin->enabled)) {
 ?>
 	<td align="right"><input type="text" size="5" name="buying_price" value="<?php echo price($line->pa_ht,0,'',0); ?>"></td>
 <?php

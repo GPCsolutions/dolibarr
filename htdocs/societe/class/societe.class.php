@@ -27,7 +27,7 @@
  *	\ingroup    societe
  *	\brief      File for third party class
  */
-require_once(DOL_DOCUMENT_ROOT."/core/class/commonobject.class.php");
+require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 
 
 /**
@@ -212,11 +212,11 @@ class Societe extends CommonObject
         {
             $sql = "INSERT INTO ".MAIN_DB_PREFIX."societe (nom, entity, datec, datea, fk_user_creat, canvas, status, ref_int, ref_ext, fk_stcomm)";
             $sql.= " VALUES ('".$this->db->escape($this->name)."', ".$conf->entity.", '".$this->db->idate($now)."', '".$this->db->idate($now)."'";
-            $sql.= ", ".($user->id > 0 ? "'".$user->id."'":"null");
-            $sql.= ", ".($this->canvas ? "'".$this->canvas."'":"null");
+            $sql.= ", ".(! empty($user->id) ? "'".$user->id."'":"null");
+            $sql.= ", ".(! empty($this->canvas) ? "'".$this->canvas."'":"null");
             $sql.= ", ".$this->status;
-            $sql.= ", ".($this->ref_int ? "'".$this->ref_int."'":"null");
-            $sql.= ", ".($this->ref_ext ? "'".$this->ref_ext."'":"null");
+            $sql.= ", ".(! empty($this->ref_int) ? "'".$this->ref_int."'":"null");
+            $sql.= ", ".(! empty($this->ref_ext) ? "'".$this->ref_ext."'":"null");
             $sql.= ", 0)";
 
             dol_syslog(get_class($this)."::create sql=".$sql);
@@ -244,7 +244,7 @@ class Societe extends CommonObject
                 if ($ret >= 0)
                 {
                     // Appel des triggers
-                    include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+                    include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
                     $interface=new Interfaces($this->db);
                     $result=$interface->run_triggers('COMPANY_CREATE',$this,$user,$langs,$conf);
                     if ($result < 0) { $error++; $this->errors=$interface->errors; }
@@ -378,7 +378,7 @@ class Societe extends CommonObject
     function update($id, $user='', $call_trigger=1, $allowmodcodeclient=0, $allowmodcodefournisseur=0, $action='update')
     {
         global $langs,$conf;
-        require_once(DOL_DOCUMENT_ROOT."/core/lib/functions2.lib.php");
+        require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 
 		$error=0;
 
@@ -413,8 +413,8 @@ class Societe extends CommonObject
         $this->idprof2		= trim($this->idprof2);
         $this->idprof3		= trim($this->idprof3);
         $this->idprof4		= trim($this->idprof4);
-        $this->idprof5		= trim($this->idprof5);
-        $this->idprof6		= trim($this->idprof6);
+        $this->idprof5		= (! empty($this->idprof5)?trim($this->idprof5):'');
+        $this->idprof6		= (! empty($this->idprof6)?trim($this->idprof6):'');
         $this->prefix_comm	= trim($this->prefix_comm);
 
         $this->tva_assuj	= trim($this->tva_assuj);
@@ -455,6 +455,32 @@ class Societe extends CommonObject
             return -1;
         }
 
+        $customer=false;
+        if (! empty($allowmodcodeclient) && ! empty($this->client))
+        {
+        	// Attention get_codecompta peut modifier le code suivant le module utilise
+        	if (empty($this->code_compta))
+        	{
+        		$ret=$this->get_codecompta('customer');
+        		if ($ret < 0) return -1;
+        	}
+
+        	$customer=true;
+        }
+
+        $supplier=false;
+        if (! empty($allowmodcodefournisseur) && ! empty($this->fournisseur))
+        {
+        	// Attention get_codecompta peut modifier le code suivant le module utilise
+        	if (empty($this->code_compta_fournisseur))
+        	{
+        		$ret=$this->get_codecompta('supplier');
+        		if ($ret < 0) return -1;
+        	}
+
+        	$supplier=true;
+        }
+
         $this->db->begin();
 
         // Check name is required and codes are ok or unique.
@@ -467,20 +493,20 @@ class Societe extends CommonObject
 
             $sql  = "UPDATE ".MAIN_DB_PREFIX."societe SET ";
             $sql .= "nom = '" . $this->db->escape($this->name) ."'"; // Required
-            $sql .= ",ref_ext = " .($this->ref_ext?"'".$this->db->escape($this->ref_ext) ."'":"null");
+            $sql .= ",ref_ext = " .(! empty($this->ref_ext)?"'".$this->db->escape($this->ref_ext) ."'":"null");
             $sql .= ",datea = '".$this->db->idate($now)."'";
             $sql .= ",address = '" . $this->db->escape($this->address) ."'";
 
-            $sql .= ",cp = ".($this->zip?"'".$this->zip."'":"null");
-            $sql .= ",ville = ".($this->town?"'".$this->db->escape($this->town)."'":"null");
+            $sql .= ",cp = ".(! empty($this->zip)?"'".$this->zip."'":"null");
+            $sql .= ",ville = ".(! empty($this->town)?"'".$this->db->escape($this->town)."'":"null");
 
-            $sql .= ",fk_departement = '" . ($this->state_id?$this->state_id:'0') ."'";
-            $sql .= ",fk_pays = '" . ($this->country_id?$this->country_id:'0') ."'";
+            $sql .= ",fk_departement = '" . (! empty($this->state_id)?$this->state_id:'0') ."'";
+            $sql .= ",fk_pays = '" . (! empty($this->country_id)?$this->country_id:'0') ."'";
 
-            $sql .= ",tel = ".($this->phone?"'".$this->db->escape($this->phone)."'":"null");
-            $sql .= ",fax = ".($this->fax?"'".$this->db->escape($this->fax)."'":"null");
-            $sql .= ",email = ".($this->email?"'".$this->db->escape($this->email)."'":"null");
-            $sql .= ",url = ".($this->url?"'".$this->db->escape($this->url)."'":"null");
+            $sql .= ",tel = ".(! empty($this->phone)?"'".$this->db->escape($this->phone)."'":"null");
+            $sql .= ",fax = ".(! empty($this->fax)?"'".$this->db->escape($this->fax)."'":"null");
+            $sql .= ",email = ".(! empty($this->email)?"'".$this->db->escape($this->email)."'":"null");
+            $sql .= ",url = ".(! empty($this->url)?"'".$this->db->escape($this->url)."'":"null");
 
             $sql .= ",siren   = '". $this->db->escape($this->idprof1) ."'";
             $sql .= ",siret   = '". $this->db->escape($this->idprof2) ."'";
@@ -499,44 +525,36 @@ class Societe extends CommonObject
 
             $sql .= ",capital = ".$this->capital;
 
-            $sql .= ",prefix_comm = ".($this->prefix_comm?"'".$this->db->escape($this->prefix_comm)."'":"null");
+            $sql .= ",prefix_comm = ".(! empty($this->prefix_comm)?"'".$this->db->escape($this->prefix_comm)."'":"null");
 
-            $sql .= ",fk_effectif = ".($this->effectif_id?"'".$this->effectif_id."'":"null");
+            $sql .= ",fk_effectif = ".(! empty($this->effectif_id)?"'".$this->effectif_id."'":"null");
 
-            $sql .= ",fk_typent = ".($this->typent_id?"'".$this->typent_id."'":"0");
+            $sql .= ",fk_typent = ".(! empty($this->typent_id)?"'".$this->typent_id."'":"0");
 
-            $sql .= ",fk_forme_juridique = ".($this->forme_juridique_code?"'".$this->forme_juridique_code."'":"null");
+            $sql .= ",fk_forme_juridique = ".(! empty($this->forme_juridique_code)?"'".$this->forme_juridique_code."'":"null");
 
-            $sql .= ",client = " . ($this->client?$this->client:0);
-            $sql .= ",fournisseur = " . ($this->fournisseur?$this->fournisseur:0);
-            $sql .= ",barcode = ".($this->barcode?"'".$this->barcode."'":"null");
-            $sql .= ",default_lang = ".($this->default_lang?"'".$this->default_lang."'":"null");
-            $sql .= ",logo = ".($this->logo?"'".$this->logo."'":"null");
+            $sql .= ",client = " . (! empty($this->client)?$this->client:0);
+            $sql .= ",fournisseur = " . (! empty($this->fournisseur)?$this->fournisseur:0);
+            $sql .= ",barcode = ".(! empty($this->barcode)?"'".$this->barcode."'":"null");
+            $sql .= ",default_lang = ".(! empty($this->default_lang)?"'".$this->default_lang."'":"null");
+            $sql .= ",logo = ".(! empty($this->logo)?"'".$this->logo."'":"null");
 
-            if ($allowmodcodeclient && $this->client)
+            if ($customer)
             {
                 //$this->check_codeclient();
 
-                $sql .= ", code_client = ".($this->code_client?"'".$this->db->escape($this->code_client)."'":"null");
-
-                // Attention get_codecompta peut modifier le code suivant le module utilise
-                if (empty($this->code_compta)) $this->get_codecompta('customer');
-
-                $sql .= ", code_compta = ".($this->code_compta?"'".$this->db->escape($this->code_compta)."'":"null");
+                $sql .= ", code_client = ".(! empty($this->code_client)?"'".$this->db->escape($this->code_client)."'":"null");
+                $sql .= ", code_compta = ".(! empty($this->code_compta)?"'".$this->db->escape($this->code_compta)."'":"null");
             }
 
-            if ($allowmodcodefournisseur && $this->fournisseur)
+            if ($supplier)
             {
                 //$this->check_codefournisseur();
 
-                $sql .= ", code_fournisseur = ".($this->code_fournisseur?"'".$this->db->escape($this->code_fournisseur)."'":"null");
-
-                // Attention get_codecompta peut modifier le code suivant le module utilise
-                if (empty($this->code_compta_fournisseur)) $this->get_codecompta('supplier');
-
-                $sql .= ", code_compta_fournisseur = ".($this->code_compta_fournisseur?"'".$this->db->escape($this->code_compta_fournisseur)."'":"null");
+                $sql .= ", code_fournisseur = ".(! empty($this->code_fournisseur)?"'".$this->db->escape($this->code_fournisseur)."'":"null");
+                $sql .= ", code_compta_fournisseur = ".(! empty($this->code_compta_fournisseur)?"'".$this->db->escape($this->code_compta_fournisseur)."'":"null");
             }
-            $sql .= ", fk_user_modif = ".($user->id > 0 ? "'".$user->id."'":"null");
+            $sql .= ", fk_user_modif = ".(! empty($user->id)?"'".$user->id."'":"null");
             $sql .= " WHERE rowid = '" . $id ."'";
 
 
@@ -553,7 +571,7 @@ class Societe extends CommonObject
                 $this->AddFournisseurInCategory($this->fournisseur_categorie);
 
                 // Actions on extra fields (by external module or standard code)
-                include_once(DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php');
+                include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
                 $hookmanager=new HookManager($this->db);
                 $hookmanager->initHooks(array('thirdpartydao'));
                 $parameters=array('socid'=>$this->id);
@@ -571,7 +589,7 @@ class Societe extends CommonObject
                 if (! $error && $call_trigger)
                 {
                     // Appel des triggers
-                    include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+                    include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
                     $interface=new Interfaces($this->db);
                     $result=$interface->run_triggers('COMPANY_MODIFY',$this,$user,$langs,$conf);
                     if ($result < 0) { $error++; $this->errors=$interface->errors; }
@@ -824,7 +842,7 @@ class Societe extends CommonObject
     function delete($id)
     {
         global $user,$langs,$conf;
-        require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
+        require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
         dol_syslog(get_class($this)."::delete", LOG_DEBUG);
         $error = 0;
@@ -835,7 +853,7 @@ class Societe extends CommonObject
 		{
             $this->db->begin();
 
-            require_once(DOL_DOCUMENT_ROOT."/categories/class/categorie.class.php");
+            require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
             $static_cat = new Categorie($this->db);
             $toute_categs = array();
 
@@ -907,7 +925,7 @@ class Societe extends CommonObject
             if (! $error)
             {
             	// Additionnal action by hooks
-                include_once(DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php');
+                include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
                 $hookmanager=new HookManager($this->db);
                 $hookmanager->initHooks(array('thirdpartydao'));
                 $parameters=array(); $action='delete';
@@ -936,7 +954,7 @@ class Societe extends CommonObject
             if (! $error)
             {
                 // Appel des triggers
-                include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+                include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
                 $interface=new Interfaces($this->db);
                 $result=$interface->run_triggers('COMPANY_DELETE',$this,$user,$langs,$conf);
                 if ($result < 0) { $error++; $this->errors=$interface->errors; }
@@ -1083,7 +1101,7 @@ class Societe extends CommonObject
 
         if ($this->id)
         {
-            require_once(DOL_DOCUMENT_ROOT.'/core/class/discount.class.php');
+            require_once DOL_DOCUMENT_ROOT.'/core/class/discount.class.php';
 
             $discount = new DiscountAbsolute($this->db);
             $discount->fk_soc=$this->id;
@@ -1116,7 +1134,7 @@ class Societe extends CommonObject
      */
     function getAvailableDiscounts($user='',$filter='',$maxvalue=0)
     {
-        require_once(DOL_DOCUMENT_ROOT.'/core/class/discount.class.php');
+        require_once DOL_DOCUMENT_ROOT.'/core/class/discount.class.php';
 
         $discountstatic=new DiscountAbsolute($this->db);
         $result=$discountstatic->getAvailableDiscounts($this,$user,$filter,$maxvalue);
@@ -1371,7 +1389,7 @@ class Societe extends CommonObject
         $ret='';
         if ($withcountry && $this->country_id && (empty($this->country_code) || empty($this->country)))
         {
-            require_once(DOL_DOCUMENT_ROOT ."/core/lib/company.lib.php");
+            require_once DOL_DOCUMENT_ROOT .'/core/lib/company.lib.php';
             $tmparray=getCountry($this->country_id,'all');
             $this->country_code=$tmparray['code'];
             $this->country     =$tmparray['label'];
@@ -1551,7 +1569,7 @@ class Societe extends CommonObject
     {
         global $langs;
 
-        require_once DOL_DOCUMENT_ROOT . "/societe/class/companybankaccount.class.php";
+        require_once DOL_DOCUMENT_ROOT . '/societe/class/companybankaccount.class.php';
 
         $bac = new CompanyBankAccount($this->db);
         $bac->fetch(0,$this->id);
@@ -1575,7 +1593,7 @@ class Societe extends CommonObject
      */
     function load_ban()
     {
-        require_once DOL_DOCUMENT_ROOT . "/societe/class/companybankaccount.class.php";
+        require_once DOL_DOCUMENT_ROOT . '/societe/class/companybankaccount.class.php';
 
         $bac = new CompanyBankAccount($this->db);
         $bac->fetch(0,$this->id);
@@ -1611,7 +1629,7 @@ class Societe extends CommonObject
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
             {
-                $res=dol_include_once($dirroot.$conf->global->SOCIETE_CODECLIENT_ADDON.".php");
+                $res=dol_include_once($dirroot.$conf->global->SOCIETE_CODECLIENT_ADDON.'.php');
                 if ($res) break;
             }
             $var = $conf->global->SOCIETE_CODECLIENT_ADDON;
@@ -1640,7 +1658,7 @@ class Societe extends CommonObject
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
             {
-                $res=dol_include_once($dirroot.$conf->global->SOCIETE_FOURNISSEUR_ADDON.".php");
+                $res=dol_include_once($dirroot.$conf->global->SOCIETE_FOURNISSEUR_ADDON.'.php');
                 if ($res) break;
             }
             $var = $conf->global->SOCIETE_CODEFOURNISSEUR_ADDON;
@@ -1666,7 +1684,7 @@ class Societe extends CommonObject
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
             {
-                $res=dol_include_once($dirroot.$conf->global->SOCIETE_CODECLIENT_ADDON.".php");
+                $res=dol_include_once($dirroot.$conf->global->SOCIETE_CODECLIENT_ADDON.'.php');
                 if ($res) break;
             }
 
@@ -1700,7 +1718,7 @@ class Societe extends CommonObject
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
             {
-                $res=dol_include_once($dirroot.$conf->global->SOCIETE_CODEFOURNISSEUR_ADDON.".php");
+                $res=dol_include_once($dirroot.$conf->global->SOCIETE_CODEFOURNISSEUR_ADDON.'.php');
                 if ($res) break;
             }
 
@@ -1738,7 +1756,7 @@ class Societe extends CommonObject
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
             {
-                $res=dol_include_once($dirroot.$conf->global->SOCIETE_CODECLIENT_ADDON.".php");
+                $res=dol_include_once($dirroot.$conf->global->SOCIETE_CODECLIENT_ADDON.'.php');
                 if ($res) break;
             }
 
@@ -1773,7 +1791,7 @@ class Societe extends CommonObject
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
             {
-                $res=dol_include_once($dirroot.$conf->global->SOCIETE_CODEFOURNISSEUR_ADDON.".php");
+                $res=dol_include_once($dirroot.$conf->global->SOCIETE_CODEFOURNISSEUR_ADDON.'.php');
                 if ($res) break;
             }
 
@@ -1803,30 +1821,44 @@ class Societe extends CommonObject
     {
         global $conf;
 
-        if ($conf->global->SOCIETE_CODECOMPTA_ADDON)
+        if (! empty($conf->global->SOCIETE_CODECOMPTA_ADDON))
         {
-            $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
+        	$file='';
+            $dirsociete=array_merge(array('/core/modules/societe/'), $conf->societe_modules);
             foreach ($dirsociete as $dirroot)
             {
-                $res=dol_include_once($dirroot.$conf->global->SOCIETE_CODECOMPTA_ADDON.".php");
-                if ($res) break;
+            	if (file_exists(DOL_DOCUMENT_ROOT.'/'.$dirroot.$conf->global->SOCIETE_CODECOMPTA_ADDON.".php"))
+            	{
+            		$file=$dirroot.$conf->global->SOCIETE_CODECOMPTA_ADDON.".php";
+            		break;
+            	}
             }
 
-            $var = $conf->global->SOCIETE_CODECOMPTA_ADDON;
-            $mod = new $var;
+            if (! empty($file))
+            {
+            	dol_include_once($file);
 
-            // Defini code compta dans $mod->code
-            $result = $mod->get_code($this->db, $this, $type);
+            	$classname = $conf->global->SOCIETE_CODECOMPTA_ADDON;
+            	$mod = new $classname;
 
-            if ($type == 'customer') $this->code_compta = $mod->code;
-            if ($type == 'supplier') $this->code_compta_fournisseur = $mod->code;
+            	// Defini code compta dans $mod->code
+            	$result = $mod->get_code($this->db, $this, $type);
 
-            return $result;
+            	if ($type == 'customer') $this->code_compta = $mod->code;
+            	else if ($type == 'supplier') $this->code_compta_fournisseur = $mod->code;
+
+            	return $result;
+            }
+            else
+            {
+            	$this->error = 'ErrorAccountancyCodeNotDefined';
+            	return -1;
+            }
         }
         else
         {
             if ($type == 'customer') $this->code_compta = '';
-            if ($type == 'supplier') $this->code_compta_fournisseur = '';
+            else if ($type == 'supplier') $this->code_compta_fournisseur = '';
 
             return 0;
         }

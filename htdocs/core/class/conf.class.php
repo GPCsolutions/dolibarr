@@ -52,7 +52,7 @@ class Conf
 	public $smart_menu;
 
 	public $modules					= array();	// List of activated modules
-	public $modules_parts			= array('js'=>array(),'triggers'=>array(),'login'=>array(),'substitutions'=>array(),'menus'=>array(),'theme'=>array(),'tpl'=>array(),'barcode'=>array(),'models'=>array(),'hooks'=>array());	// List of modules parts
+	public $modules_parts			= array('css'=>array(), 'js'=>array(),'triggers'=>array(),'login'=>array(),'substitutions'=>array(),'menus'=>array(),'theme'=>array(),'tpl'=>array(),'barcode'=>array(),'models'=>array(),'hooks'=>array());	// List of modules parts
 
 	// TODO Remove thoose arrays with generic module_parts
 	public $tabs_modules			= array();
@@ -373,6 +373,9 @@ class Conf
         $this->format_date_hour_short="%d/%m/%Y %H:%M";
         $this->format_date_hour_text_short="%d %b %Y %H:%M";
         $this->format_date_hour_text="%d %B %Y %H:%M";
+
+        // Duration of workday
+        if (! isset($conf->global->MAIN_DURATION_OF_WORKDAY)) $this->global->MAIN_DURATION_OF_WORKDAY=86400;
 
 		// Limites decimales si non definie (peuvent etre egale a 0)
 		if (! isset($this->global->MAIN_MAX_DECIMALS_UNIT))  $this->global->MAIN_MAX_DECIMALS_UNIT=5;

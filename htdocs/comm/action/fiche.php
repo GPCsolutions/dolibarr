@@ -25,16 +25,16 @@
  *       \brief      Page for event card
  */
 
-require("../../main.inc.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/agenda.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/project.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/date.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/contact/class/contact.class.php");
-require_once(DOL_DOCUMENT_ROOT."/user/class/user.class.php");
-require_once(DOL_DOCUMENT_ROOT."/comm/action/class/cactioncomm.class.php");
-require_once(DOL_DOCUMENT_ROOT."/comm/action/class/actioncomm.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/html.formactions.class.php");
-require_once(DOL_DOCUMENT_ROOT."/projet/class/project.class.php");
+require '../../main.inc.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/agenda.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/project.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+require_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
+require_once DOL_DOCUMENT_ROOT.'/comm/action/class/cactioncomm.class.php';
+require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
+require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 
 $langs->load("companies");
 $langs->load("commercial");
@@ -62,6 +62,11 @@ $actioncomm = new ActionComm($db);
 $contact = new Contact($db);
 //var_dump($_POST);
 
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+$hookmanager=new HookManager($db);
+$hookmanager->initHooks(array('actioncard'));
+
 
 /*
  * Action creation de l'action
@@ -87,14 +92,14 @@ if ($action == 'add_action')
 		exit;
 	}
 
-    $fulldayevent=$_POST["fullday"];
+    $fulldayevent=GETPOST('fullday');
 
     // Clean parameters
 	$datep=dol_mktime($fulldayevent?'00':$_POST["aphour"], $fulldayevent?'00':$_POST["apmin"], 0, $_POST["apmonth"], $_POST["apday"], $_POST["apyear"]);
 	$datef=dol_mktime($fulldayevent?'23':$_POST["p2hour"], $fulldayevent?'59':$_POST["p2min"], $fulldayevent?'59':'0', $_POST["p2month"], $_POST["p2day"], $_POST["p2year"]);
 
 	// Check parameters
-	if (! $datef && $_POST["percentage"] == 100)
+	if (! $datef && GETPOST('percentage') == 100)
 	{
 		$error++;
 		$action = 'create';
@@ -102,7 +107,7 @@ if ($action == 'add_action')
 	}
 
 	// Initialisation objet cactioncomm
-	if (! $_POST["actioncode"])
+	if (! GETPOST('actioncode'))
 	{
 		$error++;
 		$action = 'create';
@@ -110,14 +115,14 @@ if ($action == 'add_action')
 	}
 	else
 	{
-		$result=$cactioncomm->fetch($_POST["actioncode"]);
+		$result=$cactioncomm->fetch(GETPOST('actioncode'));
 	}
 
 	// Initialisation objet actioncomm
 	$actioncomm->type_id = $cactioncomm->id;
 	$actioncomm->type_code = $cactioncomm->code;
 	$actioncomm->priority = isset($_POST["priority"])?$_POST["priority"]:0;
-	$actioncomm->fulldayevent = $_POST["fullday"]?1:0;
+	$actioncomm->fulldayevent = (! empty($fulldayevent)?1:0);
 	$actioncomm->location = isset($_POST["location"])?$_POST["location"]:'';
 	$actioncomm->label = trim($_POST["label"]);
 	if (! $_POST["label"])
@@ -139,7 +144,7 @@ if ($action == 'add_action')
 	$actioncomm->datep = $datep;
 	$actioncomm->datef = $datef;
 	$actioncomm->percentage = isset($_POST["percentage"])?$_POST["percentage"]:0;
-	$actioncomm->duree=(($_POST["dureehour"] * 60) + $_POST["dureemin"]) * 60;
+	$actioncomm->duree=((GETPOST('dureehour') * 60) + GETPOST('dureemin')) * 60;
 
 	$usertodo=new User($db);
 	if ($_POST["affectedto"] > 0)
@@ -164,8 +169,9 @@ if ($action == 'add_action')
 	}
 
 	// Special for module webcal and phenix
-	if ($_POST["add_webcal"] == 'on' && $conf->webcalendar->enabled) $actioncomm->use_webcal=1;
-	if ($_POST["add_phenix"] == 'on' && $conf->phenix->enabled) $actioncomm->use_phenix=1;
+	// FIXME external modules
+	if (! empty($conf->webcalendar->enabled) && GETPOST('add_webcal') == 'on') $actioncomm->use_webcal=1;
+	if (! empty($conf->phenix->enabled) && GETPOST('add_phenix') == 'on') $actioncomm->use_phenix=1;
 
 	// Check parameters
 	if ($actioncomm->type_code == 'AC_RDV' && ($datep == '' || $datef == ''))
@@ -174,14 +180,14 @@ if ($action == 'add_action')
 		$action = 'create';
 		$mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("DateEnd")).'</div>';
 	}
-	if ($datea && $_POST["percentage"] == 0)
+	if (! empty($datea) && GETPOST('percentage') == 0)
 	{
 		$error++;
 		$action = 'create';
 		$mesg='<div class="error">'.$langs->trans("ErrorStatusCantBeZeroIfStarted").'</div>';
 	}
 
-	if (! $_POST["apyear"] && ! $_POST["adyear"])
+	if (! GETPOST('apyear') && ! GETPOST('adyear'))
 	{
 		$error++;
 		$action = 'create';
@@ -264,23 +270,27 @@ if ($action == 'confirm_delete' && GETPOST("confirm") == 'yes')
  */
 if ($action == 'update')
 {
-	if (! $_POST["cancel"])
+	if (empty($cancel))
 	{
-        $fulldayevent=$_POST["fullday"];
+        $fulldayevent=GETPOST('fullday');
+        $aphour=GETPOST('aphour');
+        $apmin=GETPOST('apmin');
+        $p2hour=GETPOST('p2hour');
+        $p2min=GETPOST('p2min');
 
 	    // Clean parameters
-		if ($_POST["aphour"] == -1) $_POST["aphour"]='0';
-		if ($_POST["apmin"] == -1) $_POST["apmin"]='0';
-		if ($_POST["p2hour"] == -1) $_POST["p2hour"]='0';
-		if ($_POST["p2min"] == -1) $_POST["p2min"]='0';
+		if ($aphour == -1) $aphour='0';
+		if ($apmin == -1) $apmin='0';
+		if ($p2hour == -1) $p2hour='0';
+		if ($p2min == -1) $p2min='0';
 		//if ($_POST["adhour"] == -1) $_POST["adhour"]='0';
 		//if ($_POST["admin"] == -1) $_POST["admin"]='0';
 
 		$actioncomm = new Actioncomm($db);
 		$actioncomm->fetch($id);
 
-		$datep=dol_mktime($fulldayevent?'00':$_POST["aphour"], $fulldayevent?'00':$_POST["apmin"], 0, $_POST["apmonth"], $_POST["apday"], $_POST["apyear"]);
-		$datef=dol_mktime($fulldayevent?'23':$_POST["p2hour"], $fulldayevent?'59':$_POST["p2min"], $fulldayevent?'59':'0', $_POST["p2month"], $_POST["p2day"], $_POST["p2year"]);
+		$datep=dol_mktime($fulldayevent?'00':$aphour, $fulldayevent?'00':$apmin, 0, $_POST["apmonth"], $_POST["apday"], $_POST["apyear"]);
+		$datef=dol_mktime($fulldayevent?'23':$p2hour, $fulldayevent?'59':$p2min, $fulldayevent?'59':'0', $_POST["p2month"], $_POST["p2day"], $_POST["p2year"]);
 
 		$actioncomm->label       = $_POST["label"];
 		$actioncomm->datep       = $datep;
@@ -450,7 +460,7 @@ if ($action == 'create')
 	print '<tr><td>'.$langs->trans("Title").'</td><td><input type="text" name="label" size="60" value="'.GETPOST('label').'"></td></tr>';
 
     // Full day
-    print '<tr><td>'.$langs->trans("EventOnFullDay").'</td><td><input type="checkbox" id="fullday" name="fullday" '.(GETPOST('fullday')?' checked="checked"':'').'></td></tr>';
+    print '<tr><td class="fieldrequired">'.$langs->trans("EventOnFullDay").'</td><td><input type="checkbox" id="fullday" name="fullday" '.(GETPOST('fullday')?' checked="checked"':'').'></td></tr>';
 
 	// Date start
 	$datep=$actioncomm->datep;
@@ -480,7 +490,7 @@ if ($action == 'create')
 	else
 	{
 		if (GETPOST("afaire") == 1) $percent=0;
-		if (GETPOST("afaire") == 2) $percent=100;
+		else if (GETPOST("afaire") == 2) $percent=100;
 	}
 	print $htmlactions->form_select_status_action('formaction',$percent,1,'complete');
 	print '</td></tr>';
@@ -561,10 +571,14 @@ if ($action == 'create')
 
     // Description
     print '<tr><td valign="top">'.$langs->trans("Description").'</td><td>';
-    require_once(DOL_DOCUMENT_ROOT."/core/class/doleditor.class.php");
+    require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
     $doleditor=new DolEditor('note',(GETPOST('note')?GETPOST('note'):$actioncomm->note),'',280,'dolibarr_notes','In',true,true,$conf->fckeditor->enabled,ROWS_7,90);
     $doleditor->Create();
     print '</td></tr>';
+
+        // Other attributes
+        $parameters=array();
+        $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$actioncomm,$action);    // Note that $action and $object may have been modified by hook
 
 	print '</table>';
 
@@ -690,7 +704,7 @@ if ($id)
 		print '<tr><td>'.$langs->trans("Title").'</td><td colspan="3"><input type="text" name="label" size="50" value="'.$act->label.'"></td></tr>';
 
         // Full day event
-        print '<tr><td>'.$langs->trans("EventOnFullDay").'</td><td colspan="3"><input type="checkbox" id="fullday" name="fullday" '.($act->fulldayevent?' checked="checked"':'').'></td></tr>';
+        print '<tr><td class="fieldrequired">'.$langs->trans("EventOnFullDay").'</td><td colspan="3"><input type="checkbox" id="fullday" name="fullday" '.($act->fulldayevent?' checked="checked"':'').'></td></tr>';
 
 		// Date start
 		print '<tr><td nowrap="nowrap" class="fieldrequired">'.$langs->trans("DateActionStart").'</td><td colspan="3">';
@@ -706,7 +720,7 @@ if ($id)
 		print '</td></tr>';
 
 		// Status
-		print '<tr><td nowrap>'.$langs->trans("Status").' / '.$langs->trans("Percentage").'</td><td colspan="3">';
+		print '<tr><td nowrap="nowrap">'.$langs->trans("Status").' / '.$langs->trans("Percentage").'</td><td colspan="3">';
 		$percent=GETPOST("percentage")?GETPOST("percentage"):$act->percentage;
 		print $htmlactions->form_select_status_action('formaction',$percent,1);
 		print '</td></tr>';
@@ -777,7 +791,7 @@ if ($id)
         // Description
         print '<tr><td valign="top">'.$langs->trans("Description").'</td><td colspan="3">';
         // Editeur wysiwyg
-        require_once(DOL_DOCUMENT_ROOT."/core/class/doleditor.class.php");
+        require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
         $doleditor=new DolEditor('note',$act->note,'',240,'dolibarr_notes','In',true,true,$conf->fckeditor->enabled,ROWS_5,90);
         $doleditor->Create();
         print '</td></tr>';
@@ -856,7 +870,7 @@ if ($id)
 		print '</td></tr>';
 
 		// Status
-		print '<tr><td nowrap>'.$langs->trans("Status").' / '.$langs->trans("Percentage").'</td><td colspan="2">';
+		print '<tr><td nowrap="nowrap">'.$langs->trans("Status").' / '.$langs->trans("Percentage").'</td><td colspan="2">';
 		print $act->getLibStatut(4);
 		print '</td></tr>';
 
@@ -943,6 +957,10 @@ if ($id)
 		print '<tr><td valign="top">'.$langs->trans("Description").'</td><td colspan="3">';
 		print dol_htmlentitiesbr($act->note);
 		print '</td></tr>';
+
+                // Other attributes
+                $parameters=array();
+                $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$act,$action);    // Note that $action and $object may have been modified by hook
 
 		print '</table>';
 	}

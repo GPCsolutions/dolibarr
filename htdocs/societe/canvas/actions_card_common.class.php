@@ -1,6 +1,6 @@
 <?php
-/* Copyright (C) 2010 Regis Houssin        <regis@dolibarr.fr>
- * Copyright (C) 2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2010-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2011-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ abstract class ActionsCardCommon
 	        if (file_exists($modelclassfile))
 	        {
 	            // Include dataservice class (model)
-	            $ret = require_once($modelclassfile);
+	            $ret = require_once $modelclassfile;
 	            if ($ret)
 	            {
 	            	// Instantiate dataservice class (model)
@@ -111,7 +111,7 @@ abstract class ActionsCardCommon
         if ((! $_POST["getcustomercode"] && ! $_POST["getsuppliercode"])
         && ($action == 'add' || $action == 'update'))
         {
-            require_once(DOL_DOCUMENT_ROOT."/core/lib/functions2.lib.php");
+            require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
             $error=0;
 
             if (GETPOST("private") == 1)
@@ -328,7 +328,7 @@ abstract class ActionsCardCommon
             }
             else
             {
-                require_once(DOL_DOCUMENT_ROOT.'/core/modules/societe/modules_societe.class.php');
+                require_once DOL_DOCUMENT_ROOT.'/core/modules/societe/modules_societe.class.php';
 
                 $this->object->fetch_thirdparty();
 
@@ -425,8 +425,7 @@ abstract class ActionsCardCommon
 			}
 
             // Load object modCodeClient
-            $module=$conf->global->SOCIETE_CODECLIENT_ADDON;
-            if (! $module) dolibarr_error('',$langs->trans("ErrorModuleThirdPartyCodeInCompanyModuleNotDefined"));
+            $module=(! empty($conf->global->SOCIETE_CODECLIENT_ADDON)?$conf->global->SOCIETE_CODECLIENT_ADDON:'mod_codeclient_leopard');
             if (substr($module, 0, 15) == 'mod_codeclient_' && substr($module, -3) == 'php')
             {
                 $module = substr($module, 0, dol_strlen($module)-4);
@@ -434,7 +433,7 @@ abstract class ActionsCardCommon
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
             {
-                $res=dol_include_once($dirroot.$module.".php");
+                $res=dol_include_once($dirroot.$module.'.php');
                 if ($res) break;
             }
             $modCodeClient = new $module;
@@ -471,7 +470,7 @@ abstract class ActionsCardCommon
                 $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
                 foreach ($dirsociete as $dirroot)
                 {
-                    $res=dol_include_once($dirroot.$module.".php");
+                    $res=dol_include_once($dirroot.$module.'.php');
                     if ($res) break;
                 }
             	$modCodeFournisseur = new $module;
@@ -578,7 +577,7 @@ abstract class ActionsCardCommon
 
             if ($conf->global->MAIN_MULTILANGS)
             {
-                require_once(DOL_DOCUMENT_ROOT."/core/lib/functions2.lib.php");
+                require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
                 //$s=picto_from_langcode($this->default_lang);
                 //print ($s?$s.' ':'');
                 $langs->load("languages");

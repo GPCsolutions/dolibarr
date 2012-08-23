@@ -1,8 +1,8 @@
 <?php
-/* Copyright (C) 2003-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
- * Copyright (C) 2011	   Juanjo Menent        <jmenent@2byte.es>
+/* Copyright (C) 2003-2004	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
+ * Copyright (C) 2004-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2012	Regis Houssin			<regis@dolibarr.fr>
+ * Copyright (C) 2011		Juanjo Menent			<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,9 +24,9 @@
  *	\brief      Page to setup barcode module
  */
 
-require("../main.inc.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/admin.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/html.formbarcode.class.php");
+require '../main.inc.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formbarcode.class.php';
 
 $langs->load("admin");
 
@@ -108,11 +108,11 @@ clearstatcache();
 
 
 // Scan list of all barcode included provided by external modules
-$dirbarcode=array_merge(array("/core/modules/barcode/"),$conf->modules_parts['barcode']);
+$dirbarcode=array_merge(array("/core/modules/barcode/"), $conf->modules_parts['barcode']);
 
 foreach($dirbarcode as $reldir)
 {
-    $dir=dol_buildpath($reldir,0);
+    $dir=dol_buildpath($reldir);
     $newdir=dol_osencode($dir);
 
     // Check if directory exists (we do not use dol_is_dir to avoid loading files.lib.php)
@@ -132,7 +132,7 @@ foreach($dirbarcode as $reldir)
 						$filebis=$reg[1];
 
 						// Chargement de la classe de codage
-						require_once($newdir.$file);
+						require_once $newdir.$file;
 						$classname = "mod".ucfirst($filebis);
 						$module = new $classname($db);
 
@@ -207,7 +207,7 @@ if ($resql)
 			    // Check if directory exists (we do not use dol_is_dir to avoid loading files.lib.php)
 			    if (! is_dir($newdir)) continue;
 
-				$result=@include_once($newdir.$obj->coder.".modules.php");
+				$result=@include_once $newdir.$obj->coder.'.modules.php';
 				if ($result) break;
 			}
 			if ($result)

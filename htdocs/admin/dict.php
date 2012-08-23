@@ -6,6 +6,7 @@
  * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2011      Philippe Grand       <philippe.grand@atoo-net.com>
  * Copyright (C) 2011      Remy Younes          <ryounes@gmail.com>
+ * Copyright (C) 2012      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,10 +28,10 @@
  *		\brief      Page to administer data tables
  */
 
-require("../main.inc.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/html.formadmin.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/html.formcompany.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/admin.lib.php");
+require '../main.inc.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formadmin.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 
 $langs->load("errors");
 $langs->load("admin");
@@ -61,7 +62,7 @@ $pageprev = $page - 1;
 $pagenext = $page + 1;
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
-include_once(DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php');
+include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
 $hookmanager=new HookManager($db);
 $hookmanager->initHooks(array('admin'));
 
@@ -338,18 +339,23 @@ if ($id == 11)
     $langs->load("propal");
     $langs->load("bills");
     $langs->load("interventions");
-    $elementList = array("commande"=>$langs->trans("Order"),
-    "order_supplier"=>$langs->trans("SupplierOrder"),
-    "contrat"=>$langs->trans("Contract"),
-    "project"=>$langs->trans("Project"),
-    "project_task"=>$langs->trans("Task"),
-    "propal"=>$langs->trans("Propal"),
-    "facture"=>$langs->trans("Bill"),
-    "facture_fourn"=>$langs->trans("SupplierBill"),
-    "fichinter"=>$langs->trans("InterventionCard"));
-    if (! empty($conf->global->MAIN_SUPPORT_CONTACT_TYPE_FOR_THIRDPARTIES)) $elementList["societe"]=$langs->trans("ThirdParty");
-    $sourceList = array("internal"=>$langs->trans("Internal"),
-    "external"=>$langs->trans("External"));
+    $elementList = array(
+        'commande'          => $langs->trans('Order'),
+        'invoice_supplier'  => $langs->trans('SupplierBill'),
+        'order_supplier'    => $langs->trans('SupplierOrder'),
+        'contrat'           => $langs->trans('Contract'),
+        'project'           => $langs->trans('Project'),
+        'project_task'      => $langs->trans('Task'),
+        'propal'            => $langs->trans('Proposal'),
+        'facture'           => $langs->trans('Bill'),
+        'facture_fourn'     => $langs->trans('SupplierBill'),
+        'fichinter'         => $langs->trans('InterventionCard')
+    );
+    if (! empty($conf->global->MAIN_SUPPORT_CONTACT_TYPE_FOR_THIRDPARTIES)) $elementList["societe"] = $langs->trans('ThirdParty');
+    $sourceList = array(
+        'internal' => $langs->trans('Internal'),
+        'external' => $langs->trans('External')
+    );
 }
 
 $msg='';
@@ -379,10 +385,18 @@ if (GETPOST('actionadd') || GETPOST('actionmodify'))
             $ok=0;
             $fieldnamekey=$listfield[$f];
             // We take translate key of field
-            if ($fieldnamekey == 'libelle')  $fieldnamekey='Label';
+            if ($fieldnamekey == 'libelle' || ($fieldnamekey == 'label'))  $fieldnamekey='Label';
+            if ($fieldnamekey == 'libelle_facture') $fieldnamekey = 'LabelOnDocuments';
             if ($fieldnamekey == 'nbjour')   $fieldnamekey='NbOfDays';
             if ($fieldnamekey == 'decalage') $fieldnamekey='Offset';
             if ($fieldnamekey == 'module')   $fieldnamekey='Module';
+            if ($fieldnamekey == 'code') $fieldnamekey = 'Code';
+            if ($fieldnamekey == 'note') $fieldnamekey = 'Note';
+            if ($fieldnamekey == 'taux') $fieldnamekey = 'Rate';
+            if ($fieldnamekey == 'type') $fieldnamekey = 'Type';
+            if ($fieldnamekey == 'position') $fieldnamekey = 'Position';
+            if ($fieldnamekey == 'unicode') $fieldnamekey = 'Unicode';
+
             $msg.=$langs->trans("ErrorFieldRequired",$langs->transnoentities($fieldnamekey)).'<br>';
         }
     }
@@ -702,14 +716,14 @@ if ($id)
         // Line to type new values
         print "<tr ".$bc[$var].">";
 
-        $obj='';
+        $obj = (object) array();
         // If data was already input, we define them in obj to populate input fields.
         if (GETPOST('actionadd'))
         {
             foreach ($fieldlist as $key=>$val)
             {
-                if (! empty($_POST[$val])) $obj->$val=$_POST[$val];
-
+                if (GETPOST($val))
+                	$obj->$val=GETPOST($val);
             }
         }
 
@@ -827,7 +841,15 @@ if ($id)
                         {
                             $showfield=1;
                             $valuetoshow=$obj->$fieldlist[$field];
-                            if ($valuetoshow=='all') {
+                            if ($value == 'element')
+                            {
+                                $valuetoshow = $elementList[$valuetoshow];
+                            }
+                            else if ($value == 'source')
+                            {
+                                $valuetoshow = $sourceList[$valuetoshow];
+                            }
+                            else if ($valuetoshow=='all') {
                                 $valuetoshow=$langs->trans('All');
                             }
                             else if ($fieldlist[$field]=='pays') {
@@ -909,6 +931,17 @@ if ($id)
                                 $langs->load("sendings");
                                 $key=$langs->trans("SendingMethod".strtoupper($obj->code));
                                 $valuetoshow=($obj->code && $key != "SendingMethod".strtoupper($obj->code))?$key:$obj->$fieldlist[$field];
+                            }
+                            else if ($fieldlist[$field] == 'libelle' && $tabname[$_GET['id']]==MAIN_DB_PREFIX.'c_paper_format')
+                            {
+                                $key = $langs->trans('PaperFormat'.strtoupper($obj->code));
+                                $valuetoshow = ($obj->code && ($key != 'PaperFormat'.strtoupper($obj->code))) ? $key : $obj->$fieldlist[$field];
+                            }
+                            else if ($fieldlist[$field] == 'libelle' && $tabname[$_GET['id']] == MAIN_DB_PREFIX.'c_type_fees')
+                            {
+                                $langs->load('trips');
+                                $key = $langs->trans(strtoupper($obj->code));
+                                $valuetoshow = ($obj->code && ($key != strtoupper($obj->code))) ? $key : $obj->$fieldlist[$field];
                             }
                             else if ($fieldlist[$field]=='region_id' || $fieldlist[$field]=='pays_id') {
                                 $showfield=0;

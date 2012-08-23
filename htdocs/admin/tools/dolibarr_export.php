@@ -22,10 +22,10 @@
  *		\brief      Page to export database
  */
 
-require("../../main.inc.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/admin.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/html.formfile.class.php");
+require '../../main.inc.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 
 $langs->load("admin");
 
@@ -76,7 +76,7 @@ jQuery(document).ready(function() {
 
 	function hideoptions () {
 		jQuery("#mysql_options").hide();
-		jQuery("#mysql_options_nobin").hide();
+		jQuery("#mysql_nobin_options").hide();
 		jQuery("#postgresql_options").hide();
 	}
 
@@ -87,7 +87,7 @@ jQuery(document).ready(function() {
 	});
 	jQuery("#radio_dump_mysql_nobin").click(function() {
 		hideoptions();
-		jQuery("#mysql_options_nobin").show();
+		jQuery("#mysql_nobin_options").show();
 	});
 	jQuery("#radio_dump_postgresql").click(function() {
 		hideoptions();
@@ -141,7 +141,7 @@ print $langs->trans("BackupDescY").'<br><br>';
 			</div>
 			<br>
 			<div class="formelementrow"><input type="radio" name="what" value="mysqlnobin" id="radio_dump_mysql_nobin" />
-			<label for="radio_dump_mysql">MySQL	Dump (php) <?php print img_warning('Backup can\'t be guaranted with this method. Prefer previous one'); ?></label>
+			<label for="radio_dump_mysql">MySQL Dump (php) <?php print img_warning($langs->trans('BackupPHPWarning')) ?></label>
 			</div>
 			<?php
 		}
@@ -218,7 +218,7 @@ print $langs->trans("BackupDescY").'<br><br>';
 			<br>
 			<fieldset><legend> <input type="checkbox" name="sql_structure"
 				value="structure" id="checkbox_sql_structure" checked="checked" /> <label
-				for="checkbox_sql_structure"> Structure</label> </legend> <input
+				for="checkbox_sql_structure"> <?php echo $langs->trans('ExportStructure') ?></label> </legend> <input
 				type="checkbox" name="drop" value="1" id="checkbox_dump_drop" /> <label
 				for="checkbox_dump_drop"><?php echo $langs->trans("AddDropTable"); ?></label><br>
 			</fieldset>
@@ -255,6 +255,50 @@ print $langs->trans("BackupDescY").'<br><br>';
 
 			</fieldset>
 			</fieldset>
+
+                        <!--  Fieldset mysql_nobin -->
+			<fieldset id="mysql_nobin_options"><legend><?php echo $langs->trans("MySqlExportParameters"); ?></legend>
+                            <fieldset>
+                                <legend><?php echo $langs->trans("ExportOptions"); ?></legend>
+                                <div class="formelementrow"><input type="checkbox"
+                                        name="nobin_use_transaction" value="yes" id="checkbox_use_transaction" /> <label
+                                        for="checkbox_use_transaction"> <?php echo $langs->trans("UseTransactionnalMode"); ?></label>
+
+                                </div>
+
+                                <div class="formelementrow"><input type="checkbox" name="nobin_disable_fk"
+                                        value="yes" id="checkbox_disable_fk" checked="checked" /> <label
+                                        for="checkbox_disable_fk"> <?php echo $langs->trans("CommandsToDisableForeignKeysForImport"); ?> <?php print img_info($langs->trans('CommandsToDisableForeignKeysForImportWarning')); ?></label>
+                                </div>
+                            </fieldset>
+
+                            <br>
+                            <fieldset><legend><?php echo $langs->trans('ExportStructure') ?></legend> <input
+                                    type="checkbox" name="nobin_drop" value="1" id="checkbox_dump_drop" /> <label
+                                    for="checkbox_dump_drop"><?php echo $langs->trans("AddDropTable"); ?></label><br>
+                            </fieldset>
+
+                            <br>
+                            <fieldset>
+                                <legend><?php echo $langs->trans("Datas"); ?></legend>
+
+                                <input type="checkbox" name="nobin_nolocks" value="no"
+                                        id="checkbox_dump_disable-add-locks" /> <label
+                                        for="checkbox_dump_disable-add-locks"> <?php echo $langs->trans("NoLockBeforeInsert"); ?></label><br>
+
+                                <input type="checkbox" name="nobin_delayed" value="yes"
+                                        id="checkbox_dump_delayed" /> <label for="checkbox_dump_delayed"> <?php echo $langs->trans("DelayedInsert"); ?></label><br>
+
+                                <input type="checkbox" name="nobin_sql_ignore" value="yes"
+                                        id="checkbox_dump_ignore" /> <label for="checkbox_dump_ignore"> <?php echo $langs->trans("IgnoreDuplicateRecords"); ?></label><br>
+
+                                <input type="checkbox" name="nobin_charset_utf8" value="yes"
+                                        id="checkbox_charset_utf8" checked="checked" disabled="disabled" /> <label
+                                        for="checkbox_charset_utf8"> <?php echo $langs->trans("UTF8"); ?></label><br>
+
+                            </fieldset>
+			</fieldset>
+
 		<?php
 		}
 
@@ -292,7 +336,7 @@ print $langs->trans("BackupDescY").'<br><br>';
 			<br>
 			<fieldset><legend> <input type="checkbox" name="sql_structure"
 				value="structure" id="checkbox_sql_structure" checked="checked" /> <label
-				for="checkbox_sql_structure"> Structure</label> </legend></fieldset>
+				for="checkbox_sql_structure"> <?php echo $langs->trans('ExportStructure') ?></label> </legend></fieldset>
 
 			<br>
 			<fieldset><legend> <input type="checkbox" name="sql_data" value="data"

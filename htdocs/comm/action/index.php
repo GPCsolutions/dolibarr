@@ -25,13 +25,13 @@
  *  \brief      Home page of calendar events
  */
 
-require("../../main.inc.php");
-require_once(DOL_DOCUMENT_ROOT."/societe/class/societe.class.php");
-require_once(DOL_DOCUMENT_ROOT."/contact/class/contact.class.php");
-require_once(DOL_DOCUMENT_ROOT."/comm/action/class/actioncomm.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/date.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/agenda.lib.php");
-if ($conf->projet->enabled) require_once(DOL_DOCUMENT_ROOT."/core/lib/project.lib.php");
+require '../../main.inc.php';
+require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/agenda.lib.php';
+if ($conf->projet->enabled) require_once DOL_DOCUMENT_ROOT.'/core/lib/project.lib.php';
 
 if (! isset($conf->global->AGENDA_MAX_EVENTS_DAY_VIEW)) $conf->global->AGENDA_MAX_EVENTS_DAY_VIEW=3;
 
@@ -519,7 +519,7 @@ if ($showbirthday)
 
 if (count($listofextcals))
 {
-    require_once(DOL_DOCUMENT_ROOT."/comm/action/class/ical.class.php");
+    require_once DOL_DOCUMENT_ROOT.'/comm/action/class/ical.class.php';
     foreach($listofextcals as $extcal)
     {
         $url=$extcal['src'];    // Example: https://www.google.com/calendar/ical/eldy10%40gmail.com/private-cde92aa7d7e0ef6110010a821a2aaeb/basic.ics
@@ -738,7 +738,7 @@ $cachecontacts=array();
 $color_file = DOL_DOCUMENT_ROOT."/theme/".$conf->theme."/graph-color.php";
 if (is_readable($color_file))
 {
-    include_once($color_file);
+    include_once $color_file;
 }
 if (! is_array($theme_datacolor)) $theme_datacolor=array(array(120,130,150), array(200,160,180), array(190,190,220));
 
@@ -746,11 +746,13 @@ if (! is_array($theme_datacolor)) $theme_datacolor=array(array(120,130,150), arr
 if (empty($action) || $action == 'show_month')      // View by month
 {
     $newparam=$param;   // newparam is for birthday links
+    $newparam=preg_replace('/showbirthday=/i','showbirthday_=',$newparam);	// To avoid replacement when replace day= is done
     $newparam=preg_replace('/action=show_month&?/i','',$newparam);
     $newparam=preg_replace('/action=show_week&?/i','',$newparam);
-    $newparam=preg_replace('/day=[0-9][0-9]&?/i','',$newparam);
-    $newparam=preg_replace('/month=[0-9][0-9]&?/i','',$newparam);
+    $newparam=preg_replace('/day=[0-9]+&?/i','',$newparam);
+    $newparam=preg_replace('/month=[0-9]+&?/i','',$newparam);
     $newparam=preg_replace('/year=[0-9]+&?/i','',$newparam);
+    $newparam=preg_replace('/showbirthday_=/i','showbirthday=',$newparam);	// Restore correct parameter
     echo '<table width="100%" class="nocellnopadd">';
     echo ' <tr class="liste_titre">';
     $i=0;
@@ -812,11 +814,13 @@ if (empty($action) || $action == 'show_month')      // View by month
 elseif ($action == 'show_week') // View by week
 {
     $newparam=$param;   // newparam is for birthday links
+    $newparam=preg_replace('/showbirthday=/i','showbirthday_=',$newparam);	// To avoid replacement when replace day= is done
     $newparam=preg_replace('/action=show_month&?/i','',$newparam);
     $newparam=preg_replace('/action=show_week&?/i','',$newparam);
-    $newparam=preg_replace('/day=[0-9][0-9]&?/i','',$newparam);
-    $newparam=preg_replace('/month=[0-9][0-9]&?/i','',$newparam);
+    $newparam=preg_replace('/day=[0-9]+&?/i','',$newparam);
+    $newparam=preg_replace('/month=[0-9]+&?/i','',$newparam);
     $newparam=preg_replace('/year=[0-9]+&?/i','',$newparam);
+    $newparam=preg_replace('/showbirthday_=/i','showbirthday=',$newparam);	// Restore correct parameter
     echo '<table width="100%" class="nocellnopadd">';
     echo ' <tr class="liste_titre">';
     $i=0;
@@ -868,9 +872,6 @@ else    // View by day
     $newparam=$param;   // newparam is for birthday links
     $newparam=preg_replace('/action=show_month&?/i','',$newparam);
     $newparam=preg_replace('/action=show_week&?/i','',$newparam);
-    $newparam=preg_replace('/day=[0-9][0-9]&?/i','',$newparam);
-    $newparam=preg_replace('/month=[0-9][0-9]&?/i','',$newparam);
-    $newparam=preg_replace('/year=[0-9]+&?/i','',$newparam);
     // Code to show just one day
     $style='cal_current_month';
     $today=0;

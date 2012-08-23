@@ -23,12 +23,12 @@
  *	\brief      Project card
  */
 
-require("../main.inc.php");
-require_once(DOL_DOCUMENT_ROOT."/projet/class/project.class.php");
-require_once(DOL_DOCUMENT_ROOT."/projet/class/task.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/project.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/html.formfile.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/modules/project/modules_project.php");
+require '../main.inc.php';
+require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
+require_once DOL_DOCUMENT_ROOT.'/projet/class/task.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/project.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/modules/project/modules_project.php';
 
 $langs->load("projects");
 $langs->load('companies');
@@ -48,6 +48,11 @@ $mine = GETPOST('mode')=='mine' ? 1 : 0;
 $socid=0;
 if ($user->societe_id > 0) $socid=$user->societe_id;
 $result = restrictedArea($user, 'projet', $id);
+
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+$hookmanager=new HookManager($db);
+$hookmanager->initHooks(array('projectcard'));
 
 $object = new Project($db);
 $object->fetch($id,$ref);
@@ -244,7 +249,7 @@ if ($action == 'builddoc' && $user->rights->projet->creer)
 // Delete file in doc form
 if ($action == 'remove_file' && $user->rights->projet->creer)
 {
-    require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
+    require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
     if ($object->id > 0)
     {
@@ -354,7 +359,7 @@ if ($action == 'create' && $user->rights->projet->creer)
     $obj = empty($conf->global->PROJECT_ADDON)?'mod_project_simple':$conf->global->PROJECT_ADDON;
     if (! empty($conf->global->PROJECT_ADDON) && is_readable(DOL_DOCUMENT_ROOT ."/core/modules/project/".$conf->global->PROJECT_ADDON.".php"))
     {
-        require_once(DOL_DOCUMENT_ROOT ."/core/modules/project/".$conf->global->PROJECT_ADDON.".php");
+        require_once DOL_DOCUMENT_ROOT ."/core/modules/project/".$conf->global->PROJECT_ADDON.'.php';
         $modProject = new $obj;
         $defaultref = $modProject->getNextValue($soc,$object);
     }
@@ -395,6 +400,10 @@ if ($action == 'create' && $user->rights->projet->creer)
     print '<td>';
     print '<textarea name="description" wrap="soft" cols="80" rows="'.ROWS_3.'">'.$_POST["description"].'</textarea>';
     print '</td></tr>';
+
+    // Other options
+    $parameters=array();
+    $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action); // Note that $action and $object may have been modified by hook
 
     print '</table>';
 
@@ -527,6 +536,10 @@ else
         print '<textarea name="description" wrap="soft" cols="80" rows="'.ROWS_3.'">'.$object->description.'</textarea>';
         print '</td></tr>';
 
+        // Other options
+        $parameters=array();
+        $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action); // Note that $action and $object may have been modified by hook
+
         print '</table>';
 
         print '<div align="center"><br>';
@@ -584,6 +597,10 @@ else
         print '<td valign="top">'.$langs->trans("Description").'</td><td>';
         print nl2br($object->description);
         print '</td></tr>';
+
+        // Other options
+        $parameters=array();
+        $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action); // Note that $action and $object may have been modified by hook
 
         print '</table>';
     }
@@ -701,7 +718,7 @@ else
         print '</td><td valign="top" width="50%">';
 
         // List of actions on element
-        include_once(DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php');
+        include_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
         $formactions=new FormActions($db);
         $somethingshown=$formactions->showactions($object,'project',$socid);
 

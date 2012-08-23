@@ -27,16 +27,16 @@
  *  \brief      Third party card page
  */
 
-require("../main.inc.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/company.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/images.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/html.formadmin.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/html.formcompany.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/html.formfile.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/extrafields.class.php");
-require_once(DOL_DOCUMENT_ROOT."/contact/class/contact.class.php");
-if ($conf->adherent->enabled) require_once(DOL_DOCUMENT_ROOT."/adherents/class/adherent.class.php");
+require '../main.inc.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/images.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formadmin.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+if ($conf->adherent->enabled) require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
 
 $langs->load("companies");
 $langs->load("commercial");
@@ -61,7 +61,7 @@ $canvas = $object->canvas?$object->canvas:GETPOST("canvas");
 $objcanvas='';
 if (! empty($canvas))
 {
-    require_once(DOL_DOCUMENT_ROOT."/core/class/canvas.class.php");
+    require_once DOL_DOCUMENT_ROOT.'/core/class/canvas.class.php';
     $objcanvas = new Canvas($db, $action);
     $objcanvas->getCanvas('thirdparty', 'card', $canvas);
 }
@@ -70,7 +70,7 @@ if (! empty($canvas))
 $result = restrictedArea($user, 'societe', $socid, '&societe', '', 'fk_soc', 'rowid', $objcanvas);
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
-include_once(DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php');
+include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
 $hookmanager=new HookManager($db);
 $hookmanager->initHooks(array('thirdpartycard'));
 
@@ -101,7 +101,7 @@ if (empty($reshook))
     if ((! GETPOST('getcustomercode') && ! GETPOST('getsuppliercode'))
     && ($action == 'add' || $action == 'update') && $user->rights->societe->creer)
     {
-        require_once(DOL_DOCUMENT_ROOT."/core/lib/functions2.lib.php");
+        require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 
         if ($action == 'update')
         {
@@ -424,7 +424,7 @@ if (empty($reshook))
         }
         else
         {
-            require_once(DOL_DOCUMENT_ROOT.'/core/modules/societe/modules_societe.class.php');
+            require_once DOL_DOCUMENT_ROOT.'/core/modules/societe/modules_societe.class.php';
 
             $object->fetch($socid);
 
@@ -457,7 +457,7 @@ if (empty($reshook))
     {
     	if ($object->fetch($socid))
     	{
-    		require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
+    		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
     		$langs->load("other");
     		$upload_dir = $conf->societe->dir_output;
@@ -514,8 +514,7 @@ else
          */
 
         // Load object modCodeTiers
-        $module=$conf->global->SOCIETE_CODECLIENT_ADDON;
-        if (! $module) dolibarr_error('',$langs->trans("ErrorModuleThirdPartyCodeInCompanyModuleNotDefined"));
+        $module=(! empty($conf->global->SOCIETE_CODECLIENT_ADDON)?$conf->global->SOCIETE_CODECLIENT_ADDON:'mod_codeclient_leopard');
         if (substr($module, 0, 15) == 'mod_codeclient_' && substr($module, -3) == 'php')
         {
             $module = substr($module, 0, dol_strlen($module)-4);
@@ -523,7 +522,7 @@ else
         $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
         foreach ($dirsociete as $dirroot)
         {
-            $res=dol_include_once($dirroot.$module.".php");
+            $res=dol_include_once($dirroot.$module.'.php');
             if ($res) break;
         }
         $modCodeClient = new $module;
@@ -536,7 +535,7 @@ else
         $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
         foreach ($dirsociete as $dirroot)
         {
-            $res=dol_include_once($dirroot.$module.".php");
+            $res=dol_include_once($dirroot.$module.'.php');
             if ($res) break;
         }
         $modCodeFournisseur = new $module;
@@ -1003,8 +1002,7 @@ else
 
 
             // Load object modCodeTiers
-            $module=$conf->global->SOCIETE_CODECLIENT_ADDON;
-            if (! $module) dolibarr_error('',$langs->trans("ErrorModuleThirdPartyCodeInCompanyModuleNotDefined"));
+            $module=(! empty($conf->global->SOCIETE_CODECLIENT_ADDON)?$conf->global->SOCIETE_CODECLIENT_ADDON:'mod_codeclient_leopard');
             if (substr($module, 0, 15) == 'mod_codeclient_' && substr($module, -3) == 'php')
             {
                 $module = substr($module, 0, dol_strlen($module)-4);
@@ -1012,7 +1010,7 @@ else
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
             {
-                $res=dol_include_once($dirroot.$module.".php");
+                $res=dol_include_once($dirroot.$module.'.php');
                 if ($res) break;
             }
             $modCodeClient = new $module;
@@ -1030,7 +1028,7 @@ else
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
             {
-                $res=dol_include_once($dirroot.$module.".php");
+                $res=dol_include_once($dirroot.$module.'.php');
                 if ($res) break;
             }
             $modCodeFournisseur = new $module;
@@ -1681,7 +1679,7 @@ else
         // Default language
         if ($conf->global->MAIN_MULTILANGS)
         {
-            require_once(DOL_DOCUMENT_ROOT."/core/lib/functions2.lib.php");
+            require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
             print '<tr><td>'.$langs->trans("DefaultLang").'</td><td colspan="3">';
             //$s=picto_from_langcode($object->default_lang);
             //print ($s?$s.' ':'');
@@ -1751,7 +1749,7 @@ else
         }
 
         // Sales representative
-        include(DOL_DOCUMENT_ROOT.'/societe/tpl/linesalesrepresentative.tpl.php');
+        include DOL_DOCUMENT_ROOT.'/societe/tpl/linesalesrepresentative.tpl.php';
 
         // Module Adherent
         if ($conf->adherent->enabled)

@@ -27,9 +27,9 @@
  *		\brief      Page to setup the module MailmanSpip (SPIP)
  */
 
-require("../../main.inc.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/admin.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/mailmanspip.lib.php");
+require '../../main.inc.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/mailmanspip.lib.php';
 
 $langs->load("admin");
 $langs->load("members");
@@ -138,7 +138,7 @@ if ($conf->global->ADHERENT_USE_SPIP)
     	'ADHERENT_SPIP_PASS'
 	);
 
-    print_fiche_titre("SPIP CMS",$lien,'');
+    print_fiche_titre($langs->trans('SPIPTitle'), $lien, '');
     form_constantes($constantes);
     print '<br>';
 }
@@ -148,7 +148,7 @@ else
     //$lien.=$langs->trans("Activate");
     $lien.=img_picto($langs->trans("Disabled"),'switch_off');
     $lien.='</a>';
-    print_fiche_titre("SPIP CMS",$lien,'');
+    print_fiche_titre($langs->trans('SPIPTitle'), $lien, '');
 }
 
 

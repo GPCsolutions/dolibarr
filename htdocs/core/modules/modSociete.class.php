@@ -27,7 +27,7 @@
  *	\brief      Fichier de description et activation du module Societe
  */
 
-include_once(DOL_DOCUMENT_ROOT ."/core/modules/DolibarrModules.class.php");
+include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
 
 
 /**
@@ -74,6 +74,20 @@ class modSociete extends DolibarrModules
 		// Constantes
 		$this->const = array();
 		$r=0;
+
+		$this->const[$r][0] = "SOCIETE_CODECLIENT_ADDON";
+		$this->const[$r][1] = "chaine";
+		$this->const[$r][2] = "mod_codeclient_leopard";
+		$this->const[$r][3] = 'Module to control third parties codes';
+		$this->const[$r][4] = 0;
+		$r++;
+
+		$this->const[$r][0] = "SOCIETE_CODECOMPTA_ADDON";
+		$this->const[$r][1] = "chaine";
+		$this->const[$r][2] = "mod_codecompta_panicum";
+		$this->const[$r][3] = 'Module to control third parties codes';
+		$this->const[$r][4] = 0;
+		$r++;
 
 		$this->const[$r][0] = "SOCIETE_FISCAL_MONTH_START";
 		$this->const[$r][1] = "chaine";
@@ -341,7 +355,7 @@ class modSociete extends DolibarrModules
 		$this->import_icon[$r]='contact';
 		$this->import_entities_array[$r]=array('s.fk_soc'=>'company');	// We define here only fields that use another icon that the one defined into import_icon
 		$this->import_tables_array[$r]=array('s'=>MAIN_DB_PREFIX.'socpeople');	// List of tables to insert into (insert done in same order)
-		$this->import_fields_array[$r]=array('s.fk_soc'=>'ThirdPartyName*','s.civilite'=>'Civility','s.name'=>"Name*",'s.firstname'=>"Firstname",'s.address'=>"Address",'s.cp'=>"Zip",'s.ville'=>"Town",'s.fk_pays'=>"CountryCode",'s.birthday'=>"BirthdayDate",'s.poste'=>"Role",'s.phone'=>"Phone",'s.phone_perso'=>"PhonePerso",'s.phone_mobile'=>"PhoneMobile",'s.fax'=>"Fax",'s.email'=>"Email",'s.note'=>"Note",'s.datec'=>"DateCreation");
+		$this->import_fields_array[$r]=array('s.fk_soc'=>'ThirdPartyName*','s.civilite'=>'UserTitle','s.name'=>"Name*",'s.firstname'=>"Firstname",'s.address'=>"Address",'s.cp'=>"Zip",'s.ville'=>"Town",'s.fk_pays'=>"CountryCode",'s.birthday'=>"BirthdayDate",'s.poste'=>"Role",'s.phone'=>"Phone",'s.phone_perso'=>"PhonePerso",'s.phone_mobile'=>"PhoneMobile",'s.fax'=>"Fax",'s.email'=>"Email",'s.note'=>"Note",'s.datec'=>"DateCreation");
 		$this->import_fieldshidden_array[$r]=array('s.fk_user_creat'=>'user->id');    // aliastable.field => ('user->id' or 'lastrowid-'.tableparent)
 		$this->import_convertvalue_array[$r]=array(
 			's.fk_soc'=>array('rule'=>'fetchidfromref','file'=>'/societe/class/societe.class.php','class'=>'Societe','method'=>'fetch','element'=>'ThirdParty'),
@@ -375,7 +389,7 @@ class modSociete extends DolibarrModules
 
 		if (file_exists($src) && ! file_exists($dest))
 		{
-			require_once(DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php');
+			require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 			dol_mkdir($dirodt);
 			$result=dol_copy($src,$dest,0,0);
 			if ($result < 0)

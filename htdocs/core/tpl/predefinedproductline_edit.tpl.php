@@ -51,14 +51,14 @@
 		if (is_object($hookmanager))
 		{
 		    $fk_parent_line = ($_POST["fk_parent_line"] ? $_POST["fk_parent_line"] : $line->fk_parent_line);
-			$parameters=array('fk_parent_line'=>$fk_parent_line);
-		    echo $hookmanager->executeHooks('formEditProductOptions',$parameters,$this,$action);
+		    $parameters=array('line'=>$line,'fk_parent_line'=>$fk_parent_line,'var'=>$var,'dateSelector'=>$dateSelector,'seller'=>$seller,'buyer'=>$buyer);
+		    $reshook=$hookmanager->executeHooks('formEditProductOptions',$parameters,$this,$action);
 		}
 
 		// editeur wysiwyg
 		$nbrows=ROWS_2;
 		if (! empty($conf->global->MAIN_INPUT_DESC_HEIGHT)) $nbrows=$conf->global->MAIN_INPUT_DESC_HEIGHT;
-		require_once(DOL_DOCUMENT_ROOT."/core/class/doleditor.class.php");
+		require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 		$doleditor=new DolEditor('desc',$line->description,'',164,'dolibarr_details','',false,true,$conf->global->FCKEDITOR_ENABLE_DETAILS,$nbrows,70);
 		$doleditor->Create();
 		?>
@@ -162,4 +162,3 @@ $(document).ready(function() {
 </script>
 <?php } ?>
 <!-- END PHP TEMPLATE predefinedproductline_edit.tpl.php -->
-

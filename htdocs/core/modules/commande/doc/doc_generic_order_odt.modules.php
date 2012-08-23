@@ -23,12 +23,12 @@
  *	\brief      File of class to build ODT documents for third parties
  */
 
-require_once(DOL_DOCUMENT_ROOT."/core/modules/commande/modules_commande.php");
-require_once(DOL_DOCUMENT_ROOT."/product/class/product.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/company.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/functions2.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/doc.lib.php");
+require_once DOL_DOCUMENT_ROOT.'/core/modules/commande/modules_commande.php';
+require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/doc.lib.php';
 
 
 /**
@@ -342,7 +342,7 @@ class doc_generic_order_odt extends ModelePDFCommandes
 			    }
 
                 // Open and load template
-				require_once(ODTPHP_PATH.'odf.php');
+				require_once ODTPHP_PATH.'odf.php';
 				$odfHandler = new odf(
 				    $srctemplatepath,
 				    array(
@@ -455,6 +455,7 @@ class doc_generic_order_odt extends ModelePDFCommandes
                     foreach ($object->lines as $line)
                     {
                         $tmparray=$this->get_substitutionarray_lines($line,$outputlangs);
+                        complete_substitutions_array($tmparray, $outputlangs, $object, $line, "completesubstitutionarray_lines");
                         foreach($tmparray as $key => $val)
                         {
                              try

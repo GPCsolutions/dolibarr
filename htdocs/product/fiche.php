@@ -27,16 +27,16 @@
  *  \brief      Page to show product
  */
 
-require("../main.inc.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/canvas.class.php");
-require_once(DOL_DOCUMENT_ROOT."/product/class/product.class.php");
-require_once(DOL_DOCUMENT_ROOT."/product/class/html.formproduct.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/class/extrafields.class.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/product.lib.php");
-require_once(DOL_DOCUMENT_ROOT."/core/lib/company.lib.php");
-if (! empty($conf->propal->enabled))   require_once(DOL_DOCUMENT_ROOT."/comm/propal/class/propal.class.php");
-if (! empty($conf->facture->enabled))  require_once(DOL_DOCUMENT_ROOT."/compta/facture/class/facture.class.php");
-if (! empty($conf->commande->enabled)) require_once(DOL_DOCUMENT_ROOT."/commande/class/commande.class.php");
+require '../main.inc.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/canvas.class.php';
+require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/product/class/html.formproduct.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/product.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
+if (! empty($conf->propal->enabled))   require_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
+if (! empty($conf->facture->enabled))  require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
+if (! empty($conf->commande->enabled)) require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 
 $langs->load("products");
 $langs->load("other");
@@ -62,7 +62,7 @@ $canvas = $object->canvas?$object->canvas:GETPOST("canvas");
 $objcanvas='';
 if (! empty($canvas))
 {
-    require_once(DOL_DOCUMENT_ROOT."/core/class/canvas.class.php");
+    require_once DOL_DOCUMENT_ROOT.'/core/class/canvas.class.php';
     $objcanvas = new Canvas($db,$action);
     $objcanvas->getCanvas('product','card',$canvas);
 }
@@ -73,7 +73,7 @@ $fieldtype = (! empty($ref) ? 'ref' : 'rowid');
 $result=restrictedArea($user,'produit|service',$fieldvalue,'product&product','','',$fieldtype,$objcanvas);
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
-include_once(DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php');
+include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
 $hookmanager=new HookManager($db);
 $hookmanager->initHooks(array('productcard'));
 
@@ -695,12 +695,22 @@ else
     if ($action == 'create' && ($user->rights->produit->creer || $user->rights->service->creer))
     {
         //WYSIWYG Editor
-        require_once(DOL_DOCUMENT_ROOT."/core/class/doleditor.class.php");
+        require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
+
+		// Load object modCodeProduct
+        $module=(! empty($conf->global->PRODUCT_CODEPRODUCT_ADDON)?$conf->global->PRODUCT_CODEPRODUCT_ADDON:'mod_codeproduct_leopard');
+        if (substr($module, 0, 16) == 'mod_codeproduct_' && substr($module, -3) == 'php')
+        {
+            $module = substr($module, 0, dol_strlen($module)-4);
+        }
+        dol_include_once('/core/modules/product/'.$module.'.php');
+        $modCodeProduct = new $module;
 
         print '<form action="fiche.php" method="post">';
         print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
         print '<input type="hidden" name="action" value="add">';
         print '<input type="hidden" name="type" value="'.$type.'">'."\n";
+		if (! empty($modCodeProduct->code_auto)) print '<input type="hidden" name="code_auto" value="1">';
 
         if ($type==1) $title=$langs->trans("NewService");
         else $title=$langs->trans("NewProduct");
@@ -710,7 +720,8 @@ else
 
         print '<table class="border" width="100%">';
         print '<tr>';
-        print '<td class="fieldrequired" width="20%">'.$langs->trans("Ref").'</td><td><input name="ref" size="40" maxlength="32" value="'.$ref.'">';
+		if (! empty($modCodeProduct->code_auto)) $tmpcode=$modCodeProduct->getNextValue($object,$type);
+        print '<td class="fieldrequired" width="20%">'.$langs->trans("Ref").'</td><td><input name="ref" size="40" maxlength="32" value="'.$tmpcode.'">';
         if ($_error)
         {
             print $langs->trans("RefAlreadyExists");
@@ -880,7 +891,7 @@ else
         if ($action == 'edit' && ($user->rights->produit->creer || $user->rights->service->creer))
         {
             //WYSIWYG Editor
-            require_once(DOL_DOCUMENT_ROOT."/core/class/doleditor.class.php");
+            require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 
             $type = $langs->trans('Product');
             if ($object->isservice()) $type = $langs->trans('Service');
@@ -936,7 +947,7 @@ else
 
             // Description (used in invoice, propal...)
             print '<tr><td valign="top">'.$langs->trans("Description").'</td><td colspan="2">';
-            
+
             $doleditor = new DolEditor('desc', $object->description, '', 160, 'dolibarr_notes', '', false, true, $conf->global->FCKEDITOR_ENABLE_PRODUCTDESC, 4, 90);
             $doleditor->Create();
 
@@ -1029,7 +1040,7 @@ else
 
             // Note
             print '<tr><td valign="top">'.$langs->trans("NoteNotVisibleOnBill").'</td><td colspan="2">';
-            
+
             $doleditor = new DolEditor('note', $object->note, '', 200, 'dolibarr_notes', '', false, true, $conf->global->FCKEDITOR_ENABLE_PRODUCTDESC, 8, 70);
             $doleditor->Create();
 
@@ -1109,7 +1120,7 @@ else
                 print '</td><td colspan="2">';
                 if ($action == 'editbarcodetype')
                 {
-                    require_once(DOL_DOCUMENT_ROOT."/core/class/html.formbarcode.class.php");
+                    require_once DOL_DOCUMENT_ROOT.'/core/class/html.formbarcode.class.php';
                     $formbarcode = new FormBarCode($db);
                     $formbarcode->form_barcode_type($_SERVER['PHP_SELF'].'?id='.$object->id,$object->barcode_type,'barcodetype_id');
                 }
