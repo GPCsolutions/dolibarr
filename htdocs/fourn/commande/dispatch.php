@@ -386,7 +386,7 @@ if ($id > 0 || ! empty($ref))
                             print '<input type="hidden" name="supplierid" value="' . $commande->socid . '"/>';
                         }
                         print '<td align="right">';
-                        if ($reste > 0) print '<input class="button" type="submit" name="detail" value="detail"/>';
+                        if ($reste > 0) print '<input class="button" type="submit" name="detail" value="'.$langs->trans('DetailStock').'"/>';
                         print '</td>';
                         if ($reste > 0) print '</form>';
                     }
