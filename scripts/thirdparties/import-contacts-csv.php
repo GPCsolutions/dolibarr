@@ -101,15 +101,17 @@ if (($handle = fopen($fname, 'r')) !== FALSE)
 			// TODO: Test that first line is what we expect
 		}
 		
-		$contact->name = trim($data[0]);
+		$contact->lastname = trim($data[0]);
+		$contact->name = $contact->lastname; // TODO: deprecated
 		$contact->firstname = trim($data[1]);
         
         /*
          * Vérification doublons
          */
         $sql = 'select fk_soc from '.MAIN_DB_PREFIX.'socpeople where ';
-        $sql .='name="'.$contact->name.'" and firstname="'.$contact->firstname.'"';
+        $sql .='name="'.$contact->lastname.'" and firstname="'.$contact->firstname.'"';
         $resql = $db->query($sql);
+	// TODO: test return before continuing
         unset($sql);
         while($res = $db->fetch_array($resql))
         {
@@ -188,8 +190,9 @@ if (($handle = fopen($fname, 'r')) !== FALSE)
 			if ($resql && ($resql->num_rows != 0))
 			{
 				$res = $db->fetch_array($resql);
-				$countryid = $res['rowid'];			
-				$contact->fk_pays = $countryid;
+				$countryid = $res['rowid'];
+				$contact->country_id = $countryid;
+				$contact->fk_pays = $contact->country_id;
 				$db->free($resql);
 				unset($res);
 				unset($countryid);
@@ -215,7 +218,8 @@ if (($handle = fopen($fname, 'r')) !== FALSE)
 			{
 				$res = $db->fetch_array($resql);
 				$depid = $res['rowid'];				
-				$contact->fk_departement = $depid;
+				$contact->state_id = $depid;
+				$contact->fk_departement = $contact->state_id; // TODO: deprecated
 				$db->free($resql);
 				unset($res);
 				unset($depid);

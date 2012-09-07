@@ -199,10 +199,13 @@ if (($handle = fopen($fname, 'r')) !== FALSE)
         $soc->fax                   = $data[15];
         $soc->email                 = trim($data[16]);
         $soc->url                   = trim($data[17]);
-        $soc->siren                 = $data[18];
-        $soc->siret                 = $data[19];
-        $soc->ape                   = $data[20];
-        $soc->idprof4               = $data[21];
+        $soc->idprof1               = $data[18]; // Siren
+        $soc->siren                 = $soc->idprof1; // TODO: deprecated
+        $soc->idprof2               = $data[19]; //Siret
+        $soc->siret                 = $soc->idprof2; // TODO: deprecated
+        $soc->idprof3               = $data[20]; // NAF
+        $soc->ape                   = $soc->idprof3; // TODO: deprecated
+        $soc->idprof4               = $data[21]; // RCS
         $soc->tva_assuj             = $data[22];        
         $soc->tva_intra             = $data[23];
 
