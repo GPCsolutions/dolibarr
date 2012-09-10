@@ -49,6 +49,7 @@ require_once($path . "../../htdocs/master.inc.php");
 
 require_once(DOL_DOCUMENT_ROOT . "/product/class/product.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/categories/class/categorie.class.php");
+require_once(DOL_DOCUMENT_ROOT . "/core/class/extrafields.class.php");
 
 @set_time_limit(0);  // No timeout for this script
 
@@ -94,6 +95,14 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 
 		$line ++;
 		if ($line == 1) {
+			if (count($data) >= 20) {
+				$i = 19;
+				$extra_data = array();
+				while ($data[$i]) {
+					$extra_data[$i] = $data[$i];
+					$i ++;
+				}
+			}
 			continue; // Ignores first line
 			// TODO: Test that first line is what we expect
 		}
@@ -116,7 +125,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 			print "The " . $required . " field is required\n";
 			continue;
 		}
-		
+
 		if ($error == 0) {
 			$prod->ref = $data[0];
 			$prod->label = $data[1];
@@ -143,7 +152,25 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 			$prod->status = $data[14];
 			$prod->status_buy = $data[15];
 
-			// TODO: add extrafields support
+			/*
+			 * Extrafields
+			 */
+			if (count($data) >= 20) {
+				// TODO: add extrafields support
+				$extra = new ExtraFields($db);
+				// Check extra field exists
+				//$options = $extra->fetch_name_optionals_label('product');
+				//$options[$extra_data[$i]];
+				$i = 19;
+				while ($data[$i]) {
+					// We add options_ before the key name because the code expects this form !
+					$array_options = array('options_' . $extra_data[$i] => $data[$i]);
+					$prod->array_options = $array_options;
+					var_dump($prod->array_options);
+					$prod->insertExtraFields();
+					$i ++;
+				}
+			}
 
 			/*
 			 * Creation
