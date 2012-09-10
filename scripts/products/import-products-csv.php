@@ -99,37 +99,55 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		}
 
 		//TODO: Check for duplicates
-		$prod->ref = $data[0];
-		$prod->label = $data[1];
-		$prod->libelle = $prod->label; // TODO: deprecated
-		$prod->description = $data[2];
-		$prod->accountancy_code_sell = $data[3];
-		$prod->accountancy_code_buy = $data[4];
-		$prod->note = $data[5];
-		$prod->type = $data[16];
-		if ($prod->type == 1) {
-			// FIXME: units handling
-			$prod->length = $data[6];
-			$prod->surface = $data[7];
-			$prod->volume = $data[8];
-			$prod->weight = $data[9];
-			$prod->finished = $data[17];
-		} elseif ($prod->type == 2) {
-			// FIXME: units handling
-			$prod->duration_value = $data[10];
+		// Check required fields
+		if ( ! strlen($data[0])) {
+			$required = "reference";
+		} elseif ( ! strlen($data[1])) {
+			$required = "label";
+		} elseif ( ! strlen($data[14])) {
+			$required = "sellable";
+		} elseif ( ! strlen($data[15])) {
+			$required = "buyable";
+		} elseif ( ! strlen($data[16])) {
+			$required = "type";
 		}
-		$prod->customcode = $data[11];
-		$prod->price = $data[12];
-		$prod->tva_tx = $data[13];
-		$prod->status = $data[14];
-		$prod->status_buy = $data[15];
-
-		// TODO: add extrafields support
-
-		/*
-		 * Creation
-		 */
+		if ($required) {
+			$error ++;
+			print "The " . $required . " field is required\n";
+			continue;
+		}
+		
 		if ($error == 0) {
+			$prod->ref = $data[0];
+			$prod->label = $data[1];
+			$prod->libelle = $prod->label; // TODO: deprecated
+			$prod->description = $data[2];
+			$prod->accountancy_code_sell = $data[3];
+			$prod->accountancy_code_buy = $data[4];
+			$prod->note = $data[5];
+			$prod->type = $data[16];
+			if ($prod->type == 1) {
+				// FIXME: units handling
+				$prod->length = $data[6];
+				$prod->surface = $data[7];
+				$prod->volume = $data[8];
+				$prod->weight = $data[9];
+				$prod->finished = $data[17];
+			} elseif ($prod->type == 2) {
+				// FIXME: units handling
+				$prod->duration_value = $data[10];
+			}
+			$prod->customcode = $data[11];
+			$prod->price = $data[12];
+			$prod->tva_tx = $data[13];
+			$prod->status = $data[14];
+			$prod->status_buy = $data[15];
+
+			// TODO: add extrafields support
+
+			/*
+			 * Creation
+			 */
 			$result = $prod->create($user);
 			if ($result >= 0) {
 				/*
