@@ -49,9 +49,8 @@ require_once($path . "../../htdocs/master.inc.php");
 
 require_once(DOL_DOCUMENT_ROOT . "/product/class/product.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/categories/class/categorie.class.php");
-require_once(DOL_DOCUMENT_ROOT . "/core/class/translate.class.php");
 
-@set_time_limit(0);	 // No timeout for this script
+@set_time_limit(0);  // No timeout for this script
 
 function printLine($line)
 {
@@ -107,19 +106,23 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		$prod->accountancy_code_sell = $data[3];
 		$prod->accountancy_code_buy = $data[4];
 		$prod->note = $data[5];
-		$prod->lenght = $data[6];
-		$prod->surface = $data[7];
-		$prod->volume = $data[8];
-		$prod->weight = $data[9];
-		$prod->duration = $data[10];
+		$prod->type = $data[16];
+		if ($prod->type == 1) {
+			// FIXME: units handling
+			$prod->length = $data[6];
+			$prod->surface = $data[7];
+			$prod->volume = $data[8];
+			$prod->weight = $data[9];
+			$prod->finished = $data[17];
+		} elseif ($prod->type == 2) {
+			// FIXME: units handling
+			$prod->duration_value = $data[10];
+		}
 		$prod->customcode = $data[11];
 		$prod->price = $data[12];
-		$prod->price_ttc = $data[13];
-		$prod->tva_tx = $data[14];
-		$prod->status = $data[15];
-		$prod->status_buy = $data[16];
-		$prod->type = $data[17];
-		$prod->finished = $data[18];
+		$prod->tva_tx = $data[13];
+		$prod->status = $data[14];
+		$prod->status_buy = $data[15];
 
 		// TODO: add extrafields support
 
@@ -133,8 +136,8 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 				 * Product category
 				 */
 				// TODO: support nested categories
-				if ( ! empty($data[19])) {
-					$labels_product = $data[19];
+				if ( ! empty($data[18])) {
+					$labels_product = $data[18];
 					$labels_categories_product = array(); // Make sure that it's initialized
 					$labels_categories_product = explode(',', $labels_product);
 
@@ -166,7 +169,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 								print "Unable to create product category\n";
 							}
 						} else {
-							$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'categorie where label="' . $labelprod . '"';
+							$sql = 'SELECT rowid FROM ' . MAIN_DB_PREFIX . 'categorie WHERE label="' . $labelprod . '"';
 							$resql = $db->query($sql);
 							unset($sql);
 							if ($resql && ($resql->num_rows != 0)) {
