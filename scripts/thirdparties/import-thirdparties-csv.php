@@ -472,6 +472,9 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 					print "Unable to set company import key\n";
 				}
 				unset($resql);
+			} else {
+				$error ++;
+				print "Unable to import company. A field might be malformed.\n";
 			}
 		} else {
 			break;

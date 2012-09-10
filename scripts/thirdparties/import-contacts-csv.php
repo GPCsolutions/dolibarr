@@ -260,7 +260,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 			} else {
 				$error ++;
 				printLine($line);
-				print "Unable to create contact\n";
+				print "Unable to create contact. A field might be malformed.\n";
 			}
 		} else {
 			break;
