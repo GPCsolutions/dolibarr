@@ -22,12 +22,12 @@
 
 /**
  *      \file      scripts/thirdparties/import-contacts-csv.php
- *      \brief     Import de contacts depuis un CSV
+ *      \brief     Contacts import from a CSV file
  *      \version   1.0.5
  *      \author    Cédric Salvador
  *      \author    Raphaël Doursenaud
  */
-//TODO factorize code
+//TODO: factorize code
 
 $sapi_type = php_sapi_name();
 $script_file = basename(__FILE__);
@@ -45,7 +45,7 @@ $error = 0;
 
 // Include Dolibarr environment
 require_once($path . "../../htdocs/master.inc.php");
-// After this $db, $mysoc, $langs and $conf->entity are defined. Opened handler to database will be closed at end of file.
+// After this $db, $mysoc, $langs and $conf->entity are defined. Opened database handler will be closed at end of file.
 
 require_once(DOL_DOCUMENT_ROOT . "/contact/class/contact.class.php");
 
@@ -104,7 +104,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		$contact->firstname = trim($data[1]);
 
 		/*
-		 * Vérification doublons
+		 * Duplicates check
 		 */
 		$sql = 'select fk_soc from ' . MAIN_DB_PREFIX . 'socpeople where ';
 		$sql .='name="' . $contact->lastname . '" and firstname="' . $contact->firstname . '"';
@@ -133,7 +133,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		unset($resql);
 
 		/*
-		 * Société référente
+		 * Linked company
 		 */
 		if ( ! empty($data[2])) {
 			if ($nomSociete != trim($data[2])) { // Company not already seen
@@ -142,7 +142,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 				$resql = $db->query($sql);
 				unset($sql);
 				if ($resql && ($resql->num_rows > 0)) {
-					// FIXME Vérifier unicité
+					// FIXME: Check unicity
 					$res = $db->fetch_array($resql);
 					$socid = $res['rowid'];
 					$db->free($resql);
@@ -168,7 +168,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		$contact->town = $data[7];
 
 		/*
-		 * Pays
+		 * Coutry
 		 */
 		if ( ! empty($data[8])) {
 			$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'c_pays where code="' . $data[8] . '"';
@@ -191,7 +191,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		}
 
 		/*
-		 * Département
+		 * State
 		 */
 		if ( ! empty($data[9])) {
 			$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'c_departements where code_departement="' . $data[9] . '"';
@@ -223,7 +223,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		$contact->note = $data[17];
 
 		/*
-		 * Date de naissance
+		 * Date of birth
 		 */
 		if ( ! empty($data[18])) {
 			$date = explode('/', $data[18]);
@@ -235,17 +235,17 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		$contact->birthday_alert = $data[19];
 
 		if ( ! empty($data[20])) {
-			//TODO verify that the language code is available
+			//TODO: check that the language code is available
 			$contact->default_lang = $data[20];
 		}
 
 		/*
-		 * Création
+		 * Creation
 		 */
 		if ($error == 0) {
 			$result = $contact->create($user);
 			if ($result >= 0) {
-				// TOFIX_UPSTREAM
+				// FIXME: upstream
 				// Import key is not populated by the class !
 				// Let's do this manually
 				$sql = "UPDATE " . MAIN_DB_PREFIX . "socpeople SET import_key='" . $import_key . "' WHERE rowid=" . $contact->id;
@@ -290,7 +290,6 @@ if ($error == 0) {
 	$db->rollback();
 }
 
-$db->close(); // Close database opened handler
+$db->close(); // Close database handler
 
 return $error;
-?>

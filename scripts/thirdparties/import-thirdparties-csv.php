@@ -22,12 +22,12 @@
 
 /**
  *      \file      scripts/thirdparties/import-thirdparties-csv.php
- *      \brief     Import de tiers depuis un CSV
+ *      \brief     Third parties import from a CSV file
  *      \version   1.0.5
  *      \author    Cédric Salvador
  *      \author    Raphaël Doursenaud
  */
-//TODO factorize code
+//TODO: factorize code
 
 $sapi_type = php_sapi_name();
 $script_file = basename(__FILE__);
@@ -45,7 +45,7 @@ $error = 0;
 
 // Include Dolibarr environment
 require_once($path . "../../htdocs/master.inc.php");
-// After this $db, $mysoc, $langs and $conf->entity are defined. Opened handler to database will be closed at end of file.
+// After this $db, $mysoc, $langs and $conf->entity are defined. Opened database handler will be closed at end of file.
 
 require_once(DOL_DOCUMENT_ROOT . "/societe/class/societe.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/categories/class/categorie.class.php");
@@ -90,7 +90,7 @@ $db->begin();
 
 if (($handle = fopen($fname, 'r')) !== FALSE) {
 	$line = 0; // Line counter
-	$categorie = 0; // Created categories counter
+	$categories = 0; // Created categories counter
 	while (($data = fgetcsv($handle)) !== FALSE) {
 		$soc = new Societe($db);
 
@@ -101,7 +101,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		}
 
 		$soc->particulier = $data[0];
-		if ($soc->particulier == 1) { // Si particulier
+		if ($soc->particulier == 1) { // If a person
 			$soc->name = empty($conf->global->MAIN_FIRSTNAME_NAME_POSITION) ? trim($data[2] . ' ' . $data[1]) : trim($data[1] . ' ' . $data[2]);
 			$soc->nom_particulier = $data[1];
 			$soc->prenom = $data[2];
@@ -109,35 +109,37 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		} else {
 			$soc->name = $data[1];
 		}
-		$soc->nom = $soc->name; // TODO obsolete
+		$soc->nom = $soc->name; // TODO: deprecated
 		$soc->status = $data[4];
 		$soc->client = $data[5];
 
 		/*
-		 * Code client
+		 * Client's code
 		 */
 		if (isset($data[5])) {
-			$soc->code_client = -1; //Automatically generates a code
+			// TODO: Check that the numbering module is automatic
+			$soc->code_client = -1; // Automatically generates a code
 		}
 
 		$soc->fournisseur = $data[7];
 
 		/*
-		 * Code fournisseur
+		 * Supplier's code
 		 */
 		if (isset($data[7])) {
-			$soc->code_fournisseur = -1; //Automatically generates a code
+			// TODO: Check that the numbering module is automatic
+			$soc->code_fournisseur = -1; // Automatically generates a code
 		}
 
 		$soc->address = $data[9];
-		$soc->adresse = $soc->address; // TODO obsolete
+		$soc->adresse = $soc->address; // TODO: deprecated
 		$soc->zip = $data[10];
-		$soc->cp = $soc->zip; // TODO obsolete
+		$soc->cp = $soc->zip; // TODO: deprecated
 		$soc->town = $data[11];
-		$soc->ville = $soc->town; // TODO obsolete
+		$soc->ville = $soc->town; // TODO: deprecated
 
 		/*
-		 * Code pays
+		 * Country code
 		 */
 		if ( ! empty($data[12])) {
 			$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'c_pays where code="' . $data[12] . '"';
@@ -147,7 +149,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 				$res = $db->fetch_array($resql);
 				$countryid = $res['rowid'];
 				$soc->country_id = $countryid;
-				$soc->pays_id = $soc->country_id; // TODO obsolete
+				$soc->pays_id = $soc->country_id; // TODO: deprecated
 				$db->free($resql);
 				unset($res);
 			} else {
@@ -159,7 +161,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		}
 
 		/*
-		 * Code département
+		 * State code
 		 */
 		if ( ! empty($data[13])) {
 			$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'c_departements where code_departement="' . $data[13] . '"';
@@ -169,7 +171,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 				$res = $db->fetch_array($resql);
 				$depid = $res['rowid'];
 				$soc->state_id = $depid;
-				$soc->departement_id = $soc->state_id; // TODO obsolete
+				$soc->departement_id = $soc->state_id; // TODO: deprecated
 				$db->free($resql);
 				unset($res);
 			} else {
@@ -195,7 +197,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		$soc->tva_intra = $data[23];
 
 		/*
-		 * Type d'entreprise
+		 * Company type
 		 */
 		if ( ! empty($data[24]) && ( ! $soc->particulier)) {
 			$sql = 'select id from ' . MAIN_DB_PREFIX . 'c_typent where code="' . $data[24] . '"';
@@ -218,7 +220,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		}
 
 		/*
-		 * Effectif
+		 * Staffing
 		 */
 		//TESTME
 		if ( ! empty($data[25])) {
@@ -239,26 +241,25 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 			unset($resql);
 		}
 
-		//TESTME
 		$soc->forme_juridique_code = $data[26];
 
 		$soc->capital = $data[27];
 		$soc->gencod = $data[28];
 
 		if ( ! empty($data[29])) {
-			//TODO verify that the language code is available
+			//TODO: check that the language code is available
 			$soc->default_lang = $data[29];
 		}
 
 		/*
-		  TODO: Taxes espagnoles
+		  TODO: Spanish taxes
 		  $soc->localtax1_assuj       = $data["localtax1assuj_value"];
 		  $soc->localtax2_assuj       = $data["localtax2assuj_value"];
-		  $soc->prefix_comm           = $data["prefix_comm"]; // Obsolete
+		  $soc->prefix_comm           = $data["prefix_comm"]; // TODO: deprecated
 		 */
 
 		/*
-		 * Commercial
+		 * Salesman
 		 */
 		if ( ! empty($data[30])) {
 			$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'user where login="' . $data[30] . '"';
@@ -281,15 +282,15 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		$soc->note = $data[31];
 
 		/*
-		 * Création
+		 * Creation
 		 */
 		if ($error == 0) {
 			$result = $soc->create();
 			if ($result >= 0) {
 				/*
-				 * Catégories clients
+				 * Clients' category
 				 */
-				// TODO: Gérer les catégories imbriquées
+				// TODO: support nested categories
 				if ( ! empty($data[6])) {
 					$labels_client = $data[6];
 					$labels_categories_client = array(); // Make sure that it's initialized
@@ -304,8 +305,8 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 							$catcli->import_key = $import_key;
 							$result = $catcli->create();
 							if ($result >= 0) {
-								$categorie ++;
-								// TOFIX_UPSTREAM
+								$categories ++;
+								// FIXME: upstream
 								// Import key is not populated by the class !
 								// Let's do this manually
 								$sql = "UPDATE " . MAIN_DB_PREFIX . "categorie SET import_key='" . $import_key . "' WHERE rowid=" . $catcli->id;
@@ -327,7 +328,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 							$resql = $db->query($sql);
 							unset($sql);
 							if ($resql && ($resql->num_rows != 0)) {
-								// FIXME Vérifier unicité !!!
+								// FIXME: Check unicity !!!
 								$res = $db->fetch_array($resql);
 								$catcliid = $res['rowid'];
 								$catcli->fetch($catcliid);
@@ -345,9 +346,9 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 				}
 
 				/*
-				 * Catégories fournisseurs
+				 * Supplier category
 				 */
-				// TODO: Gérer les catégories imbriquées
+				// TODO: support nested categories
 				if ( ! empty($data[8])) {
 					$labels_fourn = $data[8];
 					$labels_categories_fourn = array();
@@ -361,8 +362,8 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 							$catfourn->import_key = $import_key;
 							$result = $catfourn->create();
 							if ($result >= 0) {
-								$categorie ++;
-								// TOFIX_UPSTREAM
+								$categories ++;
+								// FIXME: upstream
 								// Import key is not populated by the class !
 								// Let's do this manually
 								$sql = "UPDATE " . MAIN_DB_PREFIX . "categorie SET import_key='" . $import_key . "' WHERE rowid=" . $catfourn->id;
@@ -384,7 +385,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 							$resql = $db->query($sql);
 							unset($sql);
 							if ($resql && ($resql->num_rows != 0)) {
-								// FIXME Vérifier unicité !!!
+								// FIXME: Check unicity !!!
 								$res = $db->fetch_array($resql);
 								$catfournid = $res['rowid'];
 								$catfourn->fetch($catfournid);
@@ -425,7 +426,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 
 					$result = $contact->create($user);
 					if ($result >= 0) {
-						// TOFIX_UPSTREAM
+						// FIXME: upstream
 						// Import key is not populated by the class !
 						// Let's do this manually
 						$sql = "UPDATE " . MAIN_DB_PREFIX . "socpeople SET import_key='" . $import_key . "' WHERE rowid=" . $contact->id;
@@ -444,7 +445,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 					}
 				}
 
-				// TOFIX_UPSTREAM
+				// FIXME: upstream
 				// Notes are not populated by the class !
 				// Let's do this manually
 				if (isset($soc->note)) {
@@ -459,7 +460,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 					unset($resql);
 				}
 
-				// TOFIX_UPSTREAM
+				// FIXME: upstream
 				// Import key is not populated by the class !
 				// Let's do this manually
 				$sql = "UPDATE " . MAIN_DB_PREFIX . "societe SET import_key='" . $import_key . "' WHERE rowid=" . $soc->id;
@@ -487,7 +488,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 if ($error == 0) {
 	$db->commit();
 	print ($line - 1) . " records imported\n";
-	print ($categorie) . " categories created\n";
+	print ($categories) . " categories created\n";
 	print "Import key is " . $import_key . "\n";
 	print "Import complete\n";
 } else {
@@ -500,6 +501,6 @@ if ($error == 0) {
 	$db->rollback();
 }
 
-$db->close(); // Close database opened handler
+$db->close(); // Close database handler
 
 return $error;
