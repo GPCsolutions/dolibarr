@@ -34,6 +34,23 @@ print '<head>
 print '<!-- Includes for JQuery (Ajax library) -->'."\n";
 if (constant('JS_JQUERY_UI')) print '<link rel="stylesheet" type="text/css" href="'.JS_JQUERY_UI.'css/'.$jquerytheme.'/jquery-ui.min.css" />'."\n";  // JQuery
 else print '<link rel="stylesheet" type="text/css" href="'.DOL_URL_ROOT.'/includes/jquery/css/'.$jquerytheme.'/jquery-ui-latest.custom.css" />'."\n";    // JQuery
+// CSS forced by modules (relative url starting with /)
+if (isset($conf->modules_parts['css']))
+{
+	$arraycss=(array) $conf->modules_parts['css'];
+	foreach($arraycss as $modcss => $filescss)
+	{
+		$filescss=(array) $filescss;	// To be sure filecss is an array
+		foreach($filescss as $cssfile)
+		{
+			// cssfile is a relative path
+			print '<link rel="stylesheet" type="text/css" title="default" href="'.dol_buildpath($cssfile,1);
+			// We add params only if page is not static, because some web server setup does not return content type text/css if url has parameters, so browser cache is not used.
+			if (!preg_match('/\.css$/i',$cssfile)) print $themeparam;
+			print '"><!-- Added by module '.$modcss. '-->'."\n";
+		}
+	}
+}
 // JQuery. Must be before other includes
 $ext='.js';
 if (isset($conf->global->MAIN_OPTIMIZE_SPEED) && ($conf->global->MAIN_OPTIMIZE_SPEED & 0x01)) $ext='.jgz';
@@ -72,7 +89,7 @@ $(document).ready(function () {
 <input type="hidden" name="dol_hide_topmenu" id="dol_hide_topmenu" value="" />
 <input type="hidden" name="dol_hide_leftmenu" id="dol_hide_leftmenu" value="" />
 
-<table class="login_table_title" summary="<?php echo $title; ?>" cellpadding="0" cellspacing="0" border="0" align="center">
+<table class="login_table_title" summary="<?php echo dol_escape_htmltag($title); ?>" cellpadding="0" cellspacing="0" border="0" align="center">
 <tr class="vmenu"><td align="center"><?php echo $title; ?></td></tr>
 </table>
 <br>
@@ -86,22 +103,24 @@ $(document).ready(function () {
 <tr>
 <td valign="bottom"> &nbsp; <strong><label for="username"><?php echo $langs->trans('Login'); ?></label></strong> &nbsp; </td>
 <td valign="bottom" nowrap="nowrap">
-<input type="text" id="username" name="username" class="flat" size="15" maxlength="40" value="<?php echo GETPOST('username')?GETPOST('username'):$login; ?>" tabindex="1" />
+<input type="text" id="username" name="username" class="flat" size="15" maxlength="40" value="<?php echo dol_escape_htmltag($login); ?>" tabindex="1" />
 </td>
 </tr>
 
 <!-- Password -->
 <tr><td valign="top" nowrap="nowrap"> &nbsp; <strong><label for="password"><?php echo $langs->trans('Password'); ?></label></strong> &nbsp; </td>
 <td valign="top" nowrap="nowrap">
-<input id="password" name="password" class="flat" type="password" size="15" maxlength="30" value="<?php echo $password; ?>" tabindex="2" />
+<input id="password" name="password" class="flat" type="password" size="15" maxlength="30" value="<?php echo dol_escape_htmltag($password); ?>" tabindex="2" />
 </td></tr>
 
 <?php
 if (! empty($hookmanager->resArray['options'])) {
-	foreach ($hookmanager->resArray['options'] as $option)
+	foreach ($hookmanager->resArray['options'] as $format => $option)
 	{
-		echo '<!-- Option by hook -->';
-		echo $option;
+		if ($format == 'table') {
+			echo '<!-- Option by hook -->';
+			echo $option;
+		}
 	}
 }
 ?>

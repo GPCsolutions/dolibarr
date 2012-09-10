@@ -82,6 +82,7 @@ if (! empty($dolibarr_strict_mode))
 }
 else
 {
+	if (! defined('E_DEPRECATED')) define('E_DEPRECATED',0);	// For PHP < 5.3.0 compatibility
 	error_reporting(E_ALL & ~(E_STRICT|E_NOTICE|E_DEPRECATED));
 }
 
@@ -105,7 +106,9 @@ if (empty($dolibarr_main_db_cryptkey)) $dolibarr_main_db_cryptkey='';
 if (empty($dolibarr_main_limit_users)) $dolibarr_main_limit_users=0;
 if (empty($dolibarr_mailing_limit_sendbyweb)) $dolibarr_mailing_limit_sendbyweb=0;
 if (empty($force_charset_do_notuse)) $force_charset_do_notuse='UTF-8';
+if (empty($dolibarr_strict_mode)) $dolibarr_strict_mode=0; // For debug in php strict mode
 if (empty($multicompany_transverse_mode)) $multicompany_transverse_mode=0;
+if (empty($multicompany_force_entity)) $multicompany_force_entity=0; // To force entity in login page
 
 // Security: CSRF protection
 // This test check if referrer ($_SERVER['HTTP_REFERER']) is same web site than Dolibarr ($_SERVER['HTTP_HOST'])

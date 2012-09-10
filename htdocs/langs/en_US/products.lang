@@ -172,3 +172,7 @@ HiddenIntoCombo=Hidden into select lists
 Nature=Nature
 ProductCodeModel=Product code model
 ServiceCodeModel=Service code model
+AddThisProductCard=Create product card
+HelpAddThisProductCard=This option allows you to create or clone a product if it does not exist.
+AddThisServiceCard=Create service card
+HelpAddThisServiceCard=This option allows you to create or clone a service if it does not exist.

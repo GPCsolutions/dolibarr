@@ -615,8 +615,8 @@ abstract class DolibarrModules
                         {
                             $lastid=$this->db->last_insert_id(MAIN_DB_PREFIX."boxes_def","rowid");
 
-                            $sql = "INSERT INTO ".MAIN_DB_PREFIX."boxes (box_id,position,box_order,fk_user)";
-                            $sql.= " VALUES (".$lastid.", 0, '0', 0)";
+                            $sql = "INSERT INTO ".MAIN_DB_PREFIX."boxes (box_id,position,box_order,fk_user,entity)";
+                            $sql.= " VALUES (".$lastid.", 0, '0', 0, ".$conf->entity.")";
 
                             dol_syslog(get_class($this)."::insert_boxes sql=".$sql);
                             $resql=$this->db->query($sql);
@@ -671,7 +671,7 @@ abstract class DolibarrModules
                 $sql.= " USING ".MAIN_DB_PREFIX."boxes, ".MAIN_DB_PREFIX."boxes_def";
                 $sql.= " WHERE ".MAIN_DB_PREFIX."boxes.box_id = ".MAIN_DB_PREFIX."boxes_def.rowid";
                 $sql.= " AND ".MAIN_DB_PREFIX."boxes_def.file = '".$this->db->escape($file)."'";
-                $sql.= " AND ".MAIN_DB_PREFIX."boxes_def.entity = ".$conf->entity;
+                $sql.= " AND ".MAIN_DB_PREFIX."boxes.entity = ".$conf->entity;
 
                 dol_syslog(get_class($this)."::delete_boxes sql=".$sql);
                 $resql=$this->db->query($sql);
@@ -1170,7 +1170,7 @@ abstract class DolibarrModules
 
         $err=0;
 
-        if (is_array($this->dirs))
+        if (isset($this->dirs) && is_array($this->dirs))
         {
             foreach ($this->dirs as $key => $value)
             {
@@ -1184,19 +1184,19 @@ abstract class DolibarrModules
                     $subname   = empty($this->dirs[$key][3])?'':strtoupper($this->dirs[$key][3]); // Add submodule name (ex: $conf->module->submodule->dir_output)
                     $forcename = empty($this->dirs[$key][4])?'':strtoupper($this->dirs[$key][4]); // Change the module name if different
 
-                    if ($forcename) $constname = 'MAIN_MODULE_'.$forcename."_DIR_";
-                    if ($subname)   $constname = $constname.$subname."_";
+                    if (! empty($forcename)) $constname = 'MAIN_MODULE_'.$forcename."_DIR_";
+                    if (! empty($subname))   $constname = $constname.$subname."_";
 
-                    $name      = $constname.strtoupper($this->dirs[$key][0]);
+                    $name = $constname.strtoupper($this->dirs[$key][0]);
                 }
 
                 // Define directory full path ($dir must start with "/")
                 if (empty($conf->global->MAIN_MODULE_MULTICOMPANY) || $conf->entity == 1) $fulldir = DOL_DATA_ROOT.$dir;
                 else $fulldir = DOL_DATA_ROOT."/".$conf->entity.$dir;
                 // Create dir if it does not exists
-                if ($fulldir && ! file_exists($fulldir))
+                if (! empty($fulldir) && ! file_exists($fulldir))
                 {
-                    if (dol_mkdir($fulldir) < 0)
+                    if (dol_mkdir($fulldir, DOL_DATA_ROOT) < 0)
                     {
                         $this->error = $langs->trans("ErrorCanNotCreateDir",$fulldir);
                         dol_syslog(get_class($this)."::_init ".$this->error, LOG_ERR);
@@ -1205,9 +1205,9 @@ abstract class DolibarrModules
                 }
 
                 // Define the constant in database if requested (not the default mode)
-                if ($addtodatabase)
+                if (! empty($addtodatabase))
                 {
-                    $result = $this->insert_dirs($name,$dir);
+                    $result = $this->insert_dirs($name, $dir);
                     if ($result) $err++;
                 }
             }
@@ -1273,7 +1273,7 @@ abstract class DolibarrModules
         $err=0;
 
         $sql = "DELETE FROM ".MAIN_DB_PREFIX."const";
-        $sql.= " WHERE ".$this->db->decrypt('name')." like '".$this->const_name."_DIR_%'";
+        $sql.= " WHERE ".$this->db->decrypt('name')." LIKE '".$this->const_name."_DIR_%'";
         $sql.= " AND entity = ".$conf->entity;
 
         dol_syslog(get_class($this)."::delete_dirs sql=".$sql);

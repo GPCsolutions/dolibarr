@@ -6,6 +6,7 @@
  * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
  * Copyright (C) 2005      Lionel Cousteix      <etm_ltd@tiscali.co.uk>
  * Copyright (C) 2011      Herve Prot           <herve.prot@symeos.com>
+ * Copyright (C) 2012      Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,7 +111,7 @@ if ($action == 'confirm_disable' && $confirm == "yes" && $candisableuser)
         $edituser = new User($db);
         $edituser->fetch($id);
         $edituser->setstatus(0);
-        Header("Location: ".$_SERVER['PHP_SELF'].'?id='.$id);
+        header("Location: ".$_SERVER['PHP_SELF'].'?id='.$id);
         exit;
     }
 }
@@ -133,7 +134,7 @@ if ($action == 'confirm_enable' && $confirm == "yes" && $candisableuser)
         if (! $message)
         {
             $edituser->setstatus(1);
-            Header("Location: ".$_SERVER['PHP_SELF'].'?id='.$id);
+            header("Location: ".$_SERVER['PHP_SELF'].'?id='.$id);
             exit;
         }
     }
@@ -153,7 +154,7 @@ if ($action == 'confirm_delete' && $confirm == "yes" && $candisableuser)
         }
         else
         {
-            Header("Location: index.php");
+            header("Location: index.php");
             exit;
         }
     }
@@ -238,7 +239,7 @@ if ($action == 'add' && $canadduser)
 
             $db->commit();
 
-            Header("Location: ".$_SERVER['PHP_SELF'].'?id='.$id);
+            header("Location: ".$_SERVER['PHP_SELF'].'?id='.$id);
             exit;
         }
         else
@@ -882,7 +883,7 @@ else
             $result=$ldap->connect_bind();
             if ($result > 0)
             {
-                $userSearchFilter = '('.$conf->global->LDAP_FILTER_CONNECTION.'('.$this->getUserIdentifier().'='.$fuser->login.'))';
+                $userSearchFilter = '('.$conf->global->LDAP_FILTER_CONNECTION.'('.$ldap->getUserIdentifier().'='.$fuser->login.'))';
                 $entries = $ldap->fetch($fuser->login,$userSearchFilter);
                 if (! $entries)
                 {

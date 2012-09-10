@@ -5,6 +5,7 @@
  * Copyright (C) 2007		Franky Van Liedekerke	<franky.van.liedekerke@telenet.be>
  * Copyright (C) 2010-2011	Juanjo Menent			<jmenent@2byte.es>
  * Copyright (C) 2010-2012	Philippe Grand			<philippe.grand@atoo-net.com>
+ * Copyright (C) 2012       Marcos García           <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1009,6 +1010,7 @@ class CommandeFournisseur extends CommonOrder
      *	@param		double	$pu_ttc					Unit price TTC
      *	@param		int		$type					Type of line (0=product, 1=service)
      *	@param		int		$info_bits				More information
+     *  @param		int		$notrigger				Disable triggers
      *	@return     int             				<=0 if KO, >0 if OK
      */
     function addline($desc, $pu_ht, $qty, $txtva, $txlocaltax1=0, $txlocaltax2=0, $fk_product=0, $fk_prod_fourn_price=0, $fourn_ref='', $remise_percent=0, $price_base_type='HT', $pu_ttc=0, $type=0, $info_bits=0, $notrigger=false)
@@ -1595,6 +1597,7 @@ class CommandeFournisseur extends CommonOrder
      *  @param     	double	$price_base_type 	Type of price base
      *	@param		int		$info_bits			Miscellanous informations
      *	@param		int		$type				Type of line (0=product, 1=service)
+     *  @param		int		$notrigger				Disable triggers
      *	@return    	int             			< 0 if error, > 0 if ok
      */
     function updateline($rowid, $desc, $pu, $qty, $remise_percent, $txtva, $txlocaltax1=0, $txlocaltax2=0, $price_base_type='HT', $info_bits=0, $type=0, $notrigger=false)
@@ -1839,6 +1842,43 @@ class CommandeFournisseur extends CommonOrder
             $this->error=$this->db->error();
             return -1;
         }
+    }
+
+    /**
+     * Returns the translated input method
+     *
+     * @return string
+     */
+    function getInputMethod()
+    {
+        global $db, $langs;
+
+        if ($this->methode_commande_id > 0)
+        {
+            $sql = "SELECT rowid, code, libelle";
+            $sql.= " FROM ".MAIN_DB_PREFIX.'c_input_method';
+            $sql.= " WHERE active=1 AND rowid = ".$db->escape($this->methode_commande_id);
+
+            $query = $db->query($sql);
+
+            if ($query && $db->num_rows($query))
+            {
+                $result = $db->fetch_object($query);
+
+                $string = $langs->trans($result->code);
+
+                if ($string == $result->code)
+                {
+                    $string = $obj->libelle != '-' ? $obj->libelle : '';
+                }
+
+                return $string;
+            }
+
+            dol_print_error($db);
+        }
+
+        return '';
     }
 }
 

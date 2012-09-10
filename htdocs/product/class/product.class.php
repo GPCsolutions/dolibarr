@@ -363,6 +363,7 @@ class Product extends CommonObject
 			{
 				// Product already exists with this ref
 				$langs->load("products");
+				$error++;
 				$this->error = "ErrorProductAlreadyExists";
 			}
 		}
@@ -698,14 +699,20 @@ class Product extends CommonObject
 					$sql2.= "','".$this->db->escape($this->description);
 					$sql2.= "','".$this->db->escape($this->note)."')";
 				}
-				if (!$this->db->query($sql2)) return -1;
+				dol_syslog(get_class($this).'::setMultiLangs sql='.$sql2);
+				if (! $this->db->query($sql2))
+				{
+					$this->error=$this->db->lasterror();
+					dol_syslog(get_class($this).'::setMultiLangs error='.$this->error, LOG_ERR);
+					return -1;
+				}
 			}
 			else if (isset($this->multilangs["$key"]))
 			{
 				if ($this->db->num_rows($result)) // si aucune ligne dans la base
 				{
 					$sql2 = "UPDATE ".MAIN_DB_PREFIX."product_lang";
-					$sql2.= " SET label='".$this->db->escape($this->multilangs["$key"]["libelle"])."',";
+					$sql2.= " SET label='".$this->db->escape($this->multilangs["$key"]["label"])."',";
 					$sql2.= " description='".$this->db->escape($this->multilangs["$key"]["description"])."',";
 					$sql2.= " note='".$this->db->escape($this->multilangs["$key"]["note"])."'";
 					$sql2.= " WHERE fk_product=".$this->id." AND lang='".$key."'";
@@ -713,14 +720,20 @@ class Product extends CommonObject
 				else
 				{
 					$sql2 = "INSERT INTO ".MAIN_DB_PREFIX."product_lang (fk_product, lang, label, description, note)";
-					$sql2.= " VALUES(".$this->id.",'".$key."','". $this->db->escape($this->multilangs["$key"]["libelle"]);
+					$sql2.= " VALUES(".$this->id.",'".$key."','". $this->db->escape($this->multilangs["$key"]["label"]);
 					$sql2.= "','".$this->db->escape($this->multilangs["$key"]["description"]);
 					$sql2.= "','".$this->db->escape($this->multilangs["$key"]["note"])."')";
 				}
 
 				// on ne sauvegarde pas des champs vides
-				if ( $this->multilangs["$key"]["libelle"] || $this->multilangs["$key"]["description"] || $this->multilangs["$key"]["note"] )
-				if (!$this->db->query($sql2)) return -1;
+				if ( $this->multilangs["$key"]["label"] || $this->multilangs["$key"]["description"] || $this->multilangs["$key"]["note"] )
+				dol_syslog(get_class($this).'::setMultiLangs sql='.$sql2);
+				if (! $this->db->query($sql2))
+				{
+					$this->error=$this->db->lasterror();
+					dol_syslog(get_class($this).'::setMultiLangs error='.$this->error, LOG_ERR);
+					return -1;
+				}
 			}
 		}
 		return 1;
@@ -750,12 +763,12 @@ class Product extends CommonObject
 				//print 'lang='.$obj->lang.' current='.$current_lang.'<br>';
 				if( $obj->lang == $current_lang ) // si on a les traduct. dans la langue courante on les charge en infos principales.
 				{
-					$this->libelle		= $obj->label;
+					$this->label		= $obj->label;
 					$this->description	= $obj->description;
 					$this->note			= $obj->note;
 
 				}
-				$this->multilangs["$obj->lang"]["libelle"]		= $obj->label;
+				$this->multilangs["$obj->lang"]["label"]		= $obj->label;
 				$this->multilangs["$obj->lang"]["description"]	= $obj->description;
 				$this->multilangs["$obj->lang"]["note"]			= $obj->note;
 			}
@@ -1014,6 +1027,16 @@ class Product extends CommonObject
 				$this->localtax2_tx = $localtax2;
 
 				$this->_log_price($user,$level);
+				
+				// Appel des triggers
+				include_once(DOL_DOCUMENT_ROOT . "/core/class/interfaces.class.php");
+				$interface=new Interfaces($this->db);
+				$result=$interface->run_triggers('PRODUCT_PRICE_MODIFY',$this,$user,$langs,$conf);
+				if ($result < 0) 
+				{
+					$error++; $this->errors=$interface->errors;
+				}
+				// Fin appel triggers
 			}
 			else
 			{
@@ -1765,7 +1788,7 @@ class Product extends CommonObject
 
 	/**
 	 *  Add a supplier price for the product.
-	 *  Note: Duplicate ref is accepted for different quantity only or for different companies.
+	 *  Note: Duplicate ref is accepted for different quantity only, or for different companies.
 	 *
 	 *  @param      User	$user       User that make link
 	 *  @param      int		$id_fourn   Supplier id
@@ -1841,7 +1864,7 @@ class Product extends CommonObject
 				$sql.= ", 0";
 				$sql.= ")";
 
-				dol_syslog(get_class($this)."add_fournisseur sql=".$sql);
+				dol_syslog(get_class($this)."::add_fournisseur sql=".$sql);
 				if ($this->db->query($sql))
 				{
 					$this->product_fourn_price_id = $this->db->last_insert_id(MAIN_DB_PREFIX."product_fournisseur_price");

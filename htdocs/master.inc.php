@@ -74,8 +74,12 @@ if (! empty($dolibarr_main_document_root_alt))
 }
 // Force db type (for test purpose)
 if (defined('TEST_DB_FORCE_TYPE')) $conf->db->type=constant('TEST_DB_FORCE_TYPE');
+// Force php strict mode (for debug)
+$conf->file->strict_mode = empty($dolibarr_strict_mode)?'':$dolibarr_strict_mode;
 // Force Multi-Company transverse mode
 $conf->multicompany->transverse_mode = empty($multicompany_transverse_mode)?'':$multicompany_transverse_mode;
+// Force entity in login page
+$conf->multicompany->force_entity = empty($multicompany_force_entity)?'':(int) $multicompany_force_entity;
 
 // Chargement des includes principaux de librairies communes
 if (! defined('NOREQUIREUSER')) require_once DOL_DOCUMENT_ROOT .'/user/class/user.class.php';		// Need 500ko memory
@@ -139,6 +143,10 @@ if (! defined('NOREQUIREDB'))
 	{
 		$conf->entity = DOLENTITY;
 	}
+	else if (! empty($conf->multicompany->force_entity) && is_int($conf->multicompany->force_entity)) // To force entity in login page
+	{
+		$conf->entity = $conf->multicompany->force_entity;
+	}
 
 	//print "Will work with data into entity instance number '".$conf->entity."'";
 
@@ -189,14 +197,14 @@ if (! defined('NOREQUIREDB') && ! defined('NOREQUIRESOC'))
 	$mysoc=new Societe($db);
 
 	$mysoc->id=0;
-	$mysoc->nom=$conf->global->MAIN_INFO_SOCIETE_NOM; 			// TODO deprecated
-	$mysoc->name=$conf->global->MAIN_INFO_SOCIETE_NOM;
-	$mysoc->adresse=$conf->global->MAIN_INFO_SOCIETE_ADRESSE; 	// TODO deprecated
-	$mysoc->address=$conf->global->MAIN_INFO_SOCIETE_ADRESSE;
-	$mysoc->cp=$conf->global->MAIN_INFO_SOCIETE_CP; 			// TODO deprecated
-	$mysoc->zip=$conf->global->MAIN_INFO_SOCIETE_CP;
-	$mysoc->ville=$conf->global->MAIN_INFO_SOCIETE_VILLE; 		// TODO deprecated
-	$mysoc->town=$conf->global->MAIN_INFO_SOCIETE_VILLE;
+	$mysoc->name=(! empty($conf->global->MAIN_INFO_SOCIETE_NOM))?$conf->global->MAIN_INFO_SOCIETE_NOM:'';
+	$mysoc->nom=$mysoc->name; 									// deprecated
+	$mysoc->address=(! empty($conf->global->MAIN_INFO_SOCIETE_ADRESSE))?$conf->global->MAIN_INFO_SOCIETE_ADRESSE:'';
+	$mysoc->adresse=$mysoc->address; 							// deprecated
+	$mysoc->zip=(! empty($conf->global->MAIN_INFO_SOCIETE_CP))?$conf->global->MAIN_INFO_SOCIETE_CP:'';
+	$mysoc->cp=$mysoc->zip;										// deprecated
+	$mysoc->town=(! empty($conf->global->MAIN_INFO_SOCIETE_VILLE))?$conf->global->MAIN_INFO_SOCIETE_VILLE:'';
+	$mysoc->ville=$mysoc->town;									// deprecated
 	$mysoc->state_id=$conf->global->MAIN_INFO_SOCIETE_DEPARTEMENT;
 	$mysoc->note=empty($conf->global->MAIN_INFO_SOCIETE_NOTE)?'':$conf->global->MAIN_INFO_SOCIETE_NOTE;
 
@@ -238,14 +246,13 @@ if (! defined('NOREQUIREDB') && ! defined('NOREQUIRESOC'))
 	$mysoc->idprof4=empty($conf->global->MAIN_INFO_RCS)?'':$conf->global->MAIN_INFO_RCS;
 	$mysoc->idprof5=empty($conf->global->MAIN_INFO_PROFID5)?'':$conf->global->MAIN_INFO_PROFID5;
 	$mysoc->idprof6=empty($conf->global->MAIN_INFO_PROFID6)?'':$conf->global->MAIN_INFO_PROFID6;
-	$mysoc->tva_intra=$conf->global->MAIN_INFO_TVAINTRA;	// VAT number, not necessarly INTRA.
-	$mysoc->idtrainer=empty($conf->global->MAIN_INFO_TRAINER)?'':$conf->global->MAIN_INFO_TRAINER;
-	$mysoc->capital=$conf->global->MAIN_INFO_CAPITAL;
+	$mysoc->tva_intra=(! empty($conf->global->MAIN_INFO_TVAINTRA))?$conf->global->MAIN_INFO_TVAINTRA:'';	// VAT number, not necessarly INTRA.
+	$mysoc->capital=(! empty($conf->global->MAIN_INFO_CAPITAL))?$conf->global->MAIN_INFO_CAPITAL:'';
 	$mysoc->forme_juridique_code=$conf->global->MAIN_INFO_SOCIETE_FORME_JURIDIQUE;
-	$mysoc->email=$conf->global->MAIN_INFO_SOCIETE_MAIL;
-	$mysoc->logo=$conf->global->MAIN_INFO_SOCIETE_LOGO;
-	$mysoc->logo_small=$conf->global->MAIN_INFO_SOCIETE_LOGO_SMALL;
-	$mysoc->logo_mini=$conf->global->MAIN_INFO_SOCIETE_LOGO_MINI;
+	$mysoc->email=(! empty($conf->global->MAIN_INFO_SOCIETE_MAIL))?$conf->global->MAIN_INFO_SOCIETE_MAIL:'';
+	$mysoc->logo=(! empty($conf->global->MAIN_INFO_SOCIETE_LOGO))?$conf->global->MAIN_INFO_SOCIETE_LOGO:'';
+	$mysoc->logo_small=(! empty($conf->global->MAIN_INFO_SOCIETE_LOGO_SMALL))?$conf->global->MAIN_INFO_SOCIETE_LOGO_SMALL:'';
+	$mysoc->logo_mini=(! empty($conf->global->MAIN_INFO_SOCIETE_LOGO_MINI))?$conf->global->MAIN_INFO_SOCIETE_LOGO_MINI:'';
 
 	// Define if company use vat or not (Do not use conf->global->FACTURE_TVAOPTION anymore)
 	$mysoc->tva_assuj=((isset($conf->global->FACTURE_TVAOPTION) && $conf->global->FACTURE_TVAOPTION=='franchise')?0:1);
@@ -268,6 +275,6 @@ if (! defined('NOREQUIRETRAN'))
 if (! defined('MAIN_LABEL_MENTION_NPR') ) define('MAIN_LABEL_MENTION_NPR','NPR');
 
 // We force feature to help debug
-$conf->global->MAIN_JS_ON_PAYMENT=1;
+$conf->global->MAIN_JS_ON_PAYMENT=0;	// We set to zero to unifrmize way of working between customer and supplier payments
 
 ?>

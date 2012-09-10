@@ -3,6 +3,7 @@
  * Copyright (C) 2004-2009 Laurent Destailleur   <eldy@users.sourceforge.net>
  * Copyright (C) 2005      Marc Barilley / Ocebo <marc@ocebo.com>
  * Copyright (C) 2005-2012 Regis Houssin         <regis@dolibarr.fr>
+ * Copyright (C) 2012      Marcos García         <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,7 +93,7 @@ else if ($action == 'confirm_deletefile' && $confirm == 'yes')
 		$ret=dol_delete_file($file,0,0,0,$object);
 		if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('urlfile')));
 		else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), 'errors');
-		Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id);
+		header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id);
 		exit;
 	}
 }
@@ -160,7 +161,7 @@ if ($object->id > 0)
 
 		if ($object->methode_commande)
 		{
-			print '<tr><td>'.$langs->trans("Method").'</td><td colspan="2">'.$object->methode_commande.'</td></tr>';
+            print '<tr><td>'.$langs->trans("Method").'</td><td colspan="2">'.$object->getInputMethod().'</td></tr>';
 		}
 	}
 
@@ -195,7 +196,7 @@ if ($object->id > 0)
 }
 else
 {
-	Header('Location: index.php');
+	header('Location: index.php');
 }
 
 

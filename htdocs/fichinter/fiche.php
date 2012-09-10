@@ -90,7 +90,7 @@ if ($action == 'confirm_validate' && $confirm == 'yes' && $user->rights->fichein
             $outputlangs->setDefaultLang($newlang);
         }
         $result=fichinter_create($db, $object, GETPOST('model','alpha'), $outputlangs);
-        Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+        header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
         exit;
     }
     else
@@ -118,7 +118,7 @@ else if ($action == 'confirm_modify' && $confirm == 'yes' && $user->rights->fich
             $outputlangs->setDefaultLang($newlang);
         }
         $result=fichinter_create($db, $object, (!GETPOST('model','alpha'))?$object->model:GETPOST('model','apha'), $outputlangs);
-        Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+        header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
         exit;
     }
     else
@@ -133,11 +133,11 @@ else if ($action == 'add' && $user->rights->ficheinter->creer)
     $object->duree			= GETPOST('duree','int');
     $object->fk_project		= GETPOST('projectid','int');
     $object->author			= $user->id;
-    $object->description	= GETPOST('description','alpha');
+    $object->description	= GETPOST('description');
     $object->ref			= $ref;
     $object->modelpdf		= GETPOST('model','alpha');
-    $object->note_private	= GETPOST('note_private','alpha');
-    $object->note_public	= GETPOST('note_public','alpha');
+    $object->note_private	= GETPOST('note_private');
+    $object->note_public	= GETPOST('note_public');
 
     if ($object->socid > 0)
     {
@@ -237,14 +237,14 @@ else if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->fich
 	$object->fetch_thirdparty();
 	$object->delete($user);
 
-    Header('Location: '.DOL_URL_ROOT.'/fichinter/list.php?leftmenu=ficheinter');
+    header('Location: '.DOL_URL_ROOT.'/fichinter/list.php?leftmenu=ficheinter');
     exit;
 }
 
 else if ($action == 'setdescription' && $user->rights->ficheinter->creer)
 {
     $object->fetch($id);
-    $result=$object->set_description($user,GETPOST('description','alpha'));
+    $result=$object->set_description($user,GETPOST('description'));
     if ($result < 0) dol_print_error($db,$object->error);
 }
 else if ($action == 'setnote_public' && $user->rights->ficheinter->creer)
@@ -263,7 +263,7 @@ else if ($action == 'setnote_private' && $user->rights->ficheinter->creer)
 // Add line
 else if ($action == "addline" && $user->rights->ficheinter->creer)
 {
-    if (!GETPOST('np_desc','alpha'))
+    if (!GETPOST('np_desc'))
     {
         $mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Description")).'</div>';
         $error++;
@@ -280,7 +280,7 @@ else if ($action == "addline" && $user->rights->ficheinter->creer)
         $ret=$object->fetch($id);
         $object->fetch_thirdparty();
 
-        $desc=GETPOST('np_desc','alpha');
+        $desc=GETPOST('np_desc');
         $date_intervention = dol_mktime(GETPOST('dihour','int'), GETPOST('dimin','int'), 0, GETPOST('dimonth','int'), GETPOST('diday','int'), GETPOST('diyear','int'));
         $duration = convertTime2Seconds(GETPOST('durationhour','int'), GETPOST('durationmin','int'));
 
@@ -307,7 +307,7 @@ else if ($action == "addline" && $user->rights->ficheinter->creer)
 			$db->commit();
 
         	fichinter_create($db, $object, $object->modelpdf, $outputlangs);
-        	Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+        	header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
         	exit;
 		}
 		else
@@ -325,7 +325,7 @@ else if ($action == 'classifybilled' && $user->rights->ficheinter->creer)
 	$result=$object->setBilled();
 	if ($result > 0)
 	{
-        Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+        header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
         exit;
 	}
 	else
@@ -353,7 +353,7 @@ else if ($action == 'updateline' && $user->rights->ficheinter->creer && GETPOST(
     }
     $object->fetch_thirdparty();
 
-    $desc		= GETPOST('np_desc','alpha');
+    $desc		= GETPOST('np_desc');
     $date_inter	= dol_mktime(GETPOST('dihour','int'), GETPOST('dimin','int'), 0, GETPOST('dimonth','int'), GETPOST('diday','int'), GETPOST('diyear','int'));
     $duration	= convertTime2Seconds(GETPOST('durationhour','int'),GETPOST('durationmin','int'));
 
@@ -379,7 +379,7 @@ else if ($action == 'updateline' && $user->rights->ficheinter->creer && GETPOST(
     }
     fichinter_create($db, $object, $object->modelpdf, $outputlangs);
 
-    Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+    header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
     exit;
 }
 
@@ -436,7 +436,7 @@ else if ($action == 'up' && $user->rights->ficheinter->creer)
         $outputlangs->setDefaultLang($newlang);
     }
     fichinter_create($db, $object, $object->modelpdf, $outputlangs);
-    Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'#'.GETPOST('line_id','int'));
+    header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'#'.GETPOST('line_id','int'));
     exit;
 }
 
@@ -457,7 +457,7 @@ else if ($action == 'down' && $user->rights->ficheinter->creer)
         $outputlangs->setDefaultLang($newlang);
     }
     fichinter_create($db, $object, $object->modelpdf, $outputlangs);
-    Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'#'.GETPOST('line_id','int'));
+    header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'#'.GETPOST('line_id','int'));
     exit;
 }
 
@@ -603,7 +603,7 @@ if ($action == 'send' && ! GETPOST('cancel','alpha') && (empty($conf->global->MA
                         {
                             // Redirect here
                             // This avoid sending mail twice if going out and then back to page
-                            Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&msg='.urlencode($mesg));
+                            header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&msg='.urlencode($mesg));
                             exit;
                         }
                     }
@@ -662,7 +662,7 @@ if (! empty($conf->global->MAIN_DISABLE_CONTACTS_TAB))
 
 		if ($result >= 0)
 		{
-			Header("Location: ".$_SERVER['PHP_SELF']."?id=".$object->id);
+			header("Location: ".$_SERVER['PHP_SELF']."?id=".$object->id);
 			exit;
 		}
 		else
@@ -700,7 +700,7 @@ if (! empty($conf->global->MAIN_DISABLE_CONTACTS_TAB))
 
 		if ($result >= 0)
 		{
-			Header("Location: ".$_SERVER['PHP_SELF']."?id=".$object->id);
+			header("Location: ".$_SERVER['PHP_SELF']."?id=".$object->id);
 			exit;
 		}
 		else {

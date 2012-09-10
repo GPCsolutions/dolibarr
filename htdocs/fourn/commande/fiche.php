@@ -36,8 +36,10 @@ require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.commande.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/fourn.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
-if ($conf->produit->enabled) require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
-if ($conf->projet->enabled)	require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
+if (! empty($conf->produit->enabled))
+	require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+if (! empty($conf->projet->enabled))
+	require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 
 $langs->load('orders');
 $langs->load('sendings');
@@ -155,7 +157,7 @@ else if ($action == 'reopen' && $user->rights->fournisseur->commande->approuver)
         $result = $order->setStatus($user,$newstatus);
         if ($result > 0)
         {
-            Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$_REQUEST['id']);
+            header('Location: '.$_SERVER["PHP_SELF"].'?id='.$_REQUEST['id']);
             exit;
         }
         else
@@ -404,7 +406,7 @@ else if ($action == 'confirm_deleteproductline' && $confirm == 'yes' && $user->r
 
     if (! $error)
     {
-        Header("Location: fiche.php?id=".$id);
+        header("Location: ".$_SERVER["PHP_SELF"]."?id=".$id);
         exit;
     }
 }
@@ -465,7 +467,7 @@ else if ($action == 'confirm_approve' && $confirm == 'yes' && $user->rights->fou
         $result	= $object->approve($user, $idwarehouse);
         if ($result > 0)
         {
-            Header("Location: fiche.php?id=".$id);
+            header("Location: ".$_SERVER["PHP_SELF"]."?id=".$id);
             exit;
         }
         else
@@ -481,7 +483,7 @@ else if ($action == 'confirm_refuse' &&	$confirm == 'yes' && $user->rights->four
     $result = $object->refuse($user);
     if ($result > 0)
     {
-        Header("Location: fiche.php?id=".$id);
+        header("Location: ".$_SERVER["PHP_SELF"]."?id=".$id);
         exit;
     }
     else
@@ -496,7 +498,7 @@ else if ($action == 'confirm_commande' && $confirm	== 'yes' &&	$user->rights->fo
     $result	= $object->commande($user, $_REQUEST["datecommande"],	$_REQUEST["methode"], $_REQUEST['comment']);
     if ($result > 0)
     {
-        Header("Location: fiche.php?id=".$id);
+        header("Location: ".$_SERVER["PHP_SELF"]."?id=".$id);
         exit;
     }
     else
@@ -513,7 +515,7 @@ else if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->four
     $result=$object->delete($user);
     if ($result > 0)
     {
-        Header("Location: ".DOL_URL_ROOT.'/fourn/commande/liste.php');
+        header("Location: ".DOL_URL_ROOT.'/fourn/commande/liste.php');
         exit;
     }
     else
@@ -534,7 +536,7 @@ else if ($action == 'livraison' && $user->rights->fournisseur->commande->recepti
         $result	= $object->Livraison($user, $date_liv, $_POST["type"], $_POST["comment"]);
         if ($result > 0)
         {
-            Header("Location: fiche.php?id=".$id);
+            header("Location: ".$_SERVER["PHP_SELF"]."?id=".$id);
             exit;
         }
         else if($result == -3)
@@ -559,7 +561,7 @@ else if ($action == 'confirm_cancel' && $confirm == 'yes' &&	$user->rights->four
     $result	= $object->cancel($user);
     if ($result > 0)
     {
-        Header("Location: fiche.php?id=".$id);
+        header("Location: ".$_SERVER["PHP_SELF"]."?id=".$id);
         exit;
     }
     else
@@ -581,7 +583,7 @@ else if ($action == 'up'	&& $user->rights->fournisseur->commande->creer)
         $outputlangs->setDefaultLang($_REQUEST['lang_id']);
     }
     if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) supplier_order_pdf_create($db, $object, $object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
-    Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id.(empty($conf->global->MAIN_JUMP_TAG)?'':'#'.$_GET['rowid']));
+    header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id.(empty($conf->global->MAIN_JUMP_TAG)?'':'#'.$_GET['rowid']));
     exit;
 }
 else if ($action == 'down' && $user->rights->fournisseur->commande->creer)
@@ -596,7 +598,7 @@ else if ($action == 'down' && $user->rights->fournisseur->commande->creer)
         $outputlangs->setDefaultLang($_REQUEST['lang_id']);
     }
     if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) supplier_order_pdf_create($db, $object, $object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
-    Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id.(empty($conf->global->MAIN_JUMP_TAG)?'':'#'.$_GET['rowid']));
+    header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id.(empty($conf->global->MAIN_JUMP_TAG)?'':'#'.$_GET['rowid']));
     exit;
 }
 
@@ -627,7 +629,7 @@ else if ($action == 'builddoc' && $user->rights->fournisseur->commande->creer)	/
     }
     else
     {
-        Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(empty($conf->global->MAIN_JUMP_TAG)?'':'#builddoc'));
+        header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.(empty($conf->global->MAIN_JUMP_TAG)?'':'#builddoc'));
         exit;
     }
 }
@@ -830,7 +832,7 @@ if ($action == 'send' && ! GETPOST('addfile') && ! GETPOST('removedfile') && ! G
                         {
                             // Redirect here
                             // This avoid sending mail twice if going out and then back to page
-                            Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&mesg='.urlencode($mesg));
+                            header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id.'&mesg='.urlencode($mesg));
                             exit;
                         }
                     }
@@ -888,7 +890,7 @@ if (! empty($conf->global->MAIN_DISABLE_CONTACTS_TAB))
 
 		if ($result >= 0)
 		{
-			Header("Location: ".$_SERVER['PHP_SELF']."?id=".$object->id);
+			header("Location: ".$_SERVER['PHP_SELF']."?id=".$object->id);
 			exit;
 		}
 		else
@@ -926,7 +928,7 @@ if (! empty($conf->global->MAIN_DISABLE_CONTACTS_TAB))
 
 		if ($result >= 0)
 		{
-			Header("Location: ".$_SERVER['PHP_SELF']."?id=".$object->id);
+			header("Location: ".$_SERVER['PHP_SELF']."?id=".$object->id);
 			exit;
 		}
 		else {
@@ -1118,25 +1120,7 @@ if ($id > 0 || ! empty($ref))
 
             if ($object->methode_commande)
             {
-                $sql = "SELECT rowid, code, libelle";
-                $sql.= " FROM ".MAIN_DB_PREFIX.'c_input_method';
-                $sql.= " WHERE active=1 AND rowid = ".$db->escape($object->methode_commande_id);
-
-                $resql = $db->query($sql);
-
-                if ($resql && $db->num_rows($resql))
-                {
-                    $obj = $db->fetch_object($resql);
-
-                    // Si traduction existe, on l'utilise, sinon on prend le libelle par defaut
-                    $methode_commande = ($langs->trans($obj->code) != $obj->code ? $langs->trans($obj->code) : ($obj->libelle!='-'?$obj->libelle:''));
-                }
-                else
-                {
-                    dol_print_error($db);
-                }
-
-                print '<tr><td>'.$langs->trans("Method").'</td><td colspan="2">'.$methode_commande.'</td></tr>';
+                print '<tr><td>'.$langs->trans("Method").'</td><td colspan="2">'.$object->getInputMethod().'</td></tr>';
             }
         }
 
@@ -1550,7 +1534,7 @@ if ($id > 0 || ! empty($ref))
 
                 $ajaxoptions=array(
                 		'update' => array('pqty' => 'qty'),
-                		'disabled' => 'addPredefinedProductButton',
+                		'option_disabled' => 'addPredefinedProductButton',
                 		'error' => $langs->trans("NoPriceDefinedForThisSupplier")
                 );
                 $form->select_produits_fournisseurs($object->fourn_id, '', 'idprodfournprice', '', '', $ajaxoptions);

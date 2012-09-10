@@ -240,7 +240,7 @@ if (! defined('NOREQUIREAJAX') && $conf->use_javascript_ajax) require_once DOL_D
 if (! empty($conf->global->MAIN_NOT_INSTALLED) || ! empty($conf->global->MAIN_NOT_UPGRADED))
 {
     dol_syslog("main.inc: A previous install or upgrade was not complete. Redirect to install page.", LOG_WARNING);
-    Header("Location: ".DOL_URL_ROOT."/install/index.php");
+    header("Location: ".DOL_URL_ROOT."/install/index.php");
     exit;
 }
 // If an upgrade process is required, we call the install page.
@@ -255,7 +255,7 @@ if ((! empty($conf->global->MAIN_VERSION_LAST_UPGRADE) && ($conf->global->MAIN_V
     if ($rescomp > 0)   // Programs have a version higher than database. We did not add "&& $rescomp < 3" because we want upgrade process for build upgrades
     {
         dol_syslog("main.inc: database version ".$versiontocompare." is lower than programs version ".DOL_VERSION.". Redirect to install page.", LOG_WARNING);
-        Header("Location: ".DOL_URL_ROOT."/install/index.php");
+        header("Location: ".DOL_URL_ROOT."/install/index.php");
         exit;
     }
 }
@@ -375,6 +375,7 @@ if (! defined('NOLOGIN'))
         // If error, we will put error message in session under the name dol_loginmesg
         $goontestloop=false;
         if (isset($_SERVER["REMOTE_USER"]) && in_array('http',$authmode)) $goontestloop=true;
+        if ($dolibarr_main_authentication == 'forceuser' && ! empty($dolibarr_auto_user)) $goontestloop=true;
         if (GETPOST("username","alpha",2) || ! empty($_COOKIE['login_dolibarr']) || GETPOST('openid_mode','alpha',1)) $goontestloop=true;
 
         if ($test && $goontestloop)
@@ -432,7 +433,7 @@ if (! defined('NOLOGIN'))
                 include_once DOL_DOCUMENT_ROOT.'/core/class/translate.class.php';
                 $langs=new Translate("",$conf);
             }
-            dol_loginfunction($langs,$conf,$mysoc);
+            dol_loginfunction($langs,$conf,(! empty($mysoc)?$mysoc:''));
             exit;
         }
 
@@ -761,7 +762,7 @@ if (! empty($conf->multicompany->enabled) && GETPOST('action') == 'switchentity'
 {
     if ($mc->switchEntity(GETPOST('entity','int')) > 0)
     {
-        Header("Location: ".DOL_URL_ROOT.'/');
+        header("Location: ".DOL_URL_ROOT.'/');
         exit;
     }
 }
@@ -937,7 +938,7 @@ function top_htmlhead($head, $title='', $disablejs=0, $disablehead=0, $arrayofjs
         if (empty($conf->global->MAIN_OPTIMIZEFORTEXTBROWSER)) print '<link rel="author" title="Dolibarr Development Team" href="http://www.dolibarr.org">'."\n";
 
         // Output standard javascript links
-        if (! $disablejs && $conf->use_javascript_ajax)
+        if (! $disablejs && ! empty($conf->use_javascript_ajax))
         {
             $ext='.js';
             if (isset($conf->global->MAIN_OPTIMIZE_SPEED) && ($conf->global->MAIN_OPTIMIZE_SPEED & 0x01)) {
@@ -958,10 +959,16 @@ function top_htmlhead($head, $title='', $disablejs=0, $disablehead=0, $arrayofjs
                 print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/plugins/layout/jquery.layout-latest'.$ext.'"></script>'."\n";
             }
             // jQuery jnotify
-            if (empty($conf->global->MAIN_DISABLE_JQUERY_JNOTIFY))
+            if (empty($conf->global->MAIN_DISABLE_JQUERY_JNOTIFY) && ! defined('DISABLE_JQUERY_JNOTIFY'))
             {
                 print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/plugins/jnotify/jquery.jnotify.min.js"></script>'."\n";
                 print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/core/js/jnotify.js"></script>'."\n";
+            }
+            // jQuery blockUI
+            if (! empty($conf->global->MAIN_USE_JQUERY_BLOCKUI) || defined('REQUIRE_JQUERY_BLOCKUI'))
+            {
+            	print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/plugins/blockUI/jquery.blockUI.js"></script>'."\n";
+            	print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/core/js/blockUI.js"></script>'."\n";
             }
             // Flot
             if (empty($conf->global->MAIN_DISABLE_JQUERY_FLOT))
@@ -1000,7 +1007,7 @@ function top_htmlhead($head, $title='', $disablejs=0, $disablehead=0, $arrayofjs
                 print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/plugins/jeditable/jquery.jeditable.ckeditor.js"></script>'."\n";
             }
             // jQuery File Upload
-            if (! empty($conf->global->MAIN_USE_JQUERY_FILEUPLOAD))
+            if (! empty($conf->global->MAIN_USE_JQUERY_FILEUPLOAD) || (defined('REQUIRE_JQUERY_FILEUPLOAD') && constant('REQUIRE_JQUERY_FILEUPLOAD')))
             {
                 print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/plugins/template/tmpl.min.js"></script>'."\n";
                 print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/plugins/fileupload/js/jquery.iframe-transport.js"></script>'."\n";
@@ -1407,7 +1414,7 @@ function left_menu($menu_array_before, $helppagename='', $moresearchform='', $me
 	    $searchform.=$hookmanager->executeHooks('printSearchForm',$parameters);    // Note that $action and $object may have been modified by some hooks
 
 	    // Define $bookmarks
-	    if ($conf->bookmark->enabled && $user->rights->bookmark->lire)
+	    if (! empty($conf->bookmark->enabled) && $user->rights->bookmark->lire)
 	    {
 	        include_once (DOL_DOCUMENT_ROOT.'/bookmarks/bookmarks.lib.php');
 	        $langs->load("bookmarks");
@@ -1671,7 +1678,7 @@ if (! function_exists("llxFooter"))
      */
     function llxFooter($foot='')
     {
-        global $conf, $langs, $dolibarr_auto_user, $micro_start_time;
+        global $conf, $langs;
 
         // Global html output events ($mesgs, $errors, $warnings)
         dol_htmloutput_events();

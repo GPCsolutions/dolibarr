@@ -304,7 +304,7 @@ if (empty($reshook))
                     $url=$_SERVER["PHP_SELF"]."?socid=".$object->id;
                     if (($object->client == 1 || $object->client == 3) && empty($conf->global->SOCIETE_DISABLE_CUSTOMERS)) $url=DOL_URL_ROOT."/comm/fiche.php?socid=".$object->id;
                     else if ($object->fournisseur == 1) $url=DOL_URL_ROOT."/fourn/fiche.php?socid=".$object->id;
-                    Header("Location: ".$url);
+                    header("Location: ".$url);
                     exit;
                 }
                 else
@@ -318,7 +318,7 @@ if (empty($reshook))
             {
                 if ($_POST["cancel"])
                 {
-                    Header("Location: ".$_SERVER["PHP_SELF"]."?socid=".$socid);
+                    header("Location: ".$_SERVER["PHP_SELF"]."?socid=".$socid);
                     exit;
                 }
 
@@ -381,7 +381,7 @@ if (empty($reshook))
                 if (! $error && ! count($errors))
                 {
 
-                    Header("Location: ".$_SERVER["PHP_SELF"]."?socid=".$socid);
+                    header("Location: ".$_SERVER["PHP_SELF"]."?socid=".$socid);
                     exit;
                 }
                 else
@@ -401,7 +401,7 @@ if (empty($reshook))
 
         if ($result > 0)
         {
-            Header("Location: ".DOL_URL_ROOT."/societe/societe.php?delsoc=".urlencode($object->name));
+            header("Location: ".DOL_URL_ROOT."/societe/societe.php?delsoc=".urlencode($object->name));
             exit;
         }
         else
@@ -446,7 +446,7 @@ if (empty($reshook))
             }
             else
             {
-                Header('Location: '.$_SERVER["PHP_SELF"].'?socid='.$object->id.(empty($conf->global->MAIN_JUMP_TAG)?'':'#builddoc'));
+                header('Location: '.$_SERVER["PHP_SELF"].'?socid='.$object->id.(empty($conf->global->MAIN_JUMP_TAG)?'':'#builddoc'));
                 exit;
             }
         }
@@ -784,7 +784,7 @@ else
         print '</td></tr>';
 
         // Barcode
-        if (! empty($conf->global->MAIN_MODULE_BARCODE))
+        if (! empty($conf->barcode->enabled))
         {
             print '<tr><td>'.$langs->trans('Gencod').'</td><td colspan="3"><input type="text" name="barcode" value="'.$object->barcode.'">';
             print '</td></tr>';
@@ -1013,7 +1013,7 @@ else
                 $res=dol_include_once($dirroot.$module.'.php');
                 if ($res) break;
             }
-            $modCodeClient = new $module;
+            $modCodeClient = new $module($db);
             // We verified if the tag prefix is used
             if ($modCodeClient->code_auto)
             {
@@ -1031,7 +1031,7 @@ else
                 $res=dol_include_once($dirroot.$module.'.php');
                 if ($res) break;
             }
-            $modCodeFournisseur = new $module;
+            $modCodeFournisseur = new $module($db);
             // On verifie si la balise prefix est utilisee
             if ($modCodeFournisseur->code_auto)
             {
@@ -1218,7 +1218,7 @@ else
             }
 
             // Barcode
-            if ($conf->global->MAIN_MODULE_BARCODE)
+            if (! empty($conf->barcode->enabled))
             {
                 print '<tr><td valign="top">'.$langs->trans('Gencod').'</td><td colspan="3"><input type="text" name="barcode" value="'.$object->barcode.'">';
                 print '</td></tr>';
@@ -1469,7 +1469,7 @@ else
         if (! empty($conf->global->SOCIETE_USEPREFIX)) $rowspan++;
         if (! empty($object->client)) $rowspan++;
         if (! empty($conf->fournisseur->enabled) && $object->fournisseur && ! empty($user->rights->fournisseur->lire)) $rowspan++;
-        if (! empty($conf->global->MAIN_MODULE_BARCODE)) $rowspan++;
+        if (! empty($conf->barcode->enabled)) $rowspan++;
         if (empty($conf->global->SOCIETE_DISABLE_STATE)) $rowspan++;
         $htmllogobar='';
         if ($showlogo || $showbarcode)
@@ -1514,7 +1514,7 @@ else
         }
 
         // Barcode
-        if (! empty($conf->global->MAIN_MODULE_BARCODE))
+        if (! empty($conf->barcode->enabled))
         {
             print '<tr><td>';
             print $langs->trans('Gencod').'</td><td colspan="'.(2+(($showlogo || $showbarcode)?0:1)).'">'.$object->barcode;
