@@ -84,6 +84,10 @@ $import_key = dol_print_date(dol_now(), '%Y%m%d%H%M%S');
 
 $fname = $argv[1];
 
+define('STD_COLS_NB', '19'); // Number of columns for standard fields
+$data_cols_nb = 19; // Total number of columns
+$extra_fields = False;
+
 // Start of transaction
 $db->begin();
 
@@ -95,11 +99,27 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 
 		$line ++;
 		if ($line == 1) {
-			if (count($data) >= 20) {
-				$i = 19;
+			$data_cols_nb = count($data);
+			// Is there any extra field?
+			if ($data_cols_nb > STD_COLS_NB) {
+				// Extra fields found
+				$extra_fields = True;
+				// Let's get the existing options
+				$extra = new ExtraFields($db);
+				$extra_options = array_keys($extra->fetch_name_optionals_label('product'));
+				unset($extra);
+				// Let's get the options present in the file
+				$i = STD_COLS_NB;
 				$extra_data = array();
-				while ($data[$i]) {
-					$extra_data[$i] = $data[$i];
+				while ($i < $data_cols_nb) {
+					// Is the option allowed?
+					if (in_array($data[$i], $extra_options, true)) {
+						$extra_data[$i] = $data[$i];
+					} else {
+						$error ++;
+						print "Unknown extra field\n";
+						continue(2); // Exit to throw error
+					}
 					$i ++;
 				}
 			}
@@ -123,7 +143,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		if ($required) {
 			$error ++;
 			print "The " . $required . " field is required\n";
-			continue;
+			continue; // Exit to throw error
 		}
 
 		if ($error == 0) {
@@ -155,18 +175,12 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 			/*
 			 * Extrafields
 			 */
-			if (count($data) >= 20) {
-				// TODO: add extrafields support
-				$extra = new ExtraFields($db);
-				// Check extra field exists
-				//$options = $extra->fetch_name_optionals_label('product');
-				//$options[$extra_data[$i]];
-				$i = 19;
-				while ($data[$i]) {
-					// We add options_ before the key name because the code expects this form !
+			if ($extra_fields) {
+				$i = STD_COLS_NB;
+				while ($i < $data_cols_nb) {
+					// We add options_ before the key name because the code expects this form!
 					$array_options = array('options_' . $extra_data[$i] => $data[$i]);
 					$prod->array_options = $array_options;
-					var_dump($prod->array_options);
 					$prod->insertExtraFields();
 					$i ++;
 				}
