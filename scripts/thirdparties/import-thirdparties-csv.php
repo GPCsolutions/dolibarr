@@ -23,7 +23,7 @@
 /**
  *      \file      scripts/thirdparties/import-thirdparties-csv.php
  *      \brief     Third parties import from a CSV file
- *      \version   1.0.5
+ *      \version   1.1.0
  *      \author    Cédric Salvador
  *      \author    Raphaël Doursenaud
  */
@@ -40,7 +40,7 @@ if (substr($sapi_type, 0, 3) == 'cgi') {
 }
 
 // Global variables
-$version = '1.0.5';
+$version = '1.1.0';
 $error = 0;
 
 // Include Dolibarr environment
@@ -52,7 +52,7 @@ require_once(DOL_DOCUMENT_ROOT . "/categories/class/categorie.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/contact/class/contact.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/class/translate.class.php");
 
-@set_time_limit(0);	 // No timeout for this script
+@set_time_limit(0);  // No timeout for this script
 
 function printLine($line)
 {
@@ -416,7 +416,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 					$contact->ville = $soc->ville;
 					$contact->fk_departement = $soc->departement_id;
 					$contact->fk_pays = $soc->pays_id;
-					$contact->socid = $soc->id;				   // fk_soc
+					$contact->socid = $soc->id;	   // fk_soc
 					$contact->status = 1;
 					$contact->email = $soc->email;
 					$contact->phone_pro = $soc->tel;

@@ -23,7 +23,7 @@
 /**
  *      \file      scripts/thirdparties/import-contacts-csv.php
  *      \brief     Contacts import from a CSV file
- *      \version   1.0.5
+ *      \version   1.1.0
  *      \author    Cédric Salvador
  *      \author    Raphaël Doursenaud
  */
@@ -40,7 +40,7 @@ if (substr($sapi_type, 0, 3) == 'cgi') {
 }
 
 // Global variables
-$version = '1.0.5';
+$version = '1.1.0';
 $error = 0;
 
 // Include Dolibarr environment
@@ -49,7 +49,7 @@ require_once($path . "../../htdocs/master.inc.php");
 
 require_once(DOL_DOCUMENT_ROOT . "/contact/class/contact.class.php");
 
-@set_time_limit(0);	 // No timeout for this script
+@set_time_limit(0);  // No timeout for this script
 
 function printLine($line)
 {

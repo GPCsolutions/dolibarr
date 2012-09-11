@@ -23,7 +23,7 @@
 /**
  *      \file      scripts/thirdparties/import-thirdparties-csv.php
  *      \brief     Third parties import from a CSV file
- *      \version   1.0.5
+ *      \version   1.1.0
  *      \author    Cédric Salvador
  *      \author    Raphaël Doursenaud
  */
@@ -40,7 +40,7 @@ if (substr($sapi_type, 0, 3) == 'cgi') {
 }
 
 // Global variables
-$version = '1.0.5';
+$version = '1.1.0';
 $error = 0;
 
 // Include Dolibarr environment
