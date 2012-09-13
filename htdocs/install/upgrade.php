@@ -292,11 +292,15 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
     {
         $dir = "mysql/migration/";		// We use mysql migration scripts whatever is database driver
 
+        // For minor version
+        $newversionfrom=preg_replace('/(\.[0-9]+)$/i','.0',$versionfrom);
+        $newversionto=preg_replace('/(\.[0-9]+)$/i','.0',$versionto);
+
         $filelist=array();
         $i = 0;
         $ok = 0;
-        $from='^'.$versionfrom;
-        $to=$versionto.'\.sql$';
+        $from='^'.$newversionfrom;
+        $to=$newversionto.'\.sql$';
 
         // Get files list
         $filesindir=array();
@@ -351,10 +355,14 @@ if (empty($actiondone))
     print '<div class="error">'.$langs->trans("ErrorWrongParameters").'</div>';
 }
 
+$ret=0;
+if (! $ok && isset($argv[1])) $ret=1;
+dol_syslog("Exit ".$ret);
+
 pFooter(! $ok && empty($_GET["ignoreerrors"]),$setuplang);
 
 if ($db->connected) $db->close();
 
 // Return code if ran from command line
-if (! $ok && isset($argv[1])) exit(1);
+if ($ret) exit($ret);
 ?>

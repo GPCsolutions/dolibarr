@@ -1250,6 +1250,7 @@ else if ($action == 'updateligne' && $user->rights->facture->creer && $_POST['sa
     // Define params
     if (GETPOST('productid')) $type=$product->type;
     else $type=GETPOST("type");
+
     // Update line
     if ($result >= 0)
     {
@@ -1578,6 +1579,23 @@ else if ($action == 'builddoc')	// En get ou en post
         Header('Location: '.$_SERVER["PHP_SELF"].'?facid='.$object->id.(empty($conf->global->MAIN_JUMP_TAG)?'':'#builddoc'));
         exit;
     }
+}
+
+// Remove file in doc form
+else if ($action == 'remove_file')
+{
+	if ($object->fetch($id))
+	{
+		require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
+
+		$object->fetch_thirdparty();
+
+		$langs->load("other");
+		$upload_dir = $conf->facture->dir_output;
+		$file = $upload_dir . '/' . GETPOST('file');
+		dol_delete_file($file,0,0,0,$object);
+		$mesg = '<div class="ok">'.$langs->trans("FileWasRemoved",GETPOST('file')).'</div>';
+	}
 }
 
 if (! empty($conf->global->MAIN_DISABLE_CONTACTS_TAB))

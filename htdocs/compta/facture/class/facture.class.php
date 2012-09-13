@@ -351,7 +351,7 @@ class Facture extends CommonObject
                             $this->lines[$i]->fk_code_ventilation,
                             $this->lines[$i]->info_bits,
                             $this->lines[$i]->fk_remise_except,
-        					'HT',
+                            'HT',
                             0,
                             $this->lines[$i]->product_type,
                             $this->lines[$i]->rang,
@@ -402,7 +402,13 @@ class Facture extends CommonObject
                         $localtax2_tx,
                         $_facrec->lines[$i]->fk_product,
                         $_facrec->lines[$i]->remise_percent,
-    					'','',0,0,'','HT',0,
+                        '',
+                        '',
+                        0,
+                        0,
+                        '',
+                        'HT',
+                        0,
                         $_facrec->lines[$i]->product_type,
                         $_facrec->lines[$i]->rang,
                         $_facrec->lines[$i]->special_code
@@ -1266,7 +1272,7 @@ class Facture extends CommonObject
                 			}
                 		}
                 	}
-                	
+
                     $this->db->commit();
                     return 1;
                 }
@@ -1710,7 +1716,7 @@ class Facture extends CommonObject
 
                             dol_syslog("Rename ok");
                             // Suppression ancien fichier PDF dans nouveau rep
-                            dol_delete_file($conf->facture->dir_output.'/'.$snumfa.'/'.$facref.'.*');
+                            dol_delete_file($conf->facture->dir_output.'/'.$snumfa.'/'.$facref.'*.*');
                         }
                     }
                 }
@@ -1722,6 +1728,7 @@ class Facture extends CommonObject
             	$this->ref = $num;
                 $this->facnumber=$num;
                 $this->statut=1;
+                $this->brouillon=0;
                 $this->date_validation=$now;
             }
 

@@ -201,7 +201,7 @@ Required= Requis
 Security= Sécurité
 Passwords= Mots de passe
 DoNotStoreClearPassword= Ne pas stocker de mot de passe en clair dans la base (Activation recommandée)
-MainDbPasswordFileConfEncrypted= Encrypter le mot de passe de la base dans le fichier conf.php (Activation recommandée)
+MainDbPasswordFileConfEncrypted= Chiffrer le mot de passe de la base dans le fichier conf.php (Activation recommandée)
 InstrucToEncodePass= Pour avoir le mot de passe de la base encodé dans le fichier de configuration <b>conf.php</b>, remplacer dans ce fichier la ligne<br><b>$dolibarr_main_db_pass="..."</b><br>par<br><b>$dolibarr_main_db_pass="crypted:%s"</b>
 InstrucToClearPass= Pour avoir le mot de passe de la base décodé (en clair) dans le fichier de configuration <b>conf.php</b>, remplacer dans ce fichier la ligne<br><b>$dolibarr_main_db_pass="crypted:..."</b><br>par<br><b>$dolibarr_main_db_pass="%s"</b>
 ProtectAndEncryptPdfFiles= Protection des pdf générés (Activation NON recommandée, rend inopérante la génération de PDF de masse)
@@ -377,8 +377,8 @@ Module85Name= Banques et caisses
 Module85Desc= Gestion des comptes financiers de type Comptes bancaires, postaux ou Caisses liquides
 Module100Name=External site
 Module100Desc=Ajoute un site Web externe dans les menus Dolibarr et l'affiche dans un frame Dolibarr
-Module105Name=Mailman and Sip
-Module105Desc=Interface vers Mailman ou Spip pour le module Adhérent
+Module105Name=Mailman and SPIP
+Module105Desc=Interface vers Mailman ou SPIP pour le module Adhérent
 Module200Name= LDAP
 Module200Desc= Synchronisation avec un annuaire LDAP
 Module210Name= PostNuke
@@ -711,7 +711,6 @@ Port= Port
 VirtualServerName= Nom du serveur virtuel
 AllParameters= Tous les paramètres
 OS= OS
-Php= Php
 PhpEnv= Env
 PhpModules= Modules
 PhpConf= Conf
@@ -867,8 +866,8 @@ MAIN_PROXY_HOST=Nom/Adresse du serveur proxy mandataire
 MAIN_PROXY_PORT=Port du serveur proxy mandataire
 MAIN_PROXY_USER=Login pour passer le serveur proxy mandataire
 MAIN_PROXY_PASS=Mot de passe pour passer le serveur proxy mandataire
-DefineHereComplementaryAttributes=Definissez ici la liste des attributs supplémentaire, non disponible en standard, et que vous voulez voir gérez sur les %s.
-ExtraFields=Attributs suplémentaires
+DefineHereComplementaryAttributes=Définissez ici la liste des attributs supplémentaires, non disponibles en standard, et que vous voulez voir gérés sur les %s.
+ExtraFields=Attributs supplémentaires
 ExtraFieldHasWrongValue=L'attribut %s a une valeur incorrecte.
 AlphaNumOnlyCharsAndNoSpace=uniquement caractères alphanumériques sans espace
 SendingMailSetup=Configuration de l'envoi par mail
@@ -1292,7 +1291,7 @@ BankOrderGlobalDesc=Ordre d'affichage général
 BankOrderES=Espagnol
 BankOrderESDesc=Ordre d'affichage Espagnol
 ##### MailmanSpip #####
-MailmanSpipSetup=Configuration du module Mailman et Spip
+MailmanSpipSetup=Configuration du module Mailman et SPIP
 ##### Multicompany #####
 MultiCompanySetup=Configuration du module Multi-société
 ##### Suppliers #####

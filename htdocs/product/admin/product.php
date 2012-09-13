@@ -36,7 +36,8 @@ $langs->load("admin");
 $langs->load("products");
 
 // Security check
-if (! $user->admin) accessforbidden();
+if (! $user->admin || (empty($conf->product->enabled) && empty($conf->service->enabled)))
+	accessforbidden();
 
 $action = GETPOST('action','alpha');
 $value = GETPOST('value','alpha');

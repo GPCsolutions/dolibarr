@@ -10,7 +10,7 @@ use Cwd;
 $PROJECT="dolibarr";
 $MAJOR="3";
 $MINOR="2";
-$BUILD="0";		# Mettre x pour release, x-dev pour dev, x-beta pour beta, x-rc pour release candidate
+$BUILD="2";		# Mettre x pour release, x-dev pour dev, x-beta pour beta, x-rc pour release candidate
 $RPMSUBVERSION="auto";	# auto use value found into BUILD
 
 @LISTETARGET=("TGZ","ZIP","RPM_GENERIC","RPM_FEDORA","RPM_MANDRIVA","RPM_OPENSUSE","DEB","APS","EXEDOLIWAMP","SNAPSHOT");   # Possible packages
@@ -412,7 +412,7 @@ if ($nboftargetok) {
             print "Go to directory $BUILDROOT\n";
      		$olddir=getcwd();
      		chdir("$BUILDROOT");
-    		$cmd= "7z a -r -tzip -xr\@\"$BUILDROOT\/$FILENAMEZIP\/build\/zip\/zip_exclude.txt\" -mx $BUILDROOT/$FILENAMEZIP.zip $FILENAMEZIP\\*";
+    		$cmd= "7z a -r -tzip -xr\@\"$BUILDROOT\/$FILENAMEZIP\/build\/zip\/zip_exclude.txt\" -mx $BUILDROOT/$FILENAMEZIP.zip $FILENAMEZIP\/*";
 			print $cmd."\n";
 			$ret= `$cmd`;
             chdir("$olddir");

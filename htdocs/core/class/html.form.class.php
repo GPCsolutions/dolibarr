@@ -669,6 +669,7 @@ class Form
         $sql.= " FROM ".MAIN_DB_PREFIX ."societe as s";
         if (!$user->rights->societe->client->voir && !$user->societe_id) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
         $sql.= " WHERE s.entity IN (".getEntity('societe', 1).")";
+        if (! empty($user->societe_id)) $sql.= " AND s.rowid = ".$user->societe_id;
         if ($filter) $sql.= " AND ".$filter;
         if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
         $sql.= " ORDER BY nom ASC";
@@ -929,7 +930,7 @@ class Form
      *  @param	int		$force_entity	Possibility to force entity
      * 	@return	void
      */
-    function select_users($selected='',$htmlname='userid',$show_empty=0,$exclude='',$disabled=0,$include='',$enableonly='',$force_entity=0)
+    function select_users($selected='',$htmlname='userid',$show_empty=0,$exclude='',$disabled=0,$include='',$enableonly='',$force_entity=false)
     {
         print $this->select_dolusers($selected,$htmlname,$show_empty,$exclude,$disabled,$include,$enableonly,$force_entity);
     }
@@ -947,7 +948,7 @@ class Form
      *  @param	int		$force_entity	Possibility to force entity
      * 	@return	string					HTML select string
      */
-    function select_dolusers($selected='',$htmlname='userid',$show_empty=0,$exclude='',$disabled=0,$include='',$enableonly='',$force_entity=0)
+    function select_dolusers($selected='',$htmlname='userid',$show_empty=0,$exclude='',$disabled=0,$include='',$enableonly='',$force_entity=false)
     {
         global $conf,$user,$langs;
 
@@ -962,22 +963,32 @@ class Form
         $out='';
 
         // On recherche les utilisateurs
-        $sql = "SELECT u.rowid, u.name as lastname, u.firstname, u.login, u.admin, u.entity";
-        if(! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
+        $sql = "SELECT DISTINCT u.rowid, u.name as lastname, u.firstname, u.login, u.admin, u.entity";
+        if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
         {
             $sql.= ", e.label";
         }
         $sql.= " FROM ".MAIN_DB_PREFIX ."user as u";
-        if(! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
+        if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
         {
-            $sql.= " LEFT JOIN ".MAIN_DB_PREFIX ."entity as e on e.rowid=u.entity";
+            $sql.= " LEFT JOIN ".MAIN_DB_PREFIX ."entity as e ON e.rowid=u.entity";
             if ($force_entity) $sql.= " WHERE u.entity IN (0,".$force_entity.")";
             else $sql.= " WHERE u.entity IS NOT NULL";
         }
         else
         {
-            $sql.= " WHERE u.entity IN (0,".$conf->entity.")";
+        	if (! empty($conf->multicompany->transverse_mode))
+        	{
+        		$sql.= ", ".MAIN_DB_PREFIX."usergroup_user as ug";
+        		$sql.= " WHERE ug.fk_user = u.rowid";
+        		$sql.= " AND ug.entity = ".$conf->entity;
+        	}
+        	else
+        	{
+        		$sql.= " WHERE u.entity IN (0,".$conf->entity.")";
+        	}
         }
+        if (! empty($user->societe_id)) $sql.= " AND u.fk_societe = ".$user->societe_id;
         if (is_array($exclude) && $excludeUsers) $sql.= " AND u.rowid NOT IN ('".$excludeUsers."')";
         if (is_array($include) && $includeUsers) $sql.= " AND u.rowid IN ('".$includeUsers."')";
         $sql.= " ORDER BY u.name ASC";
@@ -1020,7 +1031,7 @@ class Form
                     }
                     $out.= $userstatic->getFullName($langs);
 
-                    if(! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode) && $conf->entity == 1 && $user->admin && ! $user->entity)
+                    if (! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode) && $conf->entity == 1 && $user->admin && ! $user->entity)
                     {
                         if ($obj->admin && ! $obj->entity) $out.=" (".$langs->trans("AllEntities").")";
                         else $out.=" (".$obj->label.")";
@@ -1375,10 +1386,10 @@ class Form
         $sql.= " s.nom";
         $sql.= " FROM ".MAIN_DB_PREFIX."product as p";
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON p.rowid = pfp.fk_product";
+        if ($socid) $sql.= " AND pfp.fk_soc = ".$socid;
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON pfp.fk_soc = s.rowid";
         $sql.= " WHERE p.entity IN (".getEntity('product', 1).")";
         $sql.= " AND p.tobuy = 1";
-        if ($socid) $sql.= " AND pfp.fk_soc = ".$socid;
         if (strval($filtertype) != '') $sql.=" AND p.fk_product_type=".$filtertype;
         if (! empty($filtre)) $sql.=" ".$filtre;
         // Add criteria on ref/label
@@ -1420,7 +1431,7 @@ class Form
                 $outval='';
 
                 $opt = '<option value="'.$objp->idprodfournprice.'"';
-                if ($selected == $objp->idprodfournprice) $opt.= ' selected="selected"';
+                if ($selected && $selected == $objp->idprodfournprice) $opt.= ' selected="selected"';
                 if ($objp->fprice == '') $opt.=' disabled="disabled"';
                 $opt.= '>';
 
@@ -3313,7 +3324,7 @@ class Form
             // Generate the date part, depending on the use or not of the javascript calendar
             if (empty($conf->global->MAIN_POPUP_CALENDAR) || $conf->global->MAIN_POPUP_CALENDAR == "eldy")
             {
-                $base=DOL_URL_ROOT.'/core/lib/';
+                $base=DOL_URL_ROOT.'/core/';
                 $reset_scripts .= 'resetDP(\''.$base.'\',\''.$prefix.'\',\''.$langs->trans("FormatDateShortJava").'\',\''.$langs->defaultlang.'\');';
             }
             else
@@ -3805,7 +3816,7 @@ class Form
      * 	@param	int		$force_entity	Possibility to force entity
      *  @return	void
      */
-    function select_dolgroups($selected='',$htmlname='groupid',$show_empty=0,$exclude='',$disabled=0,$include='',$enableonly='',$force_entity='')
+    function select_dolgroups($selected='', $htmlname='groupid', $show_empty=0, $exclude='', $disabled=0, $include='', $enableonly='', $force_entity='')
     {
         global $conf,$user,$langs;
 
@@ -3818,14 +3829,14 @@ class Form
 
         // On recherche les groupes
         $sql = "SELECT ug.rowid, ug.nom ";
-        if(! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
+        if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
         {
             $sql.= ", e.label";
         }
         $sql.= " FROM ".MAIN_DB_PREFIX."usergroup as ug ";
-        if(! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
+        if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
         {
-            $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."entity as e on e.rowid=ug.entity";
+            $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."entity as e ON e.rowid=ug.entity";
             if ($force_entity) $sql.= " WHERE ug.entity IN (0,".$force_entity.")";
             else $sql.= " WHERE ug.entity IS NOT NULL";
         }
@@ -3863,7 +3874,7 @@ class Form
                     $out.= '>';
 
                     $out.= $obj->nom;
-                    if(! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode) && $conf->entity == 1)
+                    if (! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode) && $conf->entity == 1)
                     {
                         $out.= " (".$obj->label.")";
                     }

@@ -2,7 +2,50 @@
 English Dolibarr ChangeLog
 --------------------------------------------------------------
 
-***** ChangeLog for 3.2.0 compared to 3.1.2 *****
+
+***** ChangeLog for 3.2.2 compared to 3.2.1 *****
+
+- Fix: Modify spanish VAT to new rates.
+- Fix: Add error message when creating already existing product.
+- Fix: Edition of percentage of an event.
+- Fix: Minor look fix for theme bureau2crea.
+- Fix: Start and end date not saved at project creation
+- Fix: Default vat is zero for customer invoices if company does not use vat
+- Fix: Localtaxes unit prices precision
+
+
+
+***** ChangeLog for 3.2.1 compared to 3.2.0 *****
+
+- Fix: Edit of projects.
+- Fix: Activation of modules does not fails if directory install was removed.
+- Fix: [ bug #444 ] Regression on auto-closing for proposals and orders.
+- Fix: Update translations (catalan, french, spanish, brazilian).
+- Fix: [ bug #445 ] Hex escaping in descriptions.
+- Fix: error when validating shipment for non predefined products with a
+  selected warehouse.
+- Fix: Bad local taxes if price base type is TTC for spanish local taxes.
+- Fix: Phone not saved when using web service.
+- Fix: [ bug #464 ] Payment form should allow to add transmitter for bank transfers.
+- Fix: Allows to use a comma decimal separator in supplier invoices payments.
+- Fix: Translation for tr_TR, es_ES, pt_BR.
+- Fix: Products with no prices not visible.
+- Fix: Access to product card created with very old version of Dolibarr.
+- Fix: Delete temporary files after validating an invoice.
+- Fix: preview of supplier order and invoice template.
+- Fix: [ bug #485 ] Configurated amount for public auto-subscription form is not taken into account
+- Fix: Average amount graphs weren't comparing the previous year stats
+- Fix: Closed project didn't show the new status unless the page was refreshed
+- Fix: Files were not being uploaded to a project's task
+- Fix: [ bug #503 ] Unable to delete linked file to a deposit
+- Fix: [ bug #501 ] Error while trying to modify an user
+- Fix: [ bug #506 ] Can't set percentage of a started event
+- Fix: Bad assignation of const for pdf delivery module name
+
+
+
+***** ChangeLog for 3.2.0 compared to 3.1.3 *****
+
 WARNING: PHP lower than 5.x are no more supported.
 WARNING: Because of a major datastructure change onto supplier prices tables, be aware
 to make a backup of your database before making upgrade.
@@ -99,6 +142,15 @@ WARNING: To reduce technic debt, all functions dolibarr_xxx were renamed int dol
 
 
 
+***** ChangeLog for 3.1.3 compared to 3.1.2 *****
+
+Fix: PgSQL - property must be set if success
+Fix: Provide a solution for backup when mysqldump is not available
+Fix: Bug #460 - Wrong entity assignment when creating a warehouse
+Fix: bug #405 - Late icon always displayed on comm/propal.php
+
+
+
 ***** ChangeLog for 3.1.2 compared to 3.1.1 *****
 
 - Fix: Can clone a proposal
@@ -132,6 +184,7 @@ WARNING: To reduce technic debt, all functions dolibarr_xxx were renamed int dol
 
 
 ***** ChangeLog for 3.1 compared to 3.0 *****
+
 WARNING: IE6 browser is no more supported in this version.
 For users:
 - New: War against number of clicks:

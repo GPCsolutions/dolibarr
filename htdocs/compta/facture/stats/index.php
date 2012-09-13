@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2003-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (c) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2012      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -148,12 +149,7 @@ if (! $mesg)
 }
 
 
-$res = $stats->getAverageByMonth($year);
-$data = array();
-for ($i = 1 ; $i < 13 ; $i++)
-{
-    $data[$i-1] = array(ucfirst(dol_substr(dol_print_date(dol_mktime(12,0,0,$i,1,$year),"%b"),0,3)), $res[$i]);
-}
+$data = $stats->getAverageByMonthWithPrevYear($endyear, $startyear);
 
 if (!$user->rights->societe->client->voir || $user->societe_id)
 {
@@ -173,8 +169,7 @@ $mesg = $px3->isGraphKo();
 if (! $mesg)
 {
     $px3->SetData($data);
-    //$i=$startyear;$legend=array();
-    $i=$endyear;$legend=array();
+    $i = $startyear;$legend=array();
     while ($i <= $endyear)
     {
         $legend[]=$i;
@@ -219,34 +214,37 @@ complete_head_from_modules($conf,$langs,$object,$head,$h,$type);
 
 dol_fiche_head($head,'byyear',$langs->trans("Statistics"));
 
-print '<table class="notopnoleftnopadd" width="100%"><tr>';
-print '<td align="center" valign="top">';
+if (empty($socid))
+{
+	print '<table class="notopnoleftnopadd" width="100%"><tr>';
+	print '<td align="center" valign="top">';
 
-// Show filter box
-print '<form name="stats" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
-print '<input type="hidden" name="mode" value="'.$mode.'">';
-print '<table class="border" width="100%">';
-print '<tr><td class="liste_titre" colspan="2">'.$langs->trans("Filter").'</td></tr>';
-// Company
-print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
-if ($mode == 'customer') $filter='s.client in (1,2,3)';
-if ($mode == 'supplier') $filter='s.fournisseur = 1';
-print $form->select_company($socid,'socid',$filter,1);
-print '</td></tr>';
-// User
-print '<tr><td>'.$langs->trans("User").'/'.$langs->trans("SalesRepresentative").'</td><td>';
-print $form->select_users($userid,'userid',1);
-print '</td></tr>';
-// Year
-print '<tr><td>'.$langs->trans("Year").'</td><td>';
-if (! in_array($year,$arrayyears)) $arrayyears[$year]=$year;
-arsort($arrayyears);
-print $form->selectarray('year',$arrayyears,$year,0);
-print '</td></tr>';
-print '<tr><td align="center" colspan="2"><input type="submit" name="submit" class="button" value="'.$langs->trans("Refresh").'"></td></tr>';
-print '</table>';
-print '</form>';
-print '<br><br>';
+	// Show filter box
+	print '<form name="stats" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+	print '<input type="hidden" name="mode" value="'.$mode.'">';
+	print '<table class="border" width="100%">';
+	print '<tr><td class="liste_titre" colspan="2">'.$langs->trans("Filter").'</td></tr>';
+	// Company
+	print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
+	if ($mode == 'customer') $filter='s.client in (1,2,3)';
+	if ($mode == 'supplier') $filter='s.fournisseur = 1';
+	print $form->select_company($socid,'socid',$filter,1);
+	print '</td></tr>';
+	// User
+	print '<tr><td>'.$langs->trans("User").'/'.$langs->trans("SalesRepresentative").'</td><td>';
+	print $form->select_users($userid,'userid',1);
+	print '</td></tr>';
+	// Year
+	print '<tr><td>'.$langs->trans("Year").'</td><td>';
+	if (! in_array($year,$arrayyears)) $arrayyears[$year]=$year;
+	arsort($arrayyears);
+	print $form->selectarray('year',$arrayyears,$year,0);
+	print '</td></tr>';
+	print '<tr><td align="center" colspan="2"><input type="submit" name="submit" class="button" value="'.$langs->trans("Refresh").'"></td></tr>';
+	print '</table>';
+	print '</form>';
+	print '<br><br>';
+}
 
 print '<table class="border" width="100%">';
 print '<tr height="24">';

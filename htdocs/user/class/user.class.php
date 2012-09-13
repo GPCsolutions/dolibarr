@@ -41,6 +41,8 @@ class User extends CommonObject
 	protected $ismultientitymanaged = 1;	// 0=No test on entity, 1=Test with field entity, 2=Test with link by societe
 
 	var $id=0;
+	var $ref;
+	var $ref_ext;
 	var $ldap_sid;
 	var $search_sid;
 	var $nom;		// TODO deprecated
@@ -112,6 +114,7 @@ class User extends CommonObject
 		$this->all_permissions_are_loaded = 0;
 		$this->admin=0;
 
+		$this->conf				    = (object) array();
 		$this->rights				= (object) array();
 		$this->rights->user			= (object) array();
 		$this->rights->user->user	= (object) array();
@@ -149,7 +152,7 @@ class User extends CommonObject
 		$sql.= " u.ref_int, u.ref_ext";
 		$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
 
-		if(! empty($conf->multicompany->enabled) && $conf->entity == 1)
+		if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode))
 		{
 			$sql.= " WHERE u.entity IS NOT NULL";
 		}
@@ -530,16 +533,12 @@ class User extends CommonObject
 
 				if ($perms)
 				{
-					if (! is_object($this->rights->$module)) $this->rights->$module = (object) array();
-					if (! is_object($this->rights->$module->$perms)) $this->rights->$module->$perms = (object) array();
+					if (! isset($this->rights) || ! is_object($this->rights)) $this->rights = (object) array(); // For avoid error
+					if (! isset($this->rights->$module) || ! is_object($this->rights->$module)) $this->rights->$module = (object) array();
 					if ($subperms)
 					{
-						if (! isset($this->rights->$module) ||
-						(is_object($this->rights->$module) && ! isset($this->rights->$module->$perms)) ||
-						(is_object($this->rights->$module->$perms)) )
-						{
-							$this->rights->$module->$perms->$subperms = 1;
-						}
+						if (! isset($this->rights->$module->$perms) || ! is_object($this->rights->$module->$perms)) $this->rights->$module->$perms = (object) array();
+						$this->rights->$module->$perms->$subperms = 1;
 					}
 					else
 					{
@@ -581,8 +580,11 @@ class User extends CommonObject
 
 				if ($perms)
 				{
+					if (! isset($this->rights) || ! is_object($this->rights)) $this->rights = (object) array(); // For avoid error
+					if (! isset($this->rights->$module) || ! is_object($this->rights->$module)) $this->rights->$module = (object) array();
 					if ($subperms)
 					{
+						if (! isset($this->rights->$module->$perms) || ! is_object($this->rights->$module->$perms)) $this->rights->$module->$perms = (object) array();
 						$this->rights->$module->$perms->$subperms = 1;
 					}
 					else
@@ -595,7 +597,7 @@ class User extends CommonObject
 			}
 			$this->db->free($resql);
 		}
-		
+
 		// For backward compatibility
 		if (isset($this->rights->propale))
 		{
@@ -1454,7 +1456,7 @@ class User extends CommonObject
             '',
             0,
             $msgishtml
-		);
+        );
 
 		if ($mailfile->sendfile())
 		{
@@ -1984,10 +1986,10 @@ class User extends CommonObject
 	 *  Return number of existing users
 	 *
 	 *  @param	string	$limitTo	Limit to 'active' or 'superadmin' users
-	 *  @param	int		$all		Return for all entities
+	 *  @param	bool	$all		Return for all entities
 	 *  @return int  				Number of users
 	 */
-	function getNbOfUsers($limitTo='',$all=0)
+	function getNbOfUsers($limitTo='active', $all=false)
 	{
 		global $conf;
 
@@ -1999,7 +2001,7 @@ class User extends CommonObject
 		}
 		else
 		{
-			if ($all) $sql.= " WHERE entity = is not null";
+			if ($all) $sql.= " WHERE entity > 0"; // all users except superadmins
 			else $sql.= " WHERE entity = ".$conf->entity;
 			if ($limitTo == 'active') $sql.= " AND statut = 1";
 		}

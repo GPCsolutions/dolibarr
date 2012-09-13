@@ -123,11 +123,11 @@ else if ($action == 'add' && $user->rights->ficheinter->creer)
     $object->duree			= GETPOST('duree','int');
     $object->fk_project		= GETPOST('projectid','int');
     $object->author			= $user->id;
-    $object->description	= GETPOST('description','alpha');
+    $object->description	= GETPOST('description');
     $object->ref			= $ref;
     $object->modelpdf		= GETPOST('model','alpha');
-    $object->note_private	= GETPOST('note_private','alpha');
-    $object->note_public	= GETPOST('note_public','alpha');
+    $object->note_private	= GETPOST('note_private');
+    $object->note_public	= GETPOST('note_public');
 
     if ($object->socid > 0)
     {
@@ -195,6 +195,23 @@ else if ($action == 'builddoc' && $user->rights->ficheinter->creer)	// En get ou
     }
 }
 
+// Remove file in doc form
+else if ($action == 'remove_file')
+{
+	if ($object->fetch($id))
+	{
+		require_once(DOL_DOCUMENT_ROOT."/core/lib/files.lib.php");
+
+		$object->fetch_thirdparty();
+
+		$langs->load("other");
+		$upload_dir = $conf->ficheinter->dir_output;
+		$file = $upload_dir . '/' . GETPOST('file');
+		dol_delete_file($file,0,0,0,$object);
+		$mesg = '<div class="ok">'.$langs->trans("FileWasRemoved",GETPOST('file')).'</div>';
+	}
+}
+
 // Set into a project
 else if ($action == 'classin' && $user->rights->ficheinter->creer)
 {
@@ -206,6 +223,7 @@ else if ($action == 'classin' && $user->rights->ficheinter->creer)
 else if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->ficheinter->supprimer)
 {
 	$object->fetch($id);
+	$object->fetch_thirdparty();
 	$object->delete($user);
 
     Header('Location: '.DOL_URL_ROOT.'/fichinter/list.php?leftmenu=ficheinter');
@@ -215,7 +233,7 @@ else if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->fich
 else if ($action == 'setdescription' && $user->rights->ficheinter->creer)
 {
     $object->fetch($id);
-    $result=$object->set_description($user,GETPOST('description','alpha'));
+    $result=$object->set_description($user,GETPOST('description'));
     if ($result < 0) dol_print_error($db,$object->error);
 }
 else if ($action == 'setnote_public' && $user->rights->ficheinter->creer)
@@ -234,7 +252,7 @@ else if ($action == 'setnote_private' && $user->rights->ficheinter->creer)
 // Add line
 else if ($action == "addline" && $user->rights->ficheinter->creer)
 {
-    if (!GETPOST('np_desc','alpha'))
+    if (!GETPOST('np_desc'))
     {
         $mesg='<div class="error">'.$langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Description")).'</div>';
         $error++;
@@ -251,7 +269,7 @@ else if ($action == "addline" && $user->rights->ficheinter->creer)
         $ret=$object->fetch($id);
         $object->fetch_thirdparty();
 
-        $desc=GETPOST('np_desc','alpha');
+        $desc=GETPOST('np_desc');
         $date_intervention = dol_mktime(GETPOST('dihour','int'), GETPOST('dimin','int'), 0, GETPOST('dimonth','int'), GETPOST('diday','int'), GETPOST('diyear','int'));
         $duration = convertTime2Seconds(GETPOST('durationhour','int'), GETPOST('durationmin','int'));
 
@@ -324,7 +342,7 @@ else if ($action == 'updateline' && $user->rights->ficheinter->creer && GETPOST(
     }
     $object->fetch_thirdparty();
 
-    $desc		= GETPOST('np_desc','alpha');
+    $desc		= GETPOST('np_desc');
     $date_inter	= dol_mktime(GETPOST('dihour','int'), GETPOST('dimin','int'), 0, GETPOST('dimonth','int'), GETPOST('diday','int'), GETPOST('diyear','int'));
     $duration	= convertTime2Seconds(GETPOST('durationhour','int'),GETPOST('durationmin','int'));
 
@@ -1100,7 +1118,7 @@ else if ($id > 0 || ! empty($ref))
             print '<td align="center" nowrap="nowrap">';
             $timearray=dol_getdate(mktime());
             if (!GETPOST('diday','int')) $timewithnohour=dol_mktime(0,0,0,$timearray['mon'],$timearray['mday'],$timearray['year']);
-            else $timewithnohour=dol_mktime(GETPOST('dihour','int'),GETPOST('dimin','int'),GETPOST('disec','int'),GETPOST('dimonth','int'),GETPOST('diday','int'),GETPOST('diyear','int'));
+            else $timewithnohour=dol_mktime(GETPOST('dihour','int'),GETPOST('dimin','int'), 0,GETPOST('dimonth','int'),GETPOST('diday','int'),GETPOST('diyear','int'));
             $form->select_date($timewithnohour,'di',1,1,0,"addinter");
             print '</td>';
 
