@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2002-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2006-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2010-2012 Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,14 +43,14 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $txlocalta
 
 	$result=array();
 
+	// We work to define prices using the price without tax
+	$tot_sans_remise = $pu * $qty;
+	$tot_avec_remise_ligne = $tot_sans_remise       * (1 - ($remise_percent_ligne / 100));
+	$tot_avec_remise       = $tot_avec_remise_ligne * (1 - ($remise_percent_global / 100));
+
 	//dol_syslog("price.lib::calcul_price_total $qty, $pu, $remise_percent_ligne, $txtva, $price_base_type $info_bits");
 	if ($price_base_type == 'HT')
 	{
-		// We work to define prices using the price without tax
-		$tot_sans_remise = $pu * $qty;
-		$tot_avec_remise_ligne = $tot_sans_remise       * (1 - ($remise_percent_ligne / 100));
-		$tot_avec_remise       = $tot_avec_remise_ligne * (1 - ($remise_percent_global / 100));
-
 		$result[6] = price2num($tot_sans_remise, 'MT');
 		$result[8] = price2num($tot_sans_remise * (1 + ( (($info_bits & 1)?0:$txtva) / 100)), 'MT');	// Selon TVA NPR ou non
 		$result8bis= price2num($tot_sans_remise * (1 + ( $txtva / 100)), 'MT');	// Si TVA consideree normale (non NPR)
@@ -69,11 +69,6 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $txlocalta
 	}
 	else
 	{
-		// We work to define prices using the price with tax
-		$tot_sans_remise = $pu * $qty;
-		$tot_avec_remise_ligne = $tot_sans_remise       * (1 - ($remise_percent_ligne / 100));
-		$tot_avec_remise       = $tot_avec_remise_ligne * (1 - ($remise_percent_global / 100));
-
 		$result[8] = price2num($tot_sans_remise, 'MT');
 		$result[6] = price2num($tot_sans_remise / (1 + ((($info_bits & 1)?0:$txtva) / 100)), 'MT');	// Selon TVA NPR ou non
 		$result6bis= price2num($tot_sans_remise / (1 + ($txtva / 100)), 'MT');	// Si TVA consideree normale (non NPR)
@@ -94,14 +89,15 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $txlocalta
 	//Local taxes
 	if ($txlocaltax1>0)
 	{
-		$result[14] = price2num(($tot_sans_remise * (1 + ( $txlocaltax1 / 100))) - $tot_sans_remise, 'MT');
+		$result[14] = price2num(($result[6] * ( 1 + ( $txlocaltax1 / 100))) - $result[6], 'MT');
 		$result[8]  = price2num($result[8] + $result[14], 'MT');
 
-		$result[9]  = price2num(($tot_avec_remise * (1 + ( $txlocaltax1 / 100))) - $tot_avec_remise, 'MT');
+		$result[9] = price2num(($result[0] * ( 1 + ( $txlocaltax1 / 100))) - $result[0], 'MT');
 		$result[2]  = price2num($result[2] + $result[9], 'MT');
 
-		$result[11] = price2num(($pu * (1 + ( $txlocaltax1 / 100))) - $pu, 'MT');
-		$result[5]  = price2num($result[5] + $result[11], 'MT');
+		$result[11] = price2num(($result[3] * ( 1 + ( $txlocaltax1 / 100))) - $pu, 'MU');
+		$result[5]  = price2num($result[5] + $result[11], 'MU');
+
 	}
 	else
 	{
@@ -111,10 +107,10 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $txlocalta
 	}
 
 	if ($txlocaltax2>0)
-	{
-		$result[15] = price2num(($tot_sans_remise * (1 + ( $txlocaltax2 / 100))) - $tot_sans_remise, 'MT');
-		$result[10] = price2num(($tot_avec_remise * (1 + ( $txlocaltax2 / 100))) - $tot_avec_remise, 'MT');
-		$result[12] = price2num(($pu * (1 + ( $txlocaltax2 / 100))) - $pu, 'MT');
+	{		
+		$result[15] = price2num(($result[6] * ( 1 + ( $txlocaltax2 / 100))) - $result[6], 'MT');
+		$result[10] = price2num(($result[0] * ( 1 + ( $txlocaltax2 / 100))) - $result[0], 'MT');
+		$result[12] = price2num(($result[3] * ( 1 + ( $txlocaltax2 / 100))) - $pu, 'MU');
 
 		//If Country is Spain, localtax2 (IRPF) will be subtracted
 		if ($mysoc->country_code=='ES')

@@ -26,6 +26,7 @@
 
 require("../main.inc.php");
 require_once(DOL_DOCUMENT_ROOT."/core/lib/admin.lib.php");
+require_once(DOL_DOCUMENT_ROOT."/core/lib/functions2.lib.php");
 
 $langs->load("admin");
 $langs->load("users");
@@ -79,37 +80,13 @@ $db->begin();
 
 // Charge les modules soumis a permissions
 $modules = array();
-$modulesdir = array();
-
-foreach ($conf->file->dol_document_root as $type => $dirroot)
-{
-    $modulesdir[] = $dirroot . "/core/modules/";
-
-    if ($type == 'alt')
-    {
-        $handle=@opendir($dirroot);
-        if (is_resource($handle))
-        {
-            while (($file = readdir($handle))!==false)
-            {
-                if (is_dir($dirroot.'/'.$file) && substr($file, 0, 1) <> '.' && substr($file, 0, 3) <> 'CVS' && $file != 'includes')
-                {
-                    if (is_dir($dirroot . '/' . $file . '/core/modules/'))
-                    {
-                        $modulesdir[] = $dirroot . '/' . $file . '/core/modules/';
-                    }
-                }
-            }
-            closedir($handle);
-        }
-    }
-}
+$modulesdir = dolGetModulesDirs();
 
 foreach ($modulesdir as $dir)
 {
     // Load modules attributes in arrays (name, numero, orders) from dir directory
     //print $dir."\n<br>";
-    $handle=@opendir($dir);
+    $handle=@opendir(dol_osencode($dir));
     if (is_resource($handle))
     {
         while (($file = readdir($handle))!==false)
@@ -135,7 +112,6 @@ foreach ($modulesdir as $dir)
     	            if ($objMod->rights_class)
     	            {
     	                $ret=$objMod->insert_permissions(0);
-
     	                $modules[$objMod->rights_class]=$objMod;
     	                //print "modules[".$objMod->rights_class."]=$objMod;";
     	            }
@@ -151,7 +127,7 @@ $db->commit();
 $sql = "SELECT r.id, r.libelle, r.module, r.perms, r.subperms, r.bydefault";
 $sql.= " FROM ".MAIN_DB_PREFIX."rights_def as r";
 $sql.= " WHERE r.libelle NOT LIKE 'tou%'";    // On ignore droits "tous"
-$sql.= " AND entity in (".(!empty($conf->multicompany->transverse_mode)?"1,":"").$conf->entity.")";
+$sql.= " AND entity IN (".(! empty($conf->multicompany->transverse_mode)?"1,":"").$conf->entity.")";
 if (empty($conf->global->MAIN_USE_ADVANCED_PERMS)) $sql.= " AND r.perms NOT LIKE '%_advance'";  // Hide advanced perms if option is not enabled
 $sql.= " ORDER BY r.module, r.id";
 

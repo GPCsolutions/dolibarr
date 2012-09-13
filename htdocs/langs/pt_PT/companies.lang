@@ -1,4 +1,4 @@
-﻿# Dolibarr language file - pt_PT - companies
+# Dolibarr language file - pt_PT - companies
 CHARSET=UTF-8
 ErrorBadEMail=e-mail %s não está correcto
 ErrorCompanyNameAlreadyExists=o Nome da emprea %s já existe. Indique outro.

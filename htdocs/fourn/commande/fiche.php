@@ -356,6 +356,7 @@ else if ($action == 'confirm_deleteproductline' && $confirm == 'yes' && $user->r
 else if ($action == 'confirm_valid' && $confirm == 'yes' && $user->rights->fournisseur->commande->valider)
 {
     $object->fetch($id);
+    $object->fetch_thirdparty();
 
     $object->date_commande=dol_now();
     $result = $object->valid($user);
@@ -452,6 +453,7 @@ else if ($action == 'confirm_commande' && $confirm	== 'yes' &&	$user->rights->fo
 else if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->fournisseur->commande->supprimer)
 {
     $object->fetch($id);
+    $object->fetch_thirdparty();
     $result=$object->delete($user);
     if ($result > 0)
     {
@@ -547,7 +549,9 @@ else if ($action == 'builddoc' && $user->rights->fournisseur->commande->creer)	/
     // Build document
 
     // Sauvegarde le dernier module	choisi pour	generer	un document
-    $object->fetch($_REQUEST['id']);
+    $object->fetch($id);
+    $object->fetch_thirdparty();
+    
     if ($_REQUEST['model'])
     {
         $object->setDocModel($user, $_REQUEST['model']);
@@ -579,10 +583,12 @@ else if ($action == 'remove_file' && $user->rights->fournisseur->commande->creer
 
     if ($object->fetch($id))
     {
+    	$object->fetch_thirdparty();
+    	
         $langs->load("other");
-        $upload_dir =	$conf->fournisseur->commande->dir_output . "/";
+        $upload_dir =	$conf->fournisseur->commande->dir_output;
         $file =	$upload_dir	. '/' .	GETPOST('file');
-        dol_delete_file($file);
+        dol_delete_file($file,0,0,0,$object);
         $mesg	= '<div	class="ok">'.$langs->trans("FileWasRemoved",GETPOST('file')).'</div>';
     }
 }
@@ -1340,6 +1346,9 @@ if ($id > 0 || ! empty($ref))
          */
         if ($object->statut == 0 && $user->rights->fournisseur->commande->creer && $action <> 'editline')
         {
+            //WYSIWYG Editor
+            require_once(DOL_DOCUMENT_ROOT."/core/class/doleditor.class.php");
+
             print '<tr class="liste_titre">';
             print '<td>';
             print '<a name="add"></a>'; // ancre
@@ -1366,11 +1375,9 @@ if ($id > 0 || ! empty($ref))
             if ($forceall || ($conf->product->enabled && $conf->service->enabled)
             || (empty($conf->product->enabled) && empty($conf->service->enabled))) print '<br>';
 
-            // Editor wysiwyg
-            require_once(DOL_DOCUMENT_ROOT."/core/class/doleditor.class.php");
             $nbrows=ROWS_2;
             if (! empty($conf->global->MAIN_INPUT_DESC_HEIGHT)) $nbrows=$conf->global->MAIN_INPUT_DESC_HEIGHT;
-            $doleditor=new DolEditor('dp_desc',$_POST["dp_desc"],'',100,'dolibarr_details','',false,true,$conf->global->FCKEDITOR_ENABLE_DETAILS,$nbrows,70);
+            $doleditor = new DolEditor('dp_desc', $_POST["dp_desc"], '', 100, 'dolibarr_details', '', false, true, $conf->global->FCKEDITOR_ENABLE_DETAILS, $nbrows, 70);
             $doleditor->Create();
 
             print '</td>';
@@ -1424,11 +1431,9 @@ if ($id > 0 || ! empty($ref))
 				    echo $hookmanager->executeHooks('formCreateProductSupplierOptions',$parameters,$object,$action);
 				}
 
-                // Editor wysiwyg
-                require_once(DOL_DOCUMENT_ROOT."/core/class/doleditor.class.php");
                 $nbrows=ROWS_2;
                 if (! empty($conf->global->MAIN_INPUT_DESC_HEIGHT)) $nbrows=$conf->global->MAIN_INPUT_DESC_HEIGHT;
-                $doleditor=new DolEditor('np_desc',$_POST["np_desc"],'',100,'dolibarr_details','',false,true,$conf->global->FCKEDITOR_ENABLE_DETAILS,$nbrows,70);
+                $doleditor = new DolEditor('np_desc', $_POST["np_desc"], '', 100, 'dolibarr_details', '', false, true, $conf->global->FCKEDITOR_ENABLE_DETAILS, $nbrows, 70);
                 $doleditor->Create();
 
                 print '</td>';

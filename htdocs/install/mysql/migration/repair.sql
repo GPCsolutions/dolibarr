@@ -34,7 +34,11 @@ update llx_facture_rec set fk_projet = null where fk_projet not in (select rowid
 update llx_fichinter set fk_projet = null where fk_projet not in (select rowid from llx_projet);
 update llx_projet_task set fk_projet = null where fk_projet not in (select rowid from llx_projet);
 
+update llx_propal set fk_user_author = null where fk_user_author not in (select rowid from llx_user);
+update llx_propal set fk_user_valid = null where fk_user_valid not in (select rowid from llx_user);
+update llx_propal set fk_user_cloture = null where fk_user_cloture not in (select rowid from llx_user);
 update llx_commande set fk_user_author = null where fk_user_author not in (select rowid from llx_user);
+update llx_commande set fk_user_valid = null where fk_user_valid not in (select rowid from llx_user);
 
 delete from llx_societe_extrafields where fk_object not in (select rowid from llx_societe);
 delete from llx_adherent_extrafields where fk_object not in (select rowid from llx_adherent);
@@ -42,7 +46,12 @@ delete from llx_product_extrafields where fk_object not in (select rowid from ll
 --delete from llx_societe_commerciaux where fk_soc not in (select rowid from llx_societe);
 
 
+UPDATE llx_product SET canvas = NULL where canvas = 'default@product';
+
+
 DELETE FROM llx_boxes where box_id NOT IN (SELECT rowid FROM llx_boxes_def);
+
+DELETE FROM llx_document_model WHERE nom ='elevement' AND type='delivery';
 
 -- VMYSQL4.1 DELETE T1 FROM llx_boxes_def as T1, llx_boxes_def as T2 where T1.entity = T2.entity AND T1.file = T2.file AND T1.note = T2.note and T1.rowid > T2.rowid
 -- VPGSQL8.2 DELETE FROM llx_boxes_def as T1 WHERE rowid NOT IN (SELECT min(rowid) FROM llx_boxes_def GROUP BY file, entity, note)

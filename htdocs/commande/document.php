@@ -40,6 +40,13 @@ $confirm	= GETPOST('confirm');
 $id			= GETPOST('id','int');
 $ref		= GETPOST('ref');
 
+$mesg='';
+if (isset($_SESSION['DolMessage']))
+{
+	$mesg=$_SESSION['DolMessage'];
+	unset($_SESSION['DolMessage']);
+}
+
 // Security check
 if ($user->societe_id)
 {
@@ -58,7 +65,6 @@ $pageprev = $page - 1;
 $pagenext = $page + 1;
 if (! $sortorder) $sortorder="ASC";
 if (! $sortfield) $sortfield="name";
-
 
 $object = new Commande($db);
 
@@ -113,7 +119,7 @@ if ($_POST["sendit"] && ! empty($conf->global->MAIN_UPLOAD_DOC))
 }
 
 // Delete
-if ($action == 'confirm_deletefile' && $confirm == 'yes')
+else if ($action == 'confirm_deletefile' && $confirm == 'yes')
 {
 	if ($object->fetch($id))
     {
@@ -123,7 +129,9 @@ if ($action == 'confirm_deletefile' && $confirm == 'yes')
     	$upload_dir = $conf->commande->dir_output . "/" . dol_sanitizeFileName($object->ref);
     	$file = $upload_dir . '/' . GETPOST('urlfile');	// Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
     	dol_delete_file($file,0,0,0,$object);
-    	$mesg = '<div class="ok">'.$langs->trans("FileWasRemoved",GETPOST('urlfile')).'</div>';
+    	$_SESSION['DolMessage'] = '<div class="ok">'.$langs->trans("FileWasRemoved",GETPOST('urlfile')).'</div>';
+    	Header('Location: '.$_SERVER["PHP_SELF"].'?id='.$id);
+    	exit;
     }
 }
 
@@ -177,7 +185,7 @@ if ($id > 0 || ! empty($ref))
 		 */
 		if ($action == 'delete')
 		{
-			$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?id='.$id.'&urlfile='.urlencode($_GET["urlfile"]), $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile', '', 0, 1);
+			$ret=$form->form_confirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&urlfile='.urlencode($_GET["urlfile"]), $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile', '', 0, 1);
 			if ($ret == 'html') print '<br>';
 		}
 

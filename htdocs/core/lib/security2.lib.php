@@ -54,7 +54,7 @@ function checkLoginPassEntity($usertotest,$passwordtotest,$entitytotest,$authmod
 	global $conf,$langs;
     global $dolauthmode;    // To return authentication finally used
 
-	// Check parameetrs
+	// Check parameters
 	if ($entitytotest == '') $entitytotest=1;
 
     dol_syslog("checkLoginPassEntity usertotest=".$usertotest." entitytotest=".$entitytotest." authmode=".join(',',$authmode));
@@ -244,7 +244,7 @@ function dol_loginfunction($langs,$conf,$mysoc)
 	$hookmanager->executeHooks('getLoginPageOptions',$parameters);    // Note that $action and $object may have been modified by some hooks
 
 	// Login
-	$login = (! empty($hookmanager->resArray['username']) ? $hookmanager->resArray['username'] : (GETPOST("username","alpha",2) ? GETPOST("username","alpha",2) : $demologin));
+	$login = (! empty($hookmanager->resArray['username']) ? $hookmanager->resArray['username'] : (GETPOST("username","alpha") ? GETPOST("username","alpha") : $demologin));
 	$password = $demopassword;
 
 	// Show logo (search in order: small company logo, large company logo, theme logo, common logo)

@@ -27,6 +27,7 @@
 require("../../main.inc.php");
 require_once(DOL_DOCUMENT_ROOT.'/user/class/usergroup.class.php');
 require_once(DOL_DOCUMENT_ROOT."/core/lib/usergroups.lib.php");
+require_once(DOL_DOCUMENT_ROOT."/core/lib/functions2.lib.php");
 
 $langs->load("users");
 $langs->load("admin");
@@ -91,42 +92,17 @@ if ($id)
     $title = $langs->trans("Group");
     dol_fiche_head($head, 'rights', $title, 0, 'group');
 
-
-    $db->begin();
-
     // Charge les modules soumis a permissions
     $modules = array();
-    $modulesdir = array();
+    $modulesdir = dolGetModulesDirs();
 
-	foreach ($conf->file->dol_document_root as $type => $dirroot)
-	{
-		$modulesdir[] = $dirroot . "/core/modules/";
-
-		if ($type == 'alt')
-		{
-			$handle=@opendir($dirroot);
-			if (is_resource($handle))
-			{
-				while (($file = readdir($handle))!==false)
-				{
-				    if (is_dir($dirroot.'/'.$file) && substr($file, 0, 1) <> '.' && substr($file, 0, 3) <> 'CVS' && $file != 'includes')
-				    {
-				    	if (is_dir($dirroot . '/' . $file . '/core/modules/'))
-				    	{
-				    		$modulesdir[] = $dirroot . '/' . $file . '/core/modules/';
-				    	}
-				    }
-				}
-				closedir($handle);
-			}
-		}
-	}
+    $db->begin();
 
     foreach ($modulesdir as $dir)
     {
         // Load modules attributes in arrays (name, numero, orders) from dir directory
         //print $dir."\n<br>";
-        $handle=@opendir($dir);
+        $handle=@opendir(dol_osencode($dir));
         if (is_resource($handle))
         {
             while (($file = readdir($handle))!==false)
@@ -134,7 +110,7 @@ if ($id)
                 if (is_readable($dir.$file) && substr($file, 0, 3) == 'mod'  && substr($file, dol_strlen($file) - 10) == '.class.php')
                 {
                     $modName = substr($file, 0, dol_strlen($file) - 10);
-                    
+
                     if ($modName)
                     {
                         include_once($dir."/".$file);
@@ -150,7 +126,8 @@ if ($id)
                         // Load all permissions
                         if ($objMod->rights_class)
                         {
-                            $ret=$objMod->insert_permissions(0);
+                        	$entity=((! empty($conf->multicompany->enabled) && ! empty($fgroup->entity)) ? $fgroup->entity : null);
+                            $ret=$objMod->insert_permissions(0, $entity);
                             $modules[$objMod->rights_class]=$objMod;
                         }
                     }
@@ -170,9 +147,9 @@ if ($id)
     $sql.= " WHERE ugr.fk_id = r.id";
     if(! empty($conf->multicompany->enabled))
     {
-        if(empty($conf->multicompany->transverse_mode))
+        if (empty($conf->multicompany->transverse_mode))
         {
-        	$sql.= " AND r.entity = ".$conf->entity;
+        	$sql.= " AND r.entity = ".$fgroup->entity;
         }
         else
         {
@@ -248,12 +225,11 @@ if ($id)
     $sql = "SELECT r.id, r.libelle, r.module";
     $sql.= " FROM ".MAIN_DB_PREFIX."rights_def as r";
     $sql.= " WHERE r.libelle NOT LIKE 'tou%'";    // On ignore droits "tous"
-    //$sql.= " AND r.entity = ".(empty($conf->multicompany->enabled) ? $conf->entity : $fgroup->entity);
     if(! empty($conf->multicompany->enabled))
     {
-        if(empty($conf->multicompany->transverse_mode))
+        if (empty($conf->multicompany->transverse_mode))
         {
-        	$sql.= " AND r.entity = ".$conf->entity;
+        	$sql.= " AND r.entity = ".$fgroup->entity;
         }
         else
         {

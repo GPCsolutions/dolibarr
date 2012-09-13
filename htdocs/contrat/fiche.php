@@ -31,7 +31,7 @@ require_once(DOL_DOCUMENT_ROOT."/core/lib/price.lib.php");
 require_once(DOL_DOCUMENT_ROOT.'/core/lib/contract.lib.php');
 require_once(DOL_DOCUMENT_ROOT."/contrat/class/contrat.class.php");
 require_once(DOL_DOCUMENT_ROOT."/core/modules/contract/modules_contract.php");
-if ($conf->produit->enabled)  require_once(DOL_DOCUMENT_ROOT."/product/class/product.class.php");
+if ($conf->produit->enabled || $conf->service->enabled)  require_once(DOL_DOCUMENT_ROOT."/product/class/product.class.php");
 if ($conf->projet->enabled)  require_once(DOL_DOCUMENT_ROOT."/projet/class/project.class.php");
 if ($conf->propal->enabled)  require_once(DOL_DOCUMENT_ROOT."/comm/propal/class/propal.class.php");
 if ($conf->projet->enabled)  require_once(DOL_DOCUMENT_ROOT."/core/lib/project.lib.php");
@@ -415,20 +415,21 @@ else if ($action == 'confirm_deleteline' && $confirm == 'yes' && $user->rights->
 else if ($action == 'confirm_valid' && $confirm == 'yes' && $user->rights->contrat->creer)
 {
     $object->fetch($id);
-    $result = $object->validate($user,$langs,$conf);
+    $result = $object->validate($user);
 }
 
 // Close all lines
 else if ($action == 'confirm_close' && $confirm == 'yes' && $user->rights->contrat->creer)
 {
     $object->fetch($id);
-    $result = $object->cloture($user,$langs,$conf);
+    $result = $object->cloture($user);
 }
 
 else if ($action == 'confirm_delete' && $confirm == 'yes' && $user->rights->contrat->supprimer)
 {
 	$object->fetch($id);
-	$result=$object->delete($user,$langs,$conf);
+	$object->fetch_thirdparty();
+	$result=$object->delete($user);
 	if ($result >= 0)
 	{
 		Header("Location: index.php");

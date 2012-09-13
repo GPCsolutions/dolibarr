@@ -199,7 +199,7 @@ class Conf
 						{
 							$modulename=strtolower($reg[1]);
 							if ($modulename == 'propale') $modulename='propal';
-							$this->$modulename=(object) array();
+							if (! isset($this->$modulename) || ! is_object($this->$modulename)) $this->$modulename=(object) array();
 							$this->$modulename->enabled=true;
 							$this->modules[]=$modulename;              // Add this module in list of enabled modules
 						}
@@ -291,8 +291,8 @@ class Conf
 		$this->user->dir_temp=$rootforuser."/users/temp";
 
 		// For propal storage
-		$this->propal->dir_output=$rootforuser."/propale";
-		$this->propal->dir_temp=$rootforuser."/propale/temp";
+		$this->propal->dir_output=$rootfordata."/propale";
+		$this->propal->dir_temp=$rootfordata."/propale/temp";
 
 		// Exception: Some dir are not the name of module. So we keep exception here
 		// for backward compatibility.

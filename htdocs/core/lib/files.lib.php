@@ -490,6 +490,7 @@ function dol_move($srcfile, $destfile, $newmask=0, $overwriteifexists=1)
  *	Before= Capture d\'écran.doc  After= Capture d'écran.doc
  *
  *	@param	string	$filename		Filename
+ *  @return	string					Unescaped string
  */
 function dol_unescapefile($filename)
 {
@@ -772,7 +773,8 @@ function dol_delete_preview($object)
     if ($object->element == 'order_supplier')   $dir = $conf->fournisseur->dir_output.'/commande';
     elseif ($object->element == 'invoice_supplier') $dir = $conf->fournisseur->dir_output.'/facture';
     elseif ($object->element == 'project')          $dir = $conf->projet->dir_output;
-    elseif ($object->element == 'delivery')         $dir = $conf->livraison->dir_output;
+    elseif ($object->element == 'shipping')         $dir = $conf->expedition->dir_output.'/sending';
+    elseif ($object->element == 'delivery')         $dir = $conf->expedition->dir_output.'/receipt';
 
     if (empty($dir)) return 'ErrorObjectNoSupportedByFunction';
 

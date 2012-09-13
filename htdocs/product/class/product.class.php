@@ -324,9 +324,9 @@ class Product extends CommonObject
 						$result = $this->_log_price($user);
 						if ($result > 0)
 						{
-							if ( $this->update($id, $user, true) > 0)
+							if ($this->update($id, $user, true) > 0)
 							{
-								if ($this->catid > 0)
+    							if ($this->catid > 0)
 								{
 									require_once(DOL_DOCUMENT_ROOT ."/categories/class/categorie.class.php");
 									$cat = new Categorie($this->db, $this->catid);
@@ -361,6 +361,7 @@ class Product extends CommonObject
 			{
 				// Product already exists with this ref
 				$langs->load("products");
+				$error++;
 				$this->error = "ErrorProductAlreadyExists";
 			}
 		}
@@ -379,7 +380,6 @@ class Product extends CommonObject
 			if ($result < 0) { $error++; $this->errors=$interface->errors; }
 			// Fin appel triggers
 		}
-
 		if (! $error)
 		{
 			$this->db->commit();
@@ -604,22 +604,6 @@ class Product extends CommonObject
 				    }
 				}
 
-                // TODO Remove this. It can already be addressed by previous triggers
-                if (! $error)
-                {
-                	// Actions on extra fields (by external module or standard code)
-                    include_once(DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php');
-                    $hookmanager=new HookManager($this->db);
-                    $hookmanager->initHooks(array('productdao'));
-                    $parameters=array(); $action='delete';
-                    $reshook=$hookmanager->executeHooks('deleteProduct',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
-                    if (! empty($hookmanager->error))
-                    {
-                        $error++;
-                        $this->error=$hookmanager->error;
-                    }
-                }
-
                 // Delete product
                 if (! $error)
                 {
@@ -654,15 +638,34 @@ class Product extends CommonObject
                 	}
                 }
 
-				if ($error)
+                if (! $error)
+                {
+                	// We remove directory
+                	$ref = dol_sanitizeFileName($this->ref);
+                	if ($conf->product->dir_output)
+                	{
+                		$dir = $conf->product->dir_output . "/" . $ref;
+                		if (file_exists($dir))
+                		{
+                			$res=@dol_delete_dir_recursive($dir);
+                			if (! $res)
+                			{
+                				$this->error='ErrorFailToDeleteDir';
+                				$error++;
+                			}
+                		}
+                	}
+                }
+
+				if (! $error)
 				{
-				    $this->db->rollback();
-					return -$error;
+					$this->db->commit();
+					return 1;
 				}
 				else
 				{
-				    $this->db->commit();
-					return 1;
+					$this->db->rollback();
+					return -$error;
 				}
 			}
 			else
@@ -2422,7 +2425,7 @@ class Product extends CommonObject
 		$sql = "SELECT ps.reel, ps.fk_entrepot, ps.pmp";
 		$sql.= " FROM ".MAIN_DB_PREFIX."product_stock as ps";
 		$sql.= ", ".MAIN_DB_PREFIX."entrepot as w";
-		$sql.= " WHERE w.entity = (".getEntity('warehouse', 1).")";
+		$sql.= " WHERE w.entity IN (".getEntity('warehouse', 1).")";
 		$sql.= " AND w.rowid = ps.fk_entrepot";
 		$sql.= " AND ps.fk_product = ".$this->id;
 

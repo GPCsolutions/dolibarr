@@ -60,11 +60,11 @@ $substitutionarray=array(
 if ($conf->global->MAILING_EMAIL_UNSUBSCRIBE)
 {
 	$substitutionarray=array_merge(
-			$substitutionarray,
-			array(
-					'__CHECK_READ__' => 'CheckMail',
-					'__UNSUSCRIBE__' => 'Unsuscribe'
-			)
+					$substitutionarray,
+					array(
+						'__CHECK_READ__' => 'CheckMail',
+						'__UNSUBSCRIBE__' => 'Unsubscribe'
+					)
 	);
 }
 
@@ -83,13 +83,13 @@ $substitutionarrayfortest=array(
 );
 if ($conf->global->MAILING_EMAIL_UNSUBSCRIBE)
 {
-    $substitutionarrayfortest=array_merge(
-    		$substitutionarrayfortest,
-    		array(
-    				'__CHECK_READ__' => 'TESTCheckMail',
-    				'__UNSUSCRIBE__' => 'TESTCheckMail'
-    		)
-    );
+	$substitutionarrayfortest=array_merge(
+					$substitutionarrayfortest,
+					array(
+    					'__CHECK_READ__' => 'TESTCheckMail',
+    					'__UNSUBSCRIBE__' => 'TESTUnsubscribe'
+    				)
+	);
 }
 
 // Action clone object
@@ -209,7 +209,7 @@ if ($action == 'sendallconfirmed' && $confirm == 'yes')
 							'__ID__' => $obj->source_id,
 							'__EMAIL__' => $obj->email,
 							'__CHECK_READ__' => '<img src="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-read.php?tag='.$obj->tag.'" width="0" height="0" style="width:0px;height:0px" border="0"/>',
-							'__UNSUSCRIBE__' => '<a href="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-unsubscribe.php?tag='.$obj->tag.'&unsuscrib=1" target="_blank">'.$langs->trans("MailUnsubcribe").'</a>',
+							'__UNSUBSCRIBE__' => '<a href="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-unsubscribe.php?tag='.$obj->tag.'&unsuscrib=1" target="_blank">'.$langs->trans("MailUnsubcribe").'</a>',
 							'__LASTNAME__' => $obj->nom,
 							'__FIRSTNAME__' => $obj->prenom,
 							'__OTHER1__' => $other1,
@@ -1049,7 +1049,7 @@ else
             if ($conf->global->MAILING_EMAIL_UNSUBSCRIBE)
             {
     			print '__CHECK_READ__ = '.$langs->trans("CheckRead").'<br>';
-	    		print '__UNSUSCRIBE__ = '.$langs->trans("MailUnsubcribe").'<br>';
+	    		print '__UNSUBSCRIBE__ = '.$langs->trans("MailUnsubcribe").'<br>';
             }
 			print '__LASTNAME__ = '.$langs->trans("Lastname").'<br>';
 			print '__FIRSTNAME__ = '.$langs->trans("Firstname").'<br>';
