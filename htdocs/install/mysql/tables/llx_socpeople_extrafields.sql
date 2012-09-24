@@ -1,5 +1,5 @@
--- ===================================================================
--- Copyright (C) 2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
+-- ========================================================================
+-- Copyright (C) 2011 Laurent Destailleur  <eldy@users.sourceforge.net>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -14,17 +14,13 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program. If not, see <http://www.gnu.org/licenses/>.
 --
--- ===================================================================
+-- ========================================================================
 
-create table llx_document
+create table llx_socpeople_extrafields
 (
-  rowid           integer AUTO_INCREMENT PRIMARY KEY,
-  name            varchar(255) NOT NULL,
-  file_name       varchar(255) NOT NULL,
-  file_extension  varchar(5)   NOT NULL,
-  date_generation datetime     NULL,
-  fk_owner        integer      NULL,
-  fk_group        integer      NULL,
-  permissions     char(9)      DEFAULT 'rw-rw-rw'
+  rowid                     integer AUTO_INCREMENT PRIMARY KEY,
+  tms                       timestamp,
+  fk_object                 integer NOT NULL,
+  import_key                varchar(14)                          		-- import key
+) ENGINE=innodb;
 
-)ENGINE=innodb;

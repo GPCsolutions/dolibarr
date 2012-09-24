@@ -130,7 +130,7 @@ class Societe extends CommonObject
     var $datec;
     var $date_update;
 
-    var $commercial_id; //Id du commercial affecte
+    var $commercial_id;  // Id of sales representative to link (used for thirdparty creation). Not filled by a fetch, because we can have several sales representatives.
     var $default_lang;
 
     var $ref_int;
@@ -227,15 +227,15 @@ class Societe extends CommonObject
 
                 $ret = $this->update($this->id,$user,0,1,1,'add');
 
-                // si un commercial cree un client il lui est affecte automatiquement
-                if (!$user->rights->societe->client->voir)
-                {
-                    $this->add_commercial($user, $user->id);
-                }
                 // Ajout du commercial affecte
-                else if ($this->commercial_id != '' && $this->commercial_id != -1)
+                if ($this->commercial_id != '' && $this->commercial_id != -1)
                 {
                     $this->add_commercial($user, $this->commercial_id);
+                }
+                // si un commercial cree un client il lui est affecte automatiquement
+                else if (!$user->rights->societe->client->voir)
+                {
+                    $this->add_commercial($user, $user->id);
                 }
 
                 // si le fournisseur est classe on l'ajoute
@@ -388,22 +388,22 @@ class Societe extends CommonObject
 
         // Clean parameters
         $this->id			= $id;
-        $this->name=$this->name?trim($this->name):trim($this->nom);
-        $this->nom=trim($this->nom);    // TODO obsolete
-        $this->ref_ext=trim($this->ref_ext);
-        $this->address=$this->address?trim($this->address):trim($this->adresse);
-        $this->adresse=$this->address;  // TODO obsolete
-        $this->zip=$this->zip?trim($this->zip):trim($this->cp);
-        $this->cp=$this->zip;           // TODO obsolete
-        $this->town=$this->town?trim($this->town):trim($this->ville);
-        $this->ville=$this->town;       // TODO obsolete
-        $this->state_id=trim($this->state_id);
+        $this->name			= $this->name?trim($this->name):trim($this->nom);
+        $this->nom			= trim($this->nom);		// TODO obsolete
+        $this->ref_ext		= trim($this->ref_ext);
+        $this->address		= $this->address?trim($this->address):trim($this->adresse);
+        $this->adresse		= $this->address;		// TODO obsolete
+        $this->zip			= $this->zip?trim($this->zip):trim($this->cp);
+        $this->cp			= $this->zip;			// TODO obsolete
+        $this->town			= $this->town?trim($this->town):trim($this->ville);
+        $this->ville		= $this->town;			// TODO obsolete
+        $this->state_id		= trim($this->state_id);
         $this->country_id	= ($this->country_id > 0)?$this->country_id:$this->pays_id;
-        $this->pays_id      = $this->country_id;
+        $this->pays_id      = $this->country_id;	// TODO obsolete
         $this->phone		= trim($this->phone?$this->phone:$this->tel);
         $this->phone		= preg_replace("/\s/","",$this->phone);
         $this->phone		= preg_replace("/\./","",$this->phone);
-        $this->tel          = $this->phone;
+        $this->tel          = $this->phone;			// TODO obsolete
         $this->fax			= trim($this->fax);
         $this->fax			= preg_replace("/\s/","",$this->fax);
         $this->fax			= preg_replace("/\./","",$this->fax);
@@ -1624,7 +1624,7 @@ class Societe extends CommonObject
     function get_codeclient($objsoc=0,$type=0)
     {
         global $conf;
-        if ($conf->global->SOCIETE_CODECLIENT_ADDON)
+        if (! empty($conf->global->SOCIETE_CODECLIENT_ADDON))
         {
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
@@ -1653,7 +1653,7 @@ class Societe extends CommonObject
     function get_codefournisseur($objsoc=0,$type=1)
     {
         global $conf;
-        if ($conf->global->SOCIETE_CODEFOURNISSEUR_ADDON)
+        if (! empty($conf->global->SOCIETE_CODEFOURNISSEUR_ADDON))
         {
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
@@ -1679,7 +1679,7 @@ class Societe extends CommonObject
     function codeclient_modifiable()
     {
         global $conf;
-        if ($conf->global->SOCIETE_CODECLIENT_ADDON)
+        if (! empty($conf->global->SOCIETE_CODECLIENT_ADDON))
         {
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
@@ -1713,7 +1713,7 @@ class Societe extends CommonObject
     function codefournisseur_modifiable()
     {
         global $conf;
-        if ($conf->global->SOCIETE_CODEFOURNISSEUR_ADDON)
+        if (! empty($conf->global->SOCIETE_CODEFOURNISSEUR_ADDON))
         {
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
@@ -1751,7 +1751,7 @@ class Societe extends CommonObject
     function check_codeclient()
     {
         global $conf;
-        if ($conf->global->SOCIETE_CODECLIENT_ADDON)
+        if (! empty($conf->global->SOCIETE_CODECLIENT_ADDON))
         {
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
@@ -1786,7 +1786,7 @@ class Societe extends CommonObject
     function check_codefournisseur()
     {
         global $conf;
-        if ($conf->global->SOCIETE_CODEFOURNISSEUR_ADDON)
+        if (! empty($conf->global->SOCIETE_CODEFOURNISSEUR_ADDON))
         {
             $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
             foreach ($dirsociete as $dirroot)
