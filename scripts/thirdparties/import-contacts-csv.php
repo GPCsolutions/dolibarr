@@ -59,17 +59,24 @@ function printLine($line)
 // TODO: infoline
 print "***** " . $script_file . " (" . $version . ") *****\n";
 if ( ! isset($argv[1])) { // Check parameters
-	print "Usage: " . $script_file . " file.csv [username]...\n";
+	print "Usage: " . $script_file . " file.csv [username] [entity]\n";
 	exit;
 }
 print 'Processing ' . $argv[1] . "\n";
 
-// Load user and its permissions
+// Parse arguments
 if ( ! isset($argv[2])) {
 	$username = 'admin';
 } else {
 	$username = $argv[2];
 }
+if ( ! isset($argv[3])) {
+	$conf->entity = 1;
+} else {
+	$conf->entity = $argv[3];
+}
+
+// Load user and its permissions
 $result = $user->fetch('', $username); // Load user for login 'admin'. Comment line to run as anonymous user.
 if ( ! $result > 0) {
 	dol_print_error('', $user->error . " " . $username);
