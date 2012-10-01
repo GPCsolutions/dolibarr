@@ -83,6 +83,7 @@ if ( ! $result > 0) {
 	exit;
 }
 $user->getrights();
+unset($result);
 
 $import_key = dol_print_date(dol_now(), '%Y%m%d%H%M%S');
 
@@ -175,7 +176,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 		$contact->town = $data[7];
 
 		/*
-		 * Coutry
+		 * Country
 		 */
 		if ( ! empty($data[8])) {
 			$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'c_pays where code="' . $data[8] . '"';

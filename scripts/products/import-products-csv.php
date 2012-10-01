@@ -261,7 +261,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 								// FIXME: upstream
 								// Import key is not populated by the class !
 								// Let's do this manually
-								$sql = "UPDATE " . MAIN_DB_PREFIX . "categorie SET import_key='" . $import_key . "' WHERE rowid=" . $catprod->id;
+								$sql = "UPDATE " . MAIN_DB_PREFIX . "categorie SET import_key='" . $import_key . "' WHERE rowid=" . $catprod->id . '"';
 								$resql = $db->query($sql);
 								unset($sql);
 								if ( ! $resql) {
@@ -276,7 +276,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 								print "Unable to create product category\n";
 							}
 						} else {
-							$sql = 'SELECT rowid FROM ' . MAIN_DB_PREFIX . 'categorie WHERE label="' . $labelprod . '"';
+							$sql = 'SELECT rowid FROM ' . MAIN_DB_PREFIX . 'categorie WHERE label="' . $labelprod . '" AND entity IN (' . $conf->entity . ')';
 							$resql = $db->query($sql);
 							unset($sql);
 							if ($resql && ($resql->num_rows != 0)) {

@@ -331,7 +331,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 								print "Unable to create customer category\n";
 							}
 						} else {
-							$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'categorie where label="' . $labelcli . '"';
+							$sql = 'select rowid from ' . MAIN_DB_PREFIX . 'categorie where label="' . $labelcli . '" AND entity IN (' . $conf->entity . ')';
 							$resql = $db->query($sql);
 							unset($sql);
 							if ($resql && ($resql->num_rows != 0)) {
