@@ -261,7 +261,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 								// FIXME: upstream
 								// Import key is not populated by the class !
 								// Let's do this manually
-								$sql = "UPDATE " . MAIN_DB_PREFIX . "categorie SET import_key='" . $import_key . "' WHERE rowid=" . $catprod->id . '"';
+								$sql = "UPDATE " . MAIN_DB_PREFIX . "categorie SET import_key='" . $import_key . "' WHERE rowid=" . $catprod->id;
 								$resql = $db->query($sql);
 								unset($sql);
 								if ( ! $resql) {
