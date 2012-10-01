@@ -218,6 +218,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 					$suppliers_list = explode(',', $data[19]);
 					foreach ($suppliers_list as $supplier) {
 						// TODO: Create a new supplier if it doesn't exist
+						$supplier = trim($supplier);
 						$sql = "SELECT s.rowid";
 						$sql .= " FROM " . MAIN_DB_PREFIX . "societe as s";
 						$sql .= " WHERE s.entity IN (" . $conf->entity . ")";
