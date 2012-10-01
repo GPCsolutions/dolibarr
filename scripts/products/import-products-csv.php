@@ -91,8 +91,8 @@ $import_key = dol_print_date(dol_now(), '%Y%m%d%H%M%S');
 
 $fname = $argv[1];
 
-define('STD_COLS_NB', '19'); // Number of columns for standard fields
-$data_cols_nb = 19; // Total number of columns
+define('STD_COLS_NB', '20'); // Number of columns for standard fields
+$data_cols_nb = 20; // Total number of columns
 $extra_fields = False;
 
 // Start of transaction
@@ -199,11 +199,25 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 			$result = $prod->create($user);
 			if ($result >= 0) {
 				/*
+				 * Stock
+				 */
+				if (! empty($data[18])) {
+					$stock_qty = $data[18];
+					// TODO: check there is a warehouse and create one if there's none
+					$result = $prod->correct_stock($user, 1, $stock_qty, 0, $import_key);
+					if($result <= 0) {
+						$error ++;
+						printLine($line);
+						print "Unable to add product to stock, make sure you have a warehouse!\n";
+					}
+				}
+				/*
 				 * Product category
 				 */
 				// TODO: support nested categories
-				if ( ! empty($data[18])) {
-					$labels_product = $data[18];
+				// TODO: support cagories references
+				if ( ! empty($data[19])) {
+					$labels_product = $data[19];
 					$labels_categories_product = array(); // Make sure that it's initialized
 					$labels_categories_product = explode(',', $labels_product);
 
