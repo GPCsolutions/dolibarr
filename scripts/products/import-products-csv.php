@@ -91,8 +91,8 @@ $import_key = dol_print_date(dol_now(), '%Y%m%d%H%M%S');
 
 $fname = $argv[1];
 
-define('STD_COLS_NB', '20'); // Number of columns for standard fields
-$data_cols_nb = 20; // Total number of columns
+define('STD_COLS_NB', '21'); // Number of columns for standard fields
+$data_cols_nb = 21; // Total number of columns
 $extra_fields = False;
 
 // Start of transaction
@@ -201,23 +201,50 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 				/*
 				 * Stock
 				 */
-				if (! empty($data[18])) {
+				if ( ! empty($data[18])) {
 					$stock_qty = $data[18];
 					// TODO: check there is a warehouse and create one if there's none
 					$result = $prod->correct_stock($user, 1, $stock_qty, 0, $import_key);
-					if($result <= 0) {
+					if ($result <= 0) {
 						$error ++;
 						printLine($line);
 						print "Unable to add product to stock, make sure you have a warehouse!\n";
 					}
 				}
 				/*
+				 * Supplier
+				 */
+				if ( ! empty($data[19])) {
+					$suppliers_list = explode(',', $data[19]);
+					foreach ($suppliers_list as $supplier) {
+						// TODO: Create a new supplier if it doesn't exist
+						$sql = "SELECT s.rowid";
+						$sql .= " FROM " . MAIN_DB_PREFIX . "societe as s";
+						$sql .= " WHERE s.entity IN (" . $conf->entity . ")";
+						$sql .= " AND s.nom LIKE '%" . $db->escape($supplier) . "%'";
+						$resql = $db->query($sql);
+						unset($sql);
+						if ($resql && ($resql->num_rows != 0)) {
+							// FIXME: Check unicity !!!
+							$res = $db->fetch_array($resql);
+							$id_fourn = $res['rowid'];
+							$prod->add_fournisseur($user, $id_fourn, $data[0], 1);
+						} else {
+							$error ++;
+							printLine($line);
+							print "Unable to find supplier " . $supplier . "\n";
+						}
+						unset($resql);
+					}
+				}
+
+				/*
 				 * Product category
 				 */
 				// TODO: support nested categories
 				// TODO: support cagories references
-				if ( ! empty($data[19])) {
-					$labels_product = $data[19];
+				if ( ! empty($data[20])) {
+					$labels_product = $data[20];
 					$labels_categories_product = array(); // Make sure that it's initialized
 					$labels_categories_product = explode(',', $labels_product);
 
