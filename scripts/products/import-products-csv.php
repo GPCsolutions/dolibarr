@@ -50,6 +50,7 @@ require_once($path . "../../htdocs/master.inc.php");
 require_once(DOL_DOCUMENT_ROOT . "/product/class/product.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/categories/class/categorie.class.php");
 require_once(DOL_DOCUMENT_ROOT . "/core/class/extrafields.class.php");
+require_once(DOL_DOCUMENT_ROOT . "/product/stock/class/entrepot.class.php");
 
 @set_time_limit(0);  // No timeout for this script
 
@@ -204,7 +205,11 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 				if ( ! empty($data[18])) {
 					$stock_qty = $data[18];
 					// TODO: check there is a warehouse and create one if there's none
-					$result = $prod->correct_stock($user, 1, $stock_qty, 0, $import_key);
+					// Uses first warehouse from entity
+					$warehouse = new Entrepot($db);
+					$warehouse_list = $warehouse->list_array();
+					$warehouse_ids = array_keys($warehouse_list);					
+					$result = $prod->correct_stock($user, $warehouse_id[0], $stock_qty, 0, $import_key);
 					if ($result <= 0) {
 						$error ++;
 						printLine($line);
