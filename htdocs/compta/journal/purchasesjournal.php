@@ -148,7 +148,7 @@ print "<tr class=\"liste_titre\">";
 print "<td>".$langs->trans("Date")."</td>";
 print "<td>".$langs->trans("Piece").' ('.$langs->trans("InvoiceRef").")</td>";
 print "<td>".$langs->trans("Account")."</td>";
-print "<t><td>".$langs->trans("Type")."</td><td align='right'>".$langs->trans("Debit")."</td><td align='right'>".$langs->trans("Credit")."</td>";
+print "<td>".$langs->trans("Type")."</td><td align='right'>".$langs->trans("Debit")."</td><td align='right'>".$langs->trans("Credit")."</td>";
 print "</tr>\n";
 
 $var=true;
@@ -202,7 +202,7 @@ foreach ($tabfac as $key => $val)
 	foreach ($tabttc[$key] as $k => $mt)
 	{
 	    print "<td>".$k."</td><td>".$langs->trans("ThirdParty")."</td>";
-	    print '<td align="right">'.($mt<0?-price(-$mt):'')."</td>";
+	    print '<td align="right">'.($mt<0?price(-$mt):'')."</td>";
 	    print '<td align="right">'.($mt>=0?price($mt):'')."</td>";
 	}
 	print "</tr>";
