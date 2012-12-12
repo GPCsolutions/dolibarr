@@ -282,7 +282,7 @@ class User extends CommonObject
 	 *  @param  string	$allperms    Ajouter tous les droits du module allmodule, perms allperms
 	 *  @return int   			     > 0 if OK, < 0 if KO
 	 */
-	function addrights($rid,$allmodule='',$allperms='')
+	function addrights($rid, $allmodule='', $allperms='')
 	{
 		global $conf;
 
@@ -292,13 +292,13 @@ class User extends CommonObject
 
 		$this->db->begin();
 
-		if ($rid)
+		if (! empty($rid))
 		{
 			// Si on a demande ajout d'un droit en particulier, on recupere
 			// les caracteristiques (module, perms et subperms) de ce droit.
 			$sql = "SELECT module, perms, subperms";
 			$sql.= " FROM ".MAIN_DB_PREFIX."rights_def";
-			$sql.= " WHERE id = '".$rid."'";
+			$sql.= " WHERE id = '".$this->db->escape($rid)."'";
 			$sql.= " AND entity = ".$conf->entity;
 
 			$result=$this->db->query($sql);
@@ -314,21 +314,21 @@ class User extends CommonObject
 			}
 
 			// Where pour la liste des droits a ajouter
-			$whereforadd="id=".$rid;
+			$whereforadd="id=".$this->db->escape($rid);
 			// Ajout des droits induits
-			if ($subperms)   $whereforadd.=" OR (module='$module' AND perms='$perms' AND (subperms='lire' OR subperms='read'))";
-			else if ($perms) $whereforadd.=" OR (module='$module' AND (perms='lire' OR perms='read') AND subperms IS NULL)";
+			if (! empty($subperms))   $whereforadd.=" OR (module='$module' AND perms='$perms' AND (subperms='lire' OR subperms='read'))";
+			else if (! empty($perms)) $whereforadd.=" OR (module='$module' AND (perms='lire' OR perms='read') AND subperms IS NULL)";
 		}
 		else {
 			// On a pas demande un droit en particulier mais une liste de droits
 			// sur la base d'un nom de module de de perms
 			// Where pour la liste des droits a ajouter
-			if ($allmodule) $whereforadd="module='$allmodule'";
-			if ($allperms)  $whereforadd=" AND perms='$allperms'";
+			if (! empty($allmodule)) $whereforadd="module='".$this->db->escape($allmodule)."'";
+			if (! empty($allperms))  $whereforadd=" AND perms='".$this->db->escape($allperms)."'";
 		}
 
 		// Ajout des droits trouves grace au critere whereforadd
-		if ($whereforadd)
+		if (! empty($whereforadd))
 		{
 			//print "$module-$perms-$subperms";
 			$sql = "SELECT id";
@@ -381,7 +381,7 @@ class User extends CommonObject
 	 *  @param  string	$allperms   Retirer tous les droits du module allmodule, perms allperms
 	 *  @return int         		> 0 if OK, < 0 if OK
 	 */
-	function delrights($rid,$allmodule='',$allperms='')
+	function delrights($rid, $allmodule='', $allperms='')
 	{
 		global $conf;
 
@@ -390,13 +390,13 @@ class User extends CommonObject
 
 		$this->db->begin();
 
-		if ($rid)
+		if (! empty($rid))
 		{
 			// Si on a demande supression d'un droit en particulier, on recupere
 			// les caracteristiques module, perms et subperms de ce droit.
 			$sql = "SELECT module, perms, subperms";
 			$sql.= " FROM ".MAIN_DB_PREFIX."rights_def";
-			$sql.= " WHERE id = '".$rid."'";
+			$sql.= " WHERE id = '".$this->db->escape($rid)."'";
 			$sql.= " AND entity = ".$conf->entity;
 
 			$result=$this->db->query($sql);
@@ -412,7 +412,7 @@ class User extends CommonObject
 			}
 
 			// Where pour la liste des droits a supprimer
-			$wherefordel="id=".$rid;
+			$wherefordel="id=".$this->db->escape($rid);
 			// Suppression des droits induits
 			if ($subperms=='lire' || $subperms=='read') $wherefordel.=" OR (module='$module' AND perms='$perms' AND subperms IS NOT NULL)";
 			if ($perms=='lire' || $perms=='read')       $wherefordel.=" OR (module='$module')";
@@ -420,12 +420,12 @@ class User extends CommonObject
 		else {
 			// On a demande suppression d'un droit sur la base d'un nom de module ou perms
 			// Where pour la liste des droits a supprimer
-			if ($allmodule) $wherefordel="module='$allmodule'";
-			if ($allperms)  $wherefordel=" AND perms='$allperms'";
+			if (! empty($allmodule)) $wherefordel="module='".$this->db->escape($allmodule)."'";
+			if (! empty($allperms))  $wherefordel=" AND perms='".$this->db->escape($allperms)."'";
 		}
 
 		// Suppression des droits selon critere defini dans wherefordel
-		if ($wherefordel)
+		if (! empty($wherefordel))
 		{
 			//print "$module-$perms-$subperms";
 			$sql = "SELECT id";
@@ -512,7 +512,7 @@ class User extends CommonObject
 		$sql.= " FROM ".MAIN_DB_PREFIX."user_rights as ur";
 		$sql.= ", ".MAIN_DB_PREFIX."rights_def as r";
 		$sql.= " WHERE r.id = ur.fk_id";
-		$sql.= " AND r.entity in (0,".(!empty($conf->multicompany->transverse_mode)?"1,":"").$conf->entity.")";
+		$sql.= " AND r.entity IN (0,".(! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode)?"1,":"").$conf->entity.")";
 		$sql.= " AND ur.fk_user= ".$this->id;
 		$sql.= " AND r.perms IS NOT NULL";
 		if ($moduletag) $sql.= " AND r.module = '".$this->db->escape($moduletag)."'";
@@ -557,11 +557,14 @@ class User extends CommonObject
 		$sql.= " ".MAIN_DB_PREFIX."usergroup_user as gu,";
 		$sql.= " ".MAIN_DB_PREFIX."rights_def as r";
 		$sql.= " WHERE r.id = gr.fk_id";
+		if (! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode)) {
+			$sql.= " AND gu.entity IN (0,".$conf->entity.")";
+		} else {
+			$sql.= " AND r.entity = ".$conf->entity;
+		}
 		$sql.= " AND gr.fk_usergroup = gu.fk_usergroup";
 		$sql.= " AND gu.fk_user = ".$this->id;
 		$sql.= " AND r.perms IS NOT NULL";
-		$sql.= " AND r.entity = ".$conf->entity;
-		$sql.= " AND gu.entity IN (0,".$conf->entity.")";
 		if ($moduletag) $sql.= " AND r.module = '".$this->db->escape($moduletag)."'";
 
 		dol_syslog(get_class($this).'::getrights sql='.$sql, LOG_DEBUG);
@@ -1416,7 +1419,8 @@ class User extends CommonObject
 		{
 			$urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',$dolibarr_main_url_root);
 		}
-		if (! empty($dolibarr_main_force_https)) $urlwithouturlroot=preg_replace('/http:/i','https:',$urlwithouturlroot);
+		if (! empty($dolibarr_main_force_https)
+			|| (! empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == 'on')) $urlwithouturlroot=preg_replace('/http:/i','https:',$urlwithouturlroot);
 
 		// TODO Use outputlangs to translate messages
 		if (! $changelater)

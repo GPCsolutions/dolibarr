@@ -137,7 +137,11 @@ function pdf_getInstance($format='',$metric='mm',$pagetype='P')
  */
 function pdf_getPDFFont($outputlangs)
 {
-	$font='Helvetica'; // By default, for FPDI or ISO language on TCPDF
+	global $conf;
+
+	if (! empty($conf->global->MAIN_PDF_FORCE_FONT)) return $conf->global->MAIN_PDF_FORCE_FONT;
+
+	$font='Helvetica'; // By default, for FPDI, or ISO language on TCPDF
 	if (class_exists('TCPDF'))  // If TCPDF on, we can use an UTF8 one like DejaVuSans if required (slower)
 	{
 		if ($outputlangs->trans('FONTFORPDF')!='FONTFORPDF')
@@ -355,7 +359,7 @@ function pdf_watermark(&$pdf, $outputlangs, $h, $w, $unit, $text)
 
 	$watermark_angle=atan($h/$w);
 	$watermark_x=5;
-	$watermark_y=$h-25; //Set to $this->page_hauteur-50 or less if problems
+	$watermark_y=$h-50; // We must be sure to not print into margins
 	$watermark_width=$h;
 	$pdf->SetFont('','B',50);
 	$pdf->SetTextColor(255,192,203);
@@ -524,22 +528,25 @@ function pdf_bank(&$pdf,$outputlangs,$curx,$cury,$account,$onlynumber=0,$default
  *  @param  Translate	$outputlangs	Object lang for output
  * 	@param	string		$paramfreetext	Constant name of free text
  * 	@param	Societe		$fromcompany	Object company
- * 	@param	int			$marge_basse	Margin bottom
- * 	@param	int			$marge_gauche	Margin left
- * 	@param	int			$page_hauteur	Page height
+ * 	@param	int			$marge_basse	Margin bottom we use for the autobreak
+ * 	@param	int			$marge_gauche	Margin left (no more used)
+ * 	@param	int			$page_hauteur	Page height (no more used)
  * 	@param	Object		$object			Object shown in PDF
- * 	@param	int			$showdetails	Show company details
- * 	@return	void
+ * 	@param	int			$showdetails	Show company details into footer. This param seems to not be used by standard version.
+ *  @param	int			$hidefreetext	1=Hide free text, 0=Show free text
+ * 	@return	int							Return height of bottom margin including footer text
  */
-function pdf_pagefoot(&$pdf,$outputlangs,$paramfreetext,$fromcompany,$marge_basse,$marge_gauche,$page_hauteur,$object,$showdetails=0)
+function pdf_pagefoot(&$pdf,$outputlangs,$paramfreetext,$fromcompany,$marge_basse,$marge_gauche,$page_hauteur,$object,$showdetails=0,$hidefreetext=0)
 {
 	global $conf,$user;
 
 	$outputlangs->load("dict");
 	$line='';
 
+	$dims=$pdf->getPageDimensions();
+
 	// Line of free text
-	if (! empty($conf->global->$paramfreetext))
+	if (empty($hidefreetext) && ! empty($conf->global->$paramfreetext))
 	{
 		// Make substitution
 		$substitutionarray=array(
@@ -656,52 +663,58 @@ function pdf_pagefoot(&$pdf,$outputlangs,$paramfreetext,$fromcompany,$marge_bass
 	$pdf->SetDrawColor(224,224,224);
 
 	// On positionne le debut du bas de page selon nbre de lignes de ce bas de page
-	$nbofline=dol_nboflines_bis($line,0,$outputlangs->charset_output);
-	//print 'nbofline='.$nbofline; exit;
-	//print 'e'.$line.'t'.dol_nboflines($line);exit;
-	$posy=$marge_basse + ($nbofline*3) + ($line1?3:0) + ($line2?3:0) + ($line3?3:0) + ($line4?3:0);
+	$freetextheight=0;
+	if ($line)	// Free text
+	{
+		$width=20000; $align='L';	// By default, ask a manual break: We use a large value 20000, to not have automatic wrap. This make user understand, he need to add CR on its text.
+		if (! empty($conf->global->MAIN_USE_AUTOWRAP_ON_FREETEXT)) {
+			$width=200; $align='C';
+		}
+		$freetextheight=$pdf->getStringHeight($width,$line);
+	}
+
+	$marginwithfooter=$marge_basse + $freetextheight + (! empty($line1)?3:0) + (! empty($line2)?3:0) + (! empty($line3)?3:0) + (! empty($line4)?3:0);
+	$posy=$marginwithfooter+0;
 
 	if ($line)	// Free text
 	{
-		$pdf->SetXY($marge_gauche,-$posy);
-		$width=20000; $align='L';	// By default, ask a manual break: We use a large value 20000, to not have automatic wrap. This make user understand, he need to add CR on its text.
-		if ($conf->global->MAIN_USE_AUTOWRAP_ON_FREETEXT) { $width=200; $align='C'; }
+		$pdf->SetXY($dims['lm'],-$posy);
 		$pdf->MultiCell($width, 3, $line, 0, $align, 0);
-		$posy-=($nbofline*3);	// 6 of ligne + 3 of MultiCell
+		$posy-=$freetextheight;
 	}
 
 	$pdf->SetY(-$posy);
-	$pdf->line($marge_gauche, $page_hauteur-$posy, 200, $page_hauteur-$posy);
+	$pdf->line($dims['lm'], $dims['hk']-$posy, $dims['wk']-$dims['rm'], $dims['hk']-$posy);
 	$posy--;
 
-	if ($line1)
+	if (! empty($line1))
 	{
 		$pdf->SetFont('','B',7);
-		$pdf->SetXY($marge_gauche,-$posy);
+		$pdf->SetXY($dims['lm'],-$posy);
 		$pdf->MultiCell(200, 2, $line1, 0, 'C', 0);
 		$posy-=3;
 		$pdf->SetFont('','',7);
 	}
 
-	if ($line2)
+	if (! empty($line2))
 	{
 		$pdf->SetFont('','B',7);
-		$pdf->SetXY($marge_gauche,-$posy);
+		$pdf->SetXY($dims['lm'],-$posy);
 		$pdf->MultiCell(200, 2, $line2, 0, 'C', 0);
 		$posy-=3;
 		$pdf->SetFont('','',7);
 	}
 
-	if ($line3)
+	if (! empty($line3))
 	{
-		$pdf->SetXY($marge_gauche,-$posy);
+		$pdf->SetXY($dims['lm'],-$posy);
 		$pdf->MultiCell(200, 2, $line3, 0, 'C', 0);
 	}
 
-	if ($line4)
+	if (! empty($line4))
 	{
 		$posy-=3;
-		$pdf->SetXY($marge_gauche,-$posy);
+		$pdf->SetXY($dims['lm'],-$posy);
 		$pdf->MultiCell(200, 2, $line4, 0, 'C', 0);
 	}
 
@@ -712,7 +725,10 @@ function pdf_pagefoot(&$pdf,$outputlangs,$paramfreetext,$fromcompany,$marge_bass
 		$pdf->MultiCell(11, 2, $pdf->PageNo().'/'.$pdf->getAliasNbPages(), 0, 'R', 0);
 		//print 'xxx'.$pdf->getAliasNbPages().'-'.$pdf->getAliasNumPage();exit;
 	}
+
+	return $marginwithfooter;
 }
+
 
 /**
  *	Show linked objects for PDF generation

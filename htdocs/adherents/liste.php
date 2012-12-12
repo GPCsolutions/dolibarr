@@ -82,7 +82,7 @@ llxHeader('',$langs->trans("Member"),'EN:Module_Foundations|FR:Module_Adh&eacute
 
 $now=dol_now();
 
-$sql = "SELECT d.rowid, d.login, d.nom as lastname, d.prenom as firstname, d.societe, ";
+$sql = "SELECT d.rowid, d.login, d.nom as lastname, d.prenom as firstname, d.societe as company, d.fk_soc,";
 $sql.= " d.datefin,";
 $sql.= " d.email, d.fk_adherent_type as type_id, d.morphy, d.statut,";
 $sql.= " t.libelle as type, t.cotisation";
@@ -130,7 +130,7 @@ if ($filter == 'uptodate')
 }
 if ($filter == 'outofdate')
 {
-	$sql.=" AND datefin < '".$db->idate($now)."'";
+	$sql.=" AND (datefin IS NULL OR datefin < '".$db->idate($now)."')";
 }
 // Insert categ filter
 if ($search_categ)
@@ -237,7 +237,7 @@ if ($resql)
 
 	print '<td class="liste_titre">';
 	$listetype=$membertypestatic->liste_array();
-	print $form->selectarray("type", $listetype, $type, 1, 0, 0, '', 0, 12);
+	print $form->selectarray("type", $listetype, $type, 1, 0, 0, '', 0, 32);
 	print '</td>';
 
 	print '<td class="liste_titre">&nbsp;</td>';
@@ -267,6 +267,14 @@ if ($resql)
 		$memberstatic->lastname=$objp->lastname;
 		$memberstatic->firstname=$objp->firstname;
 
+		if (! empty($objp->fk_soc)) {
+			$memberstatic->socid = $objp->fk_soc;
+			$memberstatic->fetch_thirdparty();
+			$companyname=$memberstatic->thirdparty->name;
+		} else {
+			$companyname=$objp->company;
+		}
+
 		$var=!$var;
 		print "<tr ".$bc[$var].">";
 
@@ -276,14 +284,11 @@ if ($resql)
 		print "</td>\n";
 
 		// Lastname
-		if ($objp->societe != '')
-		{
-			print "<td><a href=\"fiche.php?rowid=$objp->rowid\">".dol_trunc($memberstatic->getFullName($langs))." / ".dol_trunc($objp->societe,12)."</a></td>\n";
-		}
-		else
-		{
-			print "<td><a href=\"fiche.php?rowid=$objp->rowid\">".dol_trunc($memberstatic->getFullName($langs))."</a></td>\n";
-		}
+		print "<td><a href=\"fiche.php?rowid=$objp->rowid\">";
+		print ((! empty($objp->lastname) || ! empty($objp->firstname)) ? dol_trunc($memberstatic->getFullName($langs)) : '');
+		print (((! empty($objp->lastname) || ! empty($objp->firstname)) && ! empty($companyname)) ? ' / ' : '');
+		print (! empty($companyname) ? dol_trunc($companyname, 32) : '');
+		print "</a></td>\n";
 
 		// Login
 		print "<td>".$objp->login."</td>\n";
@@ -292,7 +297,7 @@ if ($resql)
 		$membertypestatic->id=$objp->type_id;
 		$membertypestatic->libelle=$objp->type;
 		print '<td nowrap="nowrap">';
-		print $membertypestatic->getNomUrl(1,12);
+		print $membertypestatic->getNomUrl(1,32);
 		print '</td>';
 
 		// Moral/Physique
