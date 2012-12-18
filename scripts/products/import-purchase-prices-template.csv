@@ -1,1 +1,2 @@
-"RÉFÉRENCE*","FOURNISSEURS* (sous forme de liste séparée par des virgules)","PRIX D'ACHAT* (utiliser le point comme séparateur décimal)"
+"RÉFÉRENCE*","FOURNISSEUR*","RÉFÉRENCE FOURNISSEUR*","QUANTITÉ*","PRIX D'ACHAT HT* (utiliser le point comme séparateur décimal)","TAUX DE TVA* (utiliser le point comme séparateur décimal)"
+3,"Coriolis","LALA",1,"150.12","19.6"
