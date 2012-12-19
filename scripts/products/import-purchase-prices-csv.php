@@ -189,7 +189,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 			$supplier_ref,
 			$vat_rate
 		);
-		if ($ret >0) {
+		if ($ret >= 0) {
 			$count++;
 		} else {
 			printLine($line);
