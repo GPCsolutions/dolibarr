@@ -32,7 +32,7 @@ if (substr($sapi_type, 0, 3) == 'cgi') {
 }
 
 // Global variables
-$version = '0.1.0';
+$version = '1.0.0';
 $error = 0;
 
 // Include Dolibarr environment
@@ -85,12 +85,13 @@ $db->begin();
 
 if (($handle = fopen($fname, 'r')) !== FALSE) {
 	$line = 0; // Line counter
-	$count =0; // Element counter
+	$count = 0; // Element counter
 	while (($data = fgetcsv($handle)) !== FALSE) {
 		$line++;
 		if ($line == 1) {
 	 		continue; // Ignores first line
 			// TODO: Test that first line is what we expect
+			// TODO: Make first line skipping optional
 		}
 		// Search product
 		$product_ref = trim($data[0]);
