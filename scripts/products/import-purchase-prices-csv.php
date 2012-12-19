@@ -25,7 +25,9 @@ $path = dirname(__FILE__) . '/';
 
 // Test if batch mode
 if (substr($sapi_type, 0, 3) == 'cgi') {
-	echo "Error: You are using PHP for CGI. To execute " . $script_file . " from command line, you must use PHP for CLI mode.\n";
+	echo "Error: You are using PHP for CGI. To execute ",
+		$script_file,
+		" from command line, you must use PHP for CLI mode.\n";
 	exit;
 }
 
@@ -44,16 +46,16 @@ require_once(DOL_DOCUMENT_ROOT."/fourn/class/fournisseur.product.class.php");
 
 function printLine($line)
 {
-	print "Line " . $line . ": ";
+	echo "Line ", $line, ": ";
 }
 
 // TODO: infoline
-print "***** " . $script_file . " (" . $version . ") *****\n";
+echo "***** ", $script_file, " (", $version, ") *****\n";
 if (! isset($argv[1])) { // Check parameters
-	print "Usage: " . $script_file . " file.csv [username] [entity]\n";
+	echo "Usage: ", $script_file, " file.csv [username] [entity]\n";
 	exit;
 }
-print 'Processing ' . $argv[1] . "\n";
+echo 'Processing ', $argv[1], "\n";
 
 // Parse arguments
 if (! isset($argv[2])) {
@@ -83,6 +85,7 @@ $db->begin();
 
 if (($handle = fopen($fname, 'r')) !== FALSE) {
 	$line = 0; // Line counter
+	$count =0; // Element counter
 	while (($data = fgetcsv($handle)) !== FALSE) {
 		$line++;
 		if ($line == 1) {
@@ -108,9 +111,9 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 			$db->free($resql);
 			unset($res);
 		} else {
-			$error ++;
 			printLine($line);
-			print "Should never be there\n";
+			echo "Product not found, skipping\n";
+			continue;
 		}
 		unset($resql);
 
@@ -136,9 +139,9 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 			$db->free($resql);
 			unset($res);
 		} else {
-			$error ++;
 			printLine($line);
-			print "Should never be there\n";
+			echo "Supplier not found, skipping\n";
+			continue;
 		}
 		unset($resql);
 		// Test if there's already a purchase price
@@ -161,8 +164,7 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 			if ($supplier_product_price != '0') {
 				// TODO: make skip optionnal
 				printLine($line);
-				print "skipped because there's already a price set\n";
-				$line--;
+				echo "A price is already set, skipping\n";
 				continue; // We skip this line
 			}
 			$product->product_fourn_price_id = $supplier_product_id;
@@ -186,25 +188,31 @@ if (($handle = fopen($fname, 'r')) !== FALSE) {
 			$supplier_ref,
 			$vat_rate
 		);
-		// TODO: handle $ret error
+		if ($ret >0) {
+			$count++;
+		} else {
+			printLine($line);
+			echo "Unable to set the price\n";
+		}
 	}
 	fclose($handle);
 } else {
 	$error ++;
-	print "Unable to access file <" . $fname . ">\n";
+	echo "Unable to access file <", $fname, ">\n";
 }
 
 if ($error == 0) {
 	$db->commit();
-	print ($line - 1) . " prices imported\n";
-	print "Import complete\n";
+	echo ($line - 1), " lines parsed\n";
+	echo ($count), " prices imported\n";
+	echo "Import complete\n";
 } else {
-	print "Error " . $error . "\n";
-	print "Import aborted";
+	echo "Error ", $error, "\n";
+	echo "Import aborted";
 	if (isset($line)) {
-		print " at line " . $line;
+		echo " at line ", $line, "\n";
 	}
-	print "\n";
+	echo "Nothing imported\n";
 	$db->rollback();
 }
 
