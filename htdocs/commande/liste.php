@@ -4,6 +4,7 @@
  * Copyright (C) 2005      Marc Barilley / Ocebo  <marc@ocebo.com>
  * Copyright (C) 2005-2012 Regis Houssin          <regis.houssin@capnetworks.com>
  * Copyright (C) 2012      Juanjo Menent          <jmenent@2byte.es>
+ * Copyright (C) 2013      Raphaël Doursenaud     <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +42,7 @@ $deliveryyear=GETPOST("deliveryyear","int");
 $deliverymonth=GETPOST("deliverymonth","int");
 $sref=GETPOST('sref','alpha');
 $sref_client=GETPOST('sref_client','alpha');
+$samount=GETPOST('samount','alpha');
 $snom=GETPOST('snom','alpha');
 $sall=GETPOST('sall');
 $socid=GETPOST('socid','int');
@@ -79,7 +81,7 @@ if (GETPOST("button_removefilter_x"))
     $search_ref='';
     $search_refcustomer='';
     $search_societe='';
-    $search_montant_ht='';
+    $samount='';
     $orderyear='';
     $ordermonth='';
     $deliverymonth='';
@@ -124,6 +126,9 @@ if ($sref)
 if ($sall)
 {
 	$sql.= " AND (c.ref LIKE '%".$db->escape($sall)."%' OR c.note LIKE '%".$db->escape($sall)."%')";
+}
+if ($samount) {
+    $sql.= " AND c.total_ht = '".$db->escape(trim($samount))."'";
 }
 if ($viewstatut <> '')
 {
@@ -275,6 +280,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans('RefCustomerOrder'),$_SERVER["PHP_SELF"],'c.ref_client','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('OrderDate'),$_SERVER["PHP_SELF"],'c.date_commande','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('DeliveryDate'),$_SERVER["PHP_SELF"],'c.date_livraison','',$param, 'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans('AmountHT'),$_SERVER["PHP_SELF"],'c.total_ht','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Status'),$_SERVER["PHP_SELF"],'c.fk_statut','',$param,'align="right"',$sortfield,$sortorder);
 	print '</tr>';
 	print '<tr class="liste_titre">';
@@ -286,6 +292,8 @@ if ($resql)
 	print '<input class="flat" type="text" size="10" name="sref_client" value="'.$sref_client.'">';
 	print '</td><td class="liste_titre">&nbsp;';
 	print '</td><td class="liste_titre">&nbsp;';
+	print '</td><td class="liste_titre" align="right">';
+	print '<input class="flat" type="text" name="samount" value="'.$samount.'">';
 	print '</td><td align="right" class="liste_titre">';
 	print '<input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png"  value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '</td></tr>';
@@ -368,6 +376,13 @@ if ($resql)
 		print $d;
 		print ' <a href="'.$_SERVER['PHP_SELF'].'?deliveryyear='.$y.'&amp;deliverymonth='.$m.'">'.$ml.'</a>';
 		print ' <a href="'.$_SERVER['PHP_SELF'].'?deliveryyear='.$y.'">'.$y.'</a>';
+		print '</td>';
+
+		// Amount
+		print '<td align="right">';
+		print price($objp->total_ht);
+		print '&nbsp;';
+		print getCurrencySymbol($conf->currency);
 		print '</td>';
 
 		// Statut
