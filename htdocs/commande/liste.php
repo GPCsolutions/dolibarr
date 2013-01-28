@@ -5,6 +5,7 @@
  * Copyright (C) 2005-2012 Regis Houssin          <regis.houssin@capnetworks.com>
  * Copyright (C) 2012      Juanjo Menent          <jmenent@2byte.es>
  * Copyright (C) 2013      Raphaël Doursenaud     <rdoursenaud@gpcsolutions.fr>
+ * Copyright (C) 2013      Antoine Iauch          <aiauch@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -407,12 +408,34 @@ if ($resql)
 
 		print '</tr>';
 
+		// FIXME: Make total work with multiple pages
 		$total+=$objp->total_ht;
 		$total_ttc+=$objp->total_ttc;
 		$subtotal+=$objp->total_ht;
 		$subtotal_ttc+=$objp->total_ttc;
 		$i++;
 	}
+	print '<tr class="liste_total">';
+	print '<td class="liste_total" colspan="5">';
+	print $langs->trans('SubTotal');
+	print '</td>';
+	print '<td align="right">';
+	print price($subtotal);
+	print '&nbsp;';
+	print getCurrencySymbol($conf->currency);
+	print '</td>';
+	print '<td align="right">';
+	print price($subtotal_ttc);
+	print '&nbsp;';
+	print getCurrencySymbol($conf->currency);
+	print '</td>';
+	print '<td>';
+	print '&nbsp;';
+	print '</td>';
+	print '</tr>';
+
+	// TODO: Add total
+
 	print '</table>';
 
 	print '</form>';
