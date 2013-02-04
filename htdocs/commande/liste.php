@@ -39,6 +39,47 @@ $langs->load('orders');
 $langs->load('deliveries');
 $langs->load('companies');
 
+// Report period management
+$date_startyear = GETPOST('date_startyear', 'int');
+$date_startmonth = GETPOST('date_startmonth', 'int');
+$date_startday = GETPOST('date_startday', 'int');
+
+$date_endyear = GETPOST('date_endyear', 'int');
+$date_endmonth = GETPOST('date_endmonth', 'int');
+$date_endday = GETPOST('date_endday', 'int');
+
+$date_temp = null;
+
+if (empty($date_startyear) && empty($date_startmonth) && empty($date_startday)) {
+    $date_start = -1; // Empty
+} else {
+    $date_start = dol_mktime(
+	    23,
+	    59,
+	    59,
+	    $date_startmonth,
+	    $date_startday,
+	    $date_startyear
+    );
+}
+
+if (empty($date_endyear) && empty($date_endmonth) && empty($date_endday)) {
+    $date_end = -1; // Empty
+} else {
+    $date_end = dol_mktime(
+	    23,
+	    59,
+	    59,
+	    $date_endmonth,
+	    $date_endday,
+	    $date_endyear
+    );
+}
+
+if ($date_endyear < $date_startyear) {
+    $date_end ^= $date_start ^= $date_end ^= $date_start;
+}
+
 $orderyear=GETPOST("orderyear","int");
 $ordermonth=GETPOST("ordermonth","int");
 $deliveryyear=GETPOST("deliveryyear","int");
@@ -91,6 +132,8 @@ if (GETPOST("button_removefilter_x"))
     $ordermonth='';
     $deliverymonth='';
     $deliveryyear='';
+    $date_start = -1;
+    $date_end = -1;
 }
 
 
@@ -203,6 +246,9 @@ if ($search_user > 0)
 {
     $sql.= " AND ec.fk_c_type_contact = tc.rowid AND tc.element='commande' AND tc.source='internal' AND ec.element_id = c.rowid AND ec.fk_socpeople = ".$search_user;
 }
+if ($date_start && $date_end) {
+    $sql.= " AND c.date_commande >= '".$db->idate($date_start)."' AND c.date_commande <= '".$db->idate($date_end)."'";
+}
 
 $sql.= ' ORDER BY '.$sortfield.' '.$sortorder;
 $sql.= $db->plimit($limit + 1,$offset);
@@ -265,23 +311,37 @@ if ($resql)
  	if ($user->rights->societe->client->voir || $socid)
  	{
  		$langs->load("commercial");
- 		$moreforfilter.=$langs->trans('ThirdPartiesOfSaleRepresentative'). ': ';
+ 		$moreforfilter.=$langs->trans('ThirdPartiesOfSaleRepresentative'). ' : ';
 		$moreforfilter.=$formother->select_salesrepresentatives($search_sale,'search_sale',$user);
 	 	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
  	}
 	// If the user can view prospects other than his'
 	if ($user->rights->societe->client->voir || $socid)
 	{
-	    $moreforfilter.=$langs->trans('LinkedToSpecificUsers'). ': ';
+	    $moreforfilter.=$langs->trans('LinkedToSpecificUsers'). ' : ';
 	    $moreforfilter.=$form->select_dolusers($search_user,'search_user',1);
+	    $moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
 	}
+
+	print '<tr class="liste_titre">';
+	print '<td class="liste_titre" colspan="7">';
+    
 	if (! empty($moreforfilter))
 	{
-	    print '<tr class="liste_titre">';
-	    print '<td class="liste_titre" colspan="9">';
 	    print $moreforfilter;
-	    print '</td></tr>';
 	}
+
+	print $langs->trans('ReportPeriod'). ' : ';
+	$form->select_date($date_start, 'date_start');
+	print ' - ';
+	$form->select_date($date_end, 'date_end');
+
+	print '<td align="right" class="liste_titre">';
+	print '<input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png"  value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+
+	print '</td>';
+	print '</td>';
+	print '</tr>';
 
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans('Ref'),$_SERVER["PHP_SELF"],'c.ref','',$param,'width="25%"',$sortfield,$sortorder);
