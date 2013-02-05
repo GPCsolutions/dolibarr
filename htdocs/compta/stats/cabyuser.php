@@ -243,8 +243,8 @@ if ($modecompta != 'CREANCES-DETTES') {
         $i=0;
         while ($i < $num) {
             $obj = $db->fetch_object($result);
-            $amount[$obj->rowidx] = $obj->amount_ttc;
-            $name[$obj->rowidx] = $obj->name.' '.$obj->firstname;
+	    $amount[$obj->rowidx] = $obj->amount_ttc;
+	    $name[$obj->rowidx] = $obj->name.' '.$obj->firstname;
             $catotal+=$obj->amount_ttc;
             $i++;
         }
@@ -352,7 +352,7 @@ if (count($amount)) {
         }
         print "<td>".$linkname."</td>\n";
 
-	// Amount w/o VAT
+        // Amount
         print '<td align="right">';
         if ($modecompta != 'CREANCES-DETTES')
         {
@@ -412,7 +412,7 @@ if (count($amount)) {
     print '<tr class="liste_total">';
     print '<td>'.$langs->trans("Total").'</td>';
     if ($modecompta != 'CREANCES-DETTES') {
-	print '<td colspan="1"></td>';
+		print '<td colspan="1"></td>';
     } else {
 	    print '<td align="right">'.price($catotal_ht).'</td>';
     }
