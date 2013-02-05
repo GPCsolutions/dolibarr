@@ -170,10 +170,12 @@ if ($result)
     while ($i < $num)
     {
          $obj = $db->fetch_object($result);
-         $amount[$obj->rowid] = $obj->amount_ttc;
-         $name[$obj->rowid] = $obj->name.' '.$obj->firstname;
-         $catotal+=$obj->amount_ttc;
-         $i++;
+	 $amount_ht[$obj->rowid] = $obj->amount;
+	 $amount[$obj->rowid] = $obj->amount_ttc;
+	 $name[$obj->rowid] = $obj->name.' '.$obj->firstname;
+	 $catotal_ht+=$obj->amount;
+	 $catotal+=$obj->amount_ttc;
+	 $i++;
     }
 }
 else {
@@ -204,8 +206,8 @@ if ($modecompta != 'CREANCES-DETTES')
         while ($i < $num)
         {
             $obj = $db->fetch_object($result);
-            $amount[$obj->rowidx] = $obj->amount_ttc;
-            $name[$obj->rowidx] = $obj->name.' '.$obj->firstname;
+	    $amount[$obj->rowidx] = $obj->amount_ttc;
+	    $name[$obj->rowidx] = $obj->name.' '.$obj->firstname;
             $catotal+=$obj->amount_ttc;
             $i++;
         }
@@ -220,6 +222,18 @@ $i = 0;
 print "<table class=\"noborder\" width=\"100%\">";
 print "<tr class=\"liste_titre\">";
 print_liste_field_titre($langs->trans("User"),$_SERVER["PHP_SELF"],"name","",'&amp;year='.($year).'&modecompta='.$modecompta,"",$sortfield,$sortorder);
+if ($modecompta == 'CREANCES-DETTES') {
+    print_liste_field_titre(
+	    $langs->trans('AmountHT'),
+	    $_SERVER["PHP_SELF"],
+	    "amount_ht",
+	    "",
+	    '&amp;year='.($year).'&modecompta='.$modecompta,
+	    'align="right"',
+	    $sortfield,
+	    $sortorder
+    );
+}
 print_liste_field_titre($langs->trans("AmountTTC"),$_SERVER["PHP_SELF"],"amount_ttc","",'&amp;year='.($year).'&modecompta='.$modecompta,'align="right"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans("Percentage"),$_SERVER["PHP_SELF"],"amount_ttc","",'&amp;year='.($year).'&modecompta='.$modecompta,'align="right"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans("OtherStatistics"),$_SERVER["PHP_SELF"],"","","",'align="center" width="20%"');
@@ -238,6 +252,14 @@ if (count($amount))
     if ($sortfield == 'name' && $sortorder == 'desc') {
         arsort($name);
         $arrayforsort=$name;
+    }
+    if ($sortfield == 'amount_ht' && $sortorder == 'asc') {
+        asort($amount_ht);
+        $arrayforsort=$amount_ht;
+    }
+    if ($sortfield == 'amount_ht' && $sortorder == 'desc') {
+        arsort($amount_ht);
+        $arrayforsort=$amount_ht;
     }
     if ($sortfield == 'amount_ttc' && $sortorder == 'asc') {
         asort($amount);
@@ -263,7 +285,22 @@ if (count($amount))
         }
         print "<td>".$linkname."</td>\n";
 
-        // Amount
+	// Amount w/o VAT
+        print '<td align="right">';
+        if ($modecompta != 'CREANCES-DETTES')
+        {
+            if ($key > 0) print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?userid='.$key.'">';
+            else print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?userid=-1">';
+        }
+        else
+        {
+            if ($key > 0) print '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?userid='.$key.'">';
+            else print '<a href="#">';
+        }
+        print price($amount_ht[$key]);
+        print '</td>';
+
+        // Amount with VAT
         print '<td align="right">';
         if ($modecompta != 'CREANCES-DETTES')
         {
@@ -293,7 +330,11 @@ if (count($amount))
     }
 
     // Total
-    print '<tr class="liste_total"><td>'.$langs->trans("Total").'</td><td align="right">'.price($catotal).'</td><td>&nbsp;</td>';
+    print '<tr class="liste_total">';
+    print '<td>'.$langs->trans("Total").'</td>';
+    print '<td align="right">'.price($catotal_ht).'</td>';
+    print '<td align="right">'.price($catotal).'</td>';
+    print '<td>&nbsp;</td>';
     print '<td>&nbsp;</td>';
     print '</tr>';
 
