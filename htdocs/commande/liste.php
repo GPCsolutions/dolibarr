@@ -46,8 +46,6 @@ $date_endyear = GETPOST('date_endyear', 'int');
 $date_endmonth = GETPOST('date_endmonth', 'int');
 $date_endday = GETPOST('date_endday', 'int');
 
-$date_temp = null;
-
 if (empty($date_startyear) && empty($date_startmonth) && empty($date_startday)) {
     $date_start = -1; // Empty
 } else {
@@ -74,7 +72,9 @@ if (empty($date_endyear) && empty($date_endmonth) && empty($date_endday)) {
     );
 }
 
-if ($date_endyear < $date_startyear) {
+// Swap dates if period is reversed
+if ($date_end < $date_start) {
+    // XOR swap trick : only works for ints
     $date_end ^= $date_start ^= $date_end ^= $date_start;
 }
 
