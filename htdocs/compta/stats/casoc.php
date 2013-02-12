@@ -230,7 +230,15 @@ if ($modecompta != 'CREANCES-DETTES')
 $i = 0;
 print "<table class=\"noborder\" width=\"100%\">";
 print "<tr class=\"liste_titre\">";
-print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"nom","",'&amp;year='.($year).'&modecompta='.$modecompta,"",$sortfield,$sortorder);
+print_liste_field_titre(
+	$langs->trans("Company"),
+	$_SERVER["PHP_SELF"],
+	"nom",
+	"",
+	'&amp;year='.($year).'&modecompta='.$modecompta,
+	"",
+	$sortfield,$sortorder
+    );
 if ($modecompta == 'CREANCES-DETTES') {
     print_liste_field_titre(
            $langs->trans('AmountHT'),
@@ -243,9 +251,34 @@ if ($modecompta == 'CREANCES-DETTES') {
            $sortorder
     );
 }
-print_liste_field_titre($langs->trans("AmountTTC"),$_SERVER["PHP_SELF"],"amount_ttc","",'&amp;year='.($year).'&modecompta='.$modecompta,'align="right"',$sortfield,$sortorder);
-print_liste_field_titre($langs->trans("Percentage"),$_SERVER["PHP_SELF"],"amount_ttc","",'&amp;year='.($year).'&modecompta='.$modecompta,'align="right"',$sortfield,$sortorder);
-print_liste_field_titre($langs->trans("OtherStatistics"),$_SERVER["PHP_SELF"],"","","",'align="center" width="20%"');
+print_liste_field_titre(
+	$langs->trans("AmountTTC"),
+	$_SERVER["PHP_SELF"],
+	"amount_ttc",
+	"",
+	'&amp;year='.($year).'&modecompta='.$modecompta,
+	'align="right"',
+	$sortfield,
+	$sortorder
+    );
+print_liste_field_titre(
+	$langs->trans("Percentage"),
+	$_SERVER["PHP_SELF"],
+	"amount_ttc",
+	"",
+	'&amp;year='.($year).'&modecompta='.$modecompta,
+	'align="right"',
+	$sortfield,
+	$sortorder
+    );
+print_liste_field_titre(
+	$langs->trans("OtherStatistics"),
+	$_SERVER["PHP_SELF"],
+	"",
+	"",
+	"",
+	'align="center" width="20%"'
+    );
 print "</tr>\n";
 $var=true;
 
@@ -291,8 +324,7 @@ if (count($amount))
 		    $thirdparty_static->name=$fullname;
 		    $thirdparty_static->client=1;
 		    $linkname=$thirdparty_static->getNomUrl(1,'customer');
-		}
-		else {
+		} else {
 			$linkname=$langs->trans("PaymentsNotLinkedToInvoice");
 		}
 		print "<td>".$linkname."</td>\n";
