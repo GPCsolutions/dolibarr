@@ -2,6 +2,7 @@
 /* Copyright (C) 2001-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Antoine Iauch        <aiauch@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -86,7 +87,7 @@ report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportl
 
 if ($modecompta == 'CREANCES-DETTES')
 {
-	$sql  = "SELECT date_format(f.datef,'%Y-%m') as dm, sum(f.total) as amount, sum(f.total_ttc) as amount_ttc";
+	$sql  = "SELECT date_format(f.datef,'%Y-%m') as dm, sum(f.total) as amount_ht, sum(f.total_ttc) as amount_ttc";
 	$sql.= " FROM ".MAIN_DB_PREFIX."facture as f";
 	$sql.= " WHERE f.fk_statut in (1,2)";
 	if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) $sql.= " AND f.type IN (0,1,2)";
@@ -125,6 +126,9 @@ if ($result)
 			$maxyearmonth=max($maxyearmonth,$obj->dm);
 		}
 		$i++;
+
+		$cum_ht[$obj->dm] = $obj->amount_ht;
+
 	}
 	$db->free($result);
 }
@@ -176,22 +180,28 @@ if ($modecompta != 'CREANCES-DETTES')
  */
 
 print '<table width="100%" class="noborder">';
-print '<tr class="liste_titre"><td>&nbsp;</td>';
+print '<tr class="liste_titre">';
+print '<td colspan ="4">&nbsp;</td>';
 
 for ($annee = $year_start ; $annee <= $year_end ; $annee++)
 {
-	print '<td align="center" width="10%" colspan="2">';
+	print '<td align="center" width="10%" colspan="3">';
 	print '<a href="casoc.php?year='.$annee.'">';
 	print $annee;
-    if ($conf->global->SOCIETE_FISCAL_MONTH_START > 1) print '-'.($annee+1);
+    if ($conf->global->SOCIETE_FISCAL_MONTH_START > 1)
+	print '-'.($annee+1);
 	print '</a></td>';
-	if ($annee != $year_end) print '<td width="15">&nbsp;</td>';
+    if ($annee != $year_end)
+	print '<td width="15">&nbsp;</td>';
 }
 print '</tr>';
 
-print '<tr class="liste_titre"><td>'.$langs->trans("Month").'</td>';
+print '<tr class="liste_titre">';
+print '<td>'.$langs->trans("Month").'</td>';
+print '<td colspan="3">&nbsp</td>';
 for ($annee = $year_start ; $annee <= $year_end ; $annee++)
 {
+	print '<td align="right">'.$langs->trans("AmountHT").'</td>';
 	print '<td align="right">'.$langs->trans("AmountTTC").'</td>';
 	print '<td align="right">'.$langs->trans("Delta").'</td>';
 	if ($annee != $year_end) print '<td width="15">&nbsp;</td>';
@@ -224,7 +234,22 @@ for ($mois = 1+$nb_mois_decalage ; $mois <= 12+$nb_mois_decalage ; $mois++)
 		$case = dol_print_date(dol_mktime(1,1,1,$mois_modulo,1,$annee_decalage),"%Y-%m");
 		$caseprev = dol_print_date(dol_mktime(1,1,1,$mois_modulo,1,$annee_decalage-1),"%Y-%m");
 
-		// Valeur CA du mois
+		//Monthly TO Values, w/o VAT
+		print '<td align="right">';
+		if ($cum_ht[$case])
+		{
+			$now_show_delta=1;  // On a trouve le premier mois de la premiere annee generant du chiffre.
+			print '<a href="casoc.php?year='.$annee_decalage.'&month='.$mois_modulo.($modecompta?'&modecompta='.$modecompta:'').'">'.price($cum_ht[$case],1).'</a>';
+		}
+		else
+		{
+			if ($minyearmonth < $case && $case <= max($maxyearmonth,$nowyearmonth)) { print '0'; }
+			else { print '&nbsp;'; }
+		}
+		print "</td>";
+
+
+		// Monthly TO Values, VAT included
 		print '<td align="right">';
 		if ($cum[$case])
 		{
@@ -273,8 +298,12 @@ for ($mois = 1+$nb_mois_decalage ; $mois <= 12+$nb_mois_decalage ; $mois++)
 			print '</td>';
 		}
 
-		$total[$annee]+=$cum[$case];
-		if ($annee_decalage != $year_end) print '<td width="15">&nbsp;</td>';
+	// Total TO (with & w/o VAT)
+	$total[$annee]+=$cum[$case];
+	if ($annee_decalage != $year_end) print '<td width="15">&nbsp;</td>';
+
+	$total_ht[$annee]+=$cum_ht[$case];
+	if ($annee_decalage != $year_end) print '<td width="15">&nbsp;</td>';
 	}
 
 	print '</tr>';
@@ -346,10 +375,21 @@ for ($mois = 1+$nb_mois_decalage ; $mois <= 12+$nb_mois_decalage ; $mois++)
  */
 
 // Affiche total
-print '<tr class="liste_total"><td>'.$langs->trans("Total").'</td>';
+print '<tr class="liste_total">';
+print '<td colspan = "4">'.$langs->trans("Total").'</td>';
 for ($annee = $year_start ; $annee <= $year_end ; $annee++)
 {
-	// Montant total
+	// Total Amount w/o VAT
+	if ($total_ht[$annee] || ($annee >= $minyear && $annee <= max($nowyear,$maxyear)))
+	{
+		print '<td align="right" nowrap="nowrap">'.($total_ht[$annee]?price($total_ht[$annee]):"0")."</td>";
+	}
+	else
+	{
+		print '<td>&nbsp;</td>';
+	}
+
+	// Total Amount with VAT
 	if ($total[$annee] || ($annee >= $minyear && $annee <= max($nowyear,$maxyear)))
 	{
 		print '<td align="right" class="nowrap">'.($total[$annee]?price($total[$annee]):"0")."</td>";
