@@ -24,8 +24,11 @@ require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/report.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/tax.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 
 $langs->load("products");
+$langs->load("categories");
+$langs->load("errors");
 
 // Security pack (data & check)
 $socid = GETPOST('socid','int');
@@ -42,6 +45,13 @@ $sortorder=isset($_GET["sortorder"])?$_GET["sortorder"]:$_POST["sortorder"];
 $sortfield=isset($_GET["sortfield"])?$_GET["sortfield"]:$_POST["sortfield"];
 if (! $sortorder) $sortorder="asc";
 if (! $sortfield) $sortfield="name";
+
+// Category
+$selected_cat = (int)GETPOST('search_categ', 'int');
+$subcat = false;
+if (GETPOST('subcat', 'alpha') === 'on') {
+    $subcat = true;
+}
 
 // Date range
 $year=GETPOST("year");
@@ -85,24 +95,21 @@ if (empty($date_start) || empty($date_end)) // We define date_start and date_end
 	if ($q==2) { $date_start=dol_get_first_day($year_start,4,false); $date_end=dol_get_last_day($year_start,6,false); }
 	if ($q==3) { $date_start=dol_get_first_day($year_start,7,false); $date_end=dol_get_last_day($year_start,9,false); }
 	if ($q==4) { $date_start=dol_get_first_day($year_start,10,false); $date_end=dol_get_last_day($year_start,12,false); }
-}
-else
-{
+} else {
 	// TODO We define q
-
 }
 
 /*
  * View
  */
-
 llxHeader();
 $form=new Form($db);
+$formother = new FormOther($db);
 
-// Affiche en-tete du rapport
+// Show report header
 $nom=$langs->trans("SalesTurnover").', '.$langs->trans("ByProductsAndServices");
-if ($modecompta=="CREANCES-DETTES")
-{
+
+if ($modecompta=="CREANCES-DETTES") {
     $nom.='<br>('.$langs->trans("SeeReportInInputOutputMode",'<a href="'.$_SERVER["PHP_SELF"].'?year='.$year.'&modecompta=RECETTES-DEPENSES">','</a>').')';
 
     $period=$form->select_date($date_start,'date_start',0,0,0,'',1,0,1).' - '.$form->select_date($date_end,'date_end',0,0,0,'',1,0,1);
@@ -115,8 +122,7 @@ if ($modecompta=="CREANCES-DETTES")
 	}
 
     $builddate=time();
-}
-else {
+} else {
     $nom.='<br>('.$langs->trans("SeeReportInDueDebtMode",'<a href="'.$_SERVER["PHP_SELF"].'?year='.$year.'&modecompta=CREANCES-DETTES">','</a>').')';
 
     $period=$form->select_date($date_start,'date_start',0,0,0,'',1,0,1).' - '.$form->select_date($date_end,'date_end',0,0,0,'',1,0,1);
@@ -127,113 +133,103 @@ else {
     $builddate=time();
 }
 $moreparam=array();
-if (! empty($modecompta)) $moreparam['modecompta']=$modecompta;
-
+if (! empty($modecompta)) {
+    $moreparam['modecompta']=$modecompta;
+}
 report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,$moreparam);
 
 
-// Requête SQL de la mort qui tue
+// SQL request
 $catotal=0;
 
-if ($modecompta == 'CREANCES-DETTES') 
-    {
-	$sql = "SELECT p.rowid as rowid, p.ref as ref, p.label as label,";
-	$sql.= " sum(l.total_ht) as amount, sum(l.total_ttc) as amount_ttc";
-	$sql.= " FROM ".MAIN_DB_PREFIX."product as p,";
-	$sql.= " ".MAIN_DB_PREFIX."facturedet as l";
-	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."facture as f ON l.fk_facture = f.rowid";
-	$sql.= " WHERE l.fk_product = p.rowid";
-	$sql.= " AND f.fk_statut in (1,2)";
-	    if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) $sql.= " AND f.type IN (0,1,2)";
-	    else $sql.= " AND f.type IN (0,1,2,3)";
-	    if ($date_start && $date_end) $sql.= " AND f.datef >= '".$db->idate($date_start)."' AND f.datef <= '".$db->idate($date_end)."'";
-
+if ($modecompta == 'CREANCES-DETTES') {
+    $sql = "SELECT DISTINCT p.rowid as rowid, p.ref as ref, p.label as label,";
+    $sql.= " sum(DISTINCT l.total_ht) as amount, sum(DISTINCT l.total_ttc) as amount_ttc";
+    $sql.= " FROM ".MAIN_DB_PREFIX."product as p";
+    $sql.= " JOIN ".MAIN_DB_PREFIX."facturedet as l";
+    $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."facture as f ON l.fk_facture = f.rowid";
+    if ($selected_cat === -2) {
+	$sql.=" LEFT OUTER JOIN ".MAIN_DB_PREFIX."categorie_product as cp ON p.rowid = cp.fk_product";
+    }
+    if ($selected_cat && $selected_cat !== -2) {
+	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."categorie as c ON c.rowid = " . $selected_cat;
+	if ($subcat) {
+	    $sql.=" OR c.fk_parent = " . $selected_cat;
+	}
+	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."categorie_product as cp ON cp.fk_categorie = c.rowid";
+    }
+    $sql.= " WHERE l.fk_product = p.rowid";
+    $sql.= " AND f.fk_statut in (1,2)";
+    if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS)) {
+	$sql.= " AND f.type IN (0,1,2)";
     } else {
-
-	$sql = "SELECT p.rowid as rowid, p.ref as ref, p.label as label,";
-	$sql.= " sum(pf.amount) as amount_ttc";
-	$sql.= " FROM ".MAIN_DB_PREFIX."product as p";
-	$sql.= ", ".MAIN_DB_PREFIX."paiement_facture as pf";
-	$sql.= " ".MAIN_DB_PREFIX."facturedet as l";
-	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."facture as f ON l.fk_facture = f.rowid";
-	$sql.= " WHERE l.fk_product = p.rowid";
-	    if ($date_start && $date_end) $sql.= " AND f.datef >= '".$db->idate($date_start)."' AND f.datef <= '".$db->idate($date_end)."'";
+	$sql.= " AND f.type IN (0,1,2,3)";
+    }
+    if ($date_start && $date_end) {
+	$sql.= " AND f.datef >= '".$db->idate($date_start)."' AND f.datef <= '".$db->idate($date_end)."'";
+    }
+    if ($selected_cat === -2) {
+	$sql.=" AND cp.fk_product is null";
+    }
+    if ($selected_cat && $selected_cat !== -2) {
+	$sql.= " AND cp.fk_product = p.rowid";
     }
     $sql.= " AND f.entity = ".$conf->entity;
     $sql.= " GROUP BY p.rowid ";
     $sql.= "ORDER BY p.ref ";
 
-$result = $db->query($sql);
-    if ($result)
-    {
+    $result = $db->query($sql);
+    if ($result) {
 	$num = $db->num_rows($result);
 	$i=0;
-	while ($i < $num)
-	{
+	while ($i < $num) {
 		$obj = $db->fetch_object($result);
-	        $amount_ht[$obj->rowid] = $obj->amount;
-	        $amount[$obj->rowid] = $obj->amount_ttc;
-	        $name[$obj->rowid] = $obj->ref . '&nbsp;-&nbsp;' . $obj->label;
-	        $catotal_ht+=$obj->amount;
-	        $catotal+=$obj->amount_ttc;
-	        $i++;
+		$amount_ht[$obj->rowid] = $obj->amount;
+		$amount[$obj->rowid] = $obj->amount_ttc;
+		$name[$obj->rowid] = $obj->ref . '&nbsp;-&nbsp;' . $obj->label;
+		$catotal_ht+=$obj->amount;
+		$catotal+=$obj->amount_ttc;
+		$i++;
 	}
     } else {
 	dol_print_error($db);
     }
 
-/*/* On ajoute les paiements anciennes version, non lies par paiement_facture
-if ($modecompta != 'CREANCES-DETTES')
-{
-	//$sql = "SELECT '0' as socid, 'Autres' as name, sum(p.amount) as amount_ttc";
-	$sql.= " FROM ".MAIN_DB_PREFIX."bank as b";
-	$sql.= ", ".MAIN_DB_PREFIX."bank_account as ba";
-	$sql.= ", ".MAIN_DB_PREFIX."paiement as p";
-	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."paiement_facture as pf ON p.rowid = pf.fk_paiement";
-	$sql.= " WHERE pf.rowid IS NULL";
-	$sql.= " AND p.fk_bank = b.rowid";
-	$sql.= " AND b.fk_account = ba.rowid";
-	$sql.= " AND ba.entity = ".$conf->entity;
-	if ($date_start && $date_end) $sql.= " AND p.datep >= '".$db->idate($date_start)."' AND p.datep <= '".$db->idate($date_end)."'";
-	$sql.= " GROUP BY socid, name";
-	$sql.= " ORDER BY name";
-
-	$result = $db->query($sql);
-	if ($result)
-	{
-		$num = $db->num_rows($result);
-		$i=0;
-		while ($i < $num)
-		{
-			$obj = $db->fetch_object($result);
-			$amount[$obj->rowid] += $obj->amount_ttc;
-			$name[$obj->rowid] = $obj->name;
-			$catotal+=$obj->amount_ttc;
-			$i++;
-		}
-	}
-	else {
-		dol_print_error($db);
-	}
-}
- */
-
-// show array
-$i=0;
-print "<table class=\"noborder\" width=\"100%\">";
-    // Array header
-print "<tr class=\"liste_titre\">";
-print_liste_field_titre(
-	$langs->trans("Product"),
-	$_SERVER["PHP_SELF"],
-	"name",
-	"",
-	'&amp;year='.($year).'&modecompta='.$modecompta,
-	"",
-	$sortfield,
-	$sortorder
-    );
-if ($modecompta == 'CREANCES-DETTES') {
+    // Show Array
+    $i=0;
+    print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'">';
+    // Extra parameters management
+    foreach($moreparam as $key => $value)
+    {
+	 print '<input type="hidden" name="'.$key.'" value="'.$value.'">';
+    }
+    print '<table class="noborder" width="100%">';
+    // Category filter
+    print '<tr class="liste_titre">';
+    print '<td>';
+    print $langs->trans("Category") . ': ' . $formother->select_categories(0, $selected_cat, 'search_categ', true);
+    print ' ';
+    print $langs->trans("SubCats") . '? ';
+    print '<input type="checkbox" name="subcat"';
+    if ($subcat) {
+	print ' checked="checked" ';
+    }
+    print '></td>';
+    print '<td colspan="3" align="right">';
+    print '<input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png"  value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+    print '</td></tr>';
+	    // Array header
+    print "<tr class=\"liste_titre\">";
+    print_liste_field_titre(
+	    $langs->trans("Product"),
+	    $_SERVER["PHP_SELF"],
+	    "name",
+	    "",
+	    '&amp;year='.($year).'&modecompta='.$modecompta,
+	    "",
+	    $sortfield,
+	    $sortorder
+	    );
     print_liste_field_titre(
 	    $langs->trans('AmountHT'),
 	    $_SERVER["PHP_SELF"],
@@ -243,125 +239,121 @@ if ($modecompta == 'CREANCES-DETTES') {
 	    'align="right"',
 	    $sortfield,
 	    $sortorder
-	);
-}
-print_liste_field_titre(
-	$langs->trans("AmountTTC"),
-	$_SERVER["PHP_SELF"],
-	"amount_ttc",
-	"",
-	'&amp;year='.($year).'&modecompta='.$modecompta,
-	'align="right"',
-	$sortfield,
-	$sortorder
-    );
-print_liste_field_titre(
-	$langs->trans("Percentage"),
-	$_SERVER["PHP_SELF"],
-	"amount_ttc",
-	"",
-	'&amp;year='.($year).'&modecompta='.$modecompta,
-	'align="right"',
-	$sortfield,
-	$sortorder
-    );
-// TODO: statistics?
-print "</tr>\n";
+	    );
+    print_liste_field_titre(
+	    $langs->trans("AmountTTC"),
+	    $_SERVER["PHP_SELF"],
+	    "amount_ttc",
+	    "",
+	    '&amp;year='.($year).'&modecompta='.$modecompta,
+	    'align="right"',
+	    $sortfield,
+	    $sortorder
+	    );
+    print_liste_field_titre(
+	    $langs->trans("Percentage"),
+	    $_SERVER["PHP_SELF"],
+	    "amount_ttc",
+	    "",
+	    '&amp;year='.($year).'&modecompta='.$modecompta,
+	    'align="right"',
+	    $sortfield,
+	    $sortorder
+	    );
+    // TODO: statistics?
+    print "</tr>\n";
 
     // Array Data
-$var=true;
+    $var=true;
 
-if (count($amount))
-{
-	$arrayforsort=$name;
+    if (count($amount)) {
+	    $arrayforsort=$name;
+	    // defining arrayforsort
+	    if ($sortfield == 'nom' && $sortorder == 'asc') {
+		    asort($name);
+		    $arrayforsort=$name;
+	    }
+	    if ($sortfield == 'nom' && $sortorder == 'desc') {
+		    arsort($name);
+		    $arrayforsort=$name;
+	    }
+	    if ($sortfield == 'amount_ht' && $sortorder == 'asc') {
+		asort($amount_ht);
+		$arrayforsort=$amount_ht;
+	    }
+	    if ($sortfield == 'amount_ht' && $sortorder == 'desc') {
+		arsort($amount_ht);
+		$arrayforsort=$amount_ht;
+	    }
+	    if ($sortfield == 'amount_ttc' && $sortorder == 'asc') {
+		    asort($amount);
+		    $arrayforsort=$amount;
+	    }
+	    if ($sortfield == 'amount_ttc' && $sortorder == 'desc') {
+		    arsort($amount);
+		    $arrayforsort=$amount;
+	    }
+	    foreach($arrayforsort as $key=>$value) {
+		    $var=!$var;
+		    print "<tr ".$bc[$var].">";
 
-	// defining arrayforsort
-	if ($sortfield == 'nom' && $sortorder == 'asc') {
-		asort($name);
-		$arrayforsort=$name;
-	}
-	if ($sortfield == 'nom' && $sortorder == 'desc') {
-		arsort($name);
-		$arrayforsort=$name;
-	}
-	if ($sortfield == 'amount_ht' && $sortorder == 'asc') {
-	    asort($amount_ht);
-	    $arrayforsort=$amount_ht;
-	}
-	if ($sortfield == 'amount_ht' && $sortorder == 'desc') {
-	    arsort($amount_ht);
-	    $arrayforsort=$amount_ht;
-	}
-	if ($sortfield == 'amount_ttc' && $sortorder == 'asc') {
-		asort($amount);
-		$arrayforsort=$amount;
-	}
-	if ($sortfield == 'amount_ttc' && $sortorder == 'desc') {
-		arsort($amount);
-		$arrayforsort=$amount;
-	}
+		    // Third party
+		     $fullname=$name[$key];
+		    if ($key >= 0) {
+			$linkname='<a href="'.DOL_URL_ROOT.'/product/fiche.php?id='.$key.'">'.img_object($langs->trans("ShowProduct"),'product').' '.$fullname.'</a>';
+		    } else {
+			$linkname=$langs->trans("PaymentsNotLinkedToProduct");
+		    }
 
-	foreach($arrayforsort as $key=>$value)
-	{
-		$var=!$var;
-		print "<tr ".$bc[$var].">";
-// TODO : Show product name !
-		// Third party
-		 $fullname=$name[$key];
-		if ($key >= 0) {
-		    $linkname='<a href="'.DOL_URL_ROOT.'/product/fiche.php?id='.$key.'">'.img_object($langs->trans("ShowProduct"),'product').' '.$fullname.'</a>';
+		print "<td>".$linkname."</td>\n";
+
+		// Amount w/o VAT
+		print '<td align="right">';
+		if ($key > 0) {
+		    print '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?productid='.$key.'">';
 		} else {
-		    $linkname=$langs->trans("PaymentsNotLinkedToProduct");
+		    print '<a href="#">';
 		}
-		
-	    print "<td>".$linkname."</td>\n";
+		print price($amount_ht[$key]);
+		print '</td>';
 
-	    // Amount w/o VAT
-	    print '<td align="right">';
-	    if ($modecompta != 'CREANCES-DETTES') {
-		if ($key > 0) print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?productid='.$key.'">';
-		else print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?productid=-1">';
-	    } else {
-		if ($key > 0) print '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?productid='.$key.'">';
-		else print '<a href="#">';
+		// Amount with VAT
+		print '<td align="right">';
+		if ($key > 0) {
+		    print '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?productid='.$key.'">';
+		} else {
+		    print '<a href="#">';
+		}
+		print price($amount[$key]);
+		print '</a>';
+		print '</td>';
+
+		// Percent;
+		print '<td align="right">'.($catotal > 0 ? round(100 * $amount[$key] / $catotal, 2).'%' : '&nbsp;').'</td>';
+
+		// TODO: statistics?
+
+		print "</tr>\n";
+		$i++;
 	    }
-	    print price($amount_ht[$key]);
-	    print '</td>';
 
-	    // Amount with VAT
-	    print '<td align="right">';
-	    if ($modecompta != 'CREANCES-DETTES')
-	    {
-	    if ($key > 0) print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?productid='.$key.'">';
-	    else print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?productid=1">';
-	    } else 	{
-		if ($key > 0) print '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?productid='.$key.'">';
-	    else print '<a href="#">';
-	    }
-	    print price($amount[$key]);
-	    print '</a>';
-	    print '</td>';
+	    // Total
+	    print '<tr class="liste_total">';
+	    print '<td>'.$langs->trans("Total").'</td>';
+	    print '<td align="right">'.price($catotal_ht).'</td>';
+	    print '<td align="right">'.price($catotal).'</td>';
+	    print '<td>&nbsp;</td>';
+	    print '</tr>';
 
-	    // Percent;
-	    print '<td align="right">'.($catotal > 0 ? round(100 * $amount[$key] / $catotal, 2).'%' : '&nbsp;').'</td>';
-
-	    // TODO: statistics?
-
-	    print "</tr>\n";
-	    $i++;
-	}
-
-	// Total
-	print '<tr class="liste_total">';
-	print '<td>'.$langs->trans("Total").'</td>';
-	print '<td align="right">'.price($catotal_ht).'</td>';
-	print '<td align="right">'.price($catotal).'</td>';
-	print '<td>&nbsp;</td>';
-	print '</tr>';
-
-	$db->free($result);
+	    $db->free($result);
+    }
+    print "</table>";
+    print '</form>';
+} else {
+    // $modecompta != 'CREANCES-DETTES'
+    // TODO: better message
+    print '<div class="warning">' . $langs->trans("WarningNotRelevant") . '</div>';
 }
-print "</table>";
 
 llxFooter();
 $db->close();
