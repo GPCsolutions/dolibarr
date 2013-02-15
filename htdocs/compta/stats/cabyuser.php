@@ -97,7 +97,6 @@ else
 {
 	// TODO We define q
 }
-
 $commonparams=array();
 $commonparams['modecompta']=$modecompta;
 $commonparams['sortorder'] = $sortorder;
