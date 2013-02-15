@@ -47,6 +47,12 @@ if (! $sortfield) $sortfield="name";
 // Date range
 $year=GETPOST("year");
 $month=GETPOST("month");
+$date_startyear = GETPOST("date_startyear");
+$date_startmonth = GETPOST("date_startmonth");
+$date_startday = GETPOST("date_startday");
+$date_endyear = GETPOST("date_endyear");
+$date_endmonth = GETPOST("date_endmonth");
+$date_endday = GETPOST("date_endday");
 if (empty($year))
 {
 	$year_current = strftime("%Y",dol_now());
@@ -92,6 +98,32 @@ else
 	// TODO We define q
 }
 
+$commonparams=array();
+$commonparams['modecompta']=$modecompta;
+$commonparams['sortorder'] = $sortorder;
+$commonparams['sortfield'] = $sortfield;
+
+$headerparams = array();
+$headerparams['date_startyear'] = $date_startyear;
+$headerparams['date_startmonth'] = $date_startmonth;
+$headerparams['date_startday'] = $date_startday;
+$headerparams['date_endyear'] = $date_endyear;
+$headerparams['date_endmonth'] = $date_endmonth;
+$headerparams['date_endday'] = $date_endday;
+$headerparams['q'] = $q;
+
+$tableparams = array();
+$tableparams['search_categ'] = $selected_cat;
+$tableparams['subcat'] = ($subcat === true)?'yes':'';
+
+// Adding common parameters
+$allparams = array_merge($commonparams, $headerparams, $tableparams);
+$headerparams = array_merge($commonparams, $headerparams);
+$tableparams = array_merge($commonparams, $tableparams);
+
+foreach($allparams as $key => $value) {
+    $paramslink .= '&' . $key . '=' . $value;
+}
 
 /*
  * View
@@ -123,13 +155,18 @@ if ($modecompta=="CREANCES-DETTES") {
     $builddate=time();
     //$exportlink=$langs->trans("NotYetAvailable");
 }
-$moreparam=array();
-if (! empty($modecompta)) $moreparam['modecompta']=$modecompta;
 
-report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,$moreparam);
+report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,$tableparams);
 
 
 // Show array
+print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
+// Extra parameters management
+foreach($headerparams as $key => $value)
+{
+     print '<input type="hidden" name="'.$key.'" value="'.$value.'">';
+}
+
 $catotal=0;
 if ($modecompta == 'CREANCES-DETTES') {
     $sql = "SELECT u.rowid as rowid, u.name as name, u.firstname as firstname, sum(f.total) as amount, sum(f.total_ttc) as amount_ttc";
@@ -222,7 +259,7 @@ print_liste_field_titre(
 	$_SERVER["PHP_SELF"],
 	"name",
 	"",
-	'&amp;year='.($year).'&modecompta='.$modecompta,
+	$paramslink,
 	"",
 	$sortfield,
 	$sortorder
@@ -233,7 +270,7 @@ if ($modecompta == 'CREANCES-DETTES') {
            $_SERVER["PHP_SELF"],
            "amount_ht",
            "",
-           '&amp;year='.($year).'&modecompta='.$modecompta,
+           $paramslink,
            'align="right"',
            $sortfield,
            $sortorder
@@ -246,7 +283,7 @@ print_liste_field_titre(
 	$_SERVER["PHP_SELF"],
 	"amount_ttc",
 	"",
-	'&amp;year='.($year).'&modecompta='.$modecompta,
+	$paramslink,
 	'align="right"',
 	$sortfield,
 	$sortorder
@@ -255,7 +292,7 @@ print_liste_field_titre(
 	$langs->trans("Percentage"),
 	$_SERVER["PHP_SELF"],"amount_ttc",
 	"",
-	'&amp;year='.($year).'&modecompta='.$modecompta,
+	$paramslink,
 	'align="right"',
 	$sortfield,
 	$sortorder

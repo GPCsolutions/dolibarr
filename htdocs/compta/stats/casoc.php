@@ -47,7 +47,7 @@ $socid = GETPOST('socid','int');
 // Category
 $selected_cat = (int)GETPOST('search_categ', 'int');
 $subcat = false;
-if (GETPOST('subcat', 'alpha') === 'on') {
+if (GETPOST('subcat', 'alpha') === 'yes') {
     $subcat = true;
 }
 
@@ -59,6 +59,12 @@ if (! empty($conf->accounting->enabled)) $result=restrictedArea($user,'accountin
 // Date range
 $year=GETPOST("year");
 $month=GETPOST("month");
+$date_startyear = GETPOST("date_startyear");
+$date_startmonth = GETPOST("date_startmonth");
+$date_startday = GETPOST("date_startday");
+$date_endyear = GETPOST("date_endyear");
+$date_endmonth = GETPOST("date_endmonth");
+$date_endday = GETPOST("date_endday");
 if (empty($year))
 {
 	$year_current = strftime("%Y",dol_now());
@@ -104,7 +110,32 @@ else
 	// TODO We define q
 }
 
+$commonparams=array();
+$commonparams['modecompta']=$modecompta;
+$commonparams['sortorder'] = $sortorder;
+$commonparams['sortfield'] = $sortfield;
 
+$headerparams = array();
+$headerparams['date_startyear'] = $date_startyear;
+$headerparams['date_startmonth'] = $date_startmonth;
+$headerparams['date_startday'] = $date_startday;
+$headerparams['date_endyear'] = $date_endyear;
+$headerparams['date_endmonth'] = $date_endmonth;
+$headerparams['date_endday'] = $date_endday;
+$headerparams['q'] = $q;
+
+$tableparams = array();
+$tableparams['search_categ'] = $selected_cat;
+$tableparams['subcat'] = ($subcat === true)?'yes':'';
+
+// Adding common parameters
+$allparams = array_merge($commonparams, $headerparams, $tableparams);
+$headerparams = array_merge($commonparams, $headerparams);
+$tableparams = array_merge($commonparams, $tableparams);
+
+foreach($allparams as $key => $value) {
+    $paramslink .= '&' . $key . '=' . $value;
+}
 
 /*
  * View
@@ -138,11 +169,8 @@ if ($modecompta=="CREANCES-DETTES")
 	$builddate=time();
 	//$exportlink=$langs->trans("NotYetAvailable");
 }
-$moreparam=array();
-if (! empty($modecompta)) {
-    $moreparam['modecompta']=$modecompta;
-}
-report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,$moreparam);
+
+report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,$tableparams);
 
 
 // Show Array
@@ -252,9 +280,9 @@ if ($modecompta != 'CREANCES-DETTES') {
 
 // Show array
 $i = 0;
-print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'">';
+print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
 // Extra parameters management
-foreach($moreparam as $key => $value)
+foreach($headerparams as $key => $value)
 {
      print '<input type="hidden" name="'.$key.'" value="'.$value.'">';
 }
@@ -265,9 +293,9 @@ print '<td>';
 print $langs->trans("Category") . ': ' . $formother->select_categories(2, $selected_cat, 'search_categ', true);
 print ' ';
 print $langs->trans("SubCats") . '? ';
-print '<input type="checkbox" name="subcat"';
+print '<input type="checkbox" name="subcat" value="yes"';
 if ($subcat) {
-    print ' checked="checked" ';
+    print ' checked="checked"';
 }
 print'></td>';
 print '<td colspan="4" align="right">';
@@ -281,7 +309,7 @@ print_liste_field_titre(
 	$_SERVER["PHP_SELF"],
 	"nom",
 	"",
-	'&amp;year='.($year).'&modecompta='.$modecompta,
+	$paramslink,
 	"",
 	$sortfield,$sortorder
 	);
@@ -291,7 +319,7 @@ if ($modecompta == 'CREANCES-DETTES') {
            $_SERVER["PHP_SELF"],
            "amount_ht",
            "",
-           '&amp;year='.($year).'&modecompta='.$modecompta,
+           $paramslink,
            'align="right"',
            $sortfield,
            $sortorder
@@ -304,7 +332,7 @@ print_liste_field_titre(
 	$_SERVER["PHP_SELF"],
 	"amount_ttc",
 	"",
-	'&amp;year='.($year).'&modecompta='.$modecompta,
+	$paramslink,
 	'align="right"',
 	$sortfield,
 	$sortorder
@@ -314,7 +342,7 @@ print_liste_field_titre(
 	$_SERVER["PHP_SELF"],
 	"amount_ttc",
 	"",
-	'&amp;year='.($year).'&modecompta='.$modecompta,
+	$paramslink,
 	'align="right"',
 	$sortfield,
 	$sortorder
