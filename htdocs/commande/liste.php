@@ -4,6 +4,8 @@
  * Copyright (C) 2005      Marc Barilley / Ocebo  <marc@ocebo.com>
  * Copyright (C) 2005-2012 Regis Houssin          <regis.houssin@capnetworks.com>
  * Copyright (C) 2012      Juanjo Menent          <jmenent@2byte.es>
+ * Copyright (C) 2013      Raphaël Doursenaud     <rdoursenaud@gpcsolutions.fr>
+ * Copyright (C) 2013      Antoine Iauch          <aiauch@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,11 +43,19 @@ $deliveryyear=GETPOST("deliveryyear","int");
 $deliverymonth=GETPOST("deliverymonth","int");
 $sref=GETPOST('sref','alpha');
 $sref_client=GETPOST('sref_client','alpha');
+$samount=GETPOST('samount','alpha');
+$samount_ttc=GETPOST('samount_ttc','alpha');
 $snom=GETPOST('snom','alpha');
 $sall=GETPOST('sall');
 $socid=GETPOST('socid','int');
 $search_user=GETPOST('search_user','int');
 $search_sale=GETPOST('search_sale','int');
+$date_startyear = GETPOST('date_startyear', 'int');
+$date_startmonth = GETPOST('date_startmonth', 'int');
+$date_startday = GETPOST('date_startday', 'int');
+$date_endyear = GETPOST('date_endyear', 'int');
+$date_endmonth = GETPOST('date_endmonth', 'int');
+$date_endday = GETPOST('date_endday', 'int');
 
 // Security check
 $id = (GETPOST('orderid')?GETPOST('orderid'):GETPOST('id','int'));
@@ -70,6 +80,65 @@ $viewstatut=GETPOST('viewstatut');
  * Actions
  */
 
+// Report period management
+if (empty($date_startyear) && empty($date_startmonth) && empty($date_startday)) {
+    $date_start = -1; // Empty
+} else {
+    $date_start = dol_mktime(
+	    0,
+	    0,
+	    0,
+	    $date_startmonth,
+	    $date_startday,
+	    $date_startyear
+    );
+}
+
+if (empty($date_endyear) && empty($date_endmonth) && empty($date_endday)) {
+    $date_end = -1; // Empty
+} else {
+    $date_end = dol_mktime(
+	    23,
+	    59,
+	    59,
+	    $date_endmonth,
+	    $date_endday,
+	    $date_endyear
+    );
+}
+
+// Swap dates if period is reversed
+if ($date_end < $date_start) {
+    // XOR swap trick : only works for ints
+    $date_end ^= $date_start ^= $date_end ^= $date_start;
+}
+
+// Did we make a search ?
+$is_search = false;
+if (
+    ! empty($date_startyear) ||
+    ! empty($date_startmonth) ||
+    ! empty($date_startday) ||
+    ! empty($date_endyear) ||
+    ! empty($date_endmonth) ||
+    ! empty($date_endday) ||
+    ! empty($orderyear) ||
+    ! empty($ordermonth) ||
+    ! empty($deliveryyear) ||
+    ! empty($deliverymonth) ||
+    ! empty($sref) ||
+    ! empty($sref_client) ||
+    ! empty($samount) ||
+    ! empty($samount_ttc) ||
+    ! empty($snom) ||
+    ! empty($sall) ||
+    ! empty($socid) ||
+    ! (empty($search_user) || $search_user == -1) ||
+    ! empty($search_sale)
+) {
+    $is_search = true;
+}
+
 // Do we click on purge search criteria ?
 if (GETPOST("button_removefilter_x"))
 {
@@ -79,11 +148,14 @@ if (GETPOST("button_removefilter_x"))
     $search_ref='';
     $search_refcustomer='';
     $search_societe='';
-    $search_montant_ht='';
+    $samount='';
+    $samount_ttc='';
     $orderyear='';
     $ordermonth='';
     $deliverymonth='';
     $deliveryyear='';
+    $date_start = -1;
+    $date_end = -1;
 }
 
 
@@ -102,7 +174,7 @@ $companystatic = new Societe($db);
 $help_url="EN:Module_Customers_Orders|FR:Module_Commandes_Clients|ES:Módulo_Pedidos_de_clientes";
 llxHeader('',$langs->trans("Orders"),$help_url);
 
-$sql = 'SELECT s.nom, s.rowid as socid, s.client, c.rowid, c.ref, c.total_ht, c.ref_client,';
+$sql = 'SELECT s.nom, s.rowid as socid, s.client, c.rowid, c.ref, c.total_ht, c.total_ttc, c.ref_client,';
 $sql.= ' c.date_valid, c.date_commande, c.date_livraison, c.fk_statut, c.facture as facturee';
 $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s';
 $sql.= ', '.MAIN_DB_PREFIX.'commande as c';
@@ -124,6 +196,12 @@ if ($sref)
 if ($sall)
 {
 	$sql.= " AND (c.ref LIKE '%".$db->escape($sall)."%' OR c.note LIKE '%".$db->escape($sall)."%')";
+}
+if ($samount) {
+    $sql.= " AND c.total_ht = '".$db->escape(trim($samount))."'";
+}
+if ($samount_ttc) {
+    $sql.= " AND c.total_ttc = '".$db->escape(trim($samount_ttc))."'";
 }
 if ($viewstatut <> '')
 {
@@ -189,8 +267,15 @@ if ($search_user > 0)
 {
     $sql.= " AND ec.fk_c_type_contact = tc.rowid AND tc.element='commande' AND tc.source='internal' AND ec.element_id = c.rowid AND ec.fk_socpeople = ".$search_user;
 }
+if ($date_start !=-1 && $date_end != -1) {
+    $sql.= " AND c.date_commande >= '".$db->idate($date_start)."' AND c.date_commande <= '".$db->idate($date_end)."'";
+}
 
 $sql.= ' ORDER BY '.$sortfield.' '.$sortorder;
+
+// We don't want the limit to compute the total
+$sql_total = $sql;
+
 $sql.= $db->plimit($limit + 1,$offset);
 
 //print $sql;
@@ -234,6 +319,12 @@ if ($resql)
 	if ($sref_client)     $param.='&sref_client='.$sref_client;
 	if ($search_user > 0) $param.='&search_user='.$search_user;
 	if ($search_sale > 0) $param.='&search_sale='.$search_sale;
+	if ($date_startyear)  $param.='&date_startyear='.$date_startyear;
+	if ($date_startmonth) $param.='&date_startmonth='.$date_startmonth;
+	if ($date_startday)   $param.='&date_startday='.$date_startday;
+	if ($date_endyear)    $param.='&date_endyear='.$date_endyear;
+	if ($date_endmonth)   $param.='&date_endmonth='.$date_endmonth;
+	if ($date_endday)     $param.='&date_endday='.$date_endday;
 
 	$num = $db->num_rows($resql);
 	print_barre_liste($title, $page,$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num);
@@ -251,23 +342,37 @@ if ($resql)
  	if ($user->rights->societe->client->voir || $socid)
  	{
  		$langs->load("commercial");
- 		$moreforfilter.=$langs->trans('ThirdPartiesOfSaleRepresentative'). ': ';
+ 		$moreforfilter.=$langs->trans('ThirdPartiesOfSaleRepresentative'). ' : ';
 		$moreforfilter.=$formother->select_salesrepresentatives($search_sale,'search_sale',$user);
 	 	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
  	}
 	// If the user can view prospects other than his'
 	if ($user->rights->societe->client->voir || $socid)
 	{
-	    $moreforfilter.=$langs->trans('LinkedToSpecificUsers'). ': ';
+	    $moreforfilter.=$langs->trans('LinkedToSpecificUsers'). ' : ';
 	    $moreforfilter.=$form->select_dolusers($search_user,'search_user',1);
+	    $moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
 	}
+
+	print '<tr class="liste_titre">';
+	print '<td class="liste_titre" colspan="7">';
+    
 	if (! empty($moreforfilter))
 	{
-	    print '<tr class="liste_titre">';
-	    print '<td class="liste_titre" colspan="9">';
 	    print $moreforfilter;
-	    print '</td></tr>';
 	}
+
+	print $langs->trans('ReportPeriod'). ' : ';
+	$form->select_date($date_start, 'date_start');
+	print ' - ';
+	$form->select_date($date_end, 'date_end');
+
+	print '<td align="right" class="liste_titre">';
+	print '<input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png"  value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
+
+	print '</td>';
+	print '</td>';
+	print '</tr>';
 
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans('Ref'),$_SERVER["PHP_SELF"],'c.ref','',$param,'width="25%"',$sortfield,$sortorder);
@@ -275,6 +380,8 @@ if ($resql)
 	print_liste_field_titre($langs->trans('RefCustomerOrder'),$_SERVER["PHP_SELF"],'c.ref_client','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('OrderDate'),$_SERVER["PHP_SELF"],'c.date_commande','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('DeliveryDate'),$_SERVER["PHP_SELF"],'c.date_livraison','',$param, 'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans('AmountHT'),$_SERVER["PHP_SELF"],'c.total_ht','',$param, 'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans('AmountTTC'),$_SERVER["PHP_SELF"],'c.total_ttc','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Status'),$_SERVER["PHP_SELF"],'c.fk_statut','',$param,'align="right"',$sortfield,$sortorder);
 	print '</tr>';
 	print '<tr class="liste_titre">';
@@ -286,13 +393,19 @@ if ($resql)
 	print '<input class="flat" type="text" size="10" name="sref_client" value="'.$sref_client.'">';
 	print '</td><td class="liste_titre">&nbsp;';
 	print '</td><td class="liste_titre">&nbsp;';
+	print '</td><td class="liste_titre" align="right">';
+	print '<input class="flat" type="text" name="samount" value="'.$samount.'">';
+	print '</td><td class="liste_titre" align="right">';
+	print '<input class="flat" type="text" name="samount_ttc" value="'.$samount_ttc.'">';
 	print '</td><td align="right" class="liste_titre">';
 	print '<input type="image" class="liste_titre" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png"  value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '</td></tr>';
 
 	$var=true;
 	$total=0;
+	$total_ttc=0;
 	$subtotal=0;
+	$subtotal_ttc=0;
 
 	$generic_commande = new Commande($db);
 	while ($i < min($num,$limit))
@@ -370,20 +483,93 @@ if ($resql)
 		print ' <a href="'.$_SERVER['PHP_SELF'].'?deliveryyear='.$y.'">'.$y.'</a>';
 		print '</td>';
 
+		// Amount
+		print '<td align="right">';
+		print price($objp->total_ht);
+		print '&nbsp;';
+		print getCurrencySymbol($conf->currency);
+		print '</td>';
+
+		//Amount including VAT
+		print '<td align="right">';
+		print price($objp->total_ttc);
+		print '&nbsp;';
+		print getCurrencySymbol($conf ->currency);
+		print '</td>';
+
 		// Statut
 		print '<td align="right" nowrap="nowrap">'.$generic_commande->LibStatut($objp->fk_statut,$objp->facturee,5).'</td>';
 
 		print '</tr>';
 
-		$total+=$objp->total_ht;
 		$subtotal+=$objp->total_ht;
+		$subtotal_ttc+=$objp->total_ttc;
 		$i++;
 	}
+
+	$db->free($resql);
+	unset($resql);
+
+	// For performance reasons, we only want to compute the total if there is a search
+	if ($is_search) {
+	    // Total computation
+	    $i = 0;
+	    $resql = $db->query($sql_total);
+	    if ($resql) {
+		$num = $db->num_rows($resql);
+		while ($i < $num) {
+		    $objp = $db->fetch_object($resql);
+		    $total+=$objp->total_ht;
+		    $total_ttc+=$objp->total_ttc;
+		    $i++;
+		}
+	    }
+	    $db->free($resql);
+	}
+
+	print '<tr class="liste_total">';
+	print '<td class="liste_total" colspan="5">';
+	print $langs->trans('SubTotal');
+	print '</td>';
+	print '<td align="right">';
+	print price($subtotal);
+	print '&nbsp;';
+	print getCurrencySymbol($conf->currency);
+	print '</td>';
+	print '<td align="right">';
+	print price($subtotal_ttc);
+	print '&nbsp;';
+	print getCurrencySymbol($conf->currency);
+	print '</td>';
+	print '<td>';
+	print '&nbsp;';
+	print '</td>';
+	print '</tr>';
+
+	if ($is_search) {
+	    print '<tr class="liste_total">';
+	    print '<td class="liste_total" colspan="5">';
+	    print $langs->trans('Total');
+	    print '</td>';
+	    print '<td align="right">';
+	    print price($total);
+	    print '&nbsp;';
+	    print getCurrencySymbol($conf->currency);
+	    print '</td>';
+	    print '<td align="right">';
+	    print price($total_ttc);
+	    print '&nbsp;';
+	    print getCurrencySymbol($conf->currency);
+	    print '</td>';
+	    print '<td>';
+	    print '&nbsp;';
+	    print '</td>';
+	    print '</tr>';
+	}
+
 	print '</table>';
 
 	print '</form>';
-
-	$db->free($resql);
 }
 else
 {
