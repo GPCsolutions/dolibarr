@@ -155,7 +155,7 @@ function dol_loginfunction($langs,$conf,$mysoc)
 	$php_self.= $_SERVER["QUERY_STRING"]?'?'.$_SERVER["QUERY_STRING"]:'';
 
 	// Title
-	$title='Dolibarr '.DOL_VERSION;
+	$title='Dolibarr';
 	if (! empty($conf->global->MAIN_APPLICATION_TITLE)) $title=$conf->global->MAIN_APPLICATION_TITLE;
 
 	// Select templates

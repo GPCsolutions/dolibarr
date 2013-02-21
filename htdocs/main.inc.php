@@ -1328,7 +1328,7 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
 
 	    // Link info
 	    $logouttext='';
-	    $logouthtmltext=$appli.' '.DOL_VERSION.'<br>';
+	    $logouthtmltext=$appli.'<br>';
 	    $logouthtmltext.=$langs->trans("Logout").'<br>';
 	    //$logouthtmltext.="<br>";
 	    if ($_SESSION["dol_authmode"] != 'forceuser'
