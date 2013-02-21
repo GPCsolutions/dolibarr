@@ -132,7 +132,9 @@ if ($resql)
 
 			if (file_exists($file))
 			{
-				print '<td align="center"><a href="'.DOL_URL_ROOT.'/document.php?page='.$page.'&amp;file='.urlencode($relativepath).'&amp;modulepart=actionsreport">'.img_pdf().'</a></td>';
+				print '<td align="center"><a';
+                if (!empty($conf->global->MAIN_DISABLE_FORCE_SAVEAS)) print ' target="blank"';
+                print ' href="'.DOL_URL_ROOT.'/document.php?page='.$page.'&amp;file='.urlencode($relativepath).'&amp;modulepart=actionsreport">'.img_pdf().'</a></td>';
 				print '<td align="center">'.dol_print_date(dol_filemtime($file),'dayhour').'</td>';
 				print '<td align="center">'.dol_print_size(dol_filesize($file)).'</td>';
 			}
