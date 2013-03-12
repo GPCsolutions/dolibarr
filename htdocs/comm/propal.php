@@ -641,7 +641,7 @@ else if ($action == "addline" && $user->rights->propal->creer)
 		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Type")), 'errors');
 		$error++;
 	}
-	if ((empty($idprod) || GETPOST('usenewaddlineform')) && (!($price_ht >= 0) || $price_ht == ''))	// Unit price can be 0 but not ''
+	if ((empty($idprod) || GETPOST('usenewaddlineform')) && (!($price_ht != 0) || $price_ht == ''))	// Unit price can be 0 but not ''. Also price can be negative for proposal.
 	{
 		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("UnitPriceHT")), 'errors');
 		$error++;
@@ -745,7 +745,7 @@ else if ($action == "addline" && $user->rights->propal->creer)
             		if (! empty($prod->customcode) && ! empty($prod->country_code)) $tmptxt.=' - ';
             		if (! empty($prod->country_code)) $tmptxt.=$langs->transnoentitiesnoconv("CountryOrigin").': '.getCountry($prod->country_code,0,$db,$langs,0);
             		$tmptxt.=')';
-            		$desc.= dol_concatdesc($desc, $tmptxt);
+            		$desc= dol_concatdesc($desc, $tmptxt);
             	}
 			}
 
@@ -919,7 +919,7 @@ else if ($action == 'updateligne' && $user->rights->propal->creer && GETPOST('sa
 			GETPOST('fk_parent_line'),
 			0,
 			$fournprice,
-			$buying_price,
+			$buyingprice,
 			$label,
 			$type
 		);
