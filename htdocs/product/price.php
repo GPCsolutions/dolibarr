@@ -409,6 +409,27 @@ else
 	{
 		print price($object->price).' '.$langs->trans($object->price_base_type);
 	}
+	// Price (of the same product), from other entities
+	$sql = "SELECT pp.price, pp.price_ttc, e.label, p.ref";
+	$sql.= " FROM ".MAIN_DB_PREFIX."product_price as pp";
+	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product as p ON pp.fk_product = p.rowid";
+	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."entity as e ON p.entity = e.rowid";
+	$sql.= " WHERE p.ref = '" . $object->ref . "'";
+	$sql.= " AND p.entity <> " . $object->entity;
+
+	$req = $db->query($sql);
+
+	if ($req) {
+		$num = $db->num_rows($req);
+		$i=0;
+		while ($i < $num) {
+			$obj = $db->fetch_object($req);
+			print ' ( ' .$obj->label. ' : ' .price($obj->price).' '.$langs->trans($object->price_base_type).' )';
+			$i++;
+		}
+	} else {
+		dol_print_error($db);
+	}
 	print '</td></tr>';
 
 	// Price minimum
