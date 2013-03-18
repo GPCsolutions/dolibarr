@@ -14,6 +14,7 @@
  * Copyright (C) 2011      Herve Prot            <herve.prot@symeos.com>
  * Copyright (C) 2012      Marcos García         <marcosgdf@gmail.com>
  * Copyright (C) 2013      Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
+ * Copyright (C) 2013      Antoine Iauch         <aiauch@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1483,6 +1484,54 @@ class Form
             $outpricebasetype=$objp->price_base_type;
             $outtva_tx=$objp->tva_tx;
         }
+
+	// Price (of the same product), from other entities
+	$sql = "SELECT pp.price, e.label, COALESCE(SUM(ps.reel)) AS stock";
+	$sql.= " FROM " . MAIN_DB_PREFIX . "product_price as pp";
+	$sql.= " LEFT JOIN " . MAIN_DB_PREFIX . "product as p ON pp.fk_product = p.rowid";
+	$sql.= " LEFT JOIN " . MAIN_DB_PREFIX . "entity as e ON p.entity = e.rowid";
+	$sql.= " LEFT JOIN " . MAIN_DB_PREFIX . "product_stock as ps ON ps.fk_product = p.rowid";
+	$sql.= " WHERE p.ref = '" . $objp->ref . "'";
+	$sql.= " AND p.entity <> " . $conf->entity;
+	$sql.= " GROUP BY e.label";
+	$sql.= " ORDER BY e.rowid";
+
+	$req = $this->db->query($sql);
+
+	if ($req) {
+		$num = $this->db->num_rows($req);
+		$i = 0;
+		if ($num) {
+			$opt .= ' ( ';
+			$outval.= ' ( ';
+			while ($i < $num) {
+				if ($i > 0) {
+					$opt .= ' / ';
+					$outval.= ' / ';
+				}
+				$otherentinfos = true;
+				$obj = $this->db->fetch_object($req);
+				$opt .= $obj->label . ' : ' . price($obj->price) . ' ' . $langs->trans($currencytext) . ' ' . $langs->trans($objp->price_base_type);
+				$outval.= $obj->label . ' : ' . price($obj->price) . ' ' . $langs->transnoentities($currencytext) . ' ' . $langs->transnoentities($objp->price_base_type);
+
+				// Stock (of the same product), from other entities
+				if (!empty($conf->stock->enabled) && $objp->fk_product_type == 0) {
+					$opt .= ' - ' . $langs->trans("Stock") . ':' . $obj->stock;
+					$outval.= ' - ' . $langs->trans("Stock") . ':' . $obj->stock;
+				}
+
+				$i++;
+			}
+
+			$opt .= ' ) ';
+			$outval.= ' ) ';
+		}
+	} else {
+		dol_print_error($this->db);
+	}
+
+	$opt.= "</option>\n";
+	$optJson = array('key' => $outkey, 'value' => $outref, 'label' => $outval, 'label2' => $outlabel, 'desc' => $outdesc, 'type' => $outtype, 'price_ht' => $outprice_ht, 'price_ttc' => $outprice_ttc, 'pricebasetype' => $outpricebasetype, 'tva_tx' => $outtva_tx, 'qty' => $outqty, 'discount' => $outdiscount);
 
         if (! empty($conf->stock->enabled) && isset($objp->stock) && $objp->fk_product_type == 0)
         {
