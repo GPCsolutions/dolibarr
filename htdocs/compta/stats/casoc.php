@@ -405,7 +405,7 @@ if (count($amount)) {
 		// Amount w/o VAT
 		print '<td align="right">';
 		if ($modecompta != 'CREANCES-DETTES') {
-		    if ($key > 0) {
+                    if ($key > 0) {
 			print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?userid='.$key.'">';
 		    } else {
 			print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?userid=-1">';
@@ -423,14 +423,14 @@ if (count($amount)) {
 		// Amount with VAT
 		print '<td align="right">';
 		if ($modecompta != 'CREANCES-DETTES') {
-    		if ($key > 0) {
-		    print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?socid='.$key.'">';
+                    if ($key > 0) {
+                        print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?socid='.$key.'">';
 		    } else {
 			print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?orphelins=1">';
 		    }
 		} else {
-		    if ($key > 0) {
-		    print '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?socid='.$key.'">';
+                    if ($key > 0) {
+                        print '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?socid='.$key.'">';
 		    } else {
 			print '<a href="#">';
 		    }
