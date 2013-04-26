@@ -111,6 +111,8 @@ class mod_syslog_file extends LogHandler implements LogHandlerInterface
 	 */
 	public function export($content)
 	{
+		global $conf;
+
 		$logfile = $this->getFilename();
 
 		if (defined("SYSLOG_FILE_NO_ERROR")) $filefd = @fopen($logfile, 'a+');
@@ -142,6 +144,7 @@ class mod_syslog_file extends LogHandler implements LogHandlerInterface
 
 			fwrite($filefd, $message."\n");
 			fclose($filefd);
+			@chmod($logfile, octdec($conf->global->MAIN_UMASK));
 		}
 	}
 }

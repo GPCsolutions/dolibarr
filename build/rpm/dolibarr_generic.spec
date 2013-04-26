@@ -241,7 +241,6 @@ done >>%{name}.lang
 %_datadir/dolibarr/htdocs/categories
 %_datadir/dolibarr/htdocs/comm
 %_datadir/dolibarr/htdocs/commande
-%_datadir/dolibarr/htdocs/commissions
 %_datadir/dolibarr/htdocs/compta
 %_datadir/dolibarr/htdocs/conf
 %_datadir/dolibarr/htdocs/contact
@@ -522,5 +521,5 @@ fi
 
 
 %changelog
-* Sun Feb 17 2013 Laurent Destailleur 3.3.1-0.3
+* Mon Apr 22 2013 Laurent Destailleur 3.3.2-0.3
 - Initial version (#723326)
