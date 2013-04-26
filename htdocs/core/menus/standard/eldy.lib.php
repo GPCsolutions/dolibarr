@@ -831,6 +831,7 @@ function print_left_eldy_menu($db,$menu_array_before,$menu_array_after,&$tabMenu
 			if (! empty($conf->comptabilite->enabled) || ! empty($conf->accounting->enabled))
 			{
 				$langs->load("compta");
+		$langs->load("products")
 
 				// Bilan, resultats
 				$newmenu->add("/compta/resultat/index.php?leftmenu=ca&amp;mainmenu=accountancy",$langs->trans("Reportings"),0,$user->rights->compta->resultat->lire||$user->rights->accounting->comptarapport->lire, '', $mainmenu, 'ca');
