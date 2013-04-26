@@ -45,7 +45,7 @@ if (! $sortfield) $sortfield="nom";
 $socid = GETPOST('socid','int');
 
 // Category
-$selected_cat = (int)GETPOST('search_categ', 'int');
+$selected_cat = (int) GETPOST('search_categ', 'int');
 $subcat = false;
 if (GETPOST('subcat', 'alpha') === 'yes') {
     $subcat = true;
@@ -185,7 +185,7 @@ if ($modecompta == 'CREANCES-DETTES') {
 	}
 	if ($selected_cat && $selected_cat !== -2) {
 	    $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."categorie as c ON c.rowid = ".$selected_cat;
-	    if (subcat) {
+	    if ($subcat) {
 		$sql.=" OR c.fk_parent = " . $selected_cat;
 	    }
 	     $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."categorie_societe as cs ON cs.fk_categorie = c.rowid";
@@ -405,7 +405,7 @@ if (count($amount)) {
 		// Amount w/o VAT
 		print '<td align="right">';
 		if ($modecompta != 'CREANCES-DETTES') {
-		    if ($key > 0) {
+                    if ($key > 0) {
 			print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?userid='.$key.'">';
 		    } else {
 			print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?userid=-1">';
@@ -423,14 +423,14 @@ if (count($amount)) {
 		// Amount with VAT
 		print '<td align="right">';
 		if ($modecompta != 'CREANCES-DETTES') {
-    		if ($key > 0) {
-		    print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?socid='.$key.'">';
+                    if ($key > 0) {
+                        print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?socid='.$key.'">';
 		    } else {
 			print '<a href="'.DOL_URL_ROOT.'/compta/paiement/liste.php?orphelins=1">';
 		    }
 		} else {
-		    if ($key > 0) {
-		    print '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?socid='.$key.'">';
+                    if ($key > 0) {
+                        print '<a href="'.DOL_URL_ROOT.'/compta/facture/list.php?socid='.$key.'">';
 		    } else {
 			print '<a href="#">';
 		    }
