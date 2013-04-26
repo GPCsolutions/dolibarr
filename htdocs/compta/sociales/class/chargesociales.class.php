@@ -30,7 +30,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
  */
 class ChargeSociales extends CommonObject
 {
-    public $element='rowid';
+    public $element='chargesociales';
     public $table='chargesociales';
     public $table_element='chargesociales';
 
@@ -115,6 +115,8 @@ class ChargeSociales extends CommonObject
      */
     function create($user)
     {
+    	global $conf;
+
         // Nettoyage parametres
         $newamount=price2num($this->amount,'MT');
 
@@ -127,10 +129,11 @@ class ChargeSociales extends CommonObject
 
         $this->db->begin();
 
-        $sql = "INSERT INTO ".MAIN_DB_PREFIX."chargesociales (fk_type, libelle, date_ech, periode, amount)";
+        $sql = "INSERT INTO ".MAIN_DB_PREFIX."chargesociales (fk_type, libelle, date_ech, periode, amount, entity)";
         $sql.= " VALUES (".$this->type.",'".$this->db->escape($this->lib)."',";
         $sql.= " '".$this->db->idate($this->date_ech)."','".$this->db->idate($this->periode)."',";
-        $sql.= " ".price2num($newamount);
+        $sql.= " '".price2num($newamount)."',";
+        $sql.= " ".$conf->entity;
         $sql.= ")";
 
         dol_syslog(get_class($this)."::create sql=".$sql);

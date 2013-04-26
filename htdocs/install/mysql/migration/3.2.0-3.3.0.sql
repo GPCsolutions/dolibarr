@@ -89,7 +89,7 @@ ALTER TABLE llx_commande CHANGE COLUMN fk_demand_reason fk_input_reason integer 
 ALTER TABLE llx_propal CHANGE COLUMN fk_demand_reason fk_input_reason integer NULL DEFAULT NULL;
 ALTER TABLE llx_commande_fournisseur CHANGE COLUMN fk_methode_commande fk_input_method integer NULL DEFAULT 0;
 
-INSERT INTO llx_const (name, value, type, note, visible) values ('PRODUCT_CODEPRODUCT_ADDON','mod_codeproduct_leopard','yesno','Module to control product codes',0);
+INSERT INTO llx_const (name, value, type, note, visible) values (__ENCRYPT('PRODUCT_CODEPRODUCT_ADDON')__, __ENCRYPT('mod_codeproduct_leopard')__, 'yesno', 'Module to control product codes', 0);
 
 ALTER TABLE llx_c_barcode_type ADD UNIQUE INDEX uk_c_barcode_type(code, entity);
 
@@ -311,7 +311,7 @@ UPDATE llx_c_tva set localtax1 = 1, localtax1_type = '4', localtax2 = 0.4, local
 ALTER TABLE llx_c_tva DROP COLUMN accountancy_code;
 ALTER TABLE llx_c_tva ADD COLUMN accountancy_code_sell varchar(15) DEFAULT NULL AFTER active;
 ALTER TABLE llx_c_tva ADD COLUMN accountancy_code_buy varchar(15) DEFAULT NULL AFTER accountancy_code_sell;
-ALTER TABLE llx_c_chargessociales ADD COLUMN accountancy_code varchar(15) DEFAULT NULL AFTER code;
+ALTER TABLE llx_c_chargesociales ADD COLUMN accountancy_code varchar(15) DEFAULT NULL AFTER code;
 
 -- Tables for accountancy expert
 DROP TABLE llx_accountingaccount;
@@ -923,3 +923,10 @@ DELETE FROM llx_c_action_trigger WHERE elementtype='withdraw';
 UPDATE llx_c_action_trigger SET code='FICHINTER_VALIDATE' WHERE code='FICHEINTER_VALIDATE';
 
 UPDATE llx_c_departements SET ncc='ALAVA', nom='Álava' WHERE code_departement='01' AND fk_region=419;
+
+ALTER TABLE llx_product_fournisseur_price DROP FOREIGN KEY fk_product_fournisseur;
+
+UPDATE llx_const SET name = __ENCRYPT('PRODUIT_MULTI_PRICES')__ WHERE __DECRYPT('name')__ = 'PRODUIT_MUTLI_PRICES';
+
+DELETE FROM llx_const WHERE entity <> 0 AND __DECRYPT('name')__ IN ('SYSLOG_HANDLERS','SYSLOG_LEVEL');
+UPDATE llx_const SET entity = 0 WHERE __DECRYPT('name')__ = 'SYSLOG_FILE';

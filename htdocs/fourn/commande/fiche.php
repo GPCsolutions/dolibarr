@@ -297,7 +297,9 @@ else if ($action == 'addline' && $user->rights->fournisseur->commande->creer)
         //print "xx".$tva_tx; exit;
         if ($result > 0)
         {
-            if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE))
+            $ret=$object->fetch($object->id);    // Reload to get new records
+
+        	if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE))
             {
             	// Define output language
             	$outputlangs = $langs;
@@ -309,7 +311,6 @@ else if ($action == 'addline' && $user->rights->fournisseur->commande->creer)
             		$outputlangs->setDefaultLang($newlang);
             	}
 
-                $ret=$object->fetch($object->id);    // Reload to get new records
                 supplier_order_pdf_create($db, $object, $object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref, $hookmanager);
             }
             unset($_POST['qty']);
@@ -1784,7 +1785,7 @@ if (! empty($object->id))
 	{
 		$ref = dol_sanitizeFileName($object->ref);
 		include_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-		$fileparams = dol_most_recent_file($conf->fournisseur->commande->dir_output . '/' . $ref, preg_quote($object->ref,'/'));
+		$fileparams = dol_most_recent_file($conf->fournisseur->commande->dir_output . '/' . $ref, preg_quote($ref,'/'));
 		$file=$fileparams['fullname'];
 
 		// Build document if it not exists
@@ -1807,7 +1808,7 @@ if (! empty($object->id))
 				dol_print_error($db,$result);
 				exit;
 			}
-			$fileparams = dol_most_recent_file($conf->fournisseur->commande->dir_output . '/' . $ref, preg_quote($object->ref,'/'));
+			$fileparams = dol_most_recent_file($conf->fournisseur->commande->dir_output . '/' . $ref, preg_quote($ref,'/'));
 			$file=$fileparams['fullname'];
 		}
 
