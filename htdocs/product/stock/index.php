@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2003-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -29,8 +29,8 @@ require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
 
 $langs->load("stocks");
 
-if (!$user->rights->stock->lire)
-  accessforbidden();
+// Security check
+$result=restrictedArea($user,'stock');
 
 
 /*
@@ -42,8 +42,11 @@ llxHeader("",$langs->trans("Stocks"),$help_url);
 
 print_fiche_titre($langs->trans("StocksArea"));
 
-print '<table border="0" width="100%" class="notopnoleftnoright">';
-print '<tr><td valign="top" width="30%" class="notopnoleft">';
+
+//print '<table border="0" width="100%" class="notopnoleftnoright">';
+//print '<tr><td valign="top" width="30%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
+
 
 /*
  * Zone recherche entrepot
@@ -101,7 +104,10 @@ else
     dol_print_error($db);
 }
 
-print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
+
+//print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
 
 // Last movements
 $max=10;
@@ -157,10 +163,10 @@ if ($resql)
 	print "</table>";
 }
 
-print '</td></tr></table>';
+//print '</td></tr></table>';
+print '</div></div></div>';
 
 llxFooter();
 
 $db->close();
-
 ?>

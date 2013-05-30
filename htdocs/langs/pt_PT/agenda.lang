@@ -1,44 +1,65 @@
-﻿# Dolibarr language file - pt_PT - agenda
+# Dolibarr language file - Source file is en_US - agenda
 CHARSET=UTF-8
 Actions=Acções
 ActionsArea=Área de Acções
-Agenda=Agenda
-Agendas=Agendas
-Calendar=Calendário
-Calendars=Calendários
-AffectedTo=Afecta o
-DoneBy=Criado por
-Events=Eventos
+Agenda= Agenda
+Agendas= Agendas
+Calendar= Calendário
+Calendars= Calendários
+LocalAgenda=Calendário local
+AffectedTo= Afecta o
+DoneBy= Realizado por
+Events= Eventos
+# EventsNb=Number of events
+MyEvents=Meus eventos
+OtherEvents=Outros eventos
 ListOfActions=Lista de Eventos
 Location=Localização
-SearchAnAction=Procura por acção
-MenuToDoActions=Menu de acções a fazer
-MenuDoneActions=Menu de acções realizadas
-MenuToDoMyActions=Menu das minhas acções
-MenuDoneMyActions=Menu das minhas acções
-ListOfEvents=Lista de eventos
-ActionsAskedBy=Acções pedidas por
-ActionsToDoBy=Acções por fazer por
-ActionsDoneBy=Acções feitas por
-AllMyActions=Todas as minhas acções
-AllActions=Todas as acções
+EventOnFullDay=Evento no dia completo
+SearchAnAction= Procurar uma Acção
+MenuToDoActions= Wszystkich działań niekompletne
+# MenuDoneActions= All terminated events
+# MenuToDoMyActions= My incomplete events
+# MenuDoneMyActions= My terminated events
+ListOfEvents= Lista de Eventos
+# ActionsAskedBy=Events reported by
+# ActionsToDoBy=Events assigned to
+# ActionsDoneBy=Events done by
+AllMyActions= Todas as minhas acções
+AllActions= Todas as Acções
 ViewList=Ver Lista
 ViewCal=Ver Calendário
-ViewWithPredefinedFilters=Ver com filtros predefinidos
-AutoActions=Acções automáticas
-AgendaAutoActionDesc=Acções automáticas da agenda
-AgendaSetupOtherDesc=Outras configurações de agenda
-ActionsEvents=Eventos de acções
-PropalValidatedInDolibarr=Orçamento validado no ERP/CRM
-InvoiceValidatedInDolibarr=Factura validada no ERP/CRM
-OrderValidatedInDolibarr=Pedido validado no ERP
-NewCompanyToDolibarr=Nova empresa no ERP/CRM
-DateActionPlannedStart=Planeada data de inicio
-DateActionPlannedEnd=Planeada data fim
-DateActionDoneStart=Data real de Inicio
-DateActionDoneEnd=Data Real de Fim
-DateActionStart=Data de Inicio
-DateActionEnd=Data Fim
+ViewDay=Modo de exibição Dia
+ViewWeek=Vista da semana
+# ViewWithPredefinedFilters= View with predefined filters
+# AutoActions= Automatic filling
+# AgendaAutoActionDesc= Define here events for which you want Dolibarr to create automatically an event in agenda. If nothing is checked (by default), only manual actions will be included in agenda.
+# AgendaSetupOtherDesc= This page provides options to allow export of your Dolibarr events into an external calendar (thunderbird, google calendar, ...)
+AgendaExtSitesDesc=Esta página permite declarar as fontes externas de calendários para ver os seus eventos na agenda do Dolibarr.
+# ActionsEvents= Events for which Dolibarr will create an action in agenda automatically
+PropalValidatedInDolibarr= Proposta Validada
+InvoiceValidatedInDolibarr= Factura Validada
+InvoiceBackToDraftInDolibarr=Factura %s voltou ao estado de rascunho
+# InvoiceDeleteDolibarr=Invoice %s deleted
+# OrderValidatedInDolibarr= Order %s validated
+OrderApprovedInDolibarr=Encomenda %s aprovada
+OrderBackToDraftInDolibarr=Encomenda %s voltou ao estado de rascunho
+OrderCanceledInDolibarr=Encomenda %s cancelada
+InterventionValidatedInDolibarr=Intervenção %s validada
+ProposalSentByEMail=Proposta a cliente %s enviada por e-mail
+OrderSentByEMail=Encomenda de cliente %s enviada por email
+InvoiceSentByEMail=Factura de cliente %s enviada por e-mail
+SupplierOrderSentByEMail=Encomenda a fornecedor %s enviada por email
+SupplierInvoiceSentByEMail=Factura de fornecedor %s enviada por e-mail
+ShippingSentByEMail=Expedição %s enviada por email
+InterventionSentByEMail=Intervanção %s enviada por e-mail
+NewCompanyToDolibarr= Nova Empresa Adicionada
+DateActionPlannedStart= Planeada data de início
+DateActionPlannedEnd= Planeada data de fim
+DateActionDoneStart= Data Real de Início
+DateActionDoneEnd= Data Real de Fim
+DateActionStart= Data de Início
+DateActionEnd= Data Fim
 AgendaUrlOptions1=Também pode adicionar os seguintes parâmetros de filtro de saída:
 AgendaUrlOptions2=<b>login=%s</b>para restringir a produção para acções criadas por, ou afectadas a fazer pelo utilizador <b>%s</b>.
 AgendaUrlOptions3=<b>logina=%s</b> para restringir a produção para acções criadas pelo utilizador <b>%s</b>.
@@ -46,43 +67,13 @@ AgendaUrlOptions4=<b>logint=%s</b> para restringir a produção para as acções
 AgendaUrlOptions5=<b>logind=%s</b> para restringir a produção para acções feitas pelo utilizador <b>%s</b>.
 AgendaShowBirthdayEvents=Mostrar Aniversários dos Contactos
 AgendaHideBirthdayEvents=Esconder Aniversários dos Contactos
+# Busy=Busy
 
-
-// START - Lines generated via autotranslator.php tool (2010-07-17 11:42:52).
-// Reference language: en_US
-InterventionValidatedInDolibarr=Intervenção %s validada no ERP/CRM
-InterventionValidatedInDolibarr=Intervenções %s validadas
-MenuToDoActions=Menu de acções a fazer
-InterventionValidatedInDolibarr=%s Intervenção validada
-InterventionValidatedInDolibarr=%Intervenção validada
-// STOP - Lines generated via autotranslator.php tool (2010-07-17 11:42:53).
-
-
-// START - Lines generated via autotranslator.php tool (2012-02-29 15:45:52).
-// Reference language: en_US -> pt_PT
-LocalAgenda=Calendário local
-MyEvents=Meus eventos
-OtherEvents=Outros eventos
-EventOnFullDay=Evento no dia completo
-ViewDay=Modo de exibição Dia
-ViewWeek=Vista da semana
-AgendaExtSitesDesc=Esta página permite a declarar as fontes externas de calendários para ver seus eventos em agenda Dolibarr.
-InvoiceBackToDraftInDolibarr=%s factura voltar ao status de projecto
-OrderApprovedInDolibarr=%s Pedido aprovado
-OrderBackToDraftInDolibarr=%s Voltar pedido para rascunho do ERP/CRM
-OrderCanceledInDolibarr=%s Pedido cancelado
-ProposalSentByEMail=Comerciais %s proposta enviada por e-mail
-OrderSentByEMail=Cliente %s pedido enviado por email
-InvoiceSentByEMail=Cliente %s fatura enviada por e-mail
-SupplierOrderSentByEMail=Fornecedor %s pedido enviado por email
-SupplierInvoiceSentByEMail=Fornecedor %s fatura enviada por e-mail
-ShippingSentByEMail=%s Fretes enviado por email
-InterventionSentByEMail=%s intervenções enviadas por e-mail
-ExportCal=Exportação calendário
+# External Sites ical
+ExportCal=Exportar calendário
 ExtSites=Importar calendários externos
 ExtSitesEnableThisTool=Mostrar calendários externos na agenda
 ExtSitesNbOfAgenda=Número de calendários
 AgendaExtNb=Calendário nb %s
-ExtSiteUrlAgenda=URL para acessar. Ical arquivo
+ExtSiteUrlAgenda=URL para aceder. Ficheiro iCal
 ExtSiteNoLabel=Sem Descrição
-// STOP - Lines generated via autotranslator.php tool (2012-02-29 15:48:38).

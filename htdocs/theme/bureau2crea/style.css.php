@@ -1,13 +1,13 @@
 <?php
-/* Copyright (C) 2004-2010	Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2004-2013	Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2006		Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2007-2010	Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2007-2010	Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011		Philippe Grand       <philippe.grand@atoo-net.com>
  * Copyright (C) 2011		Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -54,11 +54,21 @@ if (GETPOST('theme')) $conf->theme=GETPOST('theme');  // If theme was forced on 
 $langs->load("main",0,1);
 $right=($langs->trans("DIRECTION")=='rtl'?'left':'right');
 $left=($langs->trans("DIRECTION")=='rtl'?'right':'left');
-$fontsize=empty($conf->browser->phone)?'12':'12';
-$fontsizesmaller=empty($conf->browser->phone)?'11':'11';
+$fontsize=empty($conf->dol_optimize_smallscreen)?'12':'12';
+$fontsizesmaller=empty($conf->dol_optimize_smallscreen)?'11':'11';
 
 $fontlist='arial,tahoma,verdana,helvetica';
 //$fontlist='Verdana,Helvetica,Arial,sans-serif';
+
+$dol_hide_topmenu=$conf->dol_hide_topmenu;
+$dol_hide_leftmenu=$conf->dol_hide_leftmenu;
+$dol_optimize_smallscreen=$conf->dol_optimize_smallscreen;
+$dol_no_mouse_hover=$conf->dol_no_mouse_hover;
+$dol_use_jmobile=$conf->dol_use_jmobile;
+
+$path='';    			// This value may be used in future for external module to overwrite theme
+$theme='bureau2crea';	// Value of theme
+if (! empty($conf->global->MAIN_OVERWRITE_THEME_RES)) { $path='/'.$conf->global->MAIN_OVERWRITE_THEME_RES; $theme=$conf->global->MAIN_OVERWRITE_THEME_RES; }
 
 ?>
 
@@ -139,8 +149,11 @@ textarea:disabled {
 	background:#ddd;
 }
 
+
+input[type=checkbox] { background-color: transparent; border: none; box-shadow: none; }
+input[type=image] { background-color: transparent; border: none; box-shadow: none; }
 input.button[type=submit] {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_btnGreen.jpg' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_btnGreen.jpg',1); ?>);
     display: block;
     height: 18px;
     line-height: 16px;
@@ -157,7 +170,7 @@ input.button[type=submit] {
 .button {
     font-family: <?php print $fontlist ?>;
 	border: 0px;
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/button_bg.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1); ?>);
 	background-position: bottom;
     padding: 0px 2px 0px 2px;
     margin: 0px 0px 0px 0px;
@@ -166,7 +179,7 @@ input.button[type=submit] {
     font-family: <?php print $fontlist ?>;
 	color: #222244;
 	border: 0px;
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/button_bg.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1); ?>);
 	background-position: bottom;
     padding: 0px 2px 0px 2px;
     margin: 0px 0px 0px 0px;
@@ -174,7 +187,7 @@ input.button[type=submit] {
 .buttonajax {
     font-family: <?php print $fontlist ?>;
 	border: 0px;
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/button_bg.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1); ?>);
 	background-position: bottom;
     padding: 0px 0px 0px 0px;
     margin: 0px 0px 0px 0px;
@@ -183,11 +196,36 @@ form {
     padding: 0em 0em 0em 0em;
     margin: 0em 0em 0em 0em;
 }
+div.float
+{
+    float:<?php print $left; ?>;
+}
+div.floatright
+{
+    float:<?php print $right; ?>;
+}
+div.inline-block
+{
+	display:inline-block;
+}
+
 .valignmiddle {
 	vertical-align: middle;
 }
 .centpercent {
 	width: 100%;
+}
+.center {
+    text-align: center;
+}
+.left {
+	text-align: <?php print $left; ?>;
+}
+.right {
+	text-align: <?php print $right; ?>;
+}
+.nowrap {
+	white-space: <?php print ($dol_optimize_smallscreen?'normal':'nowrap'); ?>;
 }
 
 
@@ -196,8 +234,9 @@ form {
 /* ============================================================================== */
 
 .hideobject { display: none; }
-<?php if (! empty($conf->browser->phone)) { ?>
+<?php if (! empty($dol_optimize_smallscreen)) { ?>
 .hideonsmartphone { display: none; }
+.noenlargeonsmartphone { width : 50px !important; display: inline !important; }
 <?php } ?>
 .linkobject { cursor: pointer; }
 
@@ -220,22 +259,27 @@ td.showDragHandle {
 /* Styles de positionnement des zones                                             */
 /* ============================================================================== */
 
+#id-container {
+  display: table;
+  table-layout: fixed;
+}
+#id-right, #id-left {
+  display: table-cell;
+  float: none;
+  vertical-align: top;
+}
+#id-<?php echo $right; ?> {
+	width: 100%;
+}
+
 div.leftContent {
 	margin-left: 20px !important;
     width: 220px !important;
 }
 
-div.vmenu {
-	position: relative;
-    float: left;
-    margin: 0px;
-    width: 180px;
-    margin-left: 10px;
-}
-
 div.fiche {
-	margin-<?php print $left; ?>: <?php print empty($conf->browser->phone)?'10':'2'; ?>px;
-	margin-<?php print $right; ?>: <?php print empty($conf->browser->phone)?'10':''; ?>px;
+	margin-<?php print $left; ?>: <?php print empty($conf->dol_optimize_smallscreen)?'10':'2'; ?>px;
+	margin-<?php print $right; ?>: <?php print empty($conf->dol_optimize_smallscreen)?'10':''; ?>px;
     padding: 0px;
     position: relative;
     height: auto;
@@ -246,23 +290,24 @@ div.fichecenter {
 	clear: both;	/* This is to have div fichecenter that are true rectangles */
 }
 div.fichethirdleft {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 35%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$left.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 35%;\n"; } ?>
 }
 div.fichetwothirdright {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 65%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$left.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 65%;\n"; } ?>
 }
 div.fichehalfleft {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 50%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$left.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 50%;\n"; } ?>
 }
 div.fichehalfright {
-	<?php if (empty($conf->browser->phone)) { print "float: ".$left.";\n"; } ?>
-	<?php if (empty($conf->browser->phone)) { print "width: 50%;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "float: ".$left.";\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen)) { print "width: 50%;\n"; } ?>
 }
 div.ficheaddleft {
-	<?php if (empty($conf->browser->phone)) { print "padding-left: 6px;\n"; } ?>
+	<?php if (empty($conf->dol_optimize_smallscreen))   { print "padding-left: 16px;\n"; }
+	else print "margin-top: 10px;\n"; ?>
 }
 
 
@@ -280,7 +325,7 @@ div.ficheaddleft {
 /* ============================================================================== */
 
 <?php
-if (! empty($conf->browser->phone))
+if (! empty($conf->dol_optimize_smallscreen))
 {
 	$minwidthtmenu=70;
 	$heightmenu=39;
@@ -303,7 +348,7 @@ div.tmenu {
     padding: 0px;
     margin: 5px 0px 10px 0px;
     font-size: 13px;
-    background-image : url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_mainNav.jpg' ?>);
+    background-image : url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_mainNav.jpg',1); ?>);
     background-repeat: no-repeat;
     background-color: #996644;
     height: 22px;
@@ -324,60 +369,60 @@ div.mainmenu {
 }
 */
 
-<?php if (empty($conf->browser->phone)) { ?>
+<?php if (empty($conf->dol_optimize_smallscreen)) { ?>
 
 /*
 div.mainmenu.home{
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/home.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/home.png',1); ?>);
 }
 
 div.mainmenu.companies {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/company.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/company.png',1); ?>);
 }
 
 div.mainmenu.products {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/products.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/products.png',1); ?>);
 	margin-left: 10px;
 }
 
 div.mainmenu.commercial {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/commercial.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/commercial.png',1); ?>);
 }
 
 div.mainmenu.accountancy {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/money.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/money.png',1); ?>);
 }
 
 div.mainmenu.bank {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/bank.png' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/bank.png',1); ?>);
 }
 
 div.mainmenu.project {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/project.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/project.png',1); ?>);
 }
 
 div.mainmenu.tools {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/tools.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/tools.png',1); ?>);
 }
 
 div.mainmenu.members {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/members.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/members.png',1); ?>);
 }
 
 div.mainmenu.shop {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/shop.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/shop.png',1); ?>);
 }
 
 div.mainmenu.agenda {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/agenda.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/agenda.png',1); ?>);
 }
 
 div.mainmenu.ecm {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/ecm.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/ecm.png',1); ?>);
 }
 
 div.mainmenu.cashdesk {
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/pointofsale.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/pointofsale.png',1); ?>);
 }
 */
 <?php
@@ -413,7 +458,7 @@ foreach($mainmenuusedarray as $val)
 	{
 		if (file_exists($dirroot."/".$val."/img/".$val.".png"))
 		{
-			$url=DOL_URL_ROOT.'/'.$val.'/img/'.$val.'.png';
+			$url=dol_buildpath($path.'/'.$val.'/img/'.$val.'.png',1);
 			$found=1;
 			break;
 		}
@@ -421,7 +466,7 @@ foreach($mainmenuusedarray as $val)
 	// Img file not found
 	if (! $found && $generic <= 4)
 	{
-		$url=DOL_URL_ROOT."/theme/bureau2crea/img/menus/generic".$generic.".png";
+		$url=dol_buildpath($path.'/theme/'.$theme.'/img/menus/generic'.$generic.'.png',1);
 		$found=1;
 		$generic++;
 	}
@@ -496,7 +541,7 @@ li.tmenu .tmenusel, li.tmenusel .tmenusel {
 }
 
 li.tmenusel {
-    background-image : url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_tmenusel_btnD.jpg' ?>);
+    background-image : url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_tmenusel_btnD.jpg',1); ?>);
     background-position: right;
 }
 
@@ -521,7 +566,9 @@ form#login {
 	font-size: 13px;
 }
 .login_table_title {
-	width: 540px;
+	margin-left: 10px;
+	margin-right: 10px;
+	max-width: 540px;
 	color: #888888;
 	text-shadow: 1px 1px 1px #FFF;
 }
@@ -529,8 +576,10 @@ form#login {
 	text-shadow: 1px 1px 1px #FFF;
 }
 .login_table {
+	margin-left: 10px;
+	margin-right: 10px;
 	padding:12px;
-	width: 540px;
+	max-width: 540px;
 	border: 1px solid #C0C0C0;
 	background-color: #E0E0E0;
 
@@ -570,9 +619,16 @@ div.login_block table {
 	display: inline;
 }
 
+div#login_left, div#login_right {
+	display: inline-block;
+	min-width: 220px;
+	text-align: center;
+	vertical-align: middle;
+}
+
 div.login {
 	white-space:nowrap;
-	padding: <?php echo ($conf->browser->phone?'0':'8')?>px 0px 0px 0px;
+	padding: <?php echo ($conf->dol_optimize_smallscreen?'0':'8')?>px 0px 0px 0px;
 	margin: 0px 0px 0px 8px;
 	font-weight: bold;
 }
@@ -584,8 +640,17 @@ div.login a:hover {
 	text-decoration:underline;
 }
 
+.alogin, .alogin:hover {
+	color: #888 !important;
+	font-weight: normal !important;
+	font-size: <?php echo $fontsizesmaller; ?>px !important;
+}
+.alogin:hover {
+	text-decoration:underline !important;
+}
+
 img.login, img.printer, img.entity {
-	padding: <?php echo ($conf->browser->phone?'0':'8')?>px 0px 0px 0px;
+	padding: <?php echo ($conf->dol_optimize_smallscreen?'0':'8')?>px 0px 0px 0px;
 	margin: 0px 0px 0px 8px;
 	text-decoration: none;
 	color: white;
@@ -596,16 +661,25 @@ img.login, img.printer, img.entity {
 /* ============================================================================== */
 /* Menu gauche                                                                    */
 /* ============================================================================== */
-.vmenu{
-margin: 0;
-position: relative;
-width: 180px;
+
+.vmenu {
+	margin: 0;
+	position: relative;
+	width: 180px;
 }
 <?php if (GETPOST("optioncss") == 'print') { ?>
 .vmenu {
 	display: none;
 }
 <?php } ?>
+
+div.vmenu {
+	position: relative;
+    float: left;
+    margin: 0px;
+    width: 180px;
+    margin-left: 10px;
+}
 
 a.vmenu:link        { font-size:12px; text-align:left; font-weight: normal; color: #FFFFFF; margin: 1px 1px 1px 4px; }
 a.vmenu:visited     { font-size:12px; text-align:left; font-weight: normal; color: #FFFFFF; margin: 1px 1px 1px 4px; }
@@ -617,7 +691,8 @@ a.vsmenu:link       { font-size:11px; text-align:left; font-weight: normal; colo
 a.vsmenu:visited    { font-size:11px; text-align:left; font-weight: normal; color: #202020; margin: 1px 1px 1px 4px; }
 a.vsmenu:active     { font-size:11px; text-align:left; font-weight: normal; color: RGB(94,148,181); margin: 1px 1px 1px 4px; }
 a.vsmenu:hover      { font-size:11px; text-align:left; font-weight: normal; color: #7F0A29; margin: 1px 1px 1px 4px; }
-font.vsmenudisabled { font-size:11px; text-align:left; font-weight: normal; color: #202020; margin: 1px 1px 1px 4px; }
+font.vsmenudisabled { font-size:11px; text-align:left; font-weight: normal; color: #202020; }
+font.vsmenudisabledmargin { margin: 1px 1px 1px 4px; }
 
 a.help:link         { font-size: 10px; font-weight: bold; background: #FFFFFF; border: 1px solid #8CACBB; color: #68ACCF; padding: 0em 0.7em; margin: 0em 0.5em; text-decoration: none; white-space: nowrap; }
 a.help:visited      { font-size: 10px; font-weight: bold; background: #FFFFFF; border: 1px solid #8CACBB; color: #68ACCF; padding: 0em 0.7em; margin: 0em 0.5em; text-decoration: none; white-space: nowrap; }
@@ -631,7 +706,7 @@ div.blockvmenupair
 	border-spacing: 0px;
 	padding: 0px;
 	width: 100%;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_leftCategorie.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_leftCategorie.jpg',1); ?>);
     background-position: top right;
     background-repeat: no-repeat;
 
@@ -642,7 +717,7 @@ div.blockvmenuimpair
 	border-spacing: 0px;
 	padding: 0px;
 	width: 100%;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_leftCategorie.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_leftCategorie.jpg',1); ?>);
     background-position: top right;
     background-repeat: no-repeat;
 
@@ -686,8 +761,7 @@ div.blockvmenusearch
 {
 	margin: 3px 0px 15px 0px;
 	padding: 25px 0px 2px 2px;
-	width: 180px;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_leftMenu.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_leftMenu.jpg',1); ?>);
     background-position: top right;
     background-repeat: no-repeat;
 }
@@ -722,7 +796,7 @@ div.blockvmenubookmarks
 	border-spacing: 0px;
 	padding: 0px;
 	width: 100%;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_leftCategorie.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_leftCategorie.jpg',1); ?>);
     background-position: top right;
     background-repeat: no-repeat;
     margin-bottom: 15px;
@@ -730,7 +804,7 @@ div.blockvmenubookmarks
 
 div.blockvmenuhelp
 {
-<?php if (empty($conf->browser->phone)) { ?>
+<?php if (empty($conf->dol_optimize_smallscreen)) { ?>
 	text-align: center;
 	border-spacing: 0px;
     width: 162px;
@@ -820,7 +894,7 @@ td.photo {
 /* ============================================================================== */
 
 .toolbar {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/tmenu2.png' ?>) !important;
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$conf->theme.'/img/tmenu2.png',1); ?>) !important;
     background-repeat: repeat-x !important;
     border: 1px solid #BBB !important;
 }
@@ -835,6 +909,7 @@ a.toolbarbutton {
     background: #FFFFFF;*/
 }
 img.toolbarbutton {
+	margin-top: 2px;
     height: 28px;
 }
 
@@ -950,7 +1025,7 @@ img.toolbarbutton {
 }
 
 .ui-layout-north {
-	height: <?php print (empty($conf->browser->phone)?'40':'40'); ?>px !important;
+	height: <?php print (empty($conf->dol_optimize_smallscreen)?'40':'40'); ?>px !important;
 }
 
 /* ECM */
@@ -994,7 +1069,6 @@ img.toolbarbutton {
 }
 
 .ecm-layout-resizer  { /* all 'resizer-bars' */
-    background:     #EEE;
     border:         1px solid #BBB;
     border-width:   0;
     }
@@ -1023,7 +1097,7 @@ div.tabs {
     margin: 0px 0px 10px 0px;
     text-align: left;
     width: 100%;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_navHorizontal.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_navHorizontal.jpg',1); ?>);
     height: 25px;
     background-repeat: repeat-x;
     background-position: left;
@@ -1058,7 +1132,6 @@ div.tabs a.tab {
     color: #FFFFFF;
     text-decoration: none;
     position: relative;
-    float: left;
     padding: 0px 10px 0px 10px;
 }
 
@@ -1072,7 +1145,7 @@ div.tabs a.tab#active {
 
 div.tabs a.tab span {
 	padding: 0px 10px 0px 10px;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_ssmenu_btnG.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_ssmenu_btnG.jpg',1); ?>);
     background-position: left;
     background-repeat: no-repeat;
     display: block;
@@ -1081,7 +1154,7 @@ div.tabs a.tab span {
 }
 
 div.tabs a.tab#active span {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_ssmenusel_btnG.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_ssmenusel_btnG.jpg',1); ?>);
 }
 
 div.tabs a.tab:hover {
@@ -1099,7 +1172,7 @@ div.tabs a.tab:hover {
 div.tabBar {
     color: #234046;
     margin: 0px 0px 10px 0px;
-    background: #dee7ec url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/tab_background.png' ?>) repeat-x;
+    background: #dee7ec url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/tab_background.png',1); ?>) repeat-x;
 }
 
 div.tabsAction {
@@ -1215,12 +1288,12 @@ span.tabspan {
 /* Boutons actions                                                                */
 /* ============================================================================== */
 
-/* Nouvelle syntaxe a utiliser */
+div.divButAction { margin-bottom: 1.4em; }
 
-.butAction:link, .butAction:visited, .butAction:hover, .butAction:active, .butActionDelete, .butActionDelete:link, .butActionDelete:visited, .butActionDelete:hover, .butActionDelete:active {
+.butAction, .butAction:link, .butAction:visited, .butAction:hover, .butAction:active, .butActionDelete, .butActionDelete:link, .butActionDelete:visited, .butActionDelete:hover, .butActionDelete:active {
 	font-family:"Trebuchet MS",Arial,Helvetica,sans-serif;
 	font-weight: bold;
-	background: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_btnBlue.jpg' ?>) repeat-x;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_btnBlue.jpg',1); ?>) repeat-x;
 	color: #FFF !important;
 	padding: 0px 10px 0px 10px;
 	margin: 0px 10px 0px 10px;
@@ -1238,7 +1311,7 @@ span.tabspan {
 }
 
 .butActionDelete    {
-	background: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_btnRed.jpg' ?>) repeat-x !important;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_btnRed.jpg',1); ?>) repeat-x !important;
     color: #FFF;
 }
 
@@ -1251,7 +1324,7 @@ span.tabspan {
 .butActionRefused {
 	font-family:"Trebuchet MS",Arial,Helvetica,sans-serif;
 	font-weight: bold;
-	background: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_btnBlue.jpg' ?>) repeat-x;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_btnBlue.jpg',1); ?>) repeat-x;
 	color: #AAA !important;
 	padding: 0px 10px 0px 10px;
 	margin: 0px 10px 0px 10px;
@@ -1286,7 +1359,7 @@ span.butAction, span.butActionDelete {
 
 /*
 #undertopmenu {
-background-image: url("<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/gradient.gif' ?>");
+background-image: url("<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/gradient.gif',1); ?>");
 background-repeat: repeat-x;
 }
 */
@@ -1393,7 +1466,7 @@ table.nobordernopadding td {
 /* For lists */
 
 table.liste {
-    /*background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_centerBlock-title.jpg' ?>);*/
+    /*background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_centerBlock-title.jpg',1); ?>);*/
     background-repeat: no-repeat;
     background-position: top right;
     vertical-align: text-top;
@@ -1404,7 +1477,7 @@ padding: 0px 5px;
 }
 
 table.noborder {
-    /*background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_centerBlock-title.jpg' ?>);*/
+    /*background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_centerBlock-title.jpg',1); ?>);*/
     background-repeat: no-repeat;
     background-position: top right;
     vertical-align: text-top;
@@ -1419,11 +1492,10 @@ tr.liste_titre {
     font-weight: normal;
     /* text-decoration: underline; */
     /* border-bottom: 1px solid #FDFFFF; */
-    white-space: nowrap;
 }
 
 tr.liste_titre {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_centerBlock-title.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_centerBlock-title.jpg',1); ?>);
     background-position: top right;
 }
 
@@ -1432,7 +1504,7 @@ th.liste_titre_sel, td.liste_titre_sel, th.liste_titre {
 }
 
 tr.liste_titre {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_centerBlock-title2.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_centerBlock-title2.jpg',1); ?>);
 }
 
 tr.liste_total {
@@ -1448,8 +1520,8 @@ div.liste_titre, tr.liste_titre {
 }
 
 div.liste_titre a, tr.liste_titre a {
-color: #333333;
-margin: 0px 5px;
+	color: #333333;
+	margin: 0px 5px;
 }
 
 div.liste_titre td, tr.liste_titre td {
@@ -1464,7 +1536,6 @@ div.liste_titre, th.liste_titre, td.liste_titre
     color: #333333;
     font-family: <?php print $fontlist ?>;
     font-weight: normal;
-    white-space: nowrap;
     background-image: none;
     background: none;
 }
@@ -1484,7 +1555,6 @@ th.liste_titre_sel, td.liste_titre_sel
     font-weight: normal;
     /* text-decoration: underline; */
     /* border-bottom: 1px solid #FDFFFF; */
-    white-space: nowrap;
 }
 
 input.liste_titre {
@@ -1496,11 +1566,10 @@ input.liste_titre {
 tr.liste_total td {
 border-top: 1px solid #DDDDDD;
 background: #F0F0F0;
-/* background-image: url(<?php echo DOL_URL_ROOT.'/theme/login_background.png' ?>); */
+/* background-image: url(<?php echo dol_buildpath($path.'/theme/login_background.png',1); ?>); */
 background-repeat: repeat-x;
 color: #332266;
 font-weight: normal;
-white-space: nowrap;
 padding: 5px;
 }
 
@@ -1559,15 +1628,18 @@ tr.pair td.nohover {
 tr.box_titre {
 	height: 24px;
 	background: #7699A9;
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/menus/trtitle.png' ?>);
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/menus/trtitle.png',1); ?>);
 	background-repeat: repeat-x;
 	color: #FFFFFF;
 	font-family: <?php print $fontlist ?>, sans-serif;
 	font-weight: normal;
 	border-bottom: 1px solid #FDFFFF;
-	white-space: nowrap;
   -moz-border-radius-topleft:6px;
   -moz-border-radius-topright:6px;
+}
+
+tr.box_titre td.boxclose {
+	width: 30px;
 }
 
 tr.box_impair {
@@ -1595,7 +1667,7 @@ font-family: <?php print $fontlist ?>;
 
 .ok      { color: #114466; }
 .warning { color: #887711; }
-.error   { color: #550000; font-weight: bold; }
+.error   { color: #550000 !important; font-weight: bold; }
 
 td.highlights { background: #f9c5c6; }
 
@@ -1656,6 +1728,9 @@ a.impayee:hover { font-weight: bold; color: #550000; }
 /*
  *  Other
  */
+
+.product_line_stock_ok { color: #002200; }
+.product_line_stock_too_low { color: #664400; }
 
 .fieldrequired { font-weight: bold; color: #000055; }
 
@@ -1840,12 +1915,19 @@ td.hidden {
 /*  Module agenda                                                                 */
 /* ============================================================================== */
 
-.cal_other_month   { background: #DDDDDD; border: solid 1px #ACBCBB; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
-.cal_past_month    { background: #EEEEEE; border: solid 1px #ACBCBB; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
-.cal_current_month { background: #FFFFFF; border: solid 1px #ACBCBB; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
-.cal_today         { background: #FFFFFF; border: solid 2px #6C7C7B; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+table.cal_month    { border-spacing: 0px; }
+.cal_current_month { border-top: 0; border-left: solid 1px #E0E0E0; border-right: 0; border-bottom: solid 1px #E0E0E0; }
+.cal_other_month   { border-top: 0; border-left: solid 1px #C0C0C0; border-right: 0; border-bottom: solid 1px #C0C0C0; }
+.cal_current_month_right { border-right: solid 1px #E0E0E0; }
+.cal_other_month_right   { border-right: solid 1px #C0C0C0; }
+.cal_other_month   { background: #DDDDDD; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+.cal_past_month    { background: #EEEEEE; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+.cal_current_month { background: #FFFFFF; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
+.cal_today         { background: #FFFFFF; border: solid 2px #C0C0C0; padding-<?php print $left; ?>: 2px; padding-<?php print $right; ?>: 1px; padding-top: 0px; padding-bottom: 0px; }
 table.cal_event    { border-collapse: collapse; margin-bottom: 1px; }
 table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?php print $right; ?>: 2px; padding-top: 0px; padding-bottom: 0px; }
+ul.cal_event       { padding-right: 2px; padding-top: 1px; border: none; list-style-type: none; margin: 0 auto; padding-left: 0px; padding-start: 0px; -khtml-padding-start: 0px; -o-padding-start: 0px; -webkit-padding-start: 0px; -webkit-padding-start: 0px; }
+li.cal_event       { border: none; list-style-type: none; }
 .cal_event a:link    { color: #111111; font-size: 11px; font-weight: normal !important; }
 .cal_event a:visited { color: #111111; font-size: 11px; font-weight: normal !important; }
 .cal_event a:active  { color: #111111; font-size: 11px; font-weight: normal !important; }
@@ -1857,7 +1939,7 @@ table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?
 /* ============================================================================== */
 
 .ui-widget { font-family: Verdana,Arial,sans-serif; font-size: 0.9em; }
-.ui-autocomplete-loading { background: white url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/working.gif' ?>) right center no-repeat; }
+.ui-autocomplete-loading { background: white url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/working.gif',1); ?>) right center no-repeat; }
 
 
 /* ============================================================================== */
@@ -1865,12 +1947,12 @@ table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?
 /* ============================================================================== */
 
 .editkey_textarea, .editkey_ckeditor, .editkey_string, .editkey_email, .editkey_numeric, .editkey_select, .editkey_autocomplete {
-	background: url(<?php echo dol_buildpath($path.'/theme/bureau2crea/img/edit.png',1) ?>) right top no-repeat;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/edit.png',1) ?>) right top no-repeat;
 	cursor: pointer;
 }
 
 .editkey_datepicker {
-	background: url(<?php echo dol_buildpath($path.'/theme/bureau2crea/img/calendar.png',1) ?>) right center no-repeat;
+	background: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/calendar.png',1) ?>) right center no-repeat;
 	cursor: pointer;
 }
 
@@ -1894,113 +1976,9 @@ table.cal_event td { border: 0px; padding-<?php print $left; ?>: 0px; padding-<?
 /* ============================================================================== */
 
 /* CSS for treeview */
-
-/* Lien plier /deplier tout */
-.arbre-switch {
-    text-align: right;
-    padding: 0 5px;
-    margin: 0 0 -18px 0;
-}
-
-/* Arbre */
-ul.arbre {
-    padding: 5px 10px;
-}
-/* strong : A modifier en fonction de la balise choisie */
-ul.arbre strong {
-    font-weight: normal;
-    padding: 0 0 0 20px;
-    margin: 0 0 0 -7px;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/common/treemenu/branch.gif' ?>);
-    background-repeat: no-repeat;
-    background-position: 1px 50%;
-}
-ul.arbre strong.arbre-plier {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/common/treemenu/plus.gif' ?>);
-    cursor: pointer;
-}
-ul.arbre strong.arbre-deplier {
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/common/treemenu/minus.gif' ?>);
-    cursor: pointer;
-}
-ul.arbre ul {
-    padding: 0;
-    margin: 0;
-}
-ul.arbre li {
-    padding: 0;
-    margin: 0;
-    list-style: none;
-}
-/* This is to create an indent */
-ul.arbre li li {
-    margin: 0 0 0 16px;
-}
-/* Classe pour masquer */
-.hide {
-    display: none;
-}
-
-img.menuNew
-{
-	display:block;
-	border:0px;
-}
-
-img.menuEdit
-{
-	border: 0px;
-	display: block;
-}
-
-img.menuDel
-{
-	display:none;
-	border: 0px;
-}
-
-div.menuNew
-{
-	margin-top:-20px;
-	margin-<?php print $left; ?>:270px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-}
-
-div.menuEdit
-{
-	margin-top:-15px;
-	margin-<?php print $left; ?>:250px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-
-}
-
-div.menuDel
-{
-	margin-top:-20px;
-	margin-<?php print $left; ?>:290px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-
-}
-
-div.menuFleche
-{
-	margin-top:-16px;
-	margin-<?php print $left; ?>:320px;
-	height:20px;
-	padding:0px;
-	width:30px;
-	position:relative;
-
-}
+.treeview ul { background-color: transparent !important; margin-top: 0; }
+.treeview li { background-color: transparent !important; padding: 0 0 0 16px !important; min-height: 20px; }
+.treeview .hover { color: black !important; }
 
 
 /* ============================================================================== */
@@ -2148,7 +2126,6 @@ div.tabsAction {
 table.noborder {
 	margin-bottom: 10px;
     position: relative;
-    float: left;
     border: none;
 }
 
@@ -2171,7 +2148,7 @@ span.cke_skin_kama { padding: 0 !important; }
 a.cke_dialog_ui_button
 {
     font-family: <?php print $fontlist ?> !important;
-	background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/button_bg.png' ?>) !important;
+	background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/button_bg.png',1); ?>) !important;
 	background-position: bottom !important;
     border: 1px solid #ACBCBB !important;
 	padding: 0.1em 0.7em !important;
@@ -2229,13 +2206,9 @@ div.table-val-border-col {
 /* ============================================================================== */
 
 #login {
-	position: relative;
     display: block;
-    width: 480px;
     height: auto;
     top: 20px;
-    left: 50%;
-    margin-left: -240px;
     margin-bottom: 30px;
     }
 
@@ -2263,7 +2236,7 @@ div#parameterBox {
     height: auto;
     border: 1px solid #666;
     border-top: 2px solid #842F00;
-    background-image: url(<?php echo DOL_URL_ROOT.'/theme/bureau2crea/img/bg_connectionBox.jpg' ?>);
+    background-image: url(<?php echo dol_buildpath($path.'/theme/'.$theme.'/img/bg_connectionBox.jpg',1); ?>);
     background-repeat: no-repeat;
     background-position: top center;
     }
@@ -2460,12 +2433,67 @@ div.ecmjqft {
 	bottom: 4px !important;
 <?php } ?>
 	text-align: center;
-	min-width: 500px;
+	min-width: <?php echo $dol_optimize_smallscreen?'200':'480'; ?>px;
 	width: auto;
 	padding-left: 10px !important;
 	padding-right: 10px !important;
 }
 
+
+/* ============================================================================== */
+/*  JMobile                                                                       */
+/* ============================================================================== */
+
+.ui-btn-inner {
+	padding-left: 10px;
+	padding-right: 10px;
+	white-space: normal;
+}
+
+div.ui-controlgroup
+{
+	height: auto;
+	background-image: none;
+}
+
+div.ui-controlgroup-controls div.tabsElem, div.ui-controlgroup-controls div.tabsElem a.tab
+{
+	height: auto;
+}
+
+a.tab span.ui-btn-inner
+{
+	border: none;
+	padding: 0;
+}
+div.tabs a.tab#active span.ui-btn-inner, div.tabs a.tab#active span.ui-btn-text, div.tabs a.tab span.ui-btn-inner, div.tabs a.tab span.ui-btn-text {
+	background-image: none;
+	color: #D45416;
+	height: auto;
+}
+
+.ui-body-c {
+	border: none;
+	text-shadow: none;
+}
+
+.ui-btn-icon-left .ui-icon {
+	left: 8px;
+}
+.ui-btn-icon-right .ui-icon {
+	right: 8px;
+}
+
+div.ui-radio
+{
+	display: inline-block;
+}
+.ui-radio input {
+	height: auto;
+	width: auto;
+	margin: 0;
+	position: static;
+}
 
 <?php
 if (is_object($db)) $db->close();

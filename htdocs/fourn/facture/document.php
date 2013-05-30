@@ -2,11 +2,11 @@
 /* Copyright (C) 2003-2004	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2009	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2005		Marc Barilley / Ocebo	<marc@ocebo.com>
- * Copyright (C) 2005-2012	Regis Houssin			<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -42,7 +42,7 @@ $confirm=GETPOST('confirm','alpha');
 
 // Security check
 if ($user->societe_id) $socid=$user->societe_id;
-$result = restrictedArea($user, 'fournisseur', $facid, 'facture_fourn', 'facture');
+$result = restrictedArea($user, 'fournisseur', $id, 'facture_fourn', 'facture');
 
 // Get parameters
 $sortfield = GETPOST("sortfield",'alpha');
@@ -129,13 +129,13 @@ if ($object->id > 0)
 	$linkback = '<a href="'.DOL_URL_ROOT.'/fourn/facture/index.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
 	// Ref
-	print '<tr><td width="30%" nowrap="nowrap">'.$langs->trans("Ref").'</td><td colspan="3">';
-	print $form->showrefnav($object, 'facid', $linkback, 1, 'rowid', 'ref', $morehtmlref);
+	print '<tr><td width="30%" class="nowrap">'.$langs->trans("Ref").'</td><td colspan="3">';
+	print $form->showrefnav($object, 'facid', $linkback, 1, 'rowid', 'ref');
 	print '</td>';
 	print "</tr>\n";
 
 	// Ref supplier
-	print '<tr><td nowrap="nowrap">'.$langs->trans("RefSupplier").'</td><td colspan="3">'.$object->ref_supplier.'</td>';
+	print '<tr><td class="nowrap">'.$langs->trans("RefSupplier").'</td><td colspan="3">'.$object->ref_supplier.'</td>';
 	print "</tr>\n";
 
 	// Thirdparty
@@ -172,12 +172,15 @@ if ($object->id > 0)
 		}
 		print ')';
 	}
+	// FIXME $facidnext is not defined
+	/*
 	if ($facidnext > 0)
 	{
 		$facthatreplace=new FactureFournisseur($db);
 		$facthatreplace->fetch($facidnext);
 		print ' ('.$langs->transnoentities("ReplacedByInvoice",$facthatreplace->getNomUrl(1)).')';
 	}
+	*/
 	print '</td></tr>';
 
 	// Label
@@ -200,7 +203,8 @@ if ($object->id > 0)
 
 	// List of document
 	$param='&facid='.$object->id;
-	$formfile->list_of_documents($filearray,$object,'facture_fournisseur',$param,0,get_exdir($object->id,2,0).$object->id.'/');
+	$ref=dol_sanitizeFileName($object->ref);
+	$formfile->list_of_documents($filearray,$object,'facture_fournisseur',$param,0,get_exdir($object->id,2,0).$ref.'/');
 
 }
 else

@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -24,7 +24,7 @@
  */
 
 // Put here all includes required by your class file
-//require_once(DOL_DOCUMENT_ROOT."/core/class/commonobject.class.php");
+require_once(DOL_DOCUMENT_ROOT."/core/class/commonobject.class.php");
 //require_once(DOL_DOCUMENT_ROOT."/societe/class/societe.class.php");
 //require_once(DOL_DOCUMENT_ROOT."/product/class/product.class.php");
 
@@ -32,13 +32,13 @@
 /**
  *	Put here description of your class
  */
-class Skeleton_Class // extends CommonObject
+class Skeleton_Class extends CommonObject
 {
 	var $db;							//!< To store db handler
 	var $error;							//!< To return error code (or message)
 	var $errors=array();				//!< To return several error codes (or messages)
-	//var $element='skeleton';			//!< Id that identify managed objects
-	//var $table_element='skeleton';	//!< Name of table without prefix where object is stored
+	var $element='skeleton';			//!< Id that identify managed objects
+	var $table_element='skeleton';		//!< Name of table without prefix where object is stored
 
     var $id;
     var $prop1;

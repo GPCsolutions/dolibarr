@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2010 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -46,6 +46,7 @@ $setuplang=GETPOST("selectlang",'',3)?GETPOST("selectlang",'',3):'auto';
 $langs->setDefaultLang($setuplang);
 $versionfrom=GETPOST("versionfrom",'',3)?GETPOST("versionfrom",'',3):(empty($argv[1])?'':$argv[1]);
 $versionto=GETPOST("versionto",'',3)?GETPOST("versionto",'',3):(empty($argv[2])?'':$argv[2]);
+$versionmodule=GETPOST("versionmodule",'',3)?GETPOST("versionmodule",'',3):(empty($argv[3])?'':$argv[3]);
 
 $langs->load("admin");
 $langs->load("install");
@@ -114,9 +115,13 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
 
     $db=getDoliDBInstance($conf->db->type,$conf->db->host,$conf->db->user,$conf->db->pass,$conf->db->name,$conf->db->port);
 
+    // Create the global $hookmanager object
+    include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+    $hookmanager=new HookManager($db);
+
     if ($db->connected == 1)
     {
-        print '<tr><td nowrap="nowrap">';
+        print '<tr><td class="nowrap">';
         print $langs->trans("ServerConnection")." : $dolibarr_main_db_host</td><td align=\"right\">".$langs->trans("OK")."</td></tr>\n";
         dolibarr_install_syslog("upgrade: ".$langs->transnoentities("ServerConnection")." : $dolibarr_main_db_host ".$langs->transnoentities("OK"));
         $ok = 1;
@@ -132,7 +137,7 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
     {
         if($db->database_selected == 1)
         {
-            print '<tr><td nowrap="nowrap">';
+            print '<tr><td class="nowrap">';
             print $langs->trans("DatabaseConnection")." : ".$dolibarr_main_db_name."</td><td align=\"right\">".$langs->trans("OK")."</td></tr>\n";
             dolibarr_install_syslog("upgrade: Database connection successfull : $dolibarr_main_db_name");
             $ok=1;
@@ -180,68 +185,78 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
      */
     if ($ok)
     {
-	    $couples=array();
-	    $filles=array();
-	    $sql = "SELECT fk_categorie_mere, fk_categorie_fille";
-	    $sql.= " FROM ".MAIN_DB_PREFIX."categorie_association";
-	    dolibarr_install_syslog("upgrade: search duplicate sql=".$sql);
-	    $resql = $db->query($sql);
-	    if ($resql)
+	    $result = $db->DDLDescTable(MAIN_DB_PREFIX."categorie_association");
+	    if ($result)	// result defined for version 3.2 or -
 	    {
-	        $num=$db->num_rows($resql);
-	        while ($obj=$db->fetch_object($resql))
-	        {
-	            if (! isset($filles[$obj->fk_categorie_fille]))	// Only one record as child (a child has only on parent).
-	            {
-	                if ($obj->fk_categorie_mere != $obj->fk_categorie_fille)
-	                {
-	                    $filles[$obj->fk_categorie_fille]=1;	// Set record for this child
-	                    $couples[$obj->fk_categorie_mere.'_'.$obj->fk_categorie_fille]=array('mere'=>$obj->fk_categorie_mere, 'fille'=>$obj->fk_categorie_fille);
-	                }
-	            }
-	        }
+		    $obj = $db->fetch_object($result);
+		    if ($obj)	// It table categorie_association exists
+		    {
+		    	$couples=array();
+			    $filles=array();
+			    $sql = "SELECT fk_categorie_mere, fk_categorie_fille";
+			    $sql.= " FROM ".MAIN_DB_PREFIX."categorie_association";
+			    dolibarr_install_syslog("upgrade: search duplicate sql=".$sql);
+			    $resql = $db->query($sql);
+			    if ($resql)
+			    {
+			        $num=$db->num_rows($resql);
+			        while ($obj=$db->fetch_object($resql))
+			        {
+			            if (! isset($filles[$obj->fk_categorie_fille]))	// Only one record as child (a child has only on parent).
+			            {
+			                if ($obj->fk_categorie_mere != $obj->fk_categorie_fille)
+			                {
+			                    $filles[$obj->fk_categorie_fille]=1;	// Set record for this child
+			                    $couples[$obj->fk_categorie_mere.'_'.$obj->fk_categorie_fille]=array('mere'=>$obj->fk_categorie_mere, 'fille'=>$obj->fk_categorie_fille);
+			                }
+			            }
+			        }
 
-	        dolibarr_install_syslog("upgrade: result is num=".$num." count(couples)=".count($couples));
+			        dolibarr_install_syslog("upgrade: result is num=".$num." count(couples)=".count($couples));
 
-	        // If there is duplicates couples or child with two parents
-	        if (count($couples) > 0 && $num > count($couples))
-	        {
-	            $error=0;
+			        // If there is duplicates couples or child with two parents
+			        if (count($couples) > 0 && $num > count($couples))
+			        {
+			            $error=0;
 
-	            $db->begin();
+			            $db->begin();
 
-	            $sql="DELETE FROM ".MAIN_DB_PREFIX."categorie_association";
-	            dolibarr_install_syslog("upgrade: delete association sql=".$sql);
-	            $resqld=$db->query($sql);
-	            if ($resqld)
-	            {
-	                foreach($couples as $key => $val)
-	                {
-	                    $sql ="INSERT INTO ".MAIN_DB_PREFIX."categorie_association(fk_categorie_mere,fk_categorie_fille)";
-	                    $sql.=" VALUES(".$val['mere'].", ".$val['fille'].")";
-	                    dolibarr_install_syslog("upgrade: insert association sql=".$sql);
-	                    $resqli=$db->query($sql);
-	                    if (! $resqli) $error++;
-	                }
-	            }
+			            // We delete all
+			            $sql="DELETE FROM ".MAIN_DB_PREFIX."categorie_association";
+			            dolibarr_install_syslog("upgrade: delete association sql=".$sql);
+			            $resqld=$db->query($sql);
+			            if ($resqld)
+			            {
+			            	// And we insert only each record once
+			                foreach($couples as $key => $val)
+			                {
+			                    $sql ="INSERT INTO ".MAIN_DB_PREFIX."categorie_association(fk_categorie_mere,fk_categorie_fille)";
+			                    $sql.=" VALUES(".$val['mere'].", ".$val['fille'].")";
+			                    dolibarr_install_syslog("upgrade: insert association sql=".$sql);
+			                    $resqli=$db->query($sql);
+			                    if (! $resqli) $error++;
+			                }
+			            }
 
-	            if (! $error)
-	            {
-	                print '<tr><td>'.$langs->trans("RemoveDuplicates").'</td>';
-	                print '<td align="right">'.$langs->trans("Success").' ('.$num.'=>'.count($couples).')</td></tr>';
-	                $db->commit();
-	            }
-	            else
-	            {
-	                print '<tr><td>'.$langs->trans("RemoveDuplicates").'</td>';
-	                print '<td align="right">'.$langs->trans("Failed").'</td></tr>';
-	                $db->rollback();
-	            }
-	        }
-	    }
-	    else
-	    {
-	        print '<div class="error">'.$langs->trans("Error").'</div>';
+			            if (! $error)
+			            {
+			                print '<tr><td>'.$langs->trans("RemoveDuplicates").'</td>';
+			                print '<td align="right">'.$langs->trans("Success").' ('.$num.'=>'.count($couples).')</td></tr>';
+			                $db->commit();
+			            }
+			            else
+			            {
+			                print '<tr><td>'.$langs->trans("RemoveDuplicates").'</td>';
+			                print '<td align="right">'.$langs->trans("Failed").'</td></tr>';
+			                $db->rollback();
+			            }
+			        }
+			    }
+			    else
+			    {
+			        print '<div class="error">'.$langs->trans("Error").' '.$db->lasterror().'</div>';
+			    }
+		    }
 	    }
     }
 
@@ -309,8 +324,9 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
     if ($ok)
     {
         $dir = "mysql/migration/";		// We use mysql migration scripts whatever is database driver
+		if (! empty($versionmodule)) $dir=dol_buildpath('/'.$versionmodule.'/sql/',0);
 
-        // For minor version
+		// Clean last part to exclude minor version x.y.z -> x.y
         $newversionfrom=preg_replace('/(\.[0-9]+)$/i','.0',$versionfrom);
         $newversionto=preg_replace('/(\.[0-9]+)$/i','.0',$versionto);
 
@@ -352,13 +368,43 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
         // Loop on each migrate files
         foreach($filelist as $file)
         {
-            print '<tr><td nowrap>';
-            print $langs->trans("ChoosedMigrateScript").'</td><td align="right">'.$file.'</td></tr>'."\n";
-
-            $name = substr($file, 0, dol_strlen($file) - 4);
+        	print '<tr><td colspan="2"><hr></td></tr>';
+            print '<tr><td nowrap>'.$langs->trans("ChoosedMigrateScript").'</td><td align="right">'.$file.'</td></tr>'."\n";
 
             // Run sql script
             $ok=run_sql($dir.$file, 0, '', 1);
+
+            // Scan if there is migration scripts for modules htdocs/module/sql or htdocs/custom/module/sql
+            $modulesfile = array();
+            foreach ($conf->file->dol_document_root as $type => $dirroot)
+            {
+            	$handlemodule=@opendir($dirroot);		// $dirroot may be '..'
+            	if (is_resource($handlemodule))
+            	{
+            		while (($filemodule = readdir($handlemodule))!==false)
+            		{
+            			if (! preg_match('/\./',$filemodule) && is_dir($dirroot.'/'.$filemodule.'/sql'))	// We exclude filemodule that contains . (are not directories) and are not directories.
+            			{
+            				//print "Scan for ".$dirroot . '/' . $filemodule . '/sql/'.$file;
+            				if (is_file($dirroot . '/' . $filemodule . '/sql/'.$file))
+            				{
+            					$modulesfile[$dirroot . '/' . $filemodule . '/sql/'.$file] = '/' . $filemodule . '/sql/'.$file;
+            				}
+            			}
+            		}
+            		closedir($handlemodule);
+            	}
+            }
+
+            foreach ($modulesfile as $modulefilelong => $modulefileshort)
+            {
+            	print '<tr><td colspan="2"><hr></td></tr>';
+            	print '<tr><td nowrap>'.$langs->trans("ChoosedMigrateScript").' (external modules)</td><td align="right">'.$modulefileshort.'</td></tr>'."\n";
+
+	            // Run sql script
+            	$okmodule=run_sql($modulefilelong, 0, '', 1);	// Note: Result of migration of external module should not decide if we continue migration of Dolibarr or not.
+            }
+
         }
     }
 
@@ -377,7 +423,7 @@ $ret=0;
 if (! $ok && isset($argv[1])) $ret=1;
 dol_syslog("Exit ".$ret);
 
-pFooter(! $ok && empty($_GET["ignoreerrors"]),$setuplang);
+pFooter(((! $ok && empty($_GET["ignoreerrors"])) || $versionmodule),$setuplang);
 
 if ($db->connected) $db->close();
 

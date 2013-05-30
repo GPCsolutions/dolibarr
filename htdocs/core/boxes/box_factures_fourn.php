@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2003      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -32,7 +32,7 @@ class box_factures_fourn extends ModeleBoxes
 {
 	var $boxcode="lastsupplierbills";
 	var $boximg="object_bill";
-	var $boxlabel;
+	var $boxlabel="BoxLastSupplierBills";
 	var $depends = array("facture","fournisseur");
 
 	var $db;
@@ -41,16 +41,6 @@ class box_factures_fourn extends ModeleBoxes
 	var $info_box_head = array();
 	var $info_box_contents = array();
 
-	/**
-     *  Constructor
-	 */
-	function __construct()
-	{
-		global $langs;
-		$langs->load("boxes");
-
-		$this->boxlabel=$langs->transnoentitiesnoconv("BoxLastSupplierBills");
-	}
 
 	/**
 	 *  Load data into info_box_contents array to show array later.
@@ -74,7 +64,7 @@ class box_factures_fourn extends ModeleBoxes
 		if ($user->rights->fournisseur->facture->lire)
 		{
 			$sql = "SELECT s.nom, s.rowid as socid,";
-			$sql.= " f.rowid as facid, f.facnumber, f.amount,";
+			$sql.= " f.rowid as facid, f.ref_supplier, f.amount,";
 			$sql.= " f.paye, f.fk_statut,";
 			$sql.= ' f.datef as df,';
 			$sql.= ' f.datec as datec,';
@@ -96,7 +86,7 @@ class box_factures_fourn extends ModeleBoxes
 				$now=dol_now();
 
 				$i = 0;
-				$l_due_date =  $langs->trans('Late').' ('.strtolower($langs->trans('DateEcheance')).': %s)';
+				$l_due_date =  $langs->trans('Late').' ('.$langs->trans('DateEcheance').': %s)';
 
 				while ($i < $num)
 				{
@@ -105,14 +95,14 @@ class box_factures_fourn extends ModeleBoxes
 					$datec=$db->jdate($objp->datec);
 
 					$late = '';
-					if ($objp->paye == 0 && $datelimite < ($now - $conf->facture->fournisseur->warning_delay)) $late=img_warning(sprintf($l_due_date, dol_print_date($datelimite,'day')));
+					if ($objp->paye == 0 && $datelimite && $datelimite < ($now - $conf->facture->fournisseur->warning_delay)) $late=img_warning(sprintf($l_due_date, dol_print_date($datelimite,'day')));
 
 					$this->info_box_contents[$i][0] = array('td' => 'align="left" width="16"',
                     'logo' => $this->boximg,
                     'url' => DOL_URL_ROOT."/fourn/facture/fiche.php?facid=".$objp->facid);
 
 					$this->info_box_contents[$i][1] = array('td' => 'align="left"',
-                    'text' => $objp->facnumber,
+                    'text' => $objp->ref_supplier,
                     'text2'=> $late,
                     'url' => DOL_URL_ROOT."/fourn/facture/fiche.php?facid=".$objp->facid);
 

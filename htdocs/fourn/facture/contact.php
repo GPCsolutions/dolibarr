@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2005		Patrick Rouillon	<patrick@rouillon.net>
  * Copyright (C) 2005-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -56,7 +56,7 @@ if ($action == 'addcontact' && $user->rights->fournisseur->facture->creer)
     if ($result > 0 && $id > 0)
     {
     	$contactid = (GETPOST('userid') ? GETPOST('userid') : GETPOST('contactid'));
-  		$result = $result = $object->add_contact($contactid, $_POST["type"], $_POST["source"]);
+  		$result = $object->add_contact($contactid, $_POST["type"], $_POST["source"]);
     }
 
 	if ($result >= 0)
@@ -150,7 +150,7 @@ if ($id > 0 || ! empty($ref))
 		print "</td></tr>";
 
         // Ref supplier
-        print '<tr><td nowrap="nowrap">'.$langs->trans("RefSupplier").'</td><td colspan="3">'.$object->ref_supplier.'</td>';
+        print '<tr><td class="nowrap">'.$langs->trans("RefSupplier").'</td><td colspan="3">'.$object->ref_supplier.'</td>';
         print "</tr>\n";
 
 		// Third party

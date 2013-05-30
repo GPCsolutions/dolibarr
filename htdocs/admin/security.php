@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2004-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2007 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2007 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -154,19 +154,6 @@ else if ($action == 'disable_encryptdbpassconf')
 	}
 }
 
-if ($action == 'activate_pdfsecurity')
-{
-	dolibarr_set_const($db, "PDF_SECURITY_ENCRYPTION", "1",'chaine',0,'',$conf->entity);
-	header("Location: security.php");
-	exit;
-}
-else if ($action == 'disable_pdfsecurity')
-{
-	dolibarr_del_const($db, "PDF_SECURITY_ENCRYPTION",$conf->entity);
-	header("Location: security.php");
-	exit;
-}
-
 if ($action == 'activate_MAIN_SECURITY_DISABLEFORGETPASSLINK')
 {
 	dolibarr_set_const($db, "MAIN_SECURITY_DISABLEFORGETPASSLINK", '1','chaine',0,'',$conf->entity);
@@ -260,7 +247,7 @@ foreach ($arrayhandler as $key => $module)
         print '</td>';
 
         // Show example of numbering module
-        print '<td nowrap="nowrap">';
+        print '<td class="nowrap">';
         $tmp=$module->getExample();
         if (preg_match('/^Error/',$tmp)) { $langs->load("errors"); print '<div class="error">'.$langs->trans($tmp).'</div>'; }
         elseif ($tmp=='NotConfigured') print $langs->trans($tmp);
@@ -363,37 +350,6 @@ print "</td>";
 
 print "</td>";
 print '</tr>';
-
-// Encryption et protection des PDF
-$var=!$var;
-print "<tr ".$bc[$var].">";
-print '<td colspan="3">';
-$text = $langs->trans("ProtectAndEncryptPdfFiles");
-$desc = $form->textwithpicto($text,$langs->transnoentities("ProtectAndEncryptPdfFilesDesc"),1);
-print $desc;
-print '</td>';
-print '<td align="center" width="60">';
-if($conf->global->PDF_SECURITY_ENCRYPTION == 1)
-{
-	print img_picto($langs->trans("Active"),'tick');
-}
-
-print '</td>';
-
-print '<td align="center" width="100">';
-if ($conf->global->PDF_SECURITY_ENCRYPTION == 0)
-{
-	print '<a href="security.php?action=activate_pdfsecurity">'.$langs->trans("Activate").'</a>';
-}
-if($conf->global->PDF_SECURITY_ENCRYPTION == 1)
-{
-	print '<a href="security.php?action=disable_pdfsecurity">'.$langs->trans("Disable").'</a>';
-}
-print "</td>";
-
-print "</td>";
-print '</tr>';
-
 
 
 // Disable link "Forget password" on logon

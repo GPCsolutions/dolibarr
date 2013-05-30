@@ -3,11 +3,12 @@
  * Copyright (C) 2003      Jean-Louis Bergamo   <jlb@j1b.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Christophe Combelles <ccomb@free.fr>
- * Copyright (C) 2005-2010 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copytight (C) 2013	   Florian Henry        <florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -60,19 +61,12 @@ class Account extends CommonObject
     //! IBAN number (International Bank Account Number)
     var $iban_prefix;
     var $proprio;
-    var $adresse_proprio;
+    var $owner_address;
 
-
-    var $fk_departement;    // deprecated
-    var $departement_code;    // deprecated
-    var $departement;        // deprecated
     var $state_id;
     var $state_code;
     var $state;
 
-    var $fk_pays;            // deprecated
-    var $pays_code;            // deprecated
-    var $pays;                // deprecated
     var $country_id;
     var $country_code;
     var $country;
@@ -354,8 +348,8 @@ class Account extends CommonObject
         // Clean parameters
         if (! $this->min_allowed) $this->min_allowed=0;
         if (! $this->min_desired) $this->min_desired=0;
-        $this->state_id = ($this->state_id?$this->state_id:$this->fk_departement);
-        $this->country_id = ($this->country_id?$this->country_id:$this->fk_pays);
+        $this->state_id = ($this->state_id?$this->state_id:$this->state_id);
+        $this->country_id = ($this->country_id?$this->country_id:$this->country_id);
 
         // Check parameters
         if (empty($this->country_id))
@@ -393,7 +387,7 @@ class Account extends CommonObject
         $sql.= ", min_allowed";
         $sql.= ", min_desired";
         $sql.= ", comment";
-        $sql.= ", fk_departement";
+        $sql.= ", state_id";
         $sql.= ", fk_pays";
         $sql.= ") VALUES (";
         $sql.= "'".$this->db->idate($now)."'";
@@ -478,8 +472,8 @@ class Account extends CommonObject
         // Clean parameters
         if (! $this->min_allowed) $this->min_allowed=0;
         if (! $this->min_desired) $this->min_desired=0;
-        $this->state_id = ($this->state_id?$this->state_id:$this->fk_departement);
-        $this->country_id = ($this->country_id?$this->country_id:$this->fk_pays);
+        $this->state_id = ($this->state_id?$this->state_id:$this->state_id);
+        $this->country_id = ($this->country_id?$this->country_id:$this->country_id);
 
         // Check parameters
         if (empty($this->country_id))
@@ -513,7 +507,7 @@ class Account extends CommonObject
         $sql.= ",min_desired = '".price2num($this->min_desired)."'";
         $sql.= ",comment     = '".$this->db->escape($this->comment)."'";
 
-        $sql.= ",fk_departement = ".($this->state_id>0?"'".$this->state_id."'":"null");
+        $sql.= ",state_id = ".($this->state_id>0?"'".$this->state_id."'":"null");
         $sql.= ",fk_pays = ".$this->country_id;
 
         $sql.= " WHERE rowid = ".$this->id;
@@ -545,8 +539,8 @@ class Account extends CommonObject
         global $conf,$langs;
 
         // Clean parameters
-        $this->state_id = ($this->state_id?$this->state_id:$this->fk_departement);
-        $this->country_id = ($this->country_id?$this->country_id:$this->fk_pays);
+        $this->state_id = ($this->state_id?$this->state_id:$this->state_id);
+        $this->country_id = ($this->country_id?$this->country_id:$this->country_id);
 
         // Chargement librairie pour acces fonction controle RIB
         require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
@@ -570,8 +564,8 @@ class Account extends CommonObject
         $sql.= ",iban_prefix = '".$this->iban."'";
         $sql.= ",domiciliation='".$this->db->escape($this->domiciliation)."'";
         $sql.= ",proprio = '".$this->db->escape($this->proprio)."'";
-        $sql.= ",adresse_proprio = '".$this->db->escape($this->adresse_proprio)."'";
-        $sql.= ",fk_departement = ".($this->state_id>0?"'".$this->state_id."'":"null");
+        $sql.= ",owner_address = '".$this->db->escape($this->owner_address)."'";
+        $sql.= ",state_id = ".($this->state_id>0?"'".$this->state_id."'":"null");
         $sql.= ",fk_pays = ".$this->country_id;
         $sql.= " WHERE rowid = ".$this->id;
         $sql.= " AND entity = ".$conf->entity;
@@ -611,14 +605,14 @@ class Account extends CommonObject
 
         $sql = "SELECT ba.rowid, ba.ref, ba.label, ba.bank, ba.number, ba.courant, ba.clos, ba.rappro, ba.url,";
         $sql.= " ba.code_banque, ba.code_guichet, ba.cle_rib, ba.bic, ba.iban_prefix as iban,";
-        $sql.= " ba.domiciliation, ba.proprio, ba.adresse_proprio, ba.fk_departement, ba.fk_pays as country_id,";
+        $sql.= " ba.domiciliation, ba.proprio, ba.owner_address, ba.state_id, ba.fk_pays as country_id,";
         $sql.= " ba.account_number, ba.currency_code,";
         $sql.= " ba.min_allowed, ba.min_desired, ba.comment,";
         $sql.= ' p.code as country_code, p.libelle as country,';
         $sql.= ' d.code_departement as state_code, d.nom as state';
         $sql.= " FROM ".MAIN_DB_PREFIX."bank_account as ba";
         $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_pays as p ON ba.fk_pays = p.rowid';
-        $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_departements as d ON ba.fk_departement = d.rowid';
+        $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_departements as d ON ba.state_id = d.rowid';
         $sql.= " WHERE entity = ".$conf->entity;
         if ($id)  $sql.= " AND ba.rowid  = ".$id;
         if ($ref) $sql.= " AND ba.ref = '".$this->db->escape($ref)."'";
@@ -651,18 +645,12 @@ class Account extends CommonObject
                 $this->iban_prefix   = $obj->iban;	// deprecated
                 $this->domiciliation = $obj->domiciliation;
                 $this->proprio       = $obj->proprio;
-                $this->adresse_proprio = $obj->adresse_proprio;
+                $this->owner_address = $obj->owner_address;
 
-                $this->fk_departement  = $obj->fk_departement;    // deprecated
-                $this->departement_code= $obj->state_code;        // deprecated
-                $this->departement     = $obj->state;             // deprecated
-                $this->state_id        = $obj->fk_departement;
+                $this->state_id        = $obj->state_id;
                 $this->state_code      = $obj->state_code;
                 $this->state           = $obj->state;
 
-                $this->fk_pays       = $obj->country_id;          // deprecated
-                $this->pays_code     = $obj->country_code;        // deprecated
-                $this->pays          = $obj->country;             // deprecated
                 $this->country_id    = $obj->country_id;
                 $this->country_code  = $obj->country_code;
                 $this->country       = $obj->country;
@@ -817,7 +805,7 @@ class Account extends CommonObject
         $sql = "SELECT sum(amount) as amount";
         $sql.= " FROM ".MAIN_DB_PREFIX."bank";
         $sql.= " WHERE fk_account = ".$this->id;
-        if ($option == 1) $sql.= " AND dateo <= ".$this->db->idate(time());
+        if ($option == 1) $sql.= " AND dateo <= '".$this->db->idate(dol_now())."'";
 
         $resql = $this->db->query($sql);
         if ($resql)
@@ -975,18 +963,19 @@ class Account extends CommonObject
     }
 
     /**
-     * 	Return if a bank account is defined with detailed information (bank code, desk code, number and key)
+     * Return if a bank account is defined with detailed information (bank code, desk code, number and key).
+     * More information on codes used by countries on page http://en.wikipedia.org/wiki/Bank_code
      *
-     * 	@return		int        0=Use only an account number
-     *                         1=Need Bank, Desk, Number and Key (France, Spain, ...)
-     *                         2=Neek Bank only (BSB for Australia)
+     * @return		int        0=No bank code need + Account number is enough
+     *                         1=Need 2 fields for bank code: Bank, Desk (France, Spain, ...) + Account number and key
+     *                         2=Neek 1 field for bank code:  Bank only (Sort code for Great Britain, BSB for Australia) + Account number
      */
     function useDetailedBBAN()
     {
         $country_code=$this->getCountryCode();
 
-        if (in_array($country_code,array('FR','ES','GA'))) return 1; // France, Spain, Gabon
-        if (in_array($country_code,array('AU'))) return 2;           // Australia
+        if (in_array($country_code,array('CH','DE','FR','ES','GA','IT'))) return 1; // France, Spain, Gabon
+        if (in_array($country_code,array('AU','BE','CA','DK','GR','GB','ID','IE','IR','KR','NL','NZ','UK','US'))) return 2;      // Australia, Great Britain...
         return 0;
     }
 
@@ -1025,7 +1014,7 @@ class Account extends CommonObject
         $this->iban_prefix     = 'FR';  // deprecated
         $this->domiciliation   = 'The bank addresse';
         $this->proprio         = 'Owner';
-        $this->adresse_proprio = 'Owner address';
+        $this->owner_address   = 'Owner address';
         $this->country_id      = 1;
     }
 
@@ -1093,7 +1082,7 @@ class AccountLine extends CommonObject
         $sql.= " b.fk_type, b.num_releve, b.num_chq, b.rappro, b.note,";
         $sql.= " b.fk_bordereau, b.banque, b.emetteur,";
         //$sql.= " b.author"; // Is this used ?
-        $sql.= " ba.label as bank_account_label";
+        $sql.= " ba.ref as bank_account_ref, ba.label as bank_account_label";
         $sql.= " FROM ".MAIN_DB_PREFIX."bank as b,";
         $sql.= " ".MAIN_DB_PREFIX."bank_account as ba";
         $sql.= " WHERE b.fk_account = ba.rowid";
@@ -1134,6 +1123,7 @@ class AccountLine extends CommonObject
                 $this->fk_bordereau		= $obj->fk_bordereau;
 
                 $this->fk_account		= $obj->fk_account;
+                $this->bank_account_ref   = $obj->bank_account_ref;
                 $this->bank_account_label = $obj->bank_account_label;
 
                 $ret=1;

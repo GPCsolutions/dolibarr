@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -31,6 +31,8 @@ $langs->load("stocks");
 $langs->load("companies");
 $mesg = '';
 
+// Security check
+$result=restrictedArea($user,'stock');
 
 
 /*
@@ -75,11 +77,11 @@ if ($_GET["id"])
 	print $entrepot->address;
 	print '</td></tr>';
 
-	print '<tr><td width="25%">'.$langs->trans('Zip').'</td><td width="25%">'.$entrepot->cp.'</td>';
-	print '<td width="25%">'.$langs->trans('Town').'</td><td width="25%">'.$entrepot->ville.'</td></tr>';
+	print '<tr><td width="25%">'.$langs->trans('Zip').'</td><td width="25%">'.$entrepot->zip.'</td>';
+	print '<td width="25%">'.$langs->trans('Town').'</td><td width="25%">'.$entrepot->town.'</td></tr>';
 
 	print '<tr><td>'.$langs->trans('Country').'</td><td colspan="3">';
-	print $entrepot->pays;
+	print $entrepot->country;
 	print '</td></tr>';
 
 	// Statut

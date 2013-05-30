@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -26,8 +26,8 @@
 include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
 
 
-/**     \class      modECM
- *      \brief      Description and activation class for module ECM
+/**
+ * 	Description and activation class for module ECM
  */
 class modECM extends DolibarrModules
 {
@@ -65,7 +65,7 @@ class modECM extends DolibarrModules
 		$this->dirs = array("/ecm/temp");
 
 		// Config pages. Put here list of php page names stored in admmin directory used to setup module
-		$this->config_page_url = array();
+		$this->config_page_url = array('ecm.php');
 
 		// Dependencies
 		$this->depends = array();		// List of modules id that must be enabled if this module is enabled
@@ -73,7 +73,14 @@ class modECM extends DolibarrModules
 
 		// Constants
 		$this->const = array();			// List of parameters
-
+		$r=0;
+		
+		$this->const[$r][0] = "ECM_AUTO_TREE_ENABLED";
+		$this->const[$r][1] = "chaine";
+		$this->const[$r][2] = "1";
+		$this->const[$r][3] = 'Auto tree is enabled by default';
+		$this->const[$r][4] = 0;
+		
 		// Boxes
 		$this->boxes = array();			// List of boxes
 		$r=0;
@@ -170,6 +177,7 @@ class modECM extends DolibarrModules
 							  'user'=>2);			// 0=Menu for internal users, 1=external users, 2=both
 		$r++;
 
+		/*
 		$this->menu[$r]=array('fk_menu'=>'r=1',
 							  'type'=>'left',
 							  'titre'=>'Search',
@@ -181,7 +189,8 @@ class modECM extends DolibarrModules
 							  'enabled'=>'$user->rights->ecm->read',
 							  'target'=>'',
 							  'user'=>2);			// 0=Menu for internal users, 1=external users, 2=both
-		$r++;
+							  
+		$r++;*/
 
 	}
 

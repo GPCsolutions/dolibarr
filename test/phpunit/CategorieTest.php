@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -275,10 +275,6 @@ class CategorieTest extends PHPUnit_Framework_TestCase
         $retarray=$localobject->liste_photos('/');
         print __METHOD__." retarray size=".count($retarray)."\n";
         $this->assertTrue(is_array($retarray));
-
-        $retarray=$localobject->is_fille($localobject2);
-        print __METHOD__." retarry size=".count($retarray)."\n";
-        $this->assertFalse($retarray);
 
         return $localobject->id;
     }

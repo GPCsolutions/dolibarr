@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2008-2010	Laurent Destailleur <eldy@users.sourceforge.net>
- * Copyright (C) 2011		Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2011		Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2012  Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -65,8 +65,8 @@ else
 
 
 /*
-*	Actions
-*/
+ *	Actions
+ */
 if ($action == "save" && empty($cancel))
 {
     $i=0;
@@ -94,10 +94,38 @@ if ($action == "save" && empty($cancel))
     }
 }
 
+if (preg_match('/set_(.*)/',$action,$reg))
+{
+	$code=$reg[1];
+	$value=(GETPOST($code) ? GETPOST($code) : 1);
+	if (dolibarr_set_const($db, $code, $value, 'chaine', 0, '', $conf->entity) > 0)
+	{
+		Header("Location: ".$_SERVER["PHP_SELF"]);
+		exit;
+	}
+	else
+	{
+		dol_print_error($db);
+	}
+}
+
+if (preg_match('/del_(.*)/',$action,$reg))
+{
+	$code=$reg[1];
+	if (dolibarr_del_const($db, $code, $conf->entity) > 0)
+	{
+		Header("Location: ".$_SERVER["PHP_SELF"]);
+		exit;
+	}
+	else
+	{
+		dol_print_error($db);
+	}
+}
 
 
 /**
- * Affichage du formulaire de saisie
+ * View
  */
 
 llxHeader();
@@ -106,13 +134,14 @@ $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToM
 print_fiche_titre($langs->trans("AgendaSetup"),$linkback,'setup');
 print "<br>\n";
 
-print $langs->trans("AgendaAutoActionDesc")."<br>\n";
-print "<br>\n";
 
 $head=agenda_prepare_head();
 
 dol_fiche_head($head, 'autoactions', $langs->trans("Agenda"));
 
+print $langs->trans("AgendaAutoActionDesc")."<br>\n";
+print $langs->trans("OnlyActiveElementsAreShown").'<br>';
+print "<br>\n";
 
 print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
@@ -151,19 +180,17 @@ print '</table>';
 
 print '<br><center>';
 print '<input type="submit" name="save" class="button" value="'.$langs->trans("Save").'">';
-print ' &nbsp; &nbsp; ';
-print '<input type="submit" name="cancel" class="button" value="'.$langs->trans("Cancel").'">';
 print "</center>";
 
 print "</form>\n";
 
-print '</div>';
+dol_fiche_end();
 
 print "<br>";
 
 dol_htmloutput_mesg($mesg);
 
-$db->close();
-
 llxFooter();
+
+$db->close();
 ?>

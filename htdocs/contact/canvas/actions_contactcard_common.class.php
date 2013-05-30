@@ -1,9 +1,9 @@
 <?php
-/* Copyright (C) 2010-2012 Regis Houssin  <regis@dolibarr.fr>
+/* Copyright (C) 2010-2012 Regis Houssin  <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -395,10 +395,10 @@ abstract class ActionsContactCardCommon
 
         if ($action == 'create_user')
         {
-        	// Full firstname and name separated with a dot : firstname.name
+        	// Full firstname and lastname separated with a dot : firstname.lastname
         	include_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
             require_once DOL_DOCUMENT_ROOT.'/core/lib/security2.lib.php';
-        	$login=dol_buildlogin($this->object->nom, $this->object->prenom);
+        	$login=dol_buildlogin($this->object->lastname, $this->object->firstname);
 
        		$generated_password=getRandomPassword('');
         	$password=$generated_password;
@@ -425,14 +425,13 @@ abstract class ActionsContactCardCommon
         $this->object->old_firstname 		= 	$_POST["old_firstname"];
 
         $this->object->socid				=	$_POST["socid"];
-        $this->object->name					=	$_POST["name"];
+        $this->object->lastname				=	$_POST["name"];
         $this->object->firstname			= 	$_POST["firstname"];
         $this->object->civilite_id			= 	$_POST["civilite_id"];
         $this->object->poste				= 	$_POST["poste"];
         $this->object->address				=	$_POST["address"];
         $this->object->zip					=	$_POST["zipcode"];
         $this->object->town					=	$_POST["town"];
-        $this->object->fk_pays				=	$_POST["country_id"]?$_POST["country_id"]:$mysoc->country_id;
         $this->object->fk_departement		=	$_POST["departement_id"];
         $this->object->country_id			=	$_POST["country_id"]?$_POST["country_id"]:$mysoc->country_id;
         $this->object->state_id        		=	$_POST["departement_id"];
@@ -459,8 +458,7 @@ abstract class ActionsContactCardCommon
             {
                 dol_print_error($this->db);
             }
-            $this->object->pays_code	=	$obj->code;
-            $this->object->pays			=	$langs->trans("Country".$obj->code)?$langs->trans("Country".$obj->code):$obj->libelle;
+            $this->object->country_id	=	$langs->trans("Country".$obj->code)?$langs->trans("Country".$obj->code):$obj->libelle;
             $this->object->country_code	=	$obj->code;
             $this->object->country		=	$langs->trans("Country".$obj->code)?$langs->trans("Country".$obj->code):$obj->libelle;
         }

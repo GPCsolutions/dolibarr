@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2003      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -28,11 +28,11 @@ require '../../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propalestats.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/dolgraph.class.php';
 
-$WIDTH=500;
-$HEIGHT=200;
+$WIDTH=DolGraph::getDefaultGraphSizeForStats('width');
+$HEIGHT=DolGraph::getDefaultGraphSizeForStats('height');
 
-$userid=GETPOST('userid','int'); if ($userid < 0) $userid=0;
-$socid=GETPOST('socid','int'); if ($socid < 0) $socid=0;
+$userid=GETPOST('userid','int');
+$socid=GETPOST('socid','int');
 // Security check
 if ($user->societe_id > 0)
 {
@@ -63,7 +63,7 @@ $dir=$conf->propal->dir_temp;
 
 dol_mkdir($dir);
 
-$stats = new PropaleStats($db, $socid, $userid);
+$stats = new PropaleStats($db, $socid, ($userid>0?$userid:0));
 
 // Build graphic number of object
 $data = $stats->getNbByMonthWithPrevYear($endyear,$startyear);
@@ -212,13 +212,13 @@ $head[$h][1] = $langs->trans("ByMonthYear");
 $head[$h][2] = 'byyear';
 $h++;
 
-$object=(object) array(); // TODO $object not defined ?
-complete_head_from_modules($conf,$langs,$object,$head,$h,'propal_stats');
+complete_head_from_modules($conf,$langs,null,$head,$h,'propal_stats');
 
 dol_fiche_head($head,'byyear',$langs->trans("Statistics"));
 
-print '<table class="notopnoleftnopadd" width="100%"><tr>';
-print '<td align="center" valign="top">';
+
+print '<div class="fichecenter"><div class="fichethirdleft">';
+
 
 //if (empty($socid))
 //{
@@ -228,17 +228,18 @@ print '<td align="center" valign="top">';
 	print '<table class="border" width="100%">';
 	print '<tr><td class="liste_titre" colspan="2">'.$langs->trans("Filter").'</td></tr>';
 	// Company
-	print '<tr><td>'.$langs->trans("ThirdParty").'</td><td>';
+	print '<tr><td align="left">'.$langs->trans("ThirdParty").'</td><td align="left">';
 	$filter='s.client in (1,2,3)';
 	print $form->select_company($socid,'socid',$filter,1);
 	print '</td></tr>';
 	// User
-	print '<tr><td>'.$langs->trans("User").'/'.$langs->trans("SalesRepresentative").'</td><td>';
+	print '<tr><td align="left">'.$langs->trans("CreatedBy").'</td><td align="left">';
 	print $form->select_users($userid,'userid',1);
 	print '</td></tr>';
 	// Year
-	print '<tr><td>'.$langs->trans("Year").'</td><td>';
+	print '<tr><td align="left">'.$langs->trans("Year").'</td><td align="left">';
 	if (! in_array($year,$arrayyears)) $arrayyears[$year]=$year;
+	if (! in_array($nowyear,$arrayyears)) $arrayyears[$nowyear]=$nowyear;
 	arsort($arrayyears);
 	print $form->selectarray('year',$arrayyears,$year,0);
 	print '</td></tr>';
@@ -283,8 +284,8 @@ foreach ($data as $val)
 print '</table>';
 
 
-print '</td>';
-print '<td align="center" valign="top">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
 
 // Show graphs
 print '<table class="border" width="100%"><tr valign="top"><td align="center">';
@@ -298,7 +299,10 @@ else {
 }
 print '</td></tr></table>';
 
-print '</td></tr></table>';
+
+print '</div></div></div>';
+print '<div style="clear:both"></div>';
+
 
 dol_fiche_end();
 

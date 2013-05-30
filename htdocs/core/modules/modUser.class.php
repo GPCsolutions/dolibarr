@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2010 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -28,8 +28,7 @@
 include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
 
 /**
- *	\class      modUser
- *	\brief      Classe de description et activation du module User
+ *	Classe de description et activation du module User
  */
 class modUser extends DolibarrModules
 {
@@ -210,8 +209,10 @@ class modUser extends DolibarrModules
 		$this->export_code[$r]=$this->rights_class.'_'.$r;
 		$this->export_label[$r]='Liste des utilisateurs Dolibarr et attributs';
 		$this->export_permission[$r]=array(array("user","user","export"));
-		$this->export_fields_array[$r]=array('u.rowid'=>"Id",'u.login'=>"Login",'u.name'=>"Lastname",'u.firstname'=>"Firstname",'u.office_phone'=>'Telephone','u.office_fax'=>'Fax','u.email'=>'EMail','u.datec'=>"DateCreation",'u.tms'=>"DateLastModification",'u.admin'=>"Admin",'u.statut'=>'Status','u.note'=>"Note",'u.datelastlogin'=>'LastConnexion','u.datepreviouslogin'=>'PreviousConnexion','u.fk_socpeople'=>"IdContact",'u.fk_societe'=>"IdCompany",'u.fk_member'=>"MemberId");
-		$this->export_entities_array[$r]=array('u.rowid'=>"user",'u.login'=>"user",'u.name'=>"user",'u.firstname'=>"user",'u.office_phone'=>'user','u.office_fax'=>'user','u.email'=>'user','u.datec'=>"user",'u.tms'=>"user",'u.admin'=>"user",'u.statut'=>'user','u.note'=>"user",'u.datelastlogin'=>'user','u.datepreviouslogin'=>'user','u.fk_socpeople'=>"contact",'u.fk_societe'=>"company",'u.fk_member'=>"member");
+		$this->export_fields_array[$r]=array('u.rowid'=>"Id",'u.login'=>"Login",'u.lastname'=>"Lastname",'u.firstname'=>"Firstname",'u.office_phone'=>'Telephone','u.office_fax'=>'Fax','u.email'=>'EMail','u.datec'=>"DateCreation",'u.tms'=>"DateLastModification",'u.admin'=>"Admin",'u.statut'=>'Status','u.note'=>"Note",'u.datelastlogin'=>'LastConnexion','u.datepreviouslogin'=>'PreviousConnexion','u.fk_socpeople'=>"IdContact",'u.fk_societe'=>"IdCompany",'u.fk_member'=>"MemberId");
+		$this->export_TypeFields_array[$r]=array('u.login'=>"Text",'u.lastname'=>"Text",'u.firstname'=>"Text",'u.office_phone'=>'Text','u.office_fax'=>'Text','u.email'=>'Text','u.datec'=>"Date",'u.tms'=>"Date",'u.admin'=>"Boolean",'u.statut'=>'Status','u.note'=>"Text",'u.datelastlogin'=>'Date','u.datepreviouslogin'=>'Date','u.fk_societe'=>"List:societe:nom:rowid",'u.fk_member'=>"List:adherent:nom");
+
+		$this->export_entities_array[$r]=array('u.rowid'=>"user",'u.login'=>"user",'u.lastname'=>"user",'u.firstname'=>"user",'u.office_phone'=>'user','u.office_fax'=>'user','u.email'=>'user','u.datec'=>"user",'u.tms'=>"user",'u.admin'=>"user",'u.statut'=>'user','u.note'=>"user",'u.datelastlogin'=>'user','u.datepreviouslogin'=>'user','u.fk_socpeople'=>"contact",'u.fk_societe'=>"company",'u.fk_member'=>"member");
         if (empty($conf->adherent->enabled))
         {
             unset($this->export_fields_array[$r]['u.fk_member']);

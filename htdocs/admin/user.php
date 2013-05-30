@@ -4,11 +4,11 @@
  * Copyright (C) 2004-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Sebastien Di Cintio  <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
- * Copyright (C) 2005-2011 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -27,13 +27,18 @@
  */
 
 require '../main.inc.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/usergroups.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 
 $langs->load("admin");
 $langs->load("members");
 $langs->load("users");
 
 if (! $user->admin) accessforbidden();
+
+$extrafields = new ExtraFields($db);
+
 
 /*
  * Action
@@ -71,14 +76,17 @@ if (preg_match('/del_(.*)/',$action,$reg))
  * View
  */
 
-llxHeader();
+$help_url='EN:Module_Users|FR:Module_Utilisateurs|ES:M&oacute;dulo_Usuarios';
+llxHeader('',$langs->trans("UsersSetup"),$help_url);
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
 print_fiche_titre($langs->trans("UsersSetup"),$linkback,'setup');
-print "<br>";
 
 
-print_fiche_titre($langs->trans("MemberMainOptions"),'','');
+$head=user_admin_prepare_head();
+
+dol_fiche_head($head,'card', $langs->trans("User"), 0, 'user');
+
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Description").'</td>';
@@ -114,7 +122,8 @@ else
 print '</td></tr>';
 
 print '</table>';
-print '<br><br>';
+
+dol_fiche_end();
 
 llxFooter();
 $db->close();

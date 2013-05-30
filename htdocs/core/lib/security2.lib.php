@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2008-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2008-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2008-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -131,15 +131,7 @@ function dol_loginfunction($langs,$conf,$mysoc)
 	global $smartphone,$hookmanager;
 
 	// Instantiate hooks of thirdparty module only if not already define
-	if (! is_object($hookmanager))
-	{
-		include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
-		$hookmanager=new HookManager($db);
-	}
 	$hookmanager->initHooks(array('mainloginpage'));
-
-	$langcode=(GETPOST('lang')?((is_object($langs)&&$langs->defaultlang)?$langs->defaultlang:'auto'):GETPOST('lang'));
-	$langs->setDefaultLang($langcode);
 
 	$langs->load("main");
 	$langs->load("other");
@@ -153,30 +145,42 @@ function dol_loginfunction($langs,$conf,$mysoc)
 
 	$php_self = $_SERVER['PHP_SELF'];
 	$php_self.= $_SERVER["QUERY_STRING"]?'?'.$_SERVER["QUERY_STRING"]:'';
+	if (! preg_match('/mainmenu=/',$php_self)) $php_self.=(preg_match('/\?/',$php_self)?'&':'?').'mainmenu=home';
 
 	// Title
 	$title='Dolibarr '.DOL_VERSION;
 	if (! empty($conf->global->MAIN_APPLICATION_TITLE)) $title=$conf->global->MAIN_APPLICATION_TITLE;
 
-	// Select templates
-	if (preg_match('/^smartphone/',$conf->smart_menu) && ! empty($conf->browser->phone))
+	// Note: $conf->css looks like '/theme/eldy/style.css.php'
+	$conf->css = "/theme/".(GETPOST('theme')?GETPOST('theme','alpha'):$conf->theme)."/style.css.php";
+	$themepath=dol_buildpath((empty($conf->global->MAIN_FORCETHEMEDIR)?'':$conf->global->MAIN_FORCETHEMEDIR).$conf->css,1);
+	if (! empty($conf->modules_parts['theme']))		// Using this feature slow down application
 	{
-		$template_dir = DOL_DOCUMENT_ROOT.'/theme/phones/smartphone/tpl/';
+		foreach($conf->modules_parts['theme'] as $reldir)
+		{
+			if (file_exists(dol_buildpath($reldir.$conf->css, 0)))
+			{
+				$themepath=dol_buildpath($reldir.$conf->css, 1);
+				break;
+			}
+		}
+	}
+	$conf_css = $themepath."?lang=".$langs->defaultlang;
+
+	// Select templates
+	if (! empty($conf->modules_parts['tpl']))	// Using this feature slow down application
+	{
+		$dirtpls=array_merge($conf->modules_parts['tpl'],array('/core/tpl/'));
+		foreach($dirtpls as $reldir)
+		{
+			$tmp=dol_buildpath($reldir.'login.tpl.php');
+			if (file_exists($tmp)) { $template_dir=preg_replace('/login\.tpl\.php$/','',$tmp); break; }
+		}
 	}
 	else
 	{
-		if (file_exists(DOL_DOCUMENT_ROOT."/theme/".$conf->theme."/tpl/login.tpl.php"))
-		{
-			$template_dir = DOL_DOCUMENT_ROOT."/theme/".$conf->theme."/tpl/";
-		}
-		else
-		{
-			$template_dir = DOL_DOCUMENT_ROOT."/core/tpl/";
-		}
+		$template_dir = DOL_DOCUMENT_ROOT."/core/tpl/";
 	}
-
-	$conf->css = "/theme/".(GETPOST('theme')?GETPOST('theme','alpha'):$conf->theme)."/style.css.php?lang=".$langs->defaultlang;
-	$conf_css = DOL_URL_ROOT.$conf->css;
 
 	// Set cookie for timeout management
 	$prefix=dol_getprefix();
@@ -262,6 +266,7 @@ function dol_loginfunction($langs,$conf,$mysoc)
 	}
 
 	// Home message
+	$main_home='';
 	if (! empty($conf->global->MAIN_HOME))
 	{
 		$i=0;
@@ -270,19 +275,28 @@ function dol_loginfunction($langs,$conf,$mysoc)
 			$conf->global->MAIN_HOME=preg_replace('/__\('.$reg[1].'\)__/i',$langs->trans($reg[1]),$conf->global->MAIN_HOME);
 			$i++;
 		}
+
+		$main_home=dol_htmlcleanlastbr($conf->global->MAIN_HOME);
 	}
-	$main_home=dol_htmlcleanlastbr($conf->global->MAIN_HOME);
 
 	// Google AD
 	$main_google_ad_client = ((! empty($conf->global->MAIN_GOOGLE_AD_CLIENT) && ! empty($conf->global->MAIN_GOOGLE_AD_SLOT))?1:0);
 
+	// Set jquery theme
 	$dol_loginmesg = (! empty($_SESSION["dol_loginmesg"])?$_SESSION["dol_loginmesg"]:'');
 	$favicon=DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/favicon.ico';
 	$jquerytheme = 'smoothness';
 	if (! empty($conf->global->MAIN_USE_JQUERY_THEME)) $jquerytheme = $conf->global->MAIN_USE_JQUERY_THEME;
 
+	// Set dol_hide_topmenu, dol_hide_leftmenu, dol_optimize_smallscreen, dol_nomousehover
+	$dol_hide_topmenu=GETPOST('dol_hide_topmenu');
+	$dol_hide_leftmenu=GETPOST('dol_hide_leftmenu');
+	$dol_optimize_smallscreen=GETPOST('dol_optimize_smallscreen');
+	$dol_no_mouse_hover=GETPOST('dol_no_mouse_hover');
+	$dol_use_jmobile=GETPOST('dol_use_jmobile');
 
-	include $template_dir.'login.tpl.php';	// To use native PHP
+	// Include login page template
+	include $template_dir.'login.tpl.php';
 
 
 	$_SESSION["dol_loginmesg"] = '';

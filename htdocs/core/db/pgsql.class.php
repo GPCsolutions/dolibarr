@@ -4,12 +4,13 @@
  * Copyright (C) 2004-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2004		Sebastien Di Cintio		<sdicintio@ressource-toi.org>
  * Copyright (C) 2004		Benoit Mortier			<benoit.mortier@opensides.be>
- * Copyright (C) 2005-2012	Regis Houssin			<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2012		Yann Droneaud			<yann@droneaud.fr>
+ * Copyright (C) 2012		Florian Henry			<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -28,8 +29,7 @@
 
 
 /**
- *	\class      DoliDBPgsql
- *	\brief      Class to drive a Postgresql database for Dolibarr
+ *	Class to drive a Postgresql database for Dolibarr
  */
 class DoliDBPgsql
 {
@@ -40,7 +40,9 @@ class DoliDBPgsql
     //! Database label
 	static $label='PostgreSQL';      // Label of manager
 	//! Charset
-	var $forcecharset='UTF8';      // Can't be static as it may be forced with a dynamic value
+	var $forcecharset='UTF8';       // Can't be static as it may be forced with a dynamic value
+    //! Collate used to force collate when creating database
+    var $forcecollate='';			// Can't be static as it may be forced with a dynamic value
 	//! Version min database
 	static $versionmin=array(8,4,0);	// Version min database
 
@@ -225,6 +227,13 @@ class DoliDBPgsql
     			$line=preg_replace('/^float/i','numeric',$line);
     			$line=preg_replace('/(\s*)float/i','\\1numeric',$line);
 
+    			//Check tms timestamp field case (in Mysql this field is defautled to now and 
+    			// on update defaulted by now
+    			$line=preg_replace('/(\s*)tms(\s*)timestamp/i','\\1tms timestamp without time zone DEFAULT now() NOT NULL',$line);
+    			
+    			// nuke ON UPDATE CURRENT_TIMESTAMP
+    			$line=preg_replace('/(\s*)on(\s*)update(\s*)CURRENT_TIMESTAMP/i','\\1',$line);
+    			
     			// unique index(field1,field2)
     			if (preg_match('/unique index\s*\((\w+\s*,\s*\w+)\)/i',$line))
     			{
@@ -235,17 +244,17 @@ class DoliDBPgsql
     			$line=preg_replace('/\sAFTER [a-z0-9_]+/i','',$line);
 
     			// We remove start of requests "ALTER TABLE tablexxx" if this is a DROP INDEX
-    			$line=preg_replace('/ALTER TABLE [a-z0-9_]+ DROP INDEX/i','DROP INDEX',$line);
+    			$line=preg_replace('/ALTER TABLE [a-z0-9_]+\s+DROP INDEX/i','DROP INDEX',$line);
 
                 // Translate order to rename fields
-                if (preg_match('/ALTER TABLE ([a-z0-9_]+) CHANGE(?: COLUMN)? ([a-z0-9_]+) ([a-z0-9_]+)(.*)$/i',$line,$reg))
+                if (preg_match('/ALTER TABLE ([a-z0-9_]+)\s+CHANGE(?: COLUMN)? ([a-z0-9_]+) ([a-z0-9_]+)(.*)$/i',$line,$reg))
                 {
                 	$line = "-- ".$line." replaced by --\n";
                     $line.= "ALTER TABLE ".$reg[1]." RENAME COLUMN ".$reg[2]." TO ".$reg[3];
                 }
 
                 // Translate order to modify field format
-                if (preg_match('/ALTER TABLE ([a-z0-9_]+) MODIFY(?: COLUMN)? ([a-z0-9_]+) (.*)$/i',$line,$reg))
+                if (preg_match('/ALTER TABLE ([a-z0-9_]+)\s+MODIFY(?: COLUMN)? ([a-z0-9_]+) (.*)$/i',$line,$reg))
                 {
                     $line = "-- ".$line." replaced by --\n";
                     $newreg3=$reg[3];
@@ -296,6 +305,7 @@ class DoliDBPgsql
 
             // To have postgresql case sensitive
             $line=str_replace(' LIKE \'',' ILIKE \'',$line);
+            $line=str_replace(' LIKE BINARY \'',' LIKE \'',$line);
 
 			// Delete using criteria on other table must not declare twice the deleted table
 			// DELETE FROM tabletodelete USING tabletodelete, othertable -> DELETE FROM tabletodelete USING othertable
@@ -473,12 +483,14 @@ class DoliDBPgsql
 			{
 				$this->transaction_opened++;
 				dol_syslog("BEGIN Transaction",LOG_DEBUG);
+				dol_syslog('',0,1);
 			}
 			return $ret;
 		}
 		else
 		{
 			$this->transaction_opened++;
+			dol_syslog('',0,1);
 			return 1;
 		}
 	}
@@ -491,6 +503,7 @@ class DoliDBPgsql
 	 */
 	function commit($log='')
 	{
+		dol_syslog('',0,-1);
 		if ($this->transaction_opened<=1)
 		{
 			$ret=$this->query("COMMIT;");
@@ -515,6 +528,7 @@ class DoliDBPgsql
 	 */
 	function rollback()
 	{
+		dol_syslog('',0,-1);
 		if ($this->transaction_opened<=1)
 		{
 			$ret=$this->query("ROLLBACK;");
@@ -677,16 +691,17 @@ class DoliDBPgsql
 
 
 	/**
-	 * Defini les limites de la requete
-	 *
-	 * @param	int		$limit      nombre maximum de lignes retournees
-	 * @param	int		$offset     numero de la ligne a partir de laquelle recuperer les lignes
-	 * @return	string      		chaine exprimant la syntax sql de la limite
+     *	Define limits and offset of request
+     *
+     *	@param	int		$limit      Maximum number of lines returned (-1=conf->liste_limit, 0=no limit)
+     *	@param	int		$offset     Numero of line from where starting fetch
+     *	@return	string      		String with SQL syntax to add a limit and offset
 	 */
 	function plimit($limit=0,$offset=0)
 	{
 		global $conf;
-		if (! $limit) $limit=$conf->liste_limit;
+        if (empty($limit)) return "";
+		if ($limit < 0) $limit=$conf->liste_limit;
 		if ($offset > 0) return " LIMIT ".$limit." OFFSET ".$offset." ";
 		else return " LIMIT $limit ";
 	}
@@ -1019,23 +1034,35 @@ class DoliDBPgsql
 	 *
 	 *	@param	string	$table		Name of table
 	 *	@return	array				Tableau des informations des champs de la table
-	 *	TODO modify for postgresql
+	 *
 	 */
 	function DDLInfoTable($table)
 	{
-		/*
 		 $infotables=array();
 
-		 $sql="SHOW FULL COLUMNS FROM ".$table.";";
+		 $sql="SELECT ";
+		 $sql.="	infcol.column_name as \"Column\",";
+		 $sql.="	CASE WHEN infcol.character_maximum_length IS NOT NULL THEN infcol.udt_name || '('||infcol.character_maximum_length||')'";
+		 $sql.="		ELSE infcol.udt_name";
+		 $sql.="	END as \"Type\",";
+		 $sql.="	infcol.collation_name as \"Collation\",";
+		 $sql.="	infcol.is_nullable as \"Null\",";
+		 $sql.="	'' as \"Key\",";
+		 $sql.="	infcol.column_default as \"Default\",";
+		 $sql.="	'' as \"Extra\",";
+		 $sql.="	'' as \"Privileges\"";
+		 $sql.="	FROM information_schema.columns infcol";
+		 $sql.="	WHERE table_schema='public' ";
+		 $sql.="	AND table_name='".$table."'";
+		 $sql.="	ORDER BY ordinal_position;";
 
 		 dol_syslog($sql,LOG_DEBUG);
-		 $result = $this->pg_query($this->db,$sql);
+		 $result = $this->query($sql);
 		 while($row = $this->fetch_row($result))
 		 {
 			$infotables[] = $row;
-			}
-			return $infotables;
-			*/
+		 }
+		return $infotables;
 	}
 
 
@@ -1144,7 +1171,7 @@ class DoliDBPgsql
 	 *
 	 *	@param	string		$table	Name of table
 	 *	@param	string		$field	Optionnel : Name of field if we want description of field
-	 *	@return	resource			Resource
+	 *	@return	resultset			Resultset x (x->attname)
 	 */
 	function DDLDescTable($table,$field="")
 	{
@@ -1206,7 +1233,12 @@ class DoliDBPgsql
 	{
 		$sql = "ALTER TABLE ".$table;
 		$sql .= " MODIFY COLUMN ".$field_name." ".$field_desc['type'];
-		if ($field_desc['type'] == 'int' || $field_desc['type'] == 'varchar') $sql.="(".$field_desc['value'].")";
+		if ($field_desc['type'] == 'tinyint' || $field_desc['type'] == 'int' || $field_desc['type'] == 'varchar') {
+			$sql.="(".$field_desc['value'].")";
+		}
+
+		// FIXME May not work with pgsql. May need to run a second request. If it works, just remove the FIXME tag
+		if ($field_desc['null'] == 'not null' || $field_desc['null'] == 'NOT NULL') $sql.=" NOT NULL";
 
 		dol_syslog($sql,LOG_DEBUG);
 		if (! $this->query($sql))

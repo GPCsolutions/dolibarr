@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -58,7 +58,7 @@ if ($action == 'update' && $user->rights->user->user->creer && ! $_POST["cancel"
 {
 	$db->begin();
 
-	$res=$fuser->update_note($_POST["note"],$user);
+	$res=$fuser->update_note(dol_html_entity_decode(GETPOST('note'), ENT_QUOTES));
 	if ($res < 0)
 	{
 		$mesg='<div class="error">'.$adh->error.'</div>';
@@ -101,12 +101,12 @@ if ($id)
 	print '</td>';
 	print '</tr>';
 
-    // Nom
-    print '<tr><td>'.$langs->trans("Lastname").'</td><td class="valeur" colspan="3">'.$fuser->nom.'&nbsp;</td>';
+    // Lastname
+    print '<tr><td>'.$langs->trans("Lastname").'</td><td class="valeur" colspan="3">'.$fuser->lastname.'&nbsp;</td>';
 	print '</tr>';
 
-    // Prenom
-    print '<tr><td>'.$langs->trans("Firstname").'</td><td class="valeur" colspan="3">'.$fuser->prenom.'&nbsp;</td></tr>';
+    // Firstname
+    print '<tr><td>'.$langs->trans("Firstname").'</td><td class="valeur" colspan="3">'.$fuser->firstname.'&nbsp;</td></tr>';
 
     // Login
     print '<tr><td>'.$langs->trans("Login").'</td><td class="valeur" colspan="3">'.$fuser->login.'&nbsp;</td></tr>';

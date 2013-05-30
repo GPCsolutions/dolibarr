@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2005-2010 Laurent Destailleur <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin       <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin       <regis.houssin@capnetworks.com>
  *
  * This file is an example to follow to add your own email selector inside
  * the Dolibarr email tool.
@@ -61,9 +61,8 @@ class mailing_framboise extends MailingTargets
 
 		$cibles = array();
 
-		// CHANGE THIS
 		// Select the members from category
-		$sql = "SELECT a.rowid as id, a.email as email, a.nom as name, null as fk_contact, null as firstname,";
+		$sql = "SELECT a.rowid as id, a.email as email, a.lastname, null as fk_contact, a.firstname,";
 		if ($_POST['filter']) $sql.= " c.label";
 		else $sql.=" null as label";
 		$sql.= " FROM ".MAIN_DB_PREFIX."adherent as a";
@@ -96,7 +95,7 @@ class mailing_framboise extends MailingTargets
 					$cibles[$j] = array(
                     			'email' => $obj->email,
                     			'fk_contact' => $obj->fk_contact,
-                    			'name' => $obj->name,
+                    			'lastname' => $obj->lastname,
                     			'firstname' => $obj->firstname,
                     			'other' => ($obj->label?$langs->transnoentities("Category").'='.$obj->label:''),
                                 'source_url' => $this->url($obj->id),
@@ -144,9 +143,10 @@ class mailing_framboise extends MailingTargets
 	 *	For example if this selector is used to extract 500 different
 	 *	emails from a text file, this function must return 500.
 	 *
+	 *  @param	string	$sql		Requete sql de comptage
 	 *	@return		int			Nb of recipients
 	 */
-	function getNbOfRecipients()
+	function getNbOfRecipients($sql='')
 	{
 		global $conf;
 

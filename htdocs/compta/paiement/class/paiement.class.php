@@ -5,7 +5,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -121,7 +121,8 @@ class Paiement extends CommonObject
 
 	/**
 	 *    Create payment of invoices into database.
-	 *    Use this->amounts to have list of invoices for the payment
+	 *    Use this->amounts to have list of invoices for the payment.
+	 *    For payment of a customer invoice, amounts are postive, for payment of credit note, amounts are negative
 	 *
 	 *    @param	User	$user                	Object user
 	 *    @param    int		$closepaidinvoices   	1=Also close payed invoices to paid, 0=Do nothing more
@@ -137,17 +138,22 @@ class Paiement extends CommonObject
 
         // Clean parameters
         $totalamount = 0;
+        $atleastonepaymentnotnull = 0;
 		foreach ($this->amounts as $key => $value)	// How payment is dispatch
 		{
 			$newvalue = price2num($value,'MT');
 			$this->amounts[$key] = $newvalue;
 			$totalamount += $newvalue;
+			if (! empty($newvalue)) $atleastonepaymentnotnull++;
 		}
 		$totalamount = price2num($totalamount);
 
 		// Check parameters
-        if ($totalamount == 0) return -1; // On accepte les montants negatifs pour les rejets de prelevement mais pas null
-
+        if (empty($totalamount) && empty($atleastonepaymentnotnull))	 // We accept negative amounts for withdraw reject but not empty arrays
+        {
+        	$this->error='TotalAmountEmpty';
+        	return -1;
+        }
 
 		$this->db->begin();
 
@@ -184,6 +190,9 @@ class Paiement extends CommonObject
                             $deposits=$invoice->getSumDepositsUsed();
                             $alreadypayed=price2num($paiement + $creditnotes + $deposits,'MT');
                             $remaintopay=price2num($invoice->total_ttc - $paiement - $creditnotes - $deposits,'MT');
+
+							//var_dump($invoice->total_ttc.' - '.$paiement.' -'.$creditnotes.' - '.$deposits.' - '.$remaintopay);exit;
+
                             // If there is withdrawals request to do and not done yet, we wait before closing.
                             $mustwait=0;
                             $listofpayments=$invoice->getListOfPayments();
@@ -200,7 +209,7 @@ class Paiement extends CommonObject
                                 }
                             }
 
-                            if ($invoice->type != 0 && $invoice->type != 1) dol_syslog("Invoice ".$facid." is not a standard nor replacement invoice. We do nothing more.");
+                            if ($invoice->type != 0 && $invoice->type != 1 && $invoice->type != 2) dol_syslog("Invoice ".$facid." is not a standard, nor replacement invoice, nor credit note. We do nothing more.");
                             else if ($remaintopay) dol_syslog("Remain to pay for invoice ".$facid." not null. We do nothing more.");
                             else if ($mustwait) dol_syslog("There is ".$mustwait." differed payment to process, we do nothing more.");
                             else $result=$invoice->set_paid($user,'','');
@@ -357,8 +366,8 @@ class Paiement extends CommonObject
 
 
     /**
-     *      A record into bank for payment with links between this bank record and invoices of payment.
-     *      All payment properties must have been set first like after a call to create().
+     *      Add a record into bank for payment with links between this bank record and invoices of payment.
+     *      All payment properties (this->amount, this->amounts, ...) must have been set first like after a call to create().
      *
      *      @param	User	$user               Object of user making payment
      *      @param  string	$mode               'payment', 'payment_supplier'
@@ -375,16 +384,26 @@ class Paiement extends CommonObject
 
         $error=0;
         $bank_line_id=0;
-        $this->fk_account=$accountid;
 
         if (! empty($conf->banque->enabled))
         {
-            require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+        	if ($accountid <= 0)
+        	{
+        		$this->error='Bad value for parameter accountid';
+        		dol_syslog(get_class($this).'::addPaymentToBank '.$this->error, LOG_ERR);
+        		return -1;
+        	}
+
+        	$this->db->begin();
+
+        	$this->fk_account=$accountid;
+
+        	require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
             dol_syslog("$user->id,$mode,$label,$this->fk_account,$emetteur_nom,$emetteur_banque");
 
             $acc = new Account($this->db);
-            $acc->fetch($this->fk_account);
+            $result=$acc->fetch($this->fk_account);
 
             $totalamount=$this->amount;
             if (empty($totalamount)) $totalamount=$this->total; // For backward compatibility
@@ -396,7 +415,7 @@ class Paiement extends CommonObject
                 $this->datepaye,
                 $this->paiementid,  // Payment mode id or code ("CHQ or VIR for example")
                 $label,
-                $totalamount,
+                $totalamount,		// Sign must be positive when we receive money (customer payment), negative when you give money (supplier invoice or credit note)
                 $this->num_paiement,
                 '',
                 $user,
@@ -433,7 +452,7 @@ class Paiement extends CommonObject
                 }
 
                 // Add link 'company' in bank_url between invoice and bank transaction (for each invoice concerned by payment)
-                if (! $error)
+                if (! $error  && $label != '(WithdrawalPayment)')
                 {
                     $linkaddedforthirdparty=array();
                     foreach ($this->amounts as $key => $value)  // We should have always same third party but we loop in case of.
@@ -488,9 +507,18 @@ class Paiement extends CommonObject
 				}
             }
             else
-            {
+			{
                 $this->error=$acc->error;
                 $error++;
+            }
+
+            if (! $error)
+            {
+            	$this->db->commit();
+            }
+            else
+			{
+            	$this->db->rollback();
             }
         }
 

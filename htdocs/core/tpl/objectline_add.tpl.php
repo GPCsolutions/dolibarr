@@ -1,11 +1,11 @@
 <?php
-/* Copyright (C) 2010-2012	Regis Houssin		<regis@dolibarr.fr>
+/* Copyright (C) 2010-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2011	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2012		Christophe Battarel	<christophe.battarel@altairis.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -79,14 +79,16 @@ if (! empty($conf->margin->enabled)) {
 							'price_ht' => 'price_ht',
 							'origin_price_ht_cache' => 'price_ht',
 							'origin_tva_tx_cache' => 'tva_tx',
-							'origin_price_ttc_cache' => 'price_ttc'
+							'origin_price_ttc_cache' => 'price_ttc',
+							'qty' => 'qty',
+							'remise_percent' => 'discount'
 					),
 					'update_textarea' => array(
 							'product_desc' => 'desc'
 					),
-					'show' => array(
-							'price_base_type_area'
-					),
+					//'show' => array(
+							//'price_base_type_area'
+					//),
 					'disabled' => array(
 							'select_type'
 					)
@@ -158,7 +160,10 @@ if (! empty($conf->margin->enabled)) {
 		<input type="hidden" id="origin_price_ttc_cache" name="origin_price_ttc_cache" value="" />
 	</td>
 	<td align="right"><input type="text" size="3" id="qty" name="qty" value="<?php echo (GETPOST('qty')?GETPOST('qty'):1); ?>"></td>
-	<td align="right" nowrap="nowrap"><input type="text" size="1" value="<?php echo $buyer->remise_client; ?>" name="remise_percent">%</td>
+	<td align="right" class="nowrap">
+		<input type="text" size="1" value="<?php echo $buyer->remise_client; ?>" id="remise_percent" name="remise_percent">%
+		<input type="hidden" id="origin_remise_percent" name="origin_remise_percent" value="<?php echo $buyer->remise_client; ?>" />
+	</td>
 <?php
 $colspan = 4;
 if (! empty($conf->margin->enabled)) {
@@ -225,7 +230,9 @@ $(document).ready(function() {
 			$.post('<?php echo DOL_URL_ROOT; ?>/product/ajax/products.php', {
 				'action': 'fetch',
 				'id': $(this).val(),
-				'price_level': <?php echo empty($buyer->price_level)?1:$buyer->price_level; ?>},
+				'price_level': <?php echo empty($buyer->price_level)?1:$buyer->price_level; ?>,
+				'pbq': $("option:selected", this).attr('pbq')
+				},
 			function(data) {
 				if (typeof data != 'undefined') {
 					$('#product_ref').val(data.ref);
@@ -236,7 +243,9 @@ $(document).ready(function() {
 					//$('#origin_price_ttc_cache').val(data.price_ttc);
 					$('#origin_tva_tx_cache').val(data.tva_tx);
 					$('#select_type').val(data.type).attr('disabled','disabled').trigger('change');
-					$('#price_base_type_area').show();
+					//$('#price_base_type_area').show();
+					$('#qty').val(data.qty);
+					if($('#remise_percent').val() < data.discount) $('#remise_percent').val(data.discount);
 
 					if (typeof CKEDITOR == "object" && typeof CKEDITOR.instances != "undefined" && CKEDITOR.instances['product_desc'] != "undefined") {
 						CKEDITOR.instances['product_desc'].setData(data.desc).focus();
@@ -366,6 +375,11 @@ $(document).ready(function() {
 	if ($('#idprod').val() == 0 && $('#tva_tx').val() == 0) {
 		$('#price_ttc').attr('disabled','disabled');
 	}
+
+	$('#remise_percent').bind('change', function() {
+		if ($(this).val() < $('#origin_remise_percent').val())
+			$('#remise_percent').val($('#origin_remise_percent').val());
+	});
 
 	$('#tva_tx').change(function() {
 		if ($(this).val() == 0) {

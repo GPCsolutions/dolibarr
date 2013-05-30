@@ -5,7 +5,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -39,7 +39,7 @@ print '<tr><td valign="top" width="30%">';
 
 
 $sql = "SELECT count(*) FROM ".MAIN_DB_PREFIX."facturedet";
-$sql .= " WHERE fk_export_compta = 0";
+$sql .= " WHERE fk_code_ventilation = 0";
 $result = $db->query($sql);
 if ($result)
 {
@@ -50,7 +50,7 @@ if ($result)
 }
 
 $sql = "SELECT count(*) FROM ".MAIN_DB_PREFIX."paiement";
-$sql .= " WHERE fk_export_compta = 0";
+$sql .= " WHERE fk_code_ventilation = 0";
 
 $result = $db->query($sql);
 if ($result)
@@ -62,7 +62,7 @@ if ($result)
 }
 
 $sql = "SELECT count(*) FROM ".MAIN_DB_PREFIX."facture_fourn_det";
-$sql .= " WHERE fk_export_compta = 0";
+$sql .= " WHERE fk_code_ventilation = 0";
 $result = $db->query($sql);
 if ($result)
 {
@@ -73,7 +73,7 @@ if ($result)
 }
 
 /*$sql = "SELECT count(*) FROM ".MAIN_DB_PREFIX."paiementfourn";
-$sql .= " WHERE fk_export_compta = 0";
+$sql .= " WHERE fk_code_ventilation = 0";
 
 $result = $db->query($sql);
 if ($result)

@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -78,9 +78,9 @@ class SocieteTest extends PHPUnit_Framework_TestCase
     {
     	global $conf,$user,$langs,$db;
 
-        if ($conf->global->SOCIETE_CODECLIENT_ADDON != 'mod_codeclient_monkey') { print __METHOD__." third party ref checker must be setup to 'mod_codeclient_monkey' not to '".$conf->global->SOCIETE_CODECLIENT_ADDON."'.\n"; die(); }
+        if ($conf->global->SOCIETE_CODECLIENT_ADDON != 'mod_codeclient_monkey') { print "\n".__METHOD__." third party ref checker must be setup to 'mod_codeclient_monkey' not to '".$conf->global->SOCIETE_CODECLIENT_ADDON."'.\n"; die(); }
 
-        if (! empty($conf->global->MAIN_DISABLEPROFIDRULES)) { print __METHOD__." constant MAIN_DISABLEPROFIDRULE must be empty (if a module set it, disable module).\n"; die(); }
+        if (! empty($conf->global->MAIN_DISABLEPROFIDRULES)) { print "\n".__METHOD__." constant MAIN_DISABLEPROFIDRULE must be empty (if a module set it, disable module).\n"; die(); }
 
         $db->begin();	// This is to have all actions inside a transaction even if test launched without suite.
 
@@ -189,8 +189,8 @@ class SocieteTest extends PHPUnit_Framework_TestCase
 		$langs=$this->savlangs;
 		$db=$this->savdb;
 
-		$localobject->note='New note after update';
-		//$localobject->note_public='New note public after update';
+		$localobject->note_private='New private note after update';
+		$localobject->note_public='New public note after update';
 		$localobject->name='New name';
 		$localobject->address='New address';
 		$localobject->zip='New zip';
@@ -205,22 +205,25 @@ class SocieteTest extends PHPUnit_Framework_TestCase
 		$localobject->idprof2='new idprof2';
 		$localobject->idprof3='new idprof3';
 		$localobject->idprof4='new idprof4';
+		
 		$result=$localobject->update($localobject->id,$user);
     	print __METHOD__." id=".$localobject->id." result=".$result."\n";
     	$this->assertLessThan($result, 0);
-		$result=$localobject->update_note($localobject->note);
+		
+    	$result=$localobject->update_note($localobject->note_private,'_private');
     	print __METHOD__." id=".$localobject->id." result=".$result."\n";
-    	$this->assertLessThan($result, 0);
-		//$result=$localobject->update_note_public($localobject->note_public);
-    	//print __METHOD__." id=".$localobject->id." result=".$result."\n";
-    	//$this->assertLessThan($result, 0);
+    	$this->assertLessThan($result, 0, 'Holiday::update_note_private error');
+		
+    	$result=$localobject->update_note_public($localobject->note_public);
+    	print __METHOD__." id=".$localobject->id." result=".$result."\n";
+    	$this->assertLessThan($result, 0, 'Holiday::update_note_public error');
 
 		$newobject=new Societe($this->savdb);
     	$result=$newobject->fetch($localobject->id);
         print __METHOD__." id=".$localobject->id." result=".$result."\n";
     	$this->assertLessThan($result, 0);
 
-    	$this->assertEquals($localobject->note, $newobject->note);
+    	$this->assertEquals($localobject->note_private, $newobject->note_private);
     	//$this->assertEquals($localobject->note_public, $newobject->note_public);
     	$this->assertEquals($localobject->name, $newobject->name);
     	$this->assertEquals($localobject->address, $newobject->address);
@@ -444,9 +447,10 @@ class SocieteTest extends PHPUnit_Framework_TestCase
         $localobjectadd->address='New address';
         $localobjectadd->zip='New zip';
         $localobjectadd->town='New town';
+        $localobjectadd->state='New state';
         $result=$localobjectadd->getFullAddress(1);
         print __METHOD__." id=".$localobjectadd->id." result=".$result."\n";
-        $this->assertContains("New address\nNew zip New town\nUnited States", $result);
+        $this->assertContains("New address\nNew town, New state, New zip\nUnited States", $result);
 
         return $localobjectadd->id;
     }

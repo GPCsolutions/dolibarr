@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -29,8 +29,13 @@ require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/vcard.class.php';
 
 
+$id = GETPOST('id', 'int');
+
+// Security check
+$result = restrictedArea($user, 'contact', $id, 'socpeople&societe');
+
 $contact = new Contact($db);
-$result=$contact->fetch($_GET["id"]);
+$result=$contact->fetch($id);
 
 $physicalperson=1;
 
@@ -46,7 +51,7 @@ $v = new vCard();
 $v->setProdId('Dolibarr '.DOL_VERSION);
 
 $v->setUid('DOLIBARR-CONTACTID-'.$contact->id);
-$v->setName($contact->name, $contact->firstname, "", "", "");
+$v->setName($contact->lastname, $contact->firstname, "", "", "");
 $v->setFormattedName($contact->getFullName($langs));
 
 // By default, all informations are for work (except phone_perso and phone_mobile)
@@ -54,8 +59,8 @@ $v->setPhoneNumber($contact->phone_pro, "PREF;WORK;VOICE");
 $v->setPhoneNumber($contact->phone_mobile, "CELL;VOICE");
 $v->setPhoneNumber($contact->fax, "WORK;FAX");
 
-$v->setAddress("", "", $contact->address, $contact->ville, "", $contact->cp, ($contact->pays_code?$contact->pays:''), "WORK;POSTAL");
-$v->setLabel("", "", $contact->address, $contact->ville, "", $contact->cp, ($contact->pays_code?$contact->pays:''), "WORK");
+$v->setAddress("", "", $contact->address, $contact->town, "", $contact->zip, ($contact->country_code?$contact->country_id:''), "WORK;POSTAL");
+$v->setLabel("", "", $contact->address, $contact->town, "", $contact->zip, ($contact->country_code?$contact->country_id:''), "WORK");
 $v->setEmail($contact->email,'internet,pref');
 $v->setNote($contact->note);
 
@@ -67,7 +72,7 @@ if ($company->id)
 	$v->setURL($company->url, "WORK");
 	if (! $contact->phone_pro) $v->setPhoneNumber($company->tel, "WORK;VOICE");
 	if (! $contact->fax)       $v->setPhoneNumber($company->fax, "WORK;FAX");
-	if (! $contact->cp)        $v->setAddress("", "", $company->address, $company->ville, "", $company->cp, $company->pays_code, "WORK;POSTAL");
+	if (! $contact->zip)        $v->setAddress("", "", $company->address, $company->town, "", $company->zip, $company->country_code, "WORK;POSTAL");
 	if ($company->email != $contact->email) $v->setEmail($company->email,'internet');
 	// Si contact lie a un tiers non de type "particulier"
 	if ($contact->typent_code != 'TE_PRIVATE') $v->setOrg($company->nom);

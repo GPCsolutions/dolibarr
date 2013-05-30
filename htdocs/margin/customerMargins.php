@@ -1,9 +1,9 @@
 <?php
-/* Copyright (C) 2012	Christophe Battarel	<christophe.battarel@altairis.fr>
+/* Copyright (C) 2012-2013	Christophe Battarel	<christophe.battarel@altairis.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -40,10 +40,6 @@ $result = restrictedArea($user, 'societe','','');
 
 $mesg = '';
 
-$sortfield = GETPOST("sortfield",'alpha');
-$sortorder = GETPOST("sortorder",'alpha');
-if (! $sortorder) $sortorder="ASC";
-if (! $sortfield) $sortfield="s.nom";
 $page = GETPOST("page",'int');
 if ($page == -1) { $page = 0; }
 $offset = $conf->liste_limit * $page;
@@ -77,7 +73,7 @@ $titre=$langs->trans("Margins");
 $picto='margin';
 dol_fiche_head($head, 'customerMargins', $titre, 0, $picto);
 
-print '<form method="post" name="sel">';
+print '<form method="post" name="sel" action="'.$_SERVER['PHP_SELF'].'">';
 print '<table class="border" width="100%">';
 
 $client = false;
@@ -105,6 +101,23 @@ else {
 	print '</td></tr>';
 }
 
+$sortfield = GETPOST("sortfield",'alpha');
+$sortorder = GETPOST("sortorder",'alpha');
+if (! $sortorder) $sortorder="ASC";
+if (! $sortfield)
+{
+	if ($client)
+	{
+		$sortfield="f.datef";
+		$sortorder="DESC";
+	}
+	else
+	{
+	    $sortfield="s.nom";
+	    $sortorder="ASC";
+	}
+}
+
 // Start date
 print '<td>'.$langs->trans('StartDate').'</td>';
 print '<td width="20%">';
@@ -115,7 +128,7 @@ print '<td width="20%">';
 $form->select_date($enddate,'enddate','','',1,"sel",1,1);
 print '</td>';
 print '<td style="text-align: center;">';
-print '<input type="submit" value="'.$langs->trans('Launch').'" />';
+print '<input type="submit" class="button" value="'.$langs->trans('Launch').'" />';
 print '</td></tr>';
 
 // Total Margin
@@ -142,8 +155,9 @@ print '</form>';
 
 $sql = "SELECT distinct s.nom, s.rowid as socid, s.code_client, s.client,";
 $sql.= " f.facnumber, f.total as total_ht,";
-$sql.= " sum(d.subprice * d.qty * (1 - d.remise_percent / 100)) as selling_price,";
-$sql.= " sum(d.buy_price_ht * d.qty) as buying_price, sum(((d.subprice * (1 - d.remise_percent / 100)) - d.buy_price_ht) * d.qty) as marge," ;
+$sql.= " sum(d.total_ht) as selling_price,";
+$sql.= $db->ifsql('f.type =2','sum(d.buy_price_ht * d.qty *-1)','sum(d.buy_price_ht * d.qty)')." as buying_price, ";
+$sql.= $db->ifsql('f.type =2','sum(d.total_ht + (d.buy_price_ht * d.qty))','sum(d.total_ht - (d.buy_price_ht * d.qty))')." as marge," ;
 $sql.= " f.datef, f.paye, f.fk_statut as statut, f.rowid as facid";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 $sql.= ", ".MAIN_DB_PREFIX."facture as f";
@@ -164,17 +178,19 @@ if (isset($conf->global->ForceBuyingPriceIfNull) && $conf->global->ForceBuyingPr
 if ($client)
   $sql.= " GROUP BY f.rowid";
 else
-  $sql.= " GROUP BY s.rowid";
+  $sql.= " GROUP BY s.rowid, s.nom, s.code_client, s.client, f.facnumber, f.total, f.datef, f.paye, f.fk_statut, f.rowid ";
 $sql.= " ORDER BY $sortfield $sortorder ";
-$sql.= $db->plimit($conf->liste_limit +1, $offset);
+// TODO: calculate total to display then restore pagination
+//$sql.= $db->plimit($conf->liste_limit +1, $offset);
 
+dol_syslog('margin::customerMargins.php sql='.$sql,LOG_DEBUG);
 $result = $db->query($sql);
 if ($result)
 {
 	$num = $db->num_rows($result);
 
   print '<br>';
-	print_barre_liste($langs->trans("MarginDetails"),$page,$_SERVER["PHP_SELF"],"",$sortfield,$sortorder,'',$num,0,'');
+	print_barre_liste($langs->trans("MarginDetails"),$page,$_SERVER["PHP_SELF"],"",$sortfield,$sortorder,'',0,0,'');
 
 	$i = 0;
 	print "<table class=\"noborder\" width=\"100%\">";
@@ -203,7 +219,7 @@ if ($result)
 	if ($num > 0)
 	{
 		$var=True;
-		while ($i < $num && $i < $conf->liste_limit)
+		while ($i < $num /*&& $i < $conf->liste_limit*/)
 		{
 			$objp = $db->fetch_object($result);
 

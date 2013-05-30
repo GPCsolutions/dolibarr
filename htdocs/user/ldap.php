@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2006-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2006-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2006-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -100,14 +100,14 @@ print $form->showrefnav($fuser,'id','',$user->rights->user->user->lire || $user-
 print '</td>';
 print '</tr>';
 
-// Nom
+// Lastname
 print '<tr><td width="25%" valign="top">'.$langs->trans("Lastname").'</td>';
-print '<td>'.$fuser->nom.'</td>';
+print '<td>'.$fuser->lastname.'</td>';
 print "</tr>\n";
 
-// Prenom
+// Firstname
 print '<tr><td width="25%" valign="top">'.$langs->trans("Firstname").'</td>';
-print '<td>'.$fuser->prenom.'</td>';
+print '<td>'.$fuser->firstname.'</td>';
 print "</tr>\n";
 
 // Login

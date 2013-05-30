@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2010-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2012		Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2012		Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -225,9 +225,80 @@ class FilesLibTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * testDolMimeType
+     *
+     * @return	string
+     */
+    public function testDolMimeType()
+    {
+    	global $conf,$user,$langs,$db;
+    	$conf=$this->savconf;
+    	$user=$this->savuser;
+    	$langs=$this->savlangs;
+    	$db=$this->savdb;
+
+    	// file.png
+    	$result=dol_mimetype('file.png','',0);
+    	$this->assertEquals('image/png',$result);
+    	$result=dol_mimetype('file.png','',1);
+    	$this->assertEquals('png',$result);
+    	$result=dol_mimetype('file.png','',2);
+    	$this->assertEquals('image.png',$result);
+    	$result=dol_mimetype('file.png','',3);
+    	$this->assertEquals('',$result);
+    	// file.odt
+    	$result=dol_mimetype('file.odt','',0);
+    	$this->assertEquals('application/vnd.oasis.opendocument.text',$result);
+    	$result=dol_mimetype('file.odt','',1);
+    	$this->assertEquals('vnd.oasis.opendocument.text',$result);
+    	$result=dol_mimetype('file.odt','',2);
+    	$this->assertEquals('ooffice.png',$result);
+    	$result=dol_mimetype('file.odt','',3);
+    	$this->assertEquals('',$result);
+    	// file.php
+    	$result=dol_mimetype('file.php','',0);
+    	$this->assertEquals('text/plain',$result);
+    	$result=dol_mimetype('file.php','',1);
+    	$this->assertEquals('plain',$result);
+    	$result=dol_mimetype('file.php','',2);
+    	$this->assertEquals('php.png',$result);
+    	$result=dol_mimetype('file.php','',3);
+    	$this->assertEquals('php',$result);
+    	// file.php.noexe
+    	$result=dol_mimetype('file.php.noexe','',0);
+    	$this->assertEquals('text/plain',$result);
+    }
+
+
+    /**
+     * testDolDeleteDir
+     *
+     * @return	int
+     */
+    public function testDolDeleteDir()
+    {
+    	global $conf,$user,$langs,$db;
+    	$conf=$this->savconf;
+    	$user=$this->savuser;
+    	$langs=$this->savlangs;
+    	$db=$this->savdb;
+
+    	$dirout=$conf->admin->dir_temp.'/test';
+
+    	$count=0;
+    	$result=dol_delete_dir_recursive($dirout,$count,1);	// If it has no permission to delete, it will fails as if dir does not exists, so we can't test it
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertGreaterThanOrEqual(0,$result);
+    }
+
+
+    /**
      * testDolCopyMoveDelete
      *
      * @return	int
+     *
+     * @depends	testDolDeleteDir
+     * The depends says test is run only if previous is ok
      */
     public function testDolCopyMoveDelete()
     {
@@ -241,86 +312,54 @@ class FilesLibTest extends PHPUnit_Framework_TestCase
 
         $result=dol_copy($file, '/adir/that/does/not/exists/file.csv');
         print __METHOD__." result=".$result."\n";
-        $this->assertLessThan(0,$result);    // We should have error
+        $this->assertLessThan(0,$result,'copy dir that does not exists');    // We should have error
 
         $result=dol_copy($file, $conf->admin->dir_temp.'/file.csv',0,1);
         print __METHOD__." result=".$result."\n";
-        $this->assertGreaterThanOrEqual(1,$result);    // Should be 1
+        $this->assertGreaterThanOrEqual(1,$result, 'copy into a dir that exists');    // Should be 1
 
         // Again to test with overwriting=0
         $result=dol_copy($file, $conf->admin->dir_temp.'/file.csv',0,0);
         print __METHOD__." result=".$result."\n";
-        $this->assertEquals(0,$result);    // Should be 0
+        $this->assertEquals(0,$result, 'copy destination already exists, no overwrite');    // Should be 0
 
         // Again to test with overwriting=1
         $result=dol_copy($file, $conf->admin->dir_temp.'/file.csv',0,1);
         print __METHOD__." result=".$result."\n";
-        $this->assertGreaterThanOrEqual(1,$result);    // Should be 1
+        $this->assertGreaterThanOrEqual(1,$result,'copy destination already exists, overwrite');    // Should be 1
 
         // Again to test with overwriting=1
         $result=dol_move($conf->admin->dir_temp.'/file.csv',$conf->admin->dir_temp.'/file2.csv',0,1);
         print __METHOD__." result=".$result."\n";
-        $this->assertTrue($result);
+        $this->assertTrue($result,'copy destination does not exists');
 
         $result=dol_delete_file($conf->admin->dir_temp.'/file2.csv');
         print __METHOD__." result=".$result."\n";
-        $this->assertTrue($result);
+        $this->assertTrue($result,'delete file');
 
-        // Again to test no erreor when deleteing a non existing file
+        // Again to test no error when deleteing a non existing file
         $result=dol_delete_file($conf->admin->dir_temp.'/file2.csv');
         print __METHOD__." result=".$result."\n";
-        $this->assertTrue($result);
-    }
+        $this->assertTrue($result,'delete file that does not exists');
 
-    /**
-     * testDolMimeType
-     *
-     * @return	string
-     */
-    public function testDolMimeType()
-    {
-        global $conf,$user,$langs,$db;
-        $conf=$this->savconf;
-        $user=$this->savuser;
-        $langs=$this->savlangs;
-        $db=$this->savdb;
+        // Test copy with special char / delete with blob
+        $result=dol_copy($file, $conf->admin->dir_temp.'/file with [x] and é.csv',0,1);
+        print __METHOD__." result=".$result."\n";
+        $this->assertGreaterThanOrEqual(1,$result,'copy file with special chars, overwrite');    // Should be 1
 
-		// file.png
-		$result=dol_mimetype('file.png','',0);
-        $this->assertEquals('image/png',$result);
-		$result=dol_mimetype('file.png','',1);
-        $this->assertEquals('png',$result);
-		$result=dol_mimetype('file.png','',2);
-		$this->assertEquals('image.png',$result);
-		$result=dol_mimetype('file.png','',3);
-        $this->assertEquals('',$result);
-		// file.odt
-		$result=dol_mimetype('file.odt','',0);
-        $this->assertEquals('application/vnd.oasis.opendocument.text',$result);
-		$result=dol_mimetype('file.odt','',1);
-        $this->assertEquals('vnd.oasis.opendocument.text',$result);
-		$result=dol_mimetype('file.odt','',2);
-		$this->assertEquals('ooffice.png',$result);
-		$result=dol_mimetype('file.odt','',3);
-        $this->assertEquals('',$result);
-		// file.php
-		$result=dol_mimetype('file.php','',0);
-        $this->assertEquals('text/plain',$result);
-		$result=dol_mimetype('file.php','',1);
-        $this->assertEquals('plain',$result);
-		$result=dol_mimetype('file.php','',2);
-		$this->assertEquals('php.png',$result);
-		$result=dol_mimetype('file.php','',3);
-        $this->assertEquals('php',$result);
-		// file.php.noexe
-		$result=dol_mimetype('file.php.noexe','',0);
-        $this->assertEquals('text/plain',$result);
+        // Try to delete using a glob criteria
+        $result=dol_delete_file($conf->admin->dir_temp.'/file with [x]*é.csv');
+        print __METHOD__." result=".$result."\n";
+        $this->assertTrue($result,'delete file using glob');
     }
 
     /**
      * testDolCompressUnCompress
      *
      * @return	string
+     *
+     * @depends	testDolCopyMoveDelete
+     * The depends says test is run only if previous is ok
      */
     public function testDolCompressUnCompress()
     {

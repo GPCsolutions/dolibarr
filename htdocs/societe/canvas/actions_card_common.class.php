@@ -1,10 +1,10 @@
 <?php
-/* Copyright (C) 2010-2012	Regis Houssin		<regis@dolibarr.fr>
+/* Copyright (C) 2010-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -118,11 +118,11 @@ abstract class ActionsCardCommon
             {
                 $this->object->particulier		= GETPOST("private");
 
-                $this->object->name				= empty($conf->global->MAIN_FIRSTNAME_NAME_POSITION)?trim($_POST["prenom"].' '.$_POST["nom"]):trim($_POST["nom"].' '.$_POST["prenom"]);
+                $this->object->name				= empty($conf->global->MAIN_FIRSTNAME_NAME_POSITION)?trim($_POST["firstname"].' '.$_POST["lastname"]):trim($_POST["lastname"].' '.$_POST["firstname"]);
                 $this->object->civilite_id		= $_POST["civilite_id"];
                 // Add non official properties
-                $this->object->name_bis        	= $_POST["nom"];
-                $this->object->firstname		= $_POST["prenom"];
+                $this->object->name_bis        	= $_POST["lastname"];
+                $this->object->firstname		= $_POST["firstname"];
             }
             else
             {
@@ -132,7 +132,7 @@ abstract class ActionsCardCommon
             $this->object->address				= $_POST["adresse"];
             $this->object->zip					= $_POST["zipcode"];
             $this->object->town					= $_POST["town"];
-            $this->object->country_id			= $_POST["pays_id"];
+            $this->object->country_id			= $_POST["country_id"];
             $this->object->state_id				= $_POST["departement_id"];
             $this->object->tel					= $_POST["tel"];
             $this->object->fax					= $_POST["fax"];
@@ -168,7 +168,6 @@ abstract class ActionsCardCommon
             }
             $this->object->client				= $_POST["client"];
             $this->object->fournisseur			= $_POST["fournisseur"];
-            $this->object->fournisseur_categorie	= $_POST["fournisseur_categorie"];
 
             $this->object->commercial_id		= $_POST["commercial_id"];
             $this->object->default_lang			= $_POST["default_lang"];
@@ -430,7 +429,7 @@ abstract class ActionsCardCommon
             {
                 $module = substr($module, 0, dol_strlen($module)-4);
             }
-            $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
+            $dirsociete=array_merge(array('/core/modules/societe/'),$conf->modules_parts['societe']);
             foreach ($dirsociete as $dirroot)
             {
                 $res=dol_include_once($dirroot.$module.'.php');
@@ -461,13 +460,12 @@ abstract class ActionsCardCommon
             	$this->tpl['supplier_enabled'] = 1;
 
             	// Load object modCodeFournisseur
-            	$module=$conf->global->SOCIETE_CODEFOURNISSEUR_ADDON;
-            	if (! $module) $module=$conf->global->SOCIETE_CODECLIENT_ADDON;
+            	$module=$conf->global->SOCIETE_CODECLIENT_ADDON;
             	if (substr($module, 0, 15) == 'mod_codeclient_' && substr($module, -3) == 'php')
             	{
             		$module = substr($module, 0, dol_strlen($module)-4);
             	}
-                $dirsociete=array_merge(array('/core/modules/societe/'),$conf->societe_modules);
+                $dirsociete=array_merge(array('/core/modules/societe/'),$conf->modules_parts['societe']);
                 foreach ($dirsociete as $dirroot)
                 {
                     $res=dol_include_once($dirroot.$module.'.php');
@@ -488,7 +486,6 @@ abstract class ActionsCardCommon
 
             	$this->object->LoadSupplierCateg();
             	$this->tpl['suppliercategory'] = $this->object->SupplierCategories;
-            	$this->tpl['select_suppliercategory'] = $form->selectarray("fournisseur_categorie",$this->object->SupplierCategories,$_POST["fournisseur_categorie"],1);
             }
 
             // Zip
@@ -560,7 +557,7 @@ abstract class ActionsCardCommon
             $this->tpl['checksuppliercode'] = $this->object->check_codefournisseur();
             $this->tpl['address'] 			= dol_nl2br($this->object->address);
 
-            $img=picto_from_langcode($this->object->pays_code);
+            $img=picto_from_langcode($this->object->country_code);
             if ($this->object->isInEEC()) $this->tpl['country'] = $form->textwithpicto(($img?$img.' ':'').$this->object->country,$langs->trans("CountryIsInEEC"),1,0);
             $this->tpl['country'] = ($img?$img.' ':'').$this->object->country;
 
@@ -703,7 +700,7 @@ abstract class ActionsCardCommon
         $this->object->localtax1_assuj		= 	$_POST["localtax1assuj_value"];
         $this->object->localtax2_assuj		= 	$_POST["localtax2assuj_value"];
 
-        // We set pays_id, and pays_code label of the chosen country
+        // We set country_id, and country_code label of the chosen country
         if ($this->object->country_id)
         {
             $tmparray=getCountry($this->object->country_id,'all',$this->db,$langs,0);

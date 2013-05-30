@@ -2,12 +2,12 @@
 /* Copyright (C) 2003		Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012	Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004		Eric Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2011	Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2011	Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012		Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -62,7 +62,7 @@ llxHeader();
 $sql = "SELECT s.nom, s.rowid as socid,";				// Ou
 $sql.= " d.rowid, d.type, d.dated as dd, d.km,";		// Comment
 $sql.= " d.fk_statut,";
-$sql.= " u.name, u.firstname";							// Qui
+$sql.= " u.lastname, u.firstname";							// Qui
 $sql.= " FROM ".MAIN_DB_PREFIX."user as u";
 $sql.= ", ".MAIN_DB_PREFIX."deplacement as d";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON d.fk_soc = s.rowid";
@@ -93,7 +93,7 @@ if ($resql)
     print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"d.rowid","","&socid=$socid",'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Type"),$_SERVER["PHP_SELF"],"d.type","","&socid=$socid",'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Date"),$_SERVER["PHP_SELF"],"d.dated","","&socid=$socid",'',$sortfield,$sortorder);
-    print_liste_field_titre($langs->trans("Person"),$_SERVER["PHP_SELF"],"u.name","","&socid=$socid",'',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Person"),$_SERVER["PHP_SELF"],"u.lastname","","&socid=$socid",'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","","&socid=$socid",'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("FeesKilometersOrAmout"),$_SERVER["PHP_SELF"],"d.km","","&socid=$socid",'align="right"',$sortfield,$sortorder);
     print_liste_field_titre('',$_SERVER["PHP_SELF"], '');

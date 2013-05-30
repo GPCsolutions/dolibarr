@@ -1,12 +1,15 @@
 <?php
 /* Copyright (C) 2001-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012      Marcos García        <marcosgdf@gmail.com>
+ * Copyright (C) 2013      Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2013      Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
+ * Copyright (C) 2013      Jean Heimburger   	<jean@tiaris.info>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -129,15 +132,39 @@ else
     $sql.= ' FROM '.MAIN_DB_PREFIX.'product as p';
     if (! empty($search_categ) || ! empty($catid)) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX."categorie_product as cp ON p.rowid = cp.fk_product"; // We'll need this table joined to the select in order to filter by categ
    	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON p.rowid = pfp.fk_product";
+// multilang
+	if ($conf->global->MAIN_MULTILANGS) // si l'option est active
+    {
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."product_lang as pl ON pl.fk_product = p.rowid AND pl.lang = '".$langs->getDefaultLang() ."'";
+	}
     $sql.= ' WHERE p.entity IN ('.getEntity('product', 1).')';
     if ($sall)
     {
-        $sql.= " AND (p.ref LIKE '%".$db->escape($sall)."%' OR p.label LIKE '%".$db->escape($sall)."%' OR p.description LIKE '%".$db->escape($sall)."%' OR p.note LIKE '%".$db->escape($sall)."%'";
-        if (! empty($conf->barcode->enabled))
-        {
-            $sql.= " OR p.barcode LIKE '%".$db->escape($sall)."%'";
-        }
-        $sql.= ')';
+        // For natural search
+        $scrit = explode(' ', $sall);
+		// multilang
+		if ($conf->global->MAIN_MULTILANGS) // si l'option est active
+	    {
+			foreach ($scrit as $crit) {
+		        $sql.= " AND (p.ref LIKE '%".$db->escape($crit)."%' OR p.label LIKE '%".$db->escape($crit)."%' OR p.description LIKE '%".$db->escape($crit)."%' OR p.note LIKE '%".$db->escape($crit)."%'  OR pl.description LIKE '%".$db->escape($sall)."%' OR pl.note LIKE '%".$db->escape($sall)."%'";
+		        if (! empty($conf->barcode->enabled))
+		        {
+		            $sql.= " OR p.barcode LIKE '%".$db->escape($crit)."%'";
+		        }
+		        $sql.= ')';
+		    }
+		}
+		else
+		{
+		    foreach ($scrit as $crit) {
+		        $sql.= " AND (p.ref LIKE '%".$db->escape($crit)."%' OR p.label LIKE '%".$db->escape($crit)."%' OR p.description LIKE '%".$db->escape($crit)."%' OR p.note LIKE '%".$db->escape($crit)."%'";
+		        if (! empty($conf->barcode->enabled))
+		        {
+		            $sql.= " OR p.barcode LIKE '%".$db->escape($crit)."%'";
+		        }
+		        $sql.= ')';
+		    }
+		}
     }
     // if the type is not 1, we show all products (type = 0,2,3)
     if (dol_strlen($type))
@@ -147,7 +174,15 @@ else
     }
     if ($sref)     $sql.= " AND p.ref LIKE '%".$sref."%'";
     if ($sbarcode) $sql.= " AND p.barcode LIKE '%".$sbarcode."%'";
-    if ($snom)     $sql.= " AND p.label LIKE '%".$db->escape($snom)."%'";
+    if ($snom)
+	{
+		// multilang
+		if ($conf->global->MAIN_MULTILANGS) // si l'option est active
+	    {
+			$sql.= " AND (p.label LIKE '%".$db->escape($snom)."%' OR (pl.label IS NOT null AND pl.label LIKE '%".$db->escape($snom)."%'))";
+		}
+		else $sql.= " AND p.label LIKE '%".$db->escape($snom)."%'";
+}
     if (isset($tosell) && dol_strlen($tosell) > 0) $sql.= " AND p.tosell = ".$db->escape($tosell);
     if (isset($tobuy) && dol_strlen($tobuy) > 0)   $sql.= " AND p.tobuy = ".$db->escape($tobuy);
     if (dol_strlen($canvas) > 0)                    $sql.= " AND p.canvas = '".$db->escape($canvas)."'";
@@ -163,7 +198,7 @@ else
     $sql.= $db->order($sortfield,$sortorder);
     $sql.= $db->plimit($limit + 1, $offset);
 
-    dol_syslog("sql=".$sql);
+    dol_syslog("product:list.php: sql=".$sql);
     $resql = $db->query($sql);
     if ($resql)
     {
@@ -357,7 +392,7 @@ else
     			print '<tr '.$bc[$var].'>';
 
     			// Ref
-    			print '<td nowrap="nowrap">';
+    			print '<td class="nowrap">';
     			$product_static->id = $objp->rowid;
     			$product_static->ref = $objp->ref;
     			$product_static->type = $objp->fk_product_type;
@@ -433,26 +468,20 @@ else
     			}
 
     			// Status (to buy)
-    			print '<td align="right" nowrap="nowrap">'.$product_static->LibStatut($objp->tosell,5,0).'</td>';
+    			print '<td align="right" class="nowrap">'.$product_static->LibStatut($objp->tosell,5,0).'</td>';
 
                 // Status (to sell)
-                print '<td align="right" nowrap="nowrap">'.$product_static->LibStatut($objp->tobuy,5,1).'</td>';
+                print '<td align="right" class="nowrap">'.$product_static->LibStatut($objp->tobuy,5,1).'</td>';
 
                 print "</tr>\n";
     			$i++;
     		}
 
-    		if ($num > $conf->liste_limit)
-    		{
-    			if ($sref || $snom || $sall || $sbarcode || GETPOST('search'))
-    			{
-    				print_barre_liste('', $page, "liste.php", "&amp;sref=".$sref."&amp;snom=".$snom."&amp;sall=".$sall."&amp;tosell=".$tosell."&amp;tobuy=".$tobuy, $sortfield, $sortorder,'',$num);
-    			}
-    			else
-    			{
-    				print_barre_liste('', $page, "liste.php", "&amp;sref=$sref&amp;snom=$snom&amp;fourn_id=$fourn_id".(isset($type)?"&amp;type=$type":"")."&amp;tosell=".$tosell."&amp;tobuy=".$tobuy, $sortfield, $sortorder,'',$num);
-    			}
-    		}
+    		$param="&amp;sref=".$sref.($sbarcode?"&amp;sbarcode=".$sbarcode:"")."&amp;snom=".$snom."&amp;sall=".$sall."&amp;tosell=".$tosell."&amp;tobuy=".$tobuy;
+    		$param.=($fourn_id?"&amp;fourn_id=".$fourn_id:"");
+    		$param.=($search_categ?"&amp;search_categ=".$search_categ:"");
+    		$param.=isset($type)?"&amp;type=".$type:"";
+    		print_barre_liste('', $page, "liste.php", $param, $sortfield, $sortorder,'',$num);
 
     		$db->free($resql);
 

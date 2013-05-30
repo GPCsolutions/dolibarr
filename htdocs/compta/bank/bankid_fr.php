@@ -2,11 +2,11 @@
 /* Copyright (C) 2002-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2003      Jean-Louis Bergamo   <jlb@j1b.org>
  * Copyright (C) 2004-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copytight (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copytight (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -24,11 +24,13 @@
  *  \brief      Fiche creation compte bancaire
  */
 
-require 'pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
 $langs->load("banks");
+$langs->load("categories");
 $langs->load("bills");
 
 $action=GETPOST('action');
@@ -64,9 +66,9 @@ if ($action == 'update' && ! $_POST["cancel"])
 	$account->iban_prefix     = trim($_POST["iban_prefix"]);	// deprecated
 	$account->domiciliation   = trim($_POST["domiciliation"]);
 	$account->proprio 	      = trim($_POST["proprio"]);
-	$account->adresse_proprio = trim($_POST["adresse_proprio"]);
-	$account->fk_departement  = trim($_POST["fk_departement"]);
-	//$account->fk_pays         = trim($_POST["fk_pays"]);		// We do not change this.
+	$account->owner_address   = trim($_POST["owner_address"]);
+	$account->state_id  	  = trim($_POST["state_id"]);
+	//$account->country_id       = trim($_POST["country_id"]);		// We do not change this.
 
 	if ($account->id)
 	{
@@ -223,7 +225,7 @@ if (($_GET["id"] || $_GET["ref"]) && $action != 'edit')
 		print "</td></tr>\n";
 
 		print '<tr><td valign="top">'.$langs->trans("BankAccountOwnerAddress").'</td><td colspan="3">';
-		print nl2br($account->adresse_proprio);
+		print nl2br($account->owner_address);
 		print "</td></tr>\n";
 
 	}
@@ -368,8 +370,8 @@ if ($_GET["id"] && $action == 'edit' && $user->rights->banque->configurer)
 		print '</td></tr>';
 
 		print '<tr><td valign="top">'.$langs->trans("BankAccountOwnerAddress").'</td><td colspan="3">';
-		print "<textarea class=\"flat\" name=\"adresse_proprio\" rows=\"2\" cols=\"40\">";
-		print $account->adresse_proprio;
+		print "<textarea class=\"flat\" name=\"owner_address\" rows=\"2\" cols=\"40\">";
+		print $account->owner_address;
 		print "</textarea></td></tr>";
 
 	}

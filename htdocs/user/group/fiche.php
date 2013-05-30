@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011      Herve Prot           <herve.prot@symeos.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -215,6 +215,8 @@ if ($action == 'create')
 
     if ($message) { print $message."<br>"; }
 
+    print dol_set_focus('#nom');
+
     print '<form action="'.$_SERVER["PHP_SELF"].'" method="post">';
     print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
     print '<input type="hidden" name="action" value="add">';
@@ -222,7 +224,7 @@ if ($action == 'create')
     print '<table class="border" width="100%">';
 
 	print "<tr>".'<td valign="top" class="fieldrequired">'.$langs->trans("Name").'</td>';
-	print '<td class="valeur"><input size="30" type="text" name="nom" value=""></td></tr>';
+	print '<td class="valeur"><input size="30" type="text" id="nom" name="nom" value=""></td></tr>';
 
 	// Multicompany
 	if (! empty($conf->multicompany->enabled))

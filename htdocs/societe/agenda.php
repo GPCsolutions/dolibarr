@@ -1,14 +1,14 @@
 <?php
 /* Copyright (C) 2001-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005      Brice Davoleau       <brice.davoleau@gmail.com>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2007      Patrick Raguin  		<patrick.raguin@gmail.com>
  * Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -32,18 +32,22 @@ require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 
 $langs->load("companies");
 
-$mesg=isset($_GET["mesg"])?'<div class="ok">'.$_GET["mesg"].'</div>':'';
-
 // Security check
 $socid = GETPOST('socid','int');
 if ($user->societe_id) $socid=$user->societe_id;
-$result = restrictedArea($user, 'societe', $socid);
+$result = restrictedArea($user, 'societe', $socid, '&societe');
+
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('agendathirdparty'));
 
 
 /*
  *	Actions
  */
 
+$parameters=array('id'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+$error=$hookmanager->error; $errors=array_merge($errors, (array) $hookmanager->errors);
 
 
 
@@ -115,37 +119,35 @@ if ($socid)
 	print "</td></tr>";
 
 	// Zip / Town
-	print '<tr><td width="25%">'.$langs->trans('Zip').'</td><td width="25%">'.$soc->cp."</td>";
-	print '<td width="25%">'.$langs->trans('Town').'</td><td width="25%">'.$soc->ville."</td></tr>";
+	print '<tr><td width="25%">'.$langs->trans('Zip').'</td><td width="25%">'.$soc->zip."</td>";
+	print '<td width="25%">'.$langs->trans('Town').'</td><td width="25%">'.$soc->town."</td></tr>";
 
 	// Country
-	if ($soc->pays) {
+	if ($soc->country) {
 		print '<tr><td>'.$langs->trans('Country').'</td><td colspan="3">';
 		$img=picto_from_langcode($soc->country_code);
 		print ($img?$img.' ':'');
-		print $soc->pays;
+		print $soc->country;
 		print '</td></tr>';
 	}
 
-	print '<tr><td>'.$langs->trans('Phone').'</td><td>'.dol_print_phone($soc->tel,$soc->country_code,0,$soc->id,'AC_TEL').'</td>';
-	print '<td>'.$langs->trans('Fax').'</td><td>'.dol_print_phone($soc->fax,$soc->country_code,0,$soc->id,'AC_FAX').'</td></tr>';
-
 	// EMail
-	print '<tr><td>'.$langs->trans('EMail').'</td><td>';
+	print '<tr><td>'.$langs->trans('EMail').'</td><td colspan="3">';
 	print dol_print_email($soc->email,0,$soc->id,'AC_EMAIL');
-	print '</td>';
+	print '</td></tr>';
 
 	// Web
-	print '<td>'.$langs->trans('Web').'</td><td>';
+	print '<tr><td>'.$langs->trans('Web').'</td><td colspan="3">';
 	print dol_print_url($soc->url);
 	print '</td></tr>';
+
+	// Phone / Fax
+	print '<tr><td>'.$langs->trans('Phone').'</td><td>'.dol_print_phone($soc->tel,$soc->country_code,0,$soc->id,'AC_TEL').'</td>';
+	print '<td>'.$langs->trans('Fax').'</td><td>'.dol_print_phone($soc->fax,$soc->country_code,0,$soc->id,'AC_FAX').'</td></tr>';
 
 	print '</table>';
 
 	print '</div>';
-
-
-	dol_htmloutput_mesg($mesg);
 
 
     /*

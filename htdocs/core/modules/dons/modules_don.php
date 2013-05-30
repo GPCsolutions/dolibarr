@@ -2,11 +2,11 @@
 /* Copyright (C) 2003-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2005      Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005      Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -222,7 +222,7 @@ function don_create($db, $id, $message, $modele, $outputlangs)
         // We save charset_output to restore it because write_file can change it if needed for
         // output format that does not support UTF8.
         $sav_charset_output=$outputlangs->charset_output;
-        if ($obj->write_file($object,$outputlangs, $srctemplatepath, $hidedetails, $hidedesc, $hideref, $hookmanager) > 0)
+        if ($obj->write_file($object,$outputlangs, $srctemplatepath, $hidedetails, $hidedesc, $hideref) > 0)
         {
             $outputlangs->charset_output=$sav_charset_output;
 

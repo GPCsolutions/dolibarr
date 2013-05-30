@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2004-2009	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2010		Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -37,12 +37,27 @@ $socid = GETPOST('socid','int');
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user, 'societe', $socid, '&societe');
 
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('infothirdparty'));
+
+
 
 /*
-*	View
-*/
+ *	Actions
+ */
 
-llxHeader();
+$parameters=array('id'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+$error=$hookmanager->error; $errors=array_merge($errors, (array) $hookmanager->errors);
+
+
+
+/*
+ *	View
+ */
+
+$help_url='EN:Module_Third_Parties|FR:Module_Tiers|ES:Empresas';
+llxHeader('',$langs->trans("ThirdParty"),$help_url);
 
 $soc = new Societe($db);
 $soc->fetch($socid);

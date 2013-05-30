@@ -9,7 +9,7 @@ use Cwd;
 
 $PROJECT="dolibarr";
 $MAJOR="3";
-$MINOR="3";
+$MINOR="5";
 $BUILD="0-alpha";		# Mettre x pour release, x-dev pour dev, x-beta pour beta, x-rc pour release candidate
 $RPMSUBVERSION="auto";	# auto use value found into BUILD
 
@@ -39,12 +39,13 @@ $FILENAMERPM="$PROJECT-$MAJOR.$MINOR.$BUILD-$RPMSUBVERSION";
 $FILENAMEDEB="${PROJECT}_${MAJOR}.${MINOR}.${BUILD}";
 $FILENAMEAPS="$PROJECT-$MAJOR.$MINOR.$BUILD.app";
 $FILENAMEEXEDOLIWAMP="DoliWamp-$MAJOR.$MINOR.$BUILD";
-if (-d "/usr/src/redhat") { $RPMDIR="/usr/src/redhat"; } # redhat
-if (-d "/usr/src/RPM")    { $RPMDIR="/usr/src/RPM"; } # mandrake
+if (-d "/usr/src/redhat")   { $RPMDIR="/usr/src/redhat"; } # redhat
+if (-d "/usr/src/packages") { $RPMDIR="/usr/src/packages"; } # opensuse
+if (-d "/usr/src/RPM")      { $RPMDIR="/usr/src/RPM"; } # mandrake
 
 
 use vars qw/ $REVISION $VERSION /;
-$VERSION="3.2";
+$VERSION="3.3";
 
 
 
@@ -258,6 +259,7 @@ if ($nboftargetok) {
         $ret=`rm -f  $BUILDROOT/$PROJECT/.gitignore`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/.project`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/.settings`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/.tx`;
 	    $ret=`rm -f  $BUILDROOT/$PROJECT/build.xml`;
 	    $ret=`rm -f  $BUILDROOT/$PROJECT/quickbuild.xml`;
         $ret=`rm -f  $BUILDROOT/$PROJECT/pom.xml`;
@@ -315,15 +317,23 @@ if ($nboftargetok) {
         $ret=`rm -f  $BUILDROOT/$PROJECT/doc/images/dolibarr_screenshot11.png`;
         $ret=`rm -f  $BUILDROOT/$PROJECT/doc/images/dolibarr_screenshot12.png`;
 
-	    $ret=`rm -fr $BUILDROOT/$PROJECT/documents`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/document`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/documents`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/document`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/documents`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/bootstrap*`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/custom*`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/multicompany*`;
+	    $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/pos*`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/test`;
 	    $ret=`rm -fr $BUILDROOT/$PROJECT/Thumbs.db $BUILDROOT/$PROJECT/*/Thumbs.db $BUILDROOT/$PROJECT/*/*/Thumbs.db $BUILDROOT/$PROJECT/*/*/*/Thumbs.db $BUILDROOT/$PROJECT/*/*/*/*/Thumbs.db`;
 	    $ret=`rm -f  $BUILDROOT/$PROJECT/.cvsignore $BUILDROOT/$PROJECT/*/.cvsignore $BUILDROOT/$PROJECT/*/*/.cvsignore $BUILDROOT/$PROJECT/*/*/*/.cvsignore $BUILDROOT/$PROJECT/*/*/*/*/.cvsignore $BUILDROOT/$PROJECT/*/*/*/*/*/.cvsignore $BUILDROOT/$PROJECT/*/*/*/*/*/*/.cvsignore`;
 	    $ret=`rm -f  $BUILDROOT/$PROJECT/.gitignore $BUILDROOT/$PROJECT/*/.gitignore $BUILDROOT/$PROJECT/*/*/.gitignore $BUILDROOT/$PROJECT/*/*/*/.gitignore $BUILDROOT/$PROJECT/*/*/*/*/.gitignore $BUILDROOT/$PROJECT/*/*/*/*/*/.gitignore $BUILDROOT/$PROJECT/*/*/*/*/*/*/.gitignore`;
-        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/theme/amarok`;
    	    $ret=`rm -f  $BUILDROOT/$PROJECT/htdocs/includes/geoip/sample*.*`;
+        $ret=`rm -f  $BUILDROOT/$PROJECT/htdocs/includes/jquery/plugins/jqueryFileTree/connectors/jqueryFileTree.pl`;    # Avoid errors into rpmlint
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/jquery/plugins/template`;  # Package not valid for most linux distributions (errors reported into compile.js). Package should be embed by modules to avoid problems.
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/phpmailer`;                # Package not valid for most linux distributions (errors reported into file LICENSE). Package should be embed by modules to avoid problems.
+   	    
         $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/nusoap/lib/Mail`;
         $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/phpexcel/license.txt`;
         $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/phpexcel/PHPExcel/Shared/PDF`;
@@ -332,6 +342,7 @@ if ($nboftargetok) {
         $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/fonts/freefont-20100919`;
         $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/fonts/utils`;
 	    $ret=`rm -f  $BUILDROOT/$PROJECT/htdocs/includes/tcpdf/LICENSE.TXT`;
+        $ret=`rm -fr $BUILDROOT/$PROJECT/htdocs/includes/savant`;
 	}
     
     # Build package for each target
@@ -449,6 +460,9 @@ if ($nboftargetok) {
             print "Version is $MAJOR.$MINOR.$REL1-$RPMSUBVERSION\n";
 
             $FILENAMETGZ2="$PROJECT-$MAJOR.$MINOR.$REL1";
+
+            #print "Create directory $RPMDIR\n";
+            #$ret=`mkdir -p "$RPMDIR"`;
 
     		print "Remove target ".$FILENAMETGZ2."-".$RPMSUBVERSION.".".$ARCH.".rpm...\n";
     		unlink("$NEWDESTI/".$FILENAMETGZ2."-".$RPMSUBVERSION.".".$ARCH.".rpm");
@@ -645,6 +659,8 @@ if ($nboftargetok) {
             $ret=`chmod -R 644 $BUILDROOT/$PROJECT.tmp/dev/skeletons/skeleton_webservice_server.php`;
             $cmd="find $BUILDROOT/$PROJECT.tmp/scripts -name '*.php' -type f -exec chmod 755 {} \\; ";
             $ret=`$cmd`;
+            $cmd="find $BUILDROOT/$PROJECT.tmp/scripts -name '*.sh' -type f -exec chmod 755 {} \\; ";
+            $ret=`$cmd`;
             
           
             print "Rename directory $BUILDROOT/$PROJECT.tmp into $BUILDROOT/$PROJECT-$MAJOR.$MINOR.$build\n";
@@ -657,7 +673,7 @@ if ($nboftargetok) {
             #$cmd="dpkg-source -b $BUILDROOT/$PROJECT-$MAJOR.$MINOR.$build";
             $cmd="dpkg-buildpackage -us -uc";
             print "Launch DEB build ($cmd)\n";
-            $ret=`$cmd`;
+            $ret=`$cmd 2>&1 3>&1`;
             print $ret."\n";
 
             chdir("$olddir");

@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2001-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2011 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -50,8 +50,11 @@ llxHeader("",$langs->trans("SuppliersArea"));
 
 print_fiche_titre($langs->trans("SuppliersArea"));
 
-print '<table border="0" width="100%" class="notopnoleftnoright">';
-print '<tr><td valign="top" width="30%" class="notopnoleft">';
+
+//print '<table border="0" width="100%" class="notopnoleftnoright">';
+//print '<tr><td valign="top" width="30%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
+
 
 // Orders
 $commande = new CommandeFournisseur($db);
@@ -131,18 +134,18 @@ if (! empty($conf->fournisseur->enabled))
 			{
 				$var=!$var;
 				$obj = $db->fetch_object($resql);
-				print '<tr '.$bc[$var].'><td  nowrap="nowrap">';
+				print '<tr '.$bc[$var].'><td  class="nowrap">';
 				$commandestatic->id=$obj->rowid;
 				$commandestatic->ref=$obj->ref;
 				print $commandestatic->getNomUrl(1,'',16);
 				print '</td>';
-				print '<td  nowrap="nowrap">';
+				print '<td  class="nowrap">';
 				$companystatic->id=$obj->socid;
 				$companystatic->nom=$obj->nom;
 				$companystatic->client=0;
 				print $companystatic->getNomUrl(1,'',16);
 				print '</td>';
-				print '<td align="right" nowrap="nowrap">'.price($obj->total_ttc).'</td></tr>';
+				print '<td align="right" class="nowrap">'.price($obj->total_ttc).'</td></tr>';
 				$i++;
 				$total += $obj->total_ttc;
 			}
@@ -160,7 +163,7 @@ if (! empty($conf->fournisseur->enabled))
 // Draft invoices
 if (! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->facture->lire)
 {
-	$sql = "SELECT ff.facnumber, ff.rowid, ff.total_ttc, ff.type";
+	$sql = "SELECT ff.ref_supplier, ff.rowid, ff.total_ttc, ff.type";
 	$sql.= ", s.nom, s.rowid as socid";
 	$sql.= " FROM ".MAIN_DB_PREFIX."facture_fourn as ff";
 	$sql.= ", ".MAIN_DB_PREFIX."societe as s";
@@ -188,13 +191,13 @@ if (! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->facture-
 			{
 				$obj = $db->fetch_object($resql);
 				$var=!$var;
-				print '<tr '.$bc[$var].'><td nowrap="nowrap">';
-				$facturestatic->ref=$obj->facnumber;
+				print '<tr '.$bc[$var].'><td class="nowrap">';
+				$facturestatic->ref=$obj->ref;
 				$facturestatic->id=$obj->rowid;
 				$facturestatic->type=$obj->type;
 				print $facturestatic->getNomUrl(1,'');
 				print '</td>';
-				print '<td nowrap="nowrap">';
+				print '<td class="nowrap">';
 				$companystatic->id=$obj->socid;
 				$companystatic->nom=$obj->nom;
 				$companystatic->client=0;
@@ -221,14 +224,16 @@ if (! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->facture-
 	}
 }
 
-print "</td>\n";
-print '<td valign="top" width="70%" class="notopnoleftnoright">';
+
+//print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
 
 /*
  * List last modified supliers
  */
 $max=10;
-$sql = "SELECT s.rowid as socid, s.nom, s.ville, s.datec, s.datea, s.tms, s.prefix_comm, s.code_fournisseur, s.code_compta_fournisseur";
+$sql = "SELECT s.rowid as socid, s.nom, s.town, s.datec, s.datea, s.tms, s.prefix_comm, s.code_fournisseur, s.code_compta_fournisseur";
 $sql.= ", st.libelle as stcomm";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 $sql.= ", ".MAIN_DB_PREFIX."c_stcomm as st";
@@ -314,10 +319,11 @@ if (count($companystatic->SupplierCategories))
 	print "<br>\n";
 }
 
-print "</td></tr>\n";
-print "</table>\n";
 
-$db->close();
+//print "</td></tr></table>\n";
+print '</div></div></div>';
 
 llxFooter();
+
+$db->close();
 ?>

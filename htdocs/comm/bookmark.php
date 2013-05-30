@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -87,7 +87,7 @@ if ($_GET["action"] == 'delete')
 
 print_fiche_titre($langs->trans("Bookmarks"));
 
-$sql = "SELECT s.rowid, s.nom, b.dateb as dateb, b.rowid as bid, b.fk_user, b.url, b.target, u.name, u.firstname";
+$sql = "SELECT s.rowid, s.nom as name, b.dateb as dateb, b.rowid as bid, b.fk_user, b.url, b.target, u.lastname, u.firstname";
 $sql.= " FROM ".MAIN_DB_PREFIX."bookmark as b, ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."user as u";
 $sql.= " WHERE b.fk_soc = s.rowid AND b.fk_user=u.rowid";
 if (! $user->admin) $sql.= " AND b.fk_user = ".$user->id;
@@ -108,7 +108,7 @@ if ($resql)
   print "<tr class=\"liste_titre\">";
   //print "<td>&nbsp;</td>";
   print_liste_field_titre($langs->trans("Id"),$_SERVER["PHP_SELF"],"bid","","",'align="center"',$sortfield,$sortorder);
-  print_liste_field_titre($langs->trans("Author"),$_SERVER["PHP_SELF"],"u.name","","","",$sortfield,$sortorder);
+  print_liste_field_titre($langs->trans("Author"),$_SERVER["PHP_SELF"],"u.lastname","","","",$sortfield,$sortorder);
   print_liste_field_titre($langs->trans("Date"),$_SERVER["PHP_SELF"],"b.dateb","","",'align="center"',$sortfield,$sortorder);
   print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","","","",$sortfield,$sortorder);
   print_liste_field_titre($langs->trans("Url"),$_SERVER["PHP_SELF"],"b.url","","",'',$sortfield,$sortorder);
@@ -125,9 +125,9 @@ if ($resql)
       print "<tr $bc[$var]>";
       //print "<td>" . ($i + 1 + ($limit * $page)) . "</td>";
       print "<td align=\"center\"><b>".$obj->bid."</b></td>";
-      print "<td><a href='".DOL_URL_ROOT."/user/fiche.php?id=".$obj->fk_user."'>".img_object($langs->trans("ShowUser"),"user").' '.$obj->name." ".$obj->firstname."</a></td>\n";
+      print "<td><a href='".DOL_URL_ROOT."/user/fiche.php?id=".$obj->fk_user."'>".img_object($langs->trans("ShowUser"),"user").' '.$obj->lastname." ".$obj->firstname."</a></td>\n";
       print '<td align="center">'.dol_print_date($db->jdate($obj->dateb))."</td>";
-      print "<td><a href=\"index.php?socid=".$obj->rowid."\">".img_object($langs->trans("ShowCompany"),"company").' '.$obj->nom."</a></td>\n";
+      print "<td><a href=\"index.php?socid=".$obj->rowid."\">".img_object($langs->trans("ShowCompany"),"company").' '.$obj->name."</a></td>\n";
       print '<td align="center">'.$obj->url."</td>";
       print '<td align="center">'.$obj->target."</td>";
       print "<td><a href=\"bookmark.php?action=delete&bid=".$obj->bid."\">".img_delete()."</a></td>\n";

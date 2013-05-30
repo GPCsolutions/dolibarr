@@ -1,10 +1,10 @@
 <?php
-/* Copyright (C) 2010 Regis Houssin       <regis@dolibarr.fr>
+/* Copyright (C) 2010 Regis Houssin       <regis.houssin@capnetworks.com>
  * Copyright (C) 2011 Laurent Destailleur <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -77,16 +77,16 @@ if (! empty($_GET['zipcode']) || ! empty($_GET['town']))
 	}
 	else                                               // Use table of third parties
 	{
-        $sql = "SELECT DISTINCT s.cp as zip, s.ville as town, s.fk_departement as fk_county, s.fk_pays as fk_country";
+        $sql = "SELECT DISTINCT s.zip, s.town, s.fk_departement as fk_county, s.fk_pays as fk_country";
         $sql.= ", p.code as country_code, p.libelle as country";
         $sql.= ", d.code_departement as county_code , d.nom as county";
         $sql.= " FROM ".MAIN_DB_PREFIX.'societe as s';
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX ."c_departements as d ON fk_departement = d.rowid";
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX.'c_pays as p ON fk_pays = p.rowid';
         $sql.= " WHERE";
-        if ($zipcode) $sql.= " s.cp LIKE '".$db->escape($zipcode)."%'";
-        if ($town)    $sql.= " s.ville LIKE '%" . $db->escape($town) . "%'";
-        $sql.= " ORDER BY s.fk_pays, s.cp, s.ville";
+        if ($zipcode) $sql.= " s.zip LIKE '".$db->escape($zipcode)."%'";
+        if ($town)    $sql.= " s.town LIKE '%" . $db->escape($town) . "%'";
+        $sql.= " ORDER BY s.fk_pays, s.zip, s.town";
         $sql.= $db->plimit(50); // Avoid pb with bad criteria
 	}
 

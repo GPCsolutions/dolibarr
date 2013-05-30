@@ -1,12 +1,12 @@
 -- ===================================================================
 -- Copyright (C) 2003-2010 Rodolphe Quiedeville <rodolphe@quiedeville.org>
--- Copyright (C) 2008-2010 Regis Houssin        <regis@dolibarr.fr>
--- Copyright (C) 2011      Laurent Destailleur  <eldy@users.sourceforge.net>
+-- Copyright (C) 2008-2010 Regis Houssin        <regis.houssin@capnetworks.com>
+-- Copyright (C) 2011-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
 -- Copyright (C) 2012      Juanjo Menent		<jmenent@2byte.es>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 2 of the License, or
+-- the Free Software Foundation; either version 3 of the License, or
 -- (at your option) any later version.
 --
 -- This program is distributed in the hope that it will be useful,
@@ -38,17 +38,18 @@ create table llx_expedition
   date_expedition       datetime,						-- shipping date
   date_delivery			datetime	DEFAULT NULL,		-- delivery date
   fk_address  			integer		DEFAULT NULL, 		-- delivery address (deprecated)
-  fk_expedition_methode integer,
+  fk_shipping_method    integer,
   tracking_number       varchar(50),
   fk_statut             smallint	DEFAULT 0,
   
-  height                integer,
-  width                 integer,
-  size_units            integer,
-  size                  integer,
-  weight_units          integer,
-  weight                integer,
-  note                  text,
+  height                integer,						-- height
+  width                 integer,						-- with
+  size_units            integer,						-- unit of all sizes (height, width, depth)
+  size                  integer,						-- depth
+  weight_units          integer,						-- unit of weight
+  weight                integer,						-- weight
+  note_private          text,
+  note_public           text,
   model_pdf             varchar(255)
   
 )ENGINE=innodb;

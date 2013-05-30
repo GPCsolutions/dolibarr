@@ -1,14 +1,14 @@
 <?php
 /* Copyright (C) 2003-2005 Rodolphe Quiedeville 	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2007 Laurent Destailleur  	<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin       		<regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin       		<regis.houssin@capnetworks.com>
  * Copyright (C) 2012	   Andreu Bisquerra Gaya	<jove@bisquerra.com>
  * Copyright (C) 2012	   David Rodriguez Martinez <davidrm146@gmail.com>
  * Copyright (C) 2012	   Juanjo Menent			<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -67,7 +67,7 @@ $thirdpartystatic=new Societe($db);
  * Mode List
  */
 
-$sql = "SELECT s.rowid, s.nom, s.client, s.ville, s.datec, s.datea";
+$sql = "SELECT s.rowid, s.nom, s.client, s.town, s.datec, s.datea";
 $sql.= ", st.libelle as stcomm, s.prefix_comm, s.code_client, s.code_compta ";
 if (!$user->rights->societe->client->voir && !$socid) $sql.= ", sc.fk_soc, sc.fk_user ";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."c_stcomm as st, ".MAIN_DB_PREFIX."commande as c";
@@ -119,7 +119,7 @@ if ($resql)
 	print '<tr class="liste_titre">';
 
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","","",'valign="center"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Town"),$_SERVER["PHP_SELF"],"s.ville","","",'valign="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Town"),$_SERVER["PHP_SELF"],"s.town","","",'valign="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("CustomerCode"),$_SERVER["PHP_SELF"],"s.code_client","","",'align="left"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AccountancyCode"),$_SERVER["PHP_SELF"],"s.code_compta","","",'align="left"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateCreation"),$_SERVER["PHP_SELF"],"datec",$addu,"",'align="right"',$sortfield,$sortorder);
@@ -167,7 +167,7 @@ if ($resql)
 		
 		print $result;
 		print '</td>';
-		print '<td>'.$obj->ville.'&nbsp;</td>';
+		print '<td>'.$obj->town.'&nbsp;</td>';
 		print '<td align="left">'.$obj->code_client.'&nbsp;</td>';
 		print '<td align="left">'.$obj->code_compta.'&nbsp;</td>';
 		print '<td align="right">'.dol_print_date($db->jdate($obj->datec)).'</td>';

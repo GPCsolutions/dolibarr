@@ -1,10 +1,10 @@
 <?php
-/* Copyright (C) 2010-2011 Regis Houssin       <regis@dolibarr.fr>
+/* Copyright (C) 2010-2011 Regis Houssin       <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2012 Laurent Destailleur <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -59,7 +59,7 @@
 
 <tr>
 	<td><?php echo $langs->trans('FirstName'); ?></td>
-	<td><input type="text" size="30" name="prenom" value="<?php echo $this->control->tpl['firstname']; ?>"></td>
+	<td><input type="text" size="30" name="firstname" value="<?php echo $this->control->tpl['firstname']; ?>"></td>
 	<td colspan="2">&nbsp;</td>
 </tr>
 
@@ -120,9 +120,9 @@
 
 <tr>
 	<td><?php echo $langs->trans('Zip'); ?></td>
-	<td><input size="6" type="text" name="cp" value="<?php echo $this->control->tpl['cp']; ?>"><?php echo $this->control->tpl['autofilltownfromzip']; ?></td>
+	<td><input size="6" type="text" name="zip" value="<?php echo $this->control->tpl['zip']; ?>"><?php echo $this->control->tpl['autofilltownfromzip']; ?></td>
 	<td><?php echo $langs->trans('Town'); ?></td>
-	<td><input type="text" name="ville" value="<?php echo $this->control->tpl['ville']; ?>"></td>
+	<td><input type="text" name="town" value="<?php echo $this->control->tpl['town']; ?>"></td>
 </tr>
 
 <tr>

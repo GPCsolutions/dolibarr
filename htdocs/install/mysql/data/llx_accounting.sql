@@ -3,13 +3,13 @@
 -- Copyright (C) 2004-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
 -- Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
 -- Copyright (C) 2004      Guillaume Delecourt  <guillaume.delecourt@opensides.be>
--- Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+-- Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
 -- Copyright (C) 2007 	   Patrick Raguin       <patrick.raguin@gmail.com>
 -- Copyright (C) 2011-2012 Alexandre Spangaro   <alexandre.spangaro@gmail.com>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 2 of the License, or
+-- the Free Software Foundation; either version 3 of the License, or
 -- (at your option) any later version.
 --
 -- This program is distributed in the hope that it will be useful,
@@ -28,13 +28,13 @@
 --
 
 delete from llx_accountingaccount;
-delete from llx_accountingsystem;
+delete from llx_accounting_system;
 
 --
 -- Descriptif des plans comptables FR PCG99-ABREGE
 --
 
-insert into llx_accountingsystem (pcg_version, fk_pays, label, datec, fk_author, active) VALUES ('PCG99-ABREGE', 1, 'The simple accountancy french plan', CURRENT_DATE, null, 0);
+insert into llx_accounting_system (rowid, pcg_version, fk_pays, label, active) VALUES (1,'PCG99-ABREGE', 1, 'The simple accountancy french plan', 1);
 
 insert into llx_accountingaccount (rowid, fk_pcg_version, pcg_type, pcg_subtype, account_number, account_parent, label, active) VALUES (  1,'PCG99-ABREGE','CAPIT', 'CAPITAL', '101', '1', 'Capital', '1');
 insert into llx_accountingaccount (rowid, fk_pcg_version, pcg_type, pcg_subtype, account_number, account_parent, label, active) VALUES (  2,'PCG99-ABREGE','CAPIT', 'XXXXXX',  '105', '1', 'Ecarts de réévaluation', '1');
@@ -143,7 +143,7 @@ insert into llx_accountingaccount (rowid, fk_pcg_version, pcg_type, pcg_subtype,
 -- Descriptif des plans comptables FR PCG99-BASE
 --
 
-insert into llx_accountingsystem (pcg_version, fk_pays, label, datec, fk_author, active) VALUES ('PCG99-BASE', 1, 'The base accountancy french plan', CURRENT_DATE, null, 0);
+insert into llx_accounting_system (rowid, pcg_version, fk_pays, label, active) VALUES (2,'PCG99-BASE', 1, 'The base accountancy french plan', 1);
 
 insert into llx_accountingaccount (rowid, fk_pcg_version, pcg_type, pcg_subtype, account_number, account_parent, label, active) VALUES (103,'PCG99-BASE','CAPIT', 'XXXXXX',   '10',  '1', 'Capital  et réserves', '1');
 insert into llx_accountingaccount (rowid, fk_pcg_version, pcg_type, pcg_subtype, account_number, account_parent, label, active) VALUES (104,'PCG99-BASE','CAPIT', 'CAPITAL', '101', '10', 'Capital', '1');

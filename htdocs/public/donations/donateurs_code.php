@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -54,7 +54,7 @@ $langs->load("donations");
 
 llxHeaderVierge();
 
-$sql = "SELECT d.datedon as datedon, d.nom, d.prenom, d.amount, d.public, d.societe";
+$sql = "SELECT d.datedon as datedon, d.lastname, d.firstname, d.amount, d.public, d.societe";
 $sql.= " FROM ".MAIN_DB_PREFIX."don as d";
 $sql.= " WHERE d.fk_statut in (2, 3) ORDER BY d.datedon DESC";
 
@@ -81,10 +81,10 @@ if ($resql)
 			$objp = $db->fetch_object($resql);
 
 			$var=!$var;
-			print "<TR $bc[$var]>";
+			print "<tr ".$bc[$var].">";
 			if ($objp->public)
 			{
-				print "<td>".$objp->prenom." ".$objp->nom." ".$objp->societe."</td>\n";
+				print "<td>".dolGetFirstLastname($objp->firstname, $objp->lastname)." ".$objp->societe."</td>\n";
 			}
 			else
 			{

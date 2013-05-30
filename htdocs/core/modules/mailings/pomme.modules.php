@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2005-2011 Laurent Destailleur <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin       <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin       <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -77,13 +77,15 @@ class mailing_pomme extends MailingTargets
 	}
 
 
-	/*
-	 *		\brief		Return here number of distinct emails returned by your selector.
-	 *					For example if this selector is used to extract 500 different
-	 *					emails from a text file, this function must return 500.
-	 *		\return		int
-	 */
-	function getNbOfRecipients()
+    /**
+     *	Return here number of distinct emails returned by your selector.
+     *	For example if this selector is used to extract 500 different
+     *	emails from a text file, this function must return 500.
+     *
+     *	@param	string	$sql		SQL request to use to count
+     *	@return	int					Number of recipients
+     */
+	function getNbOfRecipients($sql='')
 	{
 		global $conf;
 
@@ -146,7 +148,7 @@ class mailing_pomme extends MailingTargets
 
 		// La requete doit retourner: id, email, fk_contact, name, firstname
 		$sql = "SELECT u.rowid as id, u.email as email, null as fk_contact,";
-		$sql.= " u.name as name, u.firstname as firstname, u.login, u.office_phone";
+		$sql.= " u.lastname as name, u.firstname as firstname, u.login, u.office_phone";
 		$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
 		$sql.= " WHERE u.email != ''"; // u.email IS NOT NULL est implicite dans ce test
 		$sql.= " AND u.entity IN (0,".$conf->entity.")";
@@ -176,7 +178,7 @@ class mailing_pomme extends MailingTargets
 					$cibles[$j] = array(
                     			'email' => $obj->email,
                     			'fk_contact' => $obj->fk_contact,
-                    			'name' => $obj->name,
+                    			'lastname' => $obj->lastname,
                     			'firstname' => $obj->firstname,
                     			'other' =>
 					            ($langs->transnoentities("Login").'='.$obj->login).';'.

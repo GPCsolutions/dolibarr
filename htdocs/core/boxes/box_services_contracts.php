@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2003      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2011 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -33,7 +33,7 @@ class box_services_contracts extends ModeleBoxes
 {
 	var $boxcode="lastproductsincontract";
 	var $boximg="object_product";
-	var $boxlabel;
+	var $boxlabel="BoxLastProductsInContract";
 	var $depends = array("service","contrat");
 
 	var $db;
@@ -42,17 +42,7 @@ class box_services_contracts extends ModeleBoxes
 	var $info_box_head = array();
 	var $info_box_contents = array();
 
-	/**
-     *  Constructor
-	 */
-	function __construct()
-	{
-		global $langs;
-		$langs->load("boxes");
-
-		$this->boxlabel=$langs->transnoentitiesnoconv("BoxLastProductsInContract");
-	}
-
+	
 	/**
 	 *  Load data into info_box_contents array to show array later.
 	 *

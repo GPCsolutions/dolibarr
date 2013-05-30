@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -73,14 +73,11 @@ if (! empty($idprod))
 				$objp = $db->fetch_object($result);
 
 				$title = $objp->nom.' - '.$objp->ref_fourn.' - ';
-				$label = '';
 
 				if ($objp->quantity == 1)
 				{
-					$label.= price($objp->fprice).getCurrencySymbol($conf->currency)."/".strtolower($langs->trans("Unit"));
-
 					$title.= price($objp->fprice);
-					$title.= getCurrencySymbol($conf->currency)."/";
+					$title.= $langs->getCurrencySymbol($conf->currency)."/";
 
 					$price = $objp->fprice;
 				}
@@ -98,18 +95,18 @@ if (! empty($idprod))
 				if ($objp->quantity > 1)
 				{
 					$title.=" - ";
-					$title.= price($objp->unitprice).getCurrencySymbol($conf->currency)."/".strtolower($langs->trans("Unit"));
-
-					$label.= price($objp->unitprice).getCurrencySymbol($conf->currency)."/".strtolower($langs->trans("Unit"));
+					$title.= price($objp->unitprice).$langs->getCurrencySymbol($conf->currency)."/".strtolower($langs->trans("Unit"));
 
 					$price = $objp->unitprice;
 				}
 				if ($objp->unitcharges > 0 && ($conf->global->MARGIN_TYPE == "2")) {
 					$title.=" + ";
-					$title.= price($objp->unitcharges).getCurrencySymbol($conf->currency);
+					$title.= price($objp->unitcharges).$langs->getCurrencySymbol($conf->currency);
 					$price += $objp->unitcharges;
 				}
 				if ($objp->duration) $label .= " - ".$objp->duration;
+
+				$label = price($price).$langs->getCurrencySymbol($conf->currency)."/".strtolower($langs->trans("Unit"));
 
 				$prices[] = array("id" => $objp->idprodfournprice, "price" => price($price,0,'',0), "label" => $label, "title" => $title);
 				$i++;

@@ -4,13 +4,13 @@
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Sebastien Di Cintio  <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2012 Juanjo Menent		<jmenent@2byte.es>
  * Copyright (C) 2012      J. Fernando Lagrange <fernando@demo-tic.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -171,29 +171,52 @@ print '<input type="submit" class="button" value="'.$langs->trans("Update").'" n
 print "</td></tr>\n";
 print '</form>';
 
-// Insertion cotisations dans compte financier
+// Insert subscription into bank account
 $var=!$var;
 print '<form action="adherent.php" method="POST">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<input type="hidden" name="action" value="update">';
 print '<input type="hidden" name="constname" value="ADHERENT_BANK_USE">';
-print '<tr '.$bc[$var].'><td>'.$langs->trans("AddSubscriptionIntoAccount").'</td>';
-if (! empty($conf->banque->enabled))
-{
-    print '<td>';
-    print $form->selectyesno('constvalue',$conf->global->ADHERENT_BANK_USE,1);
-    print '</td><td align="center" width="80">';
-    print '<input type="submit" class="button" value="'.$langs->trans("Update").'" name="Button">';
-    print '</td>';
-}
-else
-{
-    print '<td align="right" colspan="2">';
-    print $langs->trans("WarningModuleNotActive",$langs->transnoentities("Module85Name")).' '.img_warning("","");
-    print '</td>';
-}
+print '<tr '.$bc[$var].'><td>'.$langs->trans("MoreActionsOnSubscription").'</td>';
+$arraychoices=array('0'=>$langs->trans("None"));
+if (! empty($conf->banque->enabled)) $arraychoices['bankdirect']=$langs->trans("MoreActionBankDirect");
+if (! empty($conf->banque->enabled) && ! empty($conf->societe->enabled) && ! empty($conf->facture->enabled)) $arraychoices['invoiceonly']=$langs->trans("MoreActionInvoiceOnly");
+if (! empty($conf->banque->enabled) && ! empty($conf->societe->enabled) && ! empty($conf->facture->enabled)) $arraychoices['bankviainvoice']=$langs->trans("MoreActionBankViaInvoice");
+print '<td>';
+print $form->selectarray('constvalue',$arraychoices,$conf->global->ADHERENT_BANK_USE,0);
+print '</td><td align="center" width="80">';
+print '<input type="submit" class="button" value="'.$langs->trans("Update").'" name="Button">';
+print '</td>';
 print "</tr>\n";
 print '</form>';
+
+// Use vat for invoice creation
+if ($conf->facture->enabled)
+{
+	$var=!$var;
+	print '<form action="adherent.php" method="POST">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<input type="hidden" name="action" value="update">';
+	print '<input type="hidden" name="constname" value="ADHERENT_VAT_FOR_SUBSCRIPTIONS">';
+	print '<tr '.$bc[$var].'><td>'.$langs->trans("VATToUseForSubscriptions").'</td>';
+	if (! empty($conf->banque->enabled))
+	{
+		print '<td>';
+		print $form->selectarray('constvalue', array('0'=>$langs->trans("NoVatOnSubscription"),'defaultforfoundationcountry'=>$langs->trans("Default")), (empty($conf->global->ADHERENT_VAT_FOR_SUBSCRIPTIONS)?'0':$conf->global->ADHERENT_VAT_FOR_SUBSCRIPTIONS), 0);
+		print '</td><td align="center" width="80">';
+		print '<input type="submit" class="button" value="'.$langs->trans("Update").'" name="Button">';
+		print '</td>';
+	}
+	else
+	{
+		print '<td align="right" colspan="2">';
+		print $langs->trans("WarningModuleNotActive",$langs->transnoentities("Module85Name"));
+		print '</td>';
+	}
+	print "</tr>\n";
+	print '</form>';
+}
+
 print '</table>';
 print '<br>';
 
@@ -216,7 +239,7 @@ form_constantes($constantes);
 
 print '*'.$langs->trans("FollowingConstantsWillBeSubstituted").'<br>';
 print '%DOL_MAIN_URL_ROOT%, %ID%, %FIRSTNAME%, %LASTNAME%, %FULLNAME%, %LOGIN%, %PASSWORD%, ';
-print '%COMPANY%, %ADDRESS%, %ZIP%, %TOWN%, %COUNTRY%, %EMAIL%, %NAISS%, %PHOTO%, %TYPE%, ';
+print '%COMPANY%, %ADDRESS%, %ZIP%, %TOWN%, %COUNTRY%, %EMAIL%, %BIRTH%, %PHOTO%, %TYPE%, ';
 print '%YEAR%, %MONTH%, %DAY%';
 print '<br>';
 
@@ -234,7 +257,7 @@ form_constantes($constantes);
 
 print '*'.$langs->trans("FollowingConstantsWillBeSubstituted").'<br>';
 print '%DOL_MAIN_URL_ROOT%, %ID%, %FIRSTNAME%, %LASTNAME%, %FULLNAME%, %LOGIN%, %PASSWORD%, ';
-print '%COMPANY%, %ADDRESS%, %ZIP%, %TOWN%, %COUNTRY%, %EMAIL%, %NAISS%, %PHOTO%, %TYPE%, ';
+print '%COMPANY%, %ADDRESS%, %ZIP%, %TOWN%, %COUNTRY%, %EMAIL%, %BIRTH%, %PHOTO%, %TYPE%, ';
 print '%YEAR%, %MONTH%, %DAY%';
 print '<br>';
 
@@ -264,7 +287,7 @@ form_constantes($constantes);
 
 print '*'.$langs->trans("FollowingConstantsWillBeSubstituted").'<br>';
 print '%DOL_MAIN_URL_ROOT%, %ID%, %FIRSTNAME%, %LASTNAME%, %FULLNAME%, %LOGIN%, %PASSWORD%, ';
-print '%COMPANY%, %ADDRESS%, %ZIP%, %TOWN%, %COUNTRY%, %EMAIL%, %NAISS%, %PHOTO%, %TYPE%, ';
+print '%COMPANY%, %ADDRESS%, %ZIP%, %TOWN%, %COUNTRY%, %EMAIL%, %BIRTH%, %PHOTO%, %TYPE%, ';
 //print '%YEAR%, %MONTH%, %DAY%';	// Not supported
 print '<br>';
 

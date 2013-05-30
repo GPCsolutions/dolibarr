@@ -3,11 +3,11 @@
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005      Simon TOSSER         <simon@kornog-computing.com>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -243,11 +243,16 @@ if ($id > 0 || $ref)
         print '</td>';
         print '</tr>';
 
+        // Stock
+        print '<tr><td>'.$form->editfieldkey("StockLimit",'stocklimit',$product->seuil_stock_alerte,$product,$user->rights->produit->creer).'</td><td colspan="2">';
+        print $form->editfieldval("StockLimit",'stocklimit',$product->seuil_stock_alerte,$product,$user->rights->produit->creer);
+        print '</td></tr>';
+
         // Real stock
         $product->load_stock();
 		print '<tr><td>'.$langs->trans("PhysicalStock").'</td>';
 		print '<td>'.$product->stock_reel;
-		if ($product->seuil_stock_alerte && ($product->stock_reel < $product->seuil_stock_alerte)) print ' '.img_warning($langs->trans("StockTooLow"));
+		if ($product->seuil_stock_alerte && ($product->stock_reel < $product->seuil_stock_alerte)) print ' '.img_warning($langs->trans("StockLowerThanLimit"));
 		print '</td>';
 		print '</tr>';
 
@@ -276,7 +281,7 @@ if ($id > 0 || $ref)
 			print "<td>".$product->stock_theorique;
 			if ($product->stock_theorique < $product->seuil_stock_alerte)
 			{
-				print ' '.img_warning($langs->trans("StockTooLow"));
+				print ' '.img_warning($langs->trans("StockLowerThanLimit"));
 			}
 			print '</td>';
 			print '</tr>';
@@ -312,11 +317,6 @@ if ($id > 0 || $ref)
 			}
 			print '</td></tr>';
 		}
-
-        // Stock
-        print '<tr><td>'.$form->editfieldkey("StockLimit",'stocklimit',$product->seuil_stock_alerte,$product,$user->rights->produit->creer).'</td><td colspan="2">';
-        print $form->editfieldval("StockLimit",'stocklimit',$product->seuil_stock_alerte,$product,$user->rights->produit->creer);
-        print '</td></tr>';
 
 		// Last movement
 		$sql = "SELECT max(m.datem) as datem";
@@ -539,11 +539,11 @@ if ($resql)
 		print '<td align="right">'.(price2num($obj->pmp)?price(price2num($obj->pmp*$obj->reel,'MT')):'').'</td>'; // Ditto : Show PMP from movement or from product
         // Sell price
 		print '<td align="right">';
-        if (empty($conf->global->PRODUIT_MUTLI_PRICES)) print price(price2num($product->price,'MU'));
+        if (empty($conf->global->PRODUIT_MULTI_PRICES)) print price(price2num($product->price,'MU'));
         else print $langs->trans("Variable");
         print '</td>'; // Ditto : Show PMP from movement or from product
         print '<td align="right">';
-        if (empty($conf->global->PRODUIT_MUTLI_PRICES)) print price(price2num($product->price*$obj->reel,'MT')).'</td>'; // Ditto : Show PMP from movement or from product
+        if (empty($conf->global->PRODUIT_MULTI_PRICES)) print price(price2num($product->price*$obj->reel,'MT')).'</td>'; // Ditto : Show PMP from movement or from product
         else print $langs->trans("Variable");
 		print '</tr>'; ;
 		$total += $obj->reel;
@@ -564,11 +564,11 @@ print '<td class="liste_total" align="right">';
 print price(price2num($totalvalue,'MT'));
 print '</td>';
 print '<td class="liste_total" align="right">';
-if (empty($conf->global->PRODUIT_MUTLI_PRICES)) print ($total?price($totalvaluesell/$total):'&nbsp;');
+if (empty($conf->global->PRODUIT_MULTI_PRICES)) print ($total?price($totalvaluesell/$total):'&nbsp;');
 else print $langs->trans("Variable");
 print '</td>';
 print '<td class="liste_total" align="right">';
-if (empty($conf->global->PRODUIT_MUTLI_PRICES)) print price(price2num($totalvaluesell,'MT'));
+if (empty($conf->global->PRODUIT_MULTI_PRICES)) print price(price2num($totalvaluesell,'MT'));
 else print $langs->trans("Variable");
 print '</td>';
 print "</tr>";

@@ -1,10 +1,11 @@
 <?php
 /* Copyright (C) 2008-2012 	Laurent Destailleur <eldy@users.sourceforge.net>
  * Copyright (C) 2012		Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2012		Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -51,12 +52,12 @@ if ($actionsave)
     if ($i >= 3)
     {
         $db->commit();
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+        setEventMessage($langs->trans("SetupSaved"));
     }
     else
     {
         $db->rollback();
-        $mesg = "<font class=\"error\">".$langs->trans("SaveFailed")."</font>";
+        setEventMessage($langs->trans("SaveFailed"), 'errors');
     }
 }
 
@@ -74,13 +75,13 @@ $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToM
 print_fiche_titre($langs->trans("AgendaSetup"),$linkback,'setup');
 print '<br>';
 
-print $langs->trans("AgendaSetupOtherDesc")."<br>\n";
-print "<br>\n";
 
 $head=agenda_prepare_head();
 
 dol_fiche_head($head, 'xcal', $langs->trans("Agenda"));
 
+print $langs->trans("AgendaSetupOtherDesc")."<br>\n";
+print "<br>\n";
 
 print '<form name="agendasetupform" action="'.$_SERVER["PHP_SELF"].'" method="post">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
@@ -95,7 +96,10 @@ print "</tr>";
 
 print "<tr class=\"impair\">";
 print '<td class="fieldrequired">'.$langs->trans("PasswordTogetVCalExport")."</td>";
-print "<td><input required=\"required\" type=\"text\" class=\"flat\" name=\"MAIN_AGENDA_XCAL_EXPORTKEY\" value=\"". (GETPOST('MAIN_AGENDA_XCAL_EXPORTKEY','alpha')?GETPOST('MAIN_AGENDA_XCAL_EXPORTKEY','alpha'):$conf->global->MAIN_AGENDA_XCAL_EXPORTKEY) . "\" size=\"40\"></td>";
+print '<td><input required="required" type="text" class="flat" id="MAIN_AGENDA_XCAL_EXPORTKEY" name="MAIN_AGENDA_XCAL_EXPORTKEY" value="' . (GETPOST('MAIN_AGENDA_XCAL_EXPORTKEY','alpha')?GETPOST('MAIN_AGENDA_XCAL_EXPORTKEY','alpha'):$conf->global->MAIN_AGENDA_XCAL_EXPORTKEY) . '" size="40">';
+if (! empty($conf->use_javascript_ajax))
+	print '&nbsp;'.img_picto($langs->trans('Generate'), 'refresh', 'id="generate_token" class="linkobject"');
+print '</td>';
 print "<td>&nbsp;</td>";
 print "</tr>";
 
@@ -126,15 +130,22 @@ clearstatcache();
 //if ($mesg) print "<br>$mesg<br>";
 print "<br>";
 
+
+// Define $urlwithroot
+$urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',trim($dolibarr_main_url_root));
+$urlwithroot=$urlwithouturlroot.DOL_URL_ROOT;		// This is to use external domain name found into config file
+//$urlwithroot=DOL_MAIN_URL_ROOT;					// This is to use same domain name than current
+
+
 // Show message
 $message='';
-$urlvcal='<a href="'.DOL_MAIN_URL_ROOT.'/public/agenda/agendaexport.php?format=vcal&exportkey='.($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY?urlencode($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY):'...').'" target="_blank">'.DOL_MAIN_URL_ROOT.'/public/agenda/agendaexport.php?format=vcal&exportkey='.($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY?urlencode($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY):'KEYNOTDEFINED').'</a>';
+$urlvcal='<a href="'.$urlwithroot.'/public/agenda/agendaexport.php?format=vcal&exportkey='.($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY?urlencode($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY):'...').'" target="_blank">'.$urlwithroot.'/public/agenda/agendaexport.php?format=vcal&exportkey='.($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY?urlencode($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY):'KEYNOTDEFINED').'</a>';
 $message.=img_picto('','object_globe.png').' '.$langs->trans("WebCalUrlForVCalExport",'vcal',$urlvcal);
 $message.='<br>';
-$urlical='<a href="'.DOL_MAIN_URL_ROOT.'/public/agenda/agendaexport.php?format=ical&type=event&exportkey='.($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY?urlencode($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY):'...').'" target="_blank">'.DOL_MAIN_URL_ROOT.'/public/agenda/agendaexport.php?format=ical&type=event&exportkey='.($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY?urlencode($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY):'KEYNOTDEFINED').'</a>';
+$urlical='<a href="'.$urlwithroot.'/public/agenda/agendaexport.php?format=ical&type=event&exportkey='.($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY?urlencode($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY):'...').'" target="_blank">'.$urlwithroot.'/public/agenda/agendaexport.php?format=ical&type=event&exportkey='.($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY?urlencode($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY):'KEYNOTDEFINED').'</a>';
 $message.=img_picto('','object_globe.png').' '.$langs->trans("WebCalUrlForVCalExport",'ical/ics',$urlical);
 $message.='<br>';
-$urlrss='<a href="'.DOL_MAIN_URL_ROOT.'/public/agenda/agendaexport.php?format=rss&exportkey='.($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY?urlencode($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY):'...').'" target="_blank">'.DOL_MAIN_URL_ROOT.'/public/agenda/agendaexport.php?format=rss&exportkey='.($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY?urlencode($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY):'KEYNOTDEFINED').'</a>';
+$urlrss='<a href="'.$urlwithroot.'/public/agenda/agendaexport.php?format=rss&exportkey='.($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY?urlencode($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY):'...').'" target="_blank">'.$urlwithroot.'/public/agenda/agendaexport.php?format=rss&exportkey='.($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY?urlencode($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY):'KEYNOTDEFINED').'</a>';
 $message.=img_picto('','object_globe.png').' '.$langs->trans("WebCalUrlForVCalExport",'rss',$urlrss);
 $message.='<br>';
 $message.='<br>';
@@ -147,9 +158,24 @@ $message.=$langs->trans("AgendaUrlOptions4",$user->login,$user->login).'<br>';
 $message.=$langs->trans("AgendaUrlOptions5",$user->login,$user->login);
 print info_admin($message);
 
-dol_htmloutput_mesg($mesg);
+if (! empty($conf->use_javascript_ajax))
+{
+	print "\n".'<script type="text/javascript">';
+	print '$(document).ready(function () {
+            $("#generate_token").click(function() {
+            	$.get( "'.DOL_URL_ROOT.'/core/ajax/security.php", {
+            		action: \'getrandompassword\',
+            		generic: true
+				},
+				function(token) {
+					$("#MAIN_AGENDA_XCAL_EXPORTKEY").val(token);
+				});
+            });
+    });';
+	print '</script>';
+}
 
-$db->close();
 
 llxFooter();
+$db->close();
 ?>

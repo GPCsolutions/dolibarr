@@ -3,14 +3,14 @@
  * Copyright (C) 2004-2011 Laurent Destailleur          <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Sebastien Di Cintio          <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Benoit Mortier               <benoit.mortier@opensides.be>
- * Copyright (C) 2005-2012 Regis Houssin                <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin                <regis.houssin@capnetworks.com>
  * Copyright (C) 2008 	   Raphael Bertrand (Resultic)  <raphael.bertrand@resultic.fr>
  * Copyright (C) 2011-2012 Juanjo Menent			    <jmenent@2byte.es>
- * Copyright (C) 2011-2012 Philippe Grand			    <philippe.grand@atoo-net.com>
+ * Copyright (C) 2011-2013 Philippe Grand			    <philippe.grand@atoo-net.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -30,6 +30,7 @@
 
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/fichinter.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/fichinter/class/fichinter.class.php';
 
 $langs->load("admin");
@@ -67,42 +68,7 @@ if ($action == 'updateMask')
     }
 }
 
-if ($action == 'set_FICHINTER_FREE_TEXT')
-{
-	$freetext= GETPOST('FICHINTER_FREE_TEXT','alpha');
-	$res = dolibarr_set_const($db, "FICHINTER_FREE_TEXT",$freetext,'chaine',0,'',$conf->entity);
-
-	if (! $res > 0) $error++;
-
- 	if (! $error)
-    {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
-    }
-    else
-    {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
-    }
-}
-
-if ($action == 'set_FICHINTER_DRAFT_WATERMARK')
-{
-	$draft= GETPOST('FICHINTER_DRAFT_WATERMARK','alpha');
-
-	$res = dolibarr_set_const($db, "FICHINTER_DRAFT_WATERMARK",trim($draft),'chaine',0,'',$conf->entity);
-
-	if (! $res > 0) $error++;
-
- 	if (! $error)
-    {
-        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
-    }
-    else
-    {
-        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
-    }
-}
-
-if ($action == 'specimen')
+else if ($action == 'specimen') // For fiche inter
 {
 	$modele= GETPOST('module','alpha');
 
@@ -147,12 +113,13 @@ if ($action == 'specimen')
 	}
 }
 
-if ($action == 'set')
+// Activate a model
+else if ($action == 'set')
 {
 	$ret = addDocumentModel($value, $type, $label, $scandir);
 }
 
-if ($action == 'del')
+else if ($action == 'del')
 {
 	$ret = delDocumentModel($value, $type);
 	if ($ret > 0)
@@ -161,7 +128,8 @@ if ($action == 'del')
 	}
 }
 
-if ($action == 'setdoc')
+// Set default model
+else if ($action == 'setdoc')
 {
 	if (dolibarr_set_const($db, "FICHEINTER_ADDON_PDF",$value,'chaine',0,'',$conf->entity))
 	{
@@ -178,12 +146,64 @@ if ($action == 'setdoc')
 	}
 }
 
-if ($action == 'setmod')
+else if ($action == 'setmod')
 {
 	// TODO Verifier si module numerotation choisi peut etre active
 	// par appel methode canBeActivated
 
 	dolibarr_set_const($db, "FICHEINTER_ADDON",$value,'chaine',0,'',$conf->entity);
+}
+
+else if ($action == 'set_FICHINTER_FREE_TEXT')
+{
+	$freetext= GETPOST('FICHINTER_FREE_TEXT','alpha');
+	$res = dolibarr_set_const($db, "FICHINTER_FREE_TEXT",$freetext,'chaine',0,'',$conf->entity);
+
+	if (! $res > 0) $error++;
+
+ 	if (! $error)
+    {
+        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+    }
+    else
+    {
+        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+    }
+}
+
+else if ($action == 'set_FICHINTER_DRAFT_WATERMARK')
+{
+	$draft= GETPOST('FICHINTER_DRAFT_WATERMARK','alpha');
+
+	$res = dolibarr_set_const($db, "FICHINTER_DRAFT_WATERMARK",trim($draft),'chaine',0,'',$conf->entity);
+
+	if (! $res > 0) $error++;
+
+ 	if (! $error)
+    {
+        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+    }
+    else
+    {
+        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+    }
+}
+
+elseif ($action == 'set_FICHINTER_PRINT_PRODUCTS')
+{
+	$val = GETPOST('FICHINTER_PRINT_PRODUCTS','alpha');
+	$res = dolibarr_set_const($db, "FICHINTER_PRINT_PRODUCTS",($val == 'on'),'bool',0,'',$conf->entity);
+
+	if (! $res > 0) $error++;
+
+ 	if (! $error)
+    {
+        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+    }
+    else
+    {
+        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+    }
 }
 
 
@@ -202,6 +222,11 @@ print_fiche_titre($langs->trans("InterventionsSetup"),$linkback,'setup');
 
 print "<br>";
 
+$head=fichinter_admin_prepare_head();
+
+dol_fiche_head($head, 'ficheinter', $langs->trans("ModuleSetup"));
+
+// Interventions numbering model
 
 print_titre($langs->trans("FicheinterNumberingModules"));
 
@@ -211,7 +236,7 @@ print '<td width="100">'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
 print '<td>'.$langs->trans("Example").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Status").'</td>';
-print '<td align="center" width="80">'.$langs->trans("Infos").'</td>';
+print '<td align="center" width="80">'.$langs->trans("ShortInfo").'</td>';
 print "</tr>\n";
 
 clearstatcache();
@@ -234,23 +259,23 @@ foreach ($dirmodels as $reldir)
 					$file = $reg[1];
 					$classname = substr($file,4);
 
-					require_once DOL_DOCUMENT_ROOT ."/core/modules/fichinter/".$file.'.php';
+					require_once $dir.$file.'.php';
 
 					$module = new $file;
-
-					// Show modules according to features level
-					if ($module->version == 'development'  && $conf->global->MAIN_FEATURES_LEVEL < 2) continue;
-					if ($module->version == 'experimental' && $conf->global->MAIN_FEATURES_LEVEL < 1) continue;
-
+					
 					if ($module->isEnabled())
 					{
+						// Show modules according to features level
+						if ($module->version == 'development'  && $conf->global->MAIN_FEATURES_LEVEL < 2) continue;
+						if ($module->version == 'experimental' && $conf->global->MAIN_FEATURES_LEVEL < 1) continue;
+					
 						$var=!$var;
 						print '<tr '.$bc[$var].'><td>'.$module->nom."</td><td>\n";
 						print $module->info();
 						print '</td>';
 
-                        // Show example of numbering module
-                        print '<td nowrap="nowrap">';
+                        // Show example of numbering model
+                        print '<td class="nowrap">';
                         $tmp=$module->getExample();
                         if (preg_match('/^Error/',$tmp)) print '<div class="error">'.$langs->trans($tmp).'</div>';
                         elseif ($tmp=='NotConfigured') print $langs->trans($tmp);
@@ -295,6 +320,9 @@ foreach ($dirmodels as $reldir)
 print '</table><br>';
 
 
+/*
+ *  Documents models for Interventions
+ */
 
 print_titre($langs->trans("TemplatePDFInterventions"));
 
@@ -329,7 +357,8 @@ print '<td>'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Status")."</td>\n";
 print '<td align="center" width="60">'.$langs->trans("Default")."</td>\n";
-print '<td align="center" width="80">'.$langs->trans("Infos").'</td>';
+print '<td align="center" width="80">'.$langs->trans("ShortInfo").'</td>';
+print '<td align="center" width="80">'.$langs->trans("Preview").'</td>';
 print "</tr>\n";
 
 clearstatcache();
@@ -377,7 +406,7 @@ foreach ($dirmodels as $reldir)
 		    			print "</td>";
 		    		}
 
-		    		// Defaut
+		    		// Default
 		    		print "<td align=\"center\">";
 		    		if ($conf->global->FICHEINTER_ADDON_PDF == "$name")
 		    		{
@@ -400,8 +429,13 @@ foreach ($dirmodels as $reldir)
 		    		$htmltooltip.='<br>'.$langs->trans("MultiLanguage").': '.yn($module->option_multilang,1,1);
 		    		$htmltooltip.='<br>'.$langs->trans("WatermarkOnDraftOrders").': '.yn($module->option_draft_watermark,1,1);
 		    		print '<td align="center">';
+		    		print $form->textwithpicto('',$htmltooltip,-1,0);
+		    		print '</td>';
+		    		
+		    		// Preview
 		    		$link='<a href="'.$_SERVER["PHP_SELF"].'?action=specimen&module='.$name.'">'.img_object($langs->trans("Preview"),'intervention').'</a>';
-		    		print $form->textwithpicto(' &nbsp; &nbsp; '.$link,$htmltooltip,-1,0);
+		    		print '<td align="center">';
+		    		print $link;
 		    		print '</td>';
 
 		    		print '</tr>';
@@ -413,11 +447,14 @@ foreach ($dirmodels as $reldir)
 }
 
 print '</table>';
-
-//Autres Options
 print "<br>";
-print_titre($langs->trans("OtherOptions"));
 
+/*
+ * Other options
+ *
+ */
+
+print_titre($langs->trans("OtherOptions"));
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Parameter").'</td>';
@@ -449,6 +486,22 @@ print '<input size="50" class="flat" type="text" name="FICHINTER_DRAFT_WATERMARK
 print '</td><td align="right">';
 print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 print "</td></tr>\n";
+
+// print products on fichinter
+$var=! $var;
+print '<form action="'.$_SERVER["PHP_SELF"].'" method="post">';
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print '<input type="hidden" name="action" value="set_FICHINTER_PRINT_PRODUCTS">';
+print '<tr '.$bc[$var].'><td>';
+print $langs->trans("PrintProductsOnFichinter").' ('.$langs->trans("PrintProductsOnFichinterDetails").')</td>';
+print '<td align="center"><input type="checkbox" name="FICHINTER_PRINT_PRODUCTS" ';
+if ($conf->global->FICHINTER_PRINT_PRODUCTS)
+	print 'checked="checked" ';
+print '/>';
+print '</td><td align="right">';
+print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+print "</td></tr>\n";
+
 print '</form>';
 
 

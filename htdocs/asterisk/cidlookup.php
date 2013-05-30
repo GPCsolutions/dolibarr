@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -40,10 +40,10 @@ if (empty($phone))
 	exit;
 }
 
-$sql = "SELECT nom as name FROM ".MAIN_DB_PREFIX."societe as s";
+$sql = "SELECT s.nom as name FROM ".MAIN_DB_PREFIX."societe as s";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople as sp ON sp.fk_soc = s.rowid";
 $sql.= " WHERE s.entity IN (".getEntity('societe', 1).")";
-$sql.= " AND (s.tel='".$db->escape($phone)."'";
+$sql.= " AND (s.phone='".$db->escape($phone)."'";
 $sql.= " OR sp.phone='".$db->escape($phone)."'";
 $sql.= " OR sp.phone_perso='".$db->escape($phone)."'";
 $sql.= " OR sp.phone_mobile='".$db->escape($phone)."')";

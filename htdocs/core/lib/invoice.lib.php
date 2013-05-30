@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2005-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -39,7 +39,7 @@ function facture_prepare_head($object)
 	$head[$h][1] = $langs->trans('CardBill');
 	$head[$h][2] = 'compta';
 	$h++;
-	
+
 	if (empty($conf->global->MAIN_DISABLE_CONTACTS_TAB))
 	{
 		$head[$h][0] = DOL_URL_ROOT.'/compta/facture/contact.php?facid='.$object->id;
@@ -68,9 +68,9 @@ function facture_prepare_head($object)
     // Show more tabs from modules
     // Entries must be declared in modules descriptor with line
     // $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
-    // $this->tabs = array('entity:-tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to remove a tab
+    // $this->tabs = array('entity:-tabname);   												to remove a tab
     complete_head_from_modules($conf,$langs,$object,$head,$h,'invoice');
-    
+
     if (empty($conf->global->MAIN_DISABLE_NOTES_TAB))
     {
     	$head[$h][0] = DOL_URL_ROOT.'/compta/facture/note.php?facid='.$object->id;
@@ -93,7 +93,47 @@ function facture_prepare_head($object)
 	$head[$h][2] = 'info';
 	$h++;
 
+	complete_head_from_modules($conf,$langs,$object,$head,$h,'invoice','remove');
+
 	return $head;
 }
+
+/**
+ * Return array head with list of tabs to view object informations.
+ *
+ * @param Object $object Invoice
+ * @return array head array with tabs
+ */
+function invoice_admin_prepare_head($object)
+{
+	global $langs, $conf, $user;
+
+	$h = 0;
+	$head = array();
+
+	$head[$h][0] = DOL_URL_ROOT.'/admin/facture.php';
+	$head[$h][1] = $langs->trans("Miscellaneous");
+	$head[$h][2] = 'general';
+	$h++;
+
+	// Show more tabs from modules
+	// Entries must be declared in modules descriptor with line
+	// $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__'); to add new tab
+	// $this->tabs = array('entity:-tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__'); to remove a tab
+	complete_head_from_modules($conf,$langs,$object,$head,$h,'invoice_admin');
+
+	$head[$h][0] = DOL_URL_ROOT.'/compta/facture/admin/facture_cust_extrafields.php';
+	$head[$h][1] = $langs->trans("ExtraFieldsCustomerInvoices");
+	$head[$h][2] = 'attributes';
+	$h++;
+
+
+
+	complete_head_from_modules($conf,$langs,$object,$head,$h,'invoice_admin','remove');
+
+	return $head;
+}
+
+
 
 ?>

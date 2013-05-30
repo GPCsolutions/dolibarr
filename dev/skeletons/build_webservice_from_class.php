@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -28,7 +28,7 @@ $path=dirname(__FILE__).'/';
 
 // Test if batch mode
 if (substr($sapi_type, 0, 3) == 'cgi') {
-    echo "Error: You ar usingr PH for CGI. To execute ".$script_file." from command line, you must use PHP for CLI mode.\n";
+    echo "Error: You are using PHP for CGI. To execute ".$script_file." from command line, you must use PHP for CLI mode.\n";
     exit;
 }
 
@@ -141,6 +141,27 @@ while($i<count($properties))
 
 $targetcontent=preg_replace('/\'prop1\'=>\$'.$classmin.'->prop1,/', $varprop, $targetcontent);
 $targetcontent=preg_replace('/\'prop2\'=>\$'.$classmin.'->prop2,/', '', $targetcontent);
+
+// Substitute get method parameters
+$varprop="\n\t\t";
+$cleanparam='';
+$i=0;
+
+while($i<count($properties))
+{
+
+	$varprop.='$newobject->'.$properties[$i].'=$'.$classmin.'->'.$properties[$i].';';
+
+	$i++;
+	if ($i == count($properties))
+		$varprop.="\n";
+	else
+		$varprop.="\n\t\t";
+}
+$targetcontent=preg_replace('/\$newobject->prop1=\$'.$classmin.'->prop1;/', $varprop, $targetcontent);
+$targetcontent=preg_replace('/\$newobject->prop2=\$'.$classmin.'->prop2;/', '', $targetcontent);
+
+
 
 // Build file
 $fp=fopen($outfile,"w");

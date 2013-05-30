@@ -3,13 +3,13 @@
  * Copyright (C) 2003      Jean-Louis Bergamo   <jlb@j1b.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Christophe Combelles <ccomb@free.fr>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@@2byte.es>
  * Copyright (C) 2012      Marcos García         <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -27,7 +27,7 @@
  *		\brief      List of details of bank transactions for an account
  */
 
-require 'pre.inc.php';	// We use pre.inc.php to have a dynamic menu
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
@@ -35,7 +35,10 @@ require_once DOL_DOCUMENT_ROOT.'/compta/sociales/class/chargesociales.class.php'
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/tva/class/tva.class.php';
 require_once DOL_DOCUMENT_ROOT.'/fourn/class/paiementfourn.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
+$langs->load("banks");
+$langs->load("categories");
 $langs->load("bills");
 
 $id = (GETPOST('id','int') ? GETPOST('id','int') : GETPOST('account','int'));
@@ -130,6 +133,8 @@ $memberstatic=new Adherent($db);
 $paymentstatic=new Paiement($db);
 $paymentsupplierstatic=new PaiementFourn($db);
 $paymentvatstatic=new TVA($db);
+$bankstatic=new Account($db);
+$banklinestatic=new AccountLine($db);
 
 $form = new Form($db);
 
@@ -348,10 +353,10 @@ if ($id > 0 || ! empty($ref))
 		print '</tr>';
 
 		print '<tr '.$bc[false].'>';
-		print '<td nowrap="nowrap" colspan="2">';
+		print '<td class="nowrap" colspan="2">';
 		$form->select_date($dateop,'op',0,0,0,'transaction');
 		print '</td>';
-		print '<td nowrap="nowrap">';
+		print '<td class="nowrap">';
 		$form->select_types_paiements((GETPOST('operation')?GETPOST('operation'):($object->courant == 2 ? 'LIQ' : '')),'operation','1,2',2,1);
 		print '</td><td>';
 		print '<input name="num_chq" class="flat" type="text" size="4" value="'.GETPOST("num_chq").'"></td>';
@@ -423,7 +428,8 @@ if ($id > 0 || ! empty($ref))
      */
 
 	$sql = "SELECT b.rowid, b.dateo as do, b.datev as dv,";
-	$sql.= " b.amount, b.label, b.rappro, b.num_releve, b.num_chq, b.fk_type";
+	$sql.= " b.amount, b.label, b.rappro, b.num_releve, b.num_chq, b.fk_type,";
+	$sql.= " ba.rowid as bankid, ba.ref as bankref, ba.label as banklabel";
 	if ($mode_search)
 	{
 		$sql.= ", s.rowid as socid, s.nom as thirdparty";
@@ -502,15 +508,14 @@ if ($id > 0 || ! empty($ref))
 
 				print '<tr '.$bc[$var].'>';
 
-				print '<td nowrap="nowrap">'.dol_print_date($db->jdate($objp->do),"day")."</td>\n";
+				print '<td class="nowrap">'.dol_print_date($db->jdate($objp->do),"day")."</td>\n";
 
-				print '<td nowrap="nowrap">'.dol_print_date($db->jdate($objp->dv),"day");
+				print '<td class="nowrap">'.dol_print_date($db->jdate($objp->dv),"day");
 				print "</td>\n";
 
 				// Payment type
 				print "<td nowrap>";
 				$label=($langs->trans("PaymentTypeShort".$objp->fk_type)!="PaymentTypeShort".$objp->fk_type)?$langs->trans("PaymentTypeShort".$objp->fk_type):$objp->fk_type;
-				// $label=$langs->getTradFromKey("PaymentTypeShort".$objp->fk_type);
 
 				if ($objp->fk_type == 'SOLD') $label='&nbsp;';
 				print $label;
@@ -538,41 +543,68 @@ if ($id > 0 || ! empty($ref))
 					if ($links[$key]['type']=='payment')
 					{
 						$paymentstatic->id=$links[$key]['url_id'];
+						$paymentstatic->ref=$links[$key]['url_id'];
 						print ' '.$paymentstatic->getNomUrl(2);
 					}
-					else if ($links[$key]['type']=='payment_supplier')
+					elseif ($links[$key]['type']=='payment_supplier')
 					{
 						$paymentsupplierstatic->id=$links[$key]['url_id'];
 						$paymentsupplierstatic->ref=$links[$key]['url_id'];
 						print ' '.$paymentsupplierstatic->getNomUrl(2);
 					}
-					else if ($links[$key]['type']=='company')
+					elseif ($links[$key]['type']=='payment_sc')
 					{
-
-					}
-					else if ($links[$key]['type']=='payment_sc')
-					{
-						//print ' - ';
 						print '<a href="'.DOL_URL_ROOT.'/compta/payment_sc/fiche.php?id='.$links[$key]['url_id'].'">';
 						print ' '.img_object($langs->trans('ShowPayment'),'payment').' ';
 						//print $langs->trans("SocialContributionPayment");
 						print '</a>';
 					}
-					else if ($links[$key]['type']=='payment_vat')
+					elseif ($links[$key]['type']=='payment_vat')
 					{
 						$paymentvatstatic->id=$links[$key]['url_id'];
 						$paymentvatstatic->ref=$links[$key]['url_id'];
 						print ' '.$paymentvatstatic->getNomUrl(2);
 					}
-					else if ($links[$key]['type']=='banktransfert')
+					elseif ($links[$key]['type']=='banktransfert')
 					{
-						// Do not show this link (avoid confusion). Can already be accessed from transaction detail
+						// Do not show link to transfer since there is no transfer card (avoid confusion). Can already be accessed from transaction detail.
+						if ($objp->amount > 0)
+						{
+							$banklinestatic->fetch($links[$key]['url_id']);
+							$bankstatic->id=$banklinestatic->fk_account;
+							$bankstatic->label=$banklinestatic->bank_account_label;
+							print ' ('.$langs->trans("from").' ';
+							print $bankstatic->getNomUrl(1,'transactions');
+							print ' '.$langs->trans("toward").' ';
+							$bankstatic->id=$objp->bankid;
+							$bankstatic->label=$objp->bankref;
+							print $bankstatic->getNomUrl(1,'');
+							print ')';
+						}
+						else
+						{
+							$bankstatic->id=$objp->bankid;
+							$bankstatic->label=$objp->bankref;
+							print ' ('.$langs->trans("from").' ';
+							print $bankstatic->getNomUrl(1,'');
+							print ' '.$langs->trans("toward").' ';
+							$banklinestatic->fetch($links[$key]['url_id']);
+							$bankstatic->id=$banklinestatic->fk_account;
+							$bankstatic->label=$banklinestatic->bank_account_label;
+							print $bankstatic->getNomUrl(1,'transactions');
+							print ')';
+						}
+						//var_dump($links);
 					}
-					else if ($links[$key]['type']=='member')
+					elseif ($links[$key]['type']=='company')
 					{
 
 					}
-					else if ($links[$key]['type']=='sc')
+					elseif ($links[$key]['type']=='member')
+					{
+
+					}
+					elseif ($links[$key]['type']=='sc')
 					{
 
 					}
@@ -634,11 +666,11 @@ if ($id > 0 || ! empty($ref))
 				// Amount
 				if ($objp->amount < 0)
 				{
-					print '<td align="right" nowrap="nowrap">'.price($objp->amount * -1).'</td><td>&nbsp;</td>'."\n";
+					print '<td align="right" class="nowrap">'.price($objp->amount * -1).'</td><td>&nbsp;</td>'."\n";
 				}
 				else
 				{
-					print '<td>&nbsp;</td><td align="right" nowrap="nowrap">&nbsp;'.price($objp->amount).'</td>'."\n";
+					print '<td>&nbsp;</td><td align="right" class="nowrap">&nbsp;'.price($objp->amount).'</td>'."\n";
 				}
 
 				// Balance

@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -32,7 +32,9 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 
 $id=GETPOST('id','int');
 $ref=GETPOST('ref','alpha');
-$mine = $_REQUEST['mode']=='mine' ? 1 : 0;
+
+$mode = GETPOST('mode', 'alpha');
+$mine = ($mode == 'mine' ? 1 : 0);
 //if (! $user->rights->projet->all->lire) $mine=1;	// Special for projects
 
 $object = new Project($db);
@@ -99,7 +101,7 @@ if ($id > 0 || ! empty($ref))
     $head=project_prepare_head($object);
     dol_fiche_head($head, $tab, $langs->trans("Project"),0,($object->public?'projectpub':'project'));
 
-    $param=($_REQUEST["mode"]=='mine'?'&mode=mine':'');
+    $param=($mode=='mine'?'&mode=mine':'');
 
     print '<table class="border" width="100%">';
 
@@ -110,8 +112,11 @@ if ($id > 0 || ! empty($ref))
     print $langs->trans("Ref");
     print '</td><td>';
     // Define a complementary filter for search of next/prev ref.
-    $objectsListId = $object->getProjectsAuthorizedForUser($user,$mine,1);
-    $object->next_prev_filter=" rowid in (".$objectsListId.")";
+    if (! $user->rights->projet->all->lire)
+    {
+        $projectsListId = $object->getProjectsAuthorizedForUser($user,$mine,0);
+        $object->next_prev_filter=" rowid in (".(count($projectsListId)?join(',',array_keys($projectsListId)):'0').")";
+    }
     print $form->showrefnav($object, 'ref', $linkback, 1, 'ref', 'ref', '', $param);
     print '</td></tr>';
 
@@ -179,8 +184,8 @@ if (count($tasksarray)>0)
 
 	// Show Gant diagram from $taskarray using JSGantt
 
-	$dateformat=$langs->trans("FormatDateShort");
-	$dateformat=strtolower($langs->trans("FormatDateShortJava"));
+	$dateformat=$langs->trans("FormatDateShort");				// Used by include ganttchart.php later
+	$dateformat=$langs->trans("FormatDateShortJQuery");			// Used by include ganttchart.php later
 	$array_contacts=array();
 	$tasks=array();
 	$project_dependencies=array();

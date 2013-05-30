@@ -2,11 +2,12 @@
 /* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Florian Henry		  	<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -50,14 +51,14 @@ $object = new Propal($db);
 if ($action == 'setnote_public' && $user->rights->propale->creer)
 {
 	$object->fetch($id);
-	$result=$object->update_note_public(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES));
+	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES),'_public');
 	if ($result < 0) dol_print_error($db,$object->error);
 }
 
-else if ($action == 'setnote' && $user->rights->propale->creer)
+else if ($action == 'setnote_private' && $user->rights->propale->creer)
 {
 	$object->fetch($id);
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note'), ENT_QUOTES));
+	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES),'_private');
 	if ($result < 0) dol_print_error($db,$object->error);
 }
 

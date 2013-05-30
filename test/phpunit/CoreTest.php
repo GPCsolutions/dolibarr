@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -123,7 +123,19 @@ class CoreTest extends PHPUnit_Framework_TestCase
      */
     public function testDetectURLROOT()
     {
-    	// Test for subdir dolibarr (that point to htdocs) in root directory /var/www
+    	global $dolibarr_main_prod;
+
+		global $dolibarr_main_url_root;
+		global $dolibarr_main_data_root;
+		global $dolibarr_main_document_root;
+		global $dolibarr_main_data_root_alt;
+		global $dolibarr_main_document_root_alt;
+		global $dolibarr_main_db_host;
+		global $dolibarr_main_db_port;
+		global $dolibarr_main_db_type;
+		global $dolibarr_main_db_prefix;
+
+		// Test for subdir dolibarr (that point to htdocs) in root directory /var/www
 		// URL: http://localhost/dolibarrnew/admin/system/phpinfo.php
     	$_SERVER["HTTPS"]='';
         $_SERVER["SERVER_NAME"]='localhost';
@@ -185,6 +197,8 @@ class CoreTest extends PHPUnit_Framework_TestCase
 		//$dolibarr_main_url_root='http://localhost/dolibarralias';
 		//$dolibarr_main_url_root_alt='http://localhost/dolibarralias/custom2';
 
+
+		// Force to rerun filefunc.inc.php
 		include dirname(__FILE__).'/../../htdocs/filefunc.inc.php';
 
 		print __METHOD__." DOL_MAIN_URL_ROOT=".DOL_MAIN_URL_ROOT."\n";

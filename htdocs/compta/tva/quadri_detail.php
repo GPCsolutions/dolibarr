@@ -6,7 +6,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -118,7 +118,7 @@ $paymentfourn_static=new PaiementFourn($db);
 //$fsearch.='<br>';
 $fsearch.='  <input type="hidden" name="year" value="'.$year.'">';
 $fsearch.='  <input type="hidden" name="modetax" value="'.$modetax.'">';
-//$fsearch.='  '.$langs->trans("SalesTurnover").' '.$langs->trans("Minimum").': ';
+//$fsearch.='  '.$langs->trans("SalesTurnoverMinimum").': ';
 //$fsearch.='  <input type="text" name="min" value="'.$min.'">';
 
 // Affiche en-tete du rapport
@@ -617,7 +617,7 @@ else
     $diff = $x_coll_sum - $x_paye_sum;
 	print '<tr class="liste_total">';
 	print '<td class="liste_total" colspan="'.$span.'">'.$langs->trans("TotalToPay").($q?', '.$langs->trans("Quadri").' '.$q:'').'</td>';
-	print '<td class="liste_total" nowrap="nowrap" align="right"><b>'.price(price2num($diff,'MT'))."</b></td>\n";
+	print '<td class="liste_total nowrap" align="right"><b>'.price(price2num($diff,'MT'))."</b></td>\n";
 	print "</tr>\n";
 
 	$i++;

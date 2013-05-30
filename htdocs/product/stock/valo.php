@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2001-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -28,8 +28,8 @@ require_once DOL_DOCUMENT_ROOT.'/product/stock/class/entrepot.class.php';
 
 $langs->load("stocks");
 
-if (!$user->rights->stock->lire)
-accessforbidden();
+// Security check
+$result=restrictedArea($user,'stock');
 
 $sref=isset($_GET["sref"])?$_GET["sref"]:$_POST["sref"];
 $snom=isset($_GET["snom"])?$_GET["snom"]:$_POST["snom"];
@@ -68,7 +68,7 @@ if ($sall)
     $sql.= " OR e.description LIKE '%".$db->escape($sall)."%'";
     $sql.= " OR e.lieu LIKE '%".$db->escape($sall)."%'";
     $sql.= " OR e.address LIKE '%".$db->escape($sall)."%'";
-    $sql.= " OR e.ville LIKE '%".$db->escape($sall)."%')";
+    $sql.= " OR e.town LIKE '%".$db->escape($sall)."%')";
 }
 $sql.= " GROUP BY e.rowid, e.label, e.statut, e.lieu";
 $sql.= $db->order($sortfield,$sortorder);

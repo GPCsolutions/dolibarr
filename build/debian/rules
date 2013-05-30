@@ -104,13 +104,15 @@ clean:
 	rm -fr htdocs/includes/jquery/plugins/flot
 	rm -fr htdocs/includes/jquery/plugins/jstree
 	rm -fr htdocs/includes/jquery/plugins/lightbox
-	rm -fr htdocs/includes/jquery/plugins/mobile
 	rm -fr htdocs/includes/jquery/plugins/multiselect
 	rm -fr htdocs/includes/phpexcel/PHPExcel/Shared/PDF
 	rm -fr htdocs/includes/phpexcel/PHPExcel/Shared/PCLZip
 	rm -fr htdocs/includes/tcpdf/fonts/dejavu-fonts-ttf-2.33
 	rm -fr htdocs/includes/tcpdf/fonts/freefont-20100919
 	rm -fr htdocs/includes/tcpdf/fonts/utils
+
+	# clean from files to avoid warning of missing dependencies
+	rm -fr htdocs/includes/jquery/plugins/jqueryFileTree/connectors/jqueryFileTree.py
 
 	# Licence files are included into copyright file.
 	rm -fr htdocs/includes/phpexcel/license.txt

@@ -77,6 +77,8 @@ YourMailUnsubcribeOK=El correu electrònic <b>%s</b>  és correcta desuscribe.
 MailtoEMail=mailto email (hyperlink)
 ActivateCheckRead=Activar confirmació de lectura i opció de Desubscripció
 ActivateCheckReadKey=Clau usada per xifrar la URL de la confirmació de lectura i la funció de desubscripció
+EMailSentToNRecipients=E-Mail enviat a %s destinataris.
+
 # Libelle des modules de liste de destinataires mailing==
 MailingModuleDescContactCompanies=Contactes de tercers (clients potencials, clients, proveïdors ...)
 MailingModuleDescDolibarrUsers=Usuaris de Dolibarr
@@ -93,7 +95,7 @@ MailSelectedRecipients=Destinataris seleccionats
 MailingArea=Àrea E-Mailings
 LastMailings=Els %s darrers E-Mailings
 TargetsStatistics=Estadístiques destinataris
-NbOfCompaniesContacts=Contactes únics d'empreses
+NbOfCompaniesContacts=Contactes/adreces únics
 MailNoChangePossible=Destinataris d'un E-Mailing validat no modificables
 SearchAMailing=Cercar un E-Mailing
 SendMailing=Enviar E-Mailing

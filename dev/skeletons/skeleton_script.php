@@ -1,11 +1,11 @@
 #!/usr/bin/php
 <?php
-/* Copyright (C) 2007-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2007-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) ---Put here your own copyright and developer email---
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -19,7 +19,7 @@
 
 /**
  *      \file       dev/skeletons/skeleton_script.php
- *		\ingroup    mymodule othermodule1 othermodule2
+ *		\ingroup    mymodule
  *      \brief      This file is an example for a command line script
  *					Put here some comments
  */
@@ -35,18 +35,21 @@ if (substr($sapi_type, 0, 3) == 'cgi') {
 }
 
 // Global variables
-$version='1.29';
+$version='1.0';
 $error=0;
 
 
 // -------------------- START OF YOUR CODE HERE --------------------
-// Include Dolibarr environment
+@set_time_limit(0);							// No timeout for this script
+define('EVEN_IF_ONLY_LOGIN_ALLOWED',1);		// Set this define to 0 if you want to lock your script when dolibarr setup is "locked to admin user only".
+
+// Include and load Dolibarr environment variables
 require_once($path."../../htdocs/master.inc.php");
-// After this $db, $mysoc, $langs and $conf->entity are defined. Opened handler to database will be closed at end of file.
+// After this $db, $mysoc, $langs, $conf and $hookmanager are defined (Opened $db handler to database will be closed at end of file).
+// $user is created but empty.
 
 //$langs->setDefaultLang('en_US'); 	// To change default language of $langs
 $langs->load("main");				// To load language file for default language
-@set_time_limit(0);					// No timeout for this script
 
 // Load user and its permissions
 $result=$user->fetch('','admin');	// Load user for login 'admin'. Comment line to run as anonymous user.
@@ -54,7 +57,7 @@ if (! $result > 0) { dol_print_error('',$user->error); exit; }
 $user->getrights();
 
 
-print "***** ".$script_file." (".$version.") *****\n";
+print "***** ".$script_file." (".$version.") pid=".getmypid()." *****\n";
 if (! isset($argv[1])) {	// Check parameters
     print "Usage: ".$script_file." param1 param2 ...\n";
     exit;
@@ -158,7 +161,7 @@ else
 	$db->rollback();
 }
 
-$db->close();	// Close database opened handler
+$db->close();	// Close $db database opened handler
 
 return $error;
 ?>

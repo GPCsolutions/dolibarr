@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2001-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -127,19 +127,19 @@ if ($resql)
     print "</tr>\n";
     print '</form>';
 
-    $var=True;
+    $var=true;
     while ($i < min($num,$limit))
     {
         $obj = $db->fetch_object($resql);
         $var=!$var;
         print '<tr '.$bc[$var].'>';
-        print '<td nowrap="nowrap"><a href="fiche.php?id='.$obj->cid.'">';
+        print '<td class="nowrap"><a href="fiche.php?id='.$obj->cid.'">';
         print img_object($langs->trans("ShowContract"),"contract").' '.(isset($obj->ref) ? $obj->ref : $obj->cid) .'</a>';
         if ($obj->nb_late) print img_warning($langs->trans("Late"));
         print '</td>';
         print '<td><a href="../comm/fiche.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.$obj->nom.'</a></td>';
         //print '<td align="center">'.dol_print_date($obj->datec).'</td>';
-        print '<td align="center">'.dol_print_date($obj->date_contrat).'</td>';
+        print '<td align="center">'.dol_print_date($db->jdate($obj->date_contrat)).'</td>';
         //print '<td align="center">'.$staticcontrat->LibStatut($obj->statut,3).'</td>';
         print '<td align="center">'.($obj->nb_initial>0?$obj->nb_initial:'').'</td>';
         print '<td align="center">'.($obj->nb_running>0?$obj->nb_running:'').'</td>';

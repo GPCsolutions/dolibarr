@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2001-2004	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
- * Copyright (C) 2004-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin			<regis@dolibarr.fr>
+ * Copyright (C) 2004-2013	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2012 	Juanjo Menent			<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -28,14 +28,10 @@ define('NOCSRFCHECK',1);	// This is login page. We must be able to go on it from
 require 'main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 
-
 // If not defined, we select menu "home"
-if (! isset($_GET["mainmenu"])) $_GET["mainmenu"]="home";
+$_GET['mainmenu']=GETPOST('mainmenu', 'alpha')?GETPOST('mainmenu', 'alpha'):'home';
 $action=GETPOST('action');
 
-
-include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
-$hookmanager=new HookManager($db);
 $hookmanager->initHooks(array('index'));
 
 
@@ -46,7 +42,7 @@ $hookmanager->initHooks(array('index'));
 // Check if company name is defined (first install)
 if (!isset($conf->global->MAIN_INFO_SOCIETE_NOM) || empty($conf->global->MAIN_INFO_SOCIETE_NOM))
 {
-    header("Location: ".DOL_URL_ROOT."/admin/company.php?mainmenu=home&leftmenu=setup&mesg=setupnotcomplete");
+    header("Location: ".DOL_URL_ROOT."/admin/index.php?mainmenu=home&leftmenu=setup&mesg=setupnotcomplete");
     exit;
 }
 
@@ -56,28 +52,7 @@ if (!isset($conf->global->MAIN_INFO_SOCIETE_NOM) || empty($conf->global->MAIN_IN
  * View
  */
 
-// If smartphone mode, we do not show main page, we show only menu
-if (preg_match('/^smartphone/',$conf->smart_menu) && ! empty($conf->browser->phone))
-{
-    $limitmenuto=GETPOST('limitmenuto')?GETPOST('limitmenuto'):0;
-    $limitmenuto=1;	// A virer
-
-    // Load the smartphone menu manager
-    $result=@include_once DOL_DOCUMENT_ROOT ."/core/menus/smartphone/".$conf->smart_menu;
-    if (! $result)	// If failed to include, we try with standard
-    {
-        $conf->smart_menu='smartphone_backoffice.php';
-        include_once DOL_DOCUMENT_ROOT ."/core/menus/smartphone/".$conf->smart_menu;
-    }
-
-    $menusmart = new MenuSmart($db);
-
-    include_once DOL_DOCUMENT_ROOT.'/theme/phones/smartphone/tpl/menu.tpl.php';
-    exit;
-}
-
-
-llxHeader();
+llxHeader('',$langs->trans("HomeArea"));
 
 print_fiche_titre($langs->trans("HomeArea"));
 
@@ -105,9 +80,9 @@ print '<div class="fichecenter"><div class="fichethirdleft">';
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre"><th class="liste_titre" colspan="2">'.$langs->trans("Informations").'</th></tr>';
 print '<tr '.$bc[false].'>';
-print '<td nowrap="nowrap">'.$langs->trans("User").'</td><td>'.$user->getNomUrl(0).'</td></tr>';
+print '<td class="nowrap">'.$langs->trans("User").'</td><td>'.$user->getNomUrl(0).'</td></tr>';
 print '<tr '.$bc[true].'>';
-print '<td nowrap="nowrap">'.$langs->trans("PreviousConnexion").'</td><td>';
+print '<td class="nowrap">'.$langs->trans("PreviousConnexion").'</td><td>';
 if ($user->datepreviouslogin) print dol_print_date($user->datepreviouslogin,"dayhour",'tzuser');
 else print $langs->trans("Unknown");
 print '</td>';
@@ -191,8 +166,8 @@ if ($user->societe_id == 0)
 				 'bill',
 				 'order');
     // Translation keyword
-    $titres=array("Customers",
-                  "Prospects",
+    $titres=array("ThirdPartyCustomersStats",
+                  "ThirdPartyProspectsStats",
                   "Suppliers",
                   "Members",
                   "Products",
@@ -213,7 +188,7 @@ if ($user->societe_id == 0)
     DOL_URL_ROOT.'/compta/facture/list.php?mainmenu=accountancy',
     DOL_URL_ROOT.'/contrat/liste.php');
     // Translation lang files
-    $langfile=array("bills",
+    $langfile=array("companies",
                     "prospects",
                     "suppliers",
                     "members",
@@ -222,7 +197,7 @@ if ($user->societe_id == 0)
                     "propal",
                     "orders",
                     "bills",
-					"Contracts");
+					"contracts");
 
 
     // Loop and displays each line of table
@@ -252,7 +227,7 @@ if ($user->societe_id == 0)
         }
     }
 
-    $object=(object) array();
+    $object=new stdClass();
     $parameters=array();
     $action='';
     $reshook=$hookmanager->executeHooks('addStatisticLine',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
@@ -278,7 +253,7 @@ print '<th class="liste_titre"align="right">'.$langs->trans("Number").'</th>';
 print '<th class="liste_titre"align="right">'.$langs->trans("Late").'</th>';
 print '<th class="liste_titre">&nbsp;</th>';
 print '<th class="liste_titre"width="20">&nbsp;</th>';
-if ($showweather) print '<th class="liste_titre" width="80">&nbsp;</th>';
+if ($showweather) print '<th class="liste_titre hideonsmartphone" width="80">&nbsp;</th>';
 print '</tr>';
 
 
@@ -308,7 +283,7 @@ if (! empty($conf->commande->enabled) && $user->rights->commande->lire)
     $board->load_board($user);
     $board->warning_delay=$conf->commande->client->warning_delay/60/60/24;
     $board->label=$langs->trans("OrdersToProcess");
-    $board->url=DOL_URL_ROOT.'/commande/liste.php?viewstatut=-2';
+    $board->url=DOL_URL_ROOT.'/commande/liste.php?viewstatut=-3';
     $board->img=img_object($langs->trans("Orders"),"order");
     $rowspan++;
     $dashboardlines[]=$board;
@@ -370,7 +345,7 @@ if (! empty($conf->contrat->enabled) && $user->rights->contrat->lire)
     $board->load_board($user,"inactives");
     $board->warning_delay=$conf->contrat->services->inactifs->warning_delay/60/60/24;
     $board->label=$langs->trans("BoardNotActivatedServices");
-    $board->url=DOL_URL_ROOT.'/contrat/services.php?mainmenu=commercial&leftmenu=contracts&mode=0';
+    $board->url=DOL_URL_ROOT.'/contrat/services.php?mainmenu=commercial&amp;leftmenu=contracts&amp;mode=0';
     $board->img=img_object($langs->trans("Contract"),"contract");
     $rowspan++;
     $dashboardlines[]=$board;
@@ -386,7 +361,7 @@ if (! empty($conf->contrat->enabled) && $user->rights->contrat->lire)
     $board->load_board($user,"expired");
     $board->warning_delay=$conf->contrat->services->expires->warning_delay/60/60/24;
     $board->label=$langs->trans("BoardRunningServices");
-    $board->url=DOL_URL_ROOT.'/contrat/services.php?mainmenu=commercial&leftmenu=contracts&mode=4&filter=expired';
+    $board->url=DOL_URL_ROOT.'/contrat/services.php?mainmenu=commercial&amp;leftmenu=contracts&amp;mode=4&amp;filter=expired';
     $board->img=img_object($langs->trans("Contract"),"contract");
     $rowspan++;
     $dashboardlines[]=$board;
@@ -496,12 +471,12 @@ foreach($dashboardlines as $key => $board)
     if ($board->nbtodolate > 0) print img_picto($langs->trans("NActionsLate",$board->nbtodolate),"warning");
     else print '&nbsp;';
     print '</td>';
-    print '<td nowrap="nowrap" align="right">';
+    print '<td class="nowrap" align="right">';
     print ' (>'.ceil($board->warning_delay).' '.$langs->trans("days").')';
     print '</td>';
     if ($showweather)
     {
-        print '<td class="nohover" rowspan="'.$rowspan.'" width="80" style="border-left: 1px solid #DDDDDD" align="center">';
+        print '<td class="nohover hideonsmartphone" rowspan="'.$rowspan.'" width="80" style="border-left: 1px solid #DDDDDD" align="center">';
         $text='';
         if ($totallate > 0) $text=$langs->transnoentitiesnoconv("WarningYouHaveAtLeastOneTaskLate").' ('.$langs->transnoentitiesnoconv("NActionsLate",$totallate).')';
         $options='height="64px"';
@@ -568,6 +543,8 @@ if ($user->admin && empty($conf->global->MAIN_REMOVE_INSTALL_WARNING))
         //print info_admin($langs->trans("WarningUntilDirRemoved",DOL_DOCUMENT_ROOT."/install"));
     }
 }
+
+//print 'mem='.memory_get_usage().' - '.memory_get_peak_usage();
 
 llxFooter();
 

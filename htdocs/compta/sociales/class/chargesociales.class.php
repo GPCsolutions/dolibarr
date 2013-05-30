@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -30,11 +30,12 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
  */
 class ChargeSociales extends CommonObject
 {
-    public $element='rowid';
+    public $element='chargesociales';
     public $table='chargesociales';
     public $table_element='chargesociales';
 
     var $id;
+    var $ref;
     var $date_ech;
     var $lib;
     var $type;
@@ -115,6 +116,8 @@ class ChargeSociales extends CommonObject
      */
     function create($user)
     {
+    	global $conf;
+
         // Nettoyage parametres
         $newamount=price2num($this->amount,'MT');
 
@@ -127,10 +130,11 @@ class ChargeSociales extends CommonObject
 
         $this->db->begin();
 
-        $sql = "INSERT INTO ".MAIN_DB_PREFIX."chargesociales (fk_type, libelle, date_ech, periode, amount)";
+        $sql = "INSERT INTO ".MAIN_DB_PREFIX."chargesociales (fk_type, libelle, date_ech, periode, amount, entity)";
         $sql.= " VALUES (".$this->type.",'".$this->db->escape($this->lib)."',";
         $sql.= " '".$this->db->idate($this->date_ech)."','".$this->db->idate($this->periode)."',";
-        $sql.= " ".price2num($newamount);
+        $sql.= " '".price2num($newamount)."',";
+        $sql.= " ".$conf->entity;
         $sql.= ")";
 
         dol_syslog(get_class($this)."::create sql=".$sql);
@@ -262,8 +266,12 @@ class ChargeSociales extends CommonObject
      */
     function solde($year = 0)
     {
-        $sql = "SELECT sum(f.amount) as amount";
-        $sql .= " FROM ".MAIN_DB_PREFIX."chargesociales as f WHERE paye = 0";
+    	global $conf;
+
+        $sql = "SELECT SUM(f.amount) as amount";
+        $sql.= " FROM ".MAIN_DB_PREFIX."chargesociales as f";
+        $sql.= " WHERE f.entity = ".$conf->entity;
+        $sql.= " AND paye = 0";
 
         if ($year) {
             $sql .= " AND f.datev >= '$y-01-01' AND f.datev <= '$y-12-31' ";
@@ -300,8 +308,8 @@ class ChargeSociales extends CommonObject
      */
     function set_paid($user)
     {
-        $sql = "UPDATE ".MAIN_DB_PREFIX."chargesociales";
-        $sql.= " set paye=1";
+        $sql = "UPDATE ".MAIN_DB_PREFIX."chargesociales SET";
+        $sql.= " paye = 1";
         $sql.= " WHERE rowid = ".$this->id;
         $return = $this->db->query($sql);
         if ($return) return 1;

@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -71,11 +71,8 @@ class mailing_contacts1 extends MailingTargets
 		$statssql=array();
 		$statssql[0] = "SELECT '".$langs->trans("NbOfCompaniesContacts")."' as label,";
 		$statssql[0].= " count(distinct(c.email)) as nb";
-		$statssql[0].= " FROM ".MAIN_DB_PREFIX."socpeople as c,";
-		$statssql[0].= " ".MAIN_DB_PREFIX."societe as s";
-		$statssql[0].= " WHERE s.rowid = c.fk_soc";
-		$statssql[0].= " AND c.entity IN (".getEntity('societe', 1).")";
-		$statssql[0].= " AND s.client IN (1, 3)";
+		$statssql[0].= " FROM ".MAIN_DB_PREFIX."socpeople as c";
+		$statssql[0].= " WHERE c.entity IN (".getEntity('societe', 1).")";
 		$statssql[0].= " AND c.email != ''";      // Note that null != '' is false
 		$statssql[0].= " AND c.no_email = 0";
 
@@ -88,19 +85,19 @@ class mailing_contacts1 extends MailingTargets
 	 *	For example if this selector is used to extract 500 different
 	 *	emails from a text file, this function must return 500.
 	 *
+	 *  @param	string	$sql		Requete sql de comptage
 	 *	@return		int
 	 */
-	function getNbOfRecipients()
+	function getNbOfRecipients($sql='')
 	{
 		global $conf;
 
 		$sql  = "SELECT count(distinct(c.email)) as nb";
-		$sql .= " FROM ".MAIN_DB_PREFIX."socpeople as c,";
-		$sql .= " ".MAIN_DB_PREFIX."societe as s";
-		$sql .= " WHERE s.rowid = c.fk_soc";
-		$sql .= " AND c.entity IN (".getEntity('societe', 1).")";
-		$sql .= " AND c.email != ''"; // Note that null != '' is false
-		$sql .= " AND c.no_email = 0";
+		$sql.= " FROM ".MAIN_DB_PREFIX."socpeople as c";
+    	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = c.fk_soc";
+		$sql.= " WHERE c.entity IN (".getEntity('societe', 1).")";
+		$sql.= " AND c.email != ''"; // Note that null != '' is false
+		$sql.= " AND c.no_email = 0";
 
 		// La requete doit retourner un champ "nb" pour etre comprise
 		// par parent::getNbOfRecipients
@@ -200,12 +197,11 @@ class mailing_contacts1 extends MailingTargets
 
 		// La requete doit retourner: id, email, fk_contact, name, firstname, other
 		$sql = "SELECT c.rowid as id, c.email as email, c.rowid as fk_contact,";
-		$sql.= " c.name as name, c.firstname as firstname, c.civilite,";
+		$sql.= " c.lastname, c.firstname, c.civilite,";
 		$sql.= " s.nom as companyname";
-		$sql.= " FROM ".MAIN_DB_PREFIX."socpeople as c,";
-		$sql.= " ".MAIN_DB_PREFIX."societe as s";
-		$sql.= " WHERE s.rowid = c.fk_soc";
-		$sql.= " AND c.entity IN (".getEntity('societe', 1).")";
+		$sql.= " FROM ".MAIN_DB_PREFIX."socpeople as c";
+    	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = c.fk_soc";
+		$sql.= " WHERE c.entity IN (".getEntity('societe', 1).")";
 		$sql.= " AND c.email != ''";
 		$sql.= " AND c.no_email = 0";
 		foreach($filtersarray as $key)
@@ -238,7 +234,7 @@ class mailing_contacts1 extends MailingTargets
 					$cibles[$j] = array(
                     		'email' => $obj->email,
                     		'fk_contact' => $obj->fk_contact,
-                    		'name' => $obj->name,
+                    		'lastname' => $obj->lastname,
                     		'firstname' => $obj->firstname,
                     		'other' =>
                                 ($langs->transnoentities("ThirdParty").'='.$obj->companyname).';'.

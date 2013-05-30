@@ -9,8 +9,9 @@ class SegmentException extends Exception
  * Encoding : ISO-8859-1
  *
  * @copyright  GPL License 2008 - Julien Pauli - Cyril PIERRE de GEYER - Anaska (http://www.anaska.com)
+ * @copyright  GPL License 2012 - Stephen Larroque - lrq3000@gmail.com
  * @license    http://www.gnu.org/copyleft/gpl.html  GPL License
- * @version 1.3
+ * @version 1.4.5 (last update 2013-04-07)
  */
 class Segment implements IteratorAggregate, Countable
 {
@@ -34,7 +35,7 @@ class Segment implements IteratorAggregate, Countable
         $this->xml = (string) $xml;
 		$this->odf = $odf;
         $zipHandler = $this->odf->getConfig('ZIP_PROXY');
-        $this->file = new $zipHandler();	
+        $this->file = new $zipHandler($this->odf->getConfig('PATH_TO_TMP'));
         $this->_analyseChildren($this->xml);
     }
     /**
@@ -93,10 +94,13 @@ class Segment implements IteratorAggregate, Countable
         $this->file->open($this->odf->getTmpfile());
         foreach ($this->images as $imageKey => $imageValue) {
 			if ($this->file->getFromName('Pictures/' . $imageValue) === false) {
+				// Add the image inside the ODT document
 				$this->file->addFile($imageKey, 'Pictures/' . $imageValue);
+				// Add the image to the Manifest (which maintains a list of images, necessary to avoid "Corrupt ODT file. Repair?" when opening the file with LibreOffice)
+				$this->odf->addImageToManifest($imageValue);
 			}
         }
-        $this->file->close();		
+        $this->file->close();
         return $this->xmlParsed;
     }
     /**
@@ -153,16 +157,21 @@ class Segment implements IteratorAggregate, Countable
         if ($size === false) {
             throw new OdfException("Invalid image");
         }
+        // Set the width and height of the page
         list ($width, $height) = $size;
         $width *= Odf::PIXEL_TO_CM;
         $height *= Odf::PIXEL_TO_CM;
+        // Fix local-aware issues (eg: 12,10 -> 12.10)
+        $width = sprintf("%F", $width);
+        $height = sprintf("%F", $height);
+
         $xml = <<<IMG
-<draw:frame draw:style-name="fr1" draw:name="$filename" text:anchor-type="char" svg:width="{$width}cm" svg:height="{$height}cm" draw:z-index="3"><draw:image xlink:href="Pictures/$file" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame>
+<draw:frame draw:style-name="fr1" draw:name="$filename" text:anchor-type="aschar" svg:width="{$width}cm" svg:height="{$height}cm" draw:z-index="3"><draw:image xlink:href="Pictures/$file" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame>
 IMG;
         $this->images[$value] = $file;
         $this->setVars($key, $xml, false);
         return $this;
-    }	
+    }
     /**
      * Shortcut to retrieve a child
      *

@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2011 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011	   Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -88,7 +88,7 @@ function getServerTimeZoneInt($refgmtdate='now')
         // Method 1 (include daylight)
         $gmtnow=dol_now('gmt'); $yearref=dol_print_date($gmtnow,'%Y'); $monthref=dol_print_date($gmtnow,'%m'); $dayref=dol_print_date($gmtnow,'%d');
         if ($refgmtdate == 'now') $newrefgmtdate=$yearref.'-'.$monthref.'-'.$dayref;
-        elseif ($refgmtdate == 'summer') $newrefgmtdate=$yearref.'-05-15';
+        elseif ($refgmtdate == 'summer') $newrefgmtdate=$yearref.'-08-01';
         else $newrefgmtdate=$yearref.'-01-01';
         $localtz = new DateTimeZone(getServerTimeZoneString());
         $localdt = new DateTime($newrefgmtdate, $localtz);
@@ -286,6 +286,16 @@ function convertSecondToTime($iSecond,$format='all',$lengthOfDay=86400,$lengthOf
 	else if ($format == 'hour')
 	{
 		$sTime=dol_print_date($iSecond,'%H',true);
+	}
+	else if ($format == 'fullhour')
+	{
+		if (!empty($iSecond)) {
+			$iSecond=$iSecond/3600;
+		}
+		else {
+			$iSecond=0;
+		}
+		$sTime=$iSecond;
 	}
 	else if ($format == 'min')
 	{
@@ -601,7 +611,7 @@ function dol_get_first_day_week($day,$month,$year,$gm=false)
 }
 
 /**
- *	Fonction retournant le nombre de jour fieries samedis et dimanches entre 2 dates entrees en timestamp
+ *	Fonction retournant le nombre de jour feries samedis et dimanches entre 2 dates entrees en timestamp
  *	Called by function num_open_day
  *
  *	@param	    timestamp	$timestampStart     Timestamp de debut
@@ -733,11 +743,12 @@ function num_public_holiday($timestampStart, $timestampEnd, $countrycode='FR')
 
 /**
  *	Fonction retournant le nombre de jour entre deux dates
+ *  Example: 2012-01-01 2012-01-02 => 1 if lastday=0, 2 if lastday=1
  *
  *	@param	   timestamp	$timestampStart     Timestamp de debut
  *	@param	   timestamp	$timestampEnd       Timestamp de fin
- *	@param     int			$lastday            On prend en compte le dernier jour, 0: non, 1:oui
- *	@return    int								Nombre de jours
+ *	@param     int			$lastday            Last day is included, 0: non, 1:oui
+ *	@return    int								Number of days
  */
 function num_between_day($timestampStart, $timestampEnd, $lastday=0)
 {
@@ -751,32 +762,46 @@ function num_between_day($timestampStart, $timestampEnd, $lastday=0)
 		{
 			$bit = 1;
 		}
-		$nbjours = round(($timestampEnd - $timestampStart)/(60*60*24)-$bit);
+		$nbjours = (int) floor(($timestampEnd - $timestampStart)/(60*60*24)) + 1 - $bit;
 	}
+	//print ($timestampEnd - $timestampStart) - $lastday;
 	return $nbjours;
 }
 
 /**
- *	Fonction retournant le nombre de jour entre deux dates sans les jours feries (jours ouvres)
+ *	Function to return number of working days (and text of units) between two dates (working days)
  *
- *	@param	   timestamp	$timestampStart     Timestamp de debut
- *	@param	   timestamp	$timestampEnd       Timestamp de fin
- *	@param     int			$inhour             0: sort le nombre de jour , 1: sort le nombre d'heure (72 max)
- *	@param     int			$lastday            On prend en compte le dernier jour, 0: non, 1:oui
- *	@return    int								Nombre de jours ou d'heures
+ *	@param	   	timestamp	$timestampStart     Timestamp for start date
+ *	@param	   	timestamp	$timestampEnd       Timestamp for end date
+ *	@param     	int			$inhour             0: return number of days, 1: return number of hours (72h max)
+ *	@param		int			$lastday            We include last day, 0: no, 1:yes
+ *  @param		int			$halfday			Tag to define half day when holiday start and end
+ *	@return    	int								Number of days or hours
  */
-function num_open_day($timestampStart, $timestampEnd,$inhour=0,$lastday=0)
+function num_open_day($timestampStart, $timestampEnd, $inhour=0, $lastday=0, $halfday=0)
 {
 	global $langs;
 
+	dol_syslog('num_open_day timestampStart='.$timestampStart.' timestampEnd='.$timestampEnd.' bit='.$lastday);
+
+	// Check parameters
+	if (! is_int($timestampStart) && ! is_float($timestampStart)) return 'ErrorBadParameter_num_open_day';
+	if (! is_int($timestampEnd) && ! is_float($timestampEnd)) return 'ErrorBadParameter_num_open_day';
+
+	//print 'num_open_day timestampStart='.$timestampStart.' timestampEnd='.$timestampEnd.' bit='.$lastday;
 	if ($timestampStart < $timestampEnd)
 	{
-		$bit = 0;
-		if ($lastday == 1) $bit = 1;
-		$nbOpenDay = num_between_day($timestampStart, $timestampEnd, $bit) - num_public_holiday($timestampStart, $timestampEnd);
-		$nbOpenDay.= " ".$langs->trans("Days");
+		//print num_between_day($timestampStart, $timestampEnd, $lastday).' - '.num_public_holiday($timestampStart, $timestampEnd);
+		$nbOpenDay = num_between_day($timestampStart, $timestampEnd, $lastday) - num_public_holiday($timestampStart, $timestampEnd, $lastday);
+		$nbOpenDay.= " " . $langs->trans("Days");
 		if ($inhour == 1 && $nbOpenDay <= 3) $nbOpenDay = $nbOpenDay*24 . $langs->trans("HourShort");
-		return $nbOpenDay;
+		return $nbOpenDay - (($inhour == 1 ? 12 : 0.5) * abs($halfday));
+	}
+	elseif ($timestampStart == $timestampEnd)
+	{
+		$nbOpenDay=$lastday;
+		if ($inhour == 1) $nbOpenDay = $nbOpenDay*24 . $langs->trans("HourShort");
+		return $nbOpenDay - (($inhour == 1 ? 12 : 0.5) * abs($halfday));
 	}
 	else
 	{

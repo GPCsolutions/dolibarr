@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2007-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -38,9 +38,10 @@ $type=GETPOST('type','int');
 $mode=GETPOST('mode','int');
 $status=((GETPOST('status','int') >= 0) ? GETPOST('status','int') : -1);
 $outjson=(GETPOST('outjson','int') ? GETPOST('outjson','int') : 0);
-$pricelevel=GETPOST('price_level','int');
+$price_level=GETPOST('price_level','int');
 $action=GETPOST('action', 'alpha');
 $id=GETPOST('id', 'int');
+$price_by_qty_rowid=GETPOST('pbq', 'int');
 
 /*
  * View
@@ -65,11 +66,37 @@ if (! empty($action) && $action == 'fetch' && ! empty($id))
 		$outlabel=$object->label;
 		$outdesc=$object->description;
 		$outtype=$object->type;
+		$outqty=1;
+		$outdiscount=0;
 
 		$found=false;
+		
+		// Price by qty
+		if (!empty($price_by_qty_rowid) && $price_by_qty_rowid >= 1)		// If we need a particular price related to qty
+		{
+			$sql = "SELECT price, unitprice, quantity, remise_percent";
+			$sql.= " FROM ".MAIN_DB_PREFIX."product_price_by_qty ";
+			$sql.= " WHERE rowid=".$price_by_qty_rowid."";
+
+			$result = $db->query($sql);
+			if ($result)
+			{
+				$objp = $db->fetch_object($result);
+				if ($objp)
+				{
+					$found=true;
+					$outprice_ht=price($objp->unitprice);
+					$outprice_ttc=price($objp->unitprice * (1 + ($object->tva_tx / 100)));
+					$outpricebasetype=$object->price_base_type;
+					$outtva_tx=$object->tva_tx;
+					$outqty=$objp->quantity;
+					$outdiscount=$objp->remise_percent;
+				}
+			}
+		}
 
 		// Multiprice
-		if (isset($price_level) && $price_level >= 1)		// If we need a particular price level (from 1 to 6)
+		if (! $found && isset($price_level) && $price_level >= 1)		// If we need a particular price level (from 1 to 6)
 		{
 			$sql = "SELECT price, price_ttc, price_base_type, tva_tx";
 			$sql.= " FROM ".MAIN_DB_PREFIX."product_price ";
@@ -78,10 +105,10 @@ if (! empty($action) && $action == 'fetch' && ! empty($id))
 			$sql.= " ORDER BY date_price";
 			$sql.= " DESC LIMIT 1";
 
-			$result = $this->db->query($sql);
+			$result = $db->query($sql);
 			if ($result)
 			{
-				$objp = $this->db->fetch_object($result);
+				$objp = $db->fetch_object($result);
 				if ($objp)
 				{
 					$found=true;
@@ -101,7 +128,7 @@ if (! empty($action) && $action == 'fetch' && ! empty($id))
 			$outtva_tx=$object->tva_tx;
 		}
 
-		$outjson = array('ref'=>$outref, 'label'=>$outlabel, 'desc'=>$outdesc, 'type'=>$outtype, 'price_ht'=>$outprice_ht, 'price_ttc'=>$outprice_ttc, 'pricebasetype'=>$outpricebasetype, 'tva_tx'=>$outtva_tx);
+		$outjson = array('ref'=>$outref, 'label'=>$outlabel, 'desc'=>$outdesc, 'type'=>$outtype, 'price_ht'=>$outprice_ht, 'price_ttc'=>$outprice_ttc, 'pricebasetype'=>$outpricebasetype, 'tva_tx'=>$outtva_tx, 'qty'=>$outqty, 'discount'=>$outdiscount);
 	}
 
 	echo json_encode($outjson);
@@ -130,7 +157,7 @@ else
 	$form = new Form($db);
 	if (empty($mode) || $mode == 1)
 	{
-		$arrayresult=$form->select_produits_do("",$htmlname,$type,"",$pricelevel,$searchkey,$status,2,$outjson);
+		$arrayresult=$form->select_produits_do("",$htmlname,$type,"",$price_level,$searchkey,$status,2,$outjson);
 	}
 	elseif ($mode == 2)
 	{

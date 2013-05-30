@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -144,7 +144,7 @@ $server->wsdl->addComplexType(
         'total_net' => array('name'=>'type','type'=>'xsd:double'),
         'total_vat' => array('name'=>'type','type'=>'xsd:double'),
         'total' => array('name'=>'type','type'=>'xsd:double'),
-        'note' => array('name'=>'note','type'=>'xsd:string'),
+        'note_private' => array('name'=>'note_private','type'=>'xsd:string'),
         'note_public' => array('name'=>'note_public','type'=>'xsd:string'),
         'status' => array('name'=>'status','type'=>'xsd:int'),
         'close_code' => array('name'=>'close_code','type'=>'xsd:string'),
@@ -293,7 +293,7 @@ function getSupplierInvoice($authentication,$id='',$ref='',$ref_ext='')
                         'date_term'=>dol_print_date($invoice->date_echeance,'dayhourrfc'),
                         'label'=>$invoice->libelle,
                         'paid'=>$invoice->paye,
-                        'note'=>$invoice->note,
+                        'note_private'=>$invoice->note_private,
                         'note_public'=>$invoice->note_public,
                         'close_code'=>$invoice->close_code,
                         'close_note'=>$invoice->close_note,
@@ -378,7 +378,13 @@ function getSupplierInvoicesForThirdParty($authentication,$idthirdparty)
 			    $obj=$db->fetch_object($resql);
 
 			    $invoice=new FactureFournisseur($db);
-			    $invoice->fetch($obj->facid);
+			    $result=$invoice->fetch($obj->facid);
+				if ($result < 0)
+				{
+					$error++;
+					$errorcode=$result; $errorlabel=$invoice->error;
+					break;
+				}
 
 				// Define lines of invoice
 				$linesresp=array();
@@ -419,7 +425,7 @@ function getSupplierInvoicesForThirdParty($authentication,$idthirdparty)
                     'date_term'=>dol_print_date($invoice->date_echeance,'dayhourrfc'),
                     'label'=>$invoice->libelle,
                     'paid'=>$invoice->paye,
-                    'note'=>$invoice->note,
+                    'note_private'=>$invoice->note_private,
                     'note_public'=>$invoice->note_public,
                     'close_code'=>$invoice->close_code,
                     'close_note'=>$invoice->close_note,

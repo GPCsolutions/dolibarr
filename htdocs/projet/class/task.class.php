@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2008-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2010-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2010-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -41,6 +41,7 @@ class Task extends CommonObject
     var $label;
     var $description;
     var $duration_effective;
+    var $planned_workload;
     var $date_c;
     var $date_start;
     var $date_end;
@@ -101,6 +102,7 @@ class Task extends CommonObject
         $sql.= ", fk_user_creat";
         $sql.= ", dateo";
         $sql.= ", datee";
+        $sql.= ", planned_workload";
         $sql.= ", progress";
         $sql.= ") VALUES (";
         $sql.= $this->fk_project;
@@ -111,6 +113,7 @@ class Task extends CommonObject
         $sql.= ", ".$user->id;
         $sql.= ", ".($this->date_start!=''?"'".$this->db->idate($this->date_start)."'":'null');
         $sql.= ", ".($this->date_end!=''?"'".$this->db->idate($this->date_end)."'":'null');
+        $sql.= ", ".($this->planned_workload!=''?$this->planned_workload:0);
         $sql.= ", ".($this->progress!=''?$this->progress:0);
         $sql.= ")";
 
@@ -133,6 +136,18 @@ class Task extends CommonObject
                 if ($result < 0) { $error++; $this->errors=$interface->errors; }
                 // End call triggers
             }
+        }
+        
+        //Update extrafield
+        if (!$error) {
+        	if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
+        	{
+        		$result=$this->insertExtraFields();
+        		if ($result < 0)
+        		{
+        			$error++;
+        		}
+        	}
         }
 
         // Commit or rollback
@@ -171,6 +186,8 @@ class Task extends CommonObject
         $sql.= " t.label,";
         $sql.= " t.description,";
         $sql.= " t.duration_effective,";
+        $sql.= " t.planned_workload,";
+        $sql.= " t.datec,";
         $sql.= " t.dateo,";
         $sql.= " t.datee,";
         $sql.= " t.fk_user_creat,";
@@ -198,6 +215,7 @@ class Task extends CommonObject
                 $this->label				= $obj->label;
                 $this->description			= $obj->description;
                 $this->duration_effective	= $obj->duration_effective;
+                $this->planned_workload		= $obj->planned_workload;
                 $this->date_c				= $this->db->jdate($obj->datec);
                 $this->date_start			= $this->db->jdate($obj->dateo);
                 $this->date_end				= $this->db->jdate($obj->datee);
@@ -241,6 +259,7 @@ class Task extends CommonObject
         if (isset($this->label)) $this->label=trim($this->label);
         if (isset($this->description)) $this->description=trim($this->description);
         if (isset($this->duration_effective)) $this->duration_effective=trim($this->duration_effective);
+        if (isset($this->planned_workload)) $this->planned_workload=trim($this->planned_workload);
 
         // Check parameters
         // Put here code to add control on parameters values
@@ -252,6 +271,7 @@ class Task extends CommonObject
         $sql.= " label=".(isset($this->label)?"'".$this->db->escape($this->label)."'":"null").",";
         $sql.= " description=".(isset($this->description)?"'".$this->db->escape($this->description)."'":"null").",";
         $sql.= " duration_effective=".(isset($this->duration_effective)?$this->duration_effective:"null").",";
+        $sql.= " planned_workload=".(isset($this->planned_workload)?$this->planned_workload:"0").",";
         $sql.= " dateo=".($this->date_start!=''?$this->db->idate($this->date_start):'null').",";
         $sql.= " datee=".($this->date_end!=''?$this->db->idate($this->date_end):'null').",";
         $sql.= " progress=".$this->progress;
@@ -274,6 +294,18 @@ class Task extends CommonObject
                 if ($result < 0) { $error++; $this->errors=$interface->errors; }
                 // End call triggers
             }
+        }
+        
+        //Update extrafield
+        if (!$error) {
+        	if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
+        	{
+        		$result=$this->insertExtraFields();
+        		if ($result < 0)
+        		{
+        			$error++;
+        		}
+        	}
         }
 
         // Commit or rollback
@@ -478,7 +510,7 @@ class Task extends CommonObject
 
     /**
      * Return list of tasks for all projects or for one particular project
-     * Sort order is on project, then on position of task, and last on title of first level task
+     * Sort order is on project, then on position of task, and last on start date of first level task
      *
      * @param	User	$usert				Object user to limit tasks affected to a particular user
      * @param	User	$userp				Object user to limit projects of a particular user and public projects
@@ -499,7 +531,7 @@ class Task extends CommonObject
         // List of tasks (does not care about permissions. Filtering will be done later)
         $sql = "SELECT p.rowid as projectid, p.ref, p.title as plabel, p.public,";
         $sql.= " t.rowid as taskid, t.label, t.description, t.fk_task_parent, t.duration_effective, t.progress,";
-        $sql.= " t.dateo as date_start, t.datee as date_end";
+        $sql.= " t.dateo as date_start, t.datee as date_end, t.planned_workload";
         if ($mode == 0)
         {
             $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
@@ -518,7 +550,7 @@ class Task extends CommonObject
             if ($projectid) $sql.= " AND p.rowid in (".$projectid.")";
         }
         if ($filteronprojref) $sql.= " AND p.ref LIKE '%".$filteronprojref."%'";
-        $sql.= " ORDER BY p.ref, t.rang, t.label";
+        $sql.= " ORDER BY p.ref, t.rang, t.dateo";
 
         //print $sql;
         dol_syslog(get_class($this)."::getTasksArray sql=".$sql, LOG_DEBUG);
@@ -551,7 +583,7 @@ class Task extends CommonObject
 
                 if (! $error)
                 {
-                	$tasks[$i]					= (object) array();
+                	$tasks[$i]					= new stdClass();
                     $tasks[$i]->id				= $obj->taskid;
                     $tasks[$i]->ref				= $obj->taskid;
                     $tasks[$i]->fk_project		= $obj->projectid;
@@ -561,6 +593,7 @@ class Task extends CommonObject
                     $tasks[$i]->description		= $obj->description;
                     $tasks[$i]->fk_parent		= $obj->fk_task_parent;
                     $tasks[$i]->duration		= $obj->duration_effective;
+                    $tasks[$i]->planned_workload= $obj->planned_workload;
                     $tasks[$i]->progress		= $obj->progress;
                     $tasks[$i]->public			= $obj->public;
                     $tasks[$i]->date_start		= $this->db->jdate($obj->date_start);
@@ -972,6 +1005,7 @@ class Task extends CommonObject
         $clone_task->fk_project			= $project_id;
         $clone_task->fk_task_parent		= $parent_task_id;
         $clone_task->date_c				= $datec;
+        $clone_task->planned_workload	= $clone_task->planned_workload;
 
         //Manage Task Date
         if ($clone_change_dt)
@@ -1027,7 +1061,7 @@ class Task extends CommonObject
         	else
         	{
         		$this->db->begin();
-				$res=$clone_task->update_note_public(dol_html_entity_decode($clone_task->note_public, ENT_QUOTES));
+				$res=$clone_task->update_note(dol_html_entity_decode($clone_task->note_public, ENT_QUOTES),'_public');
 				if ($res < 0)
 				{
 					$this->error.=$clone_task->error;
@@ -1040,7 +1074,7 @@ class Task extends CommonObject
 				}
 
 				$this->db->begin();
-				$res=$clone_task->update_note(dol_html_entity_decode($clone_task->note_private, ENT_QUOTES));
+				$res=$clone_task->update_note(dol_html_entity_decode($clone_task->note_private, ENT_QUOTES), '_private');
 				if ($res < 0)
 				{
 					$this->error.=$clone_task->error;

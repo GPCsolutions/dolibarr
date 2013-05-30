@@ -1,10 +1,10 @@
 <?php
-/* Copyright (C) 2010-2011	Regis Houssin        <regis@dolibarr.fr>
+/* Copyright (C) 2010-2011	Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011		Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -154,7 +154,7 @@ class ActionsCardCompany extends ActionsCardCommon
 				}
 				else
 				{
-					$this->tpl['tva_intra'] =  $s.'<a href="'.$langs->transcountry("VATIntraCheckURL",$this->object->id_pays).'" target="_blank">'.img_picto($langs->trans("VATIntraCheckableOnEUSite"),'help').'</a>';
+					$this->tpl['tva_intra'] =  $s.'<a href="'.$langs->transcountry("VATIntraCheckURL",$this->object->country_id).'" target="_blank">'.img_picto($langs->trans("VATIntraCheckableOnEUSite"),'help').'</a>';
 				}
 			}
 			else
@@ -193,7 +193,7 @@ class ActionsCardCompany extends ActionsCardCommon
 					}
 					else
 					{
-						$this->tpl['tva_intra'] = $s.'<a href="'.$langs->transcountry("VATIntraCheckURL",$this->object->id_pays).'" target="_blank">'.img_picto($langs->trans("VATIntraCheckableOnEUSite"),'help').'</a>';
+						$this->tpl['tva_intra'] = $s.'<a href="'.$langs->transcountry("VATIntraCheckURL",$this->object->country_id).'" target="_blank">'.img_picto($langs->trans("VATIntraCheckableOnEUSite"),'help').'</a>';
 					}
 				}
 				else

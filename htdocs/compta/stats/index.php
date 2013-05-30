@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2001-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -25,27 +25,28 @@
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/report.lib.php';
 
-
 $year_start=GETPOST("year_start");
 $year_current = strftime("%Y",time());
 $nbofyear=4;
 if (! $year_start) {
-    $year_start = $year_current - ($nbofyear-1);
-    $year_end = $year_current;
+	$year_start = $year_current - ($nbofyear-1);
+	$year_end = $year_current;
 }
 else {
-    $year_end=$year_start + ($nbofyear-1);
+	$year_end=$year_start + ($nbofyear-1);
 }
-
 $userid=GETPOST('userid','int');
-$socid=GETPOST('socid','int');
-// Security check
-if ($user->societe_id > 0) $socid = $user->societe_id;
-if (!$user->rights->compta->resultat->lire && !$user->rights->accounting->comptarapport->lire) accessforbidden();
-
+$socid = GETPOST('socid','int');
 // Define modecompta ('CREANCES-DETTES' or 'RECETTES-DEPENSES')
 $modecompta = $conf->global->COMPTA_MODE;
 if ($_GET["modecompta"]) $modecompta=$_GET["modecompta"];
+
+// Security check
+if ($user->societe_id > 0) $socid = $user->societe_id;
+if (! empty($conf->comptabilite->enabled)) $result=restrictedArea($user,'compta','','','resultat');
+if (! empty($conf->accounting->enabled)) $result=restrictedArea($user,'accounting','','','comptarapport');
+
+
 
 
 /*
@@ -252,7 +253,8 @@ for ($mois = 1+$nb_mois_decalage ; $mois <= 12+$nb_mois_decalage ; $mois++)
 			}
 			if (! $cum[$caseprev] && $cum[$case])
 			{
-				print '<td align="right">+Inf%</td>';
+				//print '<td align="right">+Inf%</td>';
+				print '<td align="right">-</td>';
 			}
 			if (isset($cum[$caseprev]) && ! $cum[$caseprev] && ! $cum[$case])
 			{
@@ -350,7 +352,7 @@ for ($annee = $year_start ; $annee <= $year_end ; $annee++)
 	// Montant total
 	if ($total[$annee] || ($annee >= $minyear && $annee <= max($nowyear,$maxyear)))
 	{
-		print '<td align="right" nowrap="nowrap">'.($total[$annee]?price($total[$annee]):"0")."</td>";
+		print '<td align="right" class="nowrap">'.($total[$annee]?price($total[$annee]):"0")."</td>";
 	}
 	else
 	{
@@ -362,7 +364,7 @@ for ($annee = $year_start ; $annee <= $year_end ; $annee++)
 	{
 		if ($total[$annee-1] && $total[$annee]) {
 			$percent=(round(($total[$annee]-$total[$annee-1])/$total[$annee-1],4)*100);
-			print '<td align="right" nowrap="nowrap">'.($percent>=0?"+$percent":"$percent").'%</td>';
+			print '<td align="right" class="nowrap">'.($percent>=0?"+$percent":"$percent").'%</td>';
 		}
 		if ($total[$annee-1] && ! $total[$annee])
 		{

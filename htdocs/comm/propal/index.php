@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2003-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -43,7 +43,7 @@ $result = restrictedArea($user, 'propal');
 /*
  * View
  */
-
+$now=dol_now();
 $propalstatic=new Propal($db);
 $companystatic=new Societe($db);
 $form = new Form($db);
@@ -54,9 +54,10 @@ llxHeader("",$langs->trans("ProspectionArea"),$help_url);
 
 print_fiche_titre($langs->trans("ProspectionArea"));
 
-print '<table width="100%" class="notopnoleftnoright">';
+//print '<table width="100%" class="notopnoleftnoright">';
+//print '<tr><td valign="top" width="30%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
 
-print '<tr><td valign="top" width="30%" class="notopnoleft">';
 
 /*
  * Search form
@@ -183,7 +184,7 @@ if (! empty($conf->propal->enabled))
 
 				$propalstatic->id=$obj->rowid;
 				$propalstatic->ref=$obj->ref;
-				print '<td nowrap="nowrap">'.$propalstatic->getNomUrl(1).'</td>';
+				print '<td class="nowrap">'.$propalstatic->getNomUrl(1).'</td>';
 
 				$companystatic->id=$obj->socid;
 				$companystatic->name=$obj->socname;
@@ -199,7 +200,9 @@ if (! empty($conf->propal->enabled))
 	}
 }
 
-print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
+
+//print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
 
 
 $max=5;
@@ -239,17 +242,17 @@ if ($resql)
 			$obj = $db->fetch_object($resql);
 
 			print "<tr $bc[$var]>";
-			print '<td width="20%" nowrap="nowrap">';
+			print '<td width="20%" class="nowrap">';
 
 			$propalstatic->id=$obj->rowid;
 			$propalstatic->ref=$obj->ref;
 
 			print '<table class="nobordernopadding"><tr class="nocellnopadd">';
-			print '<td width="96" class="nobordernopadding" nowrap="nowrap">';
+			print '<td width="96" class="nobordernopadding nowrap">';
 			print $propalstatic->getNomUrl(1);
 			print '</td>';
 
-			print '<td width="16" class="nobordernopadding" nowrap="nowrap">';
+			print '<td width="16" class="nobordernopadding nowrap">';
 			print '&nbsp;';
 			print '</td>';
 
@@ -288,7 +291,7 @@ if (! empty($conf->propal->enabled) && $user->rights->propale->lire)
 
 	$now=dol_now();
 
-	$sql = "SELECT s.nom as socname, s.rowid as socid, s.canvas, s.client, p.rowid as propalid, p.total as total_ttc, p.total_ht, p.ref, p.fk_statut, p.datep as dp";
+	$sql = "SELECT s.nom as socname, s.rowid as socid, s.canvas, s.client, p.rowid as propalid, p.total as total_ttc, p.total_ht, p.ref, p.fk_statut, p.datep as dp, p.fin_validite as dfv";
 	$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 	$sql.= ", ".MAIN_DB_PREFIX."propal as p";
 	if (!$user->rights->societe->client->voir && !$socid) $sql.= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
@@ -318,17 +321,17 @@ if (! empty($conf->propal->enabled) && $user->rights->propale->lire)
 				print '<tr '.$bc[$var].'>';
 
 				// Ref
-				print '<td nowrap="nowrap" width="140">';
+				print '<td class="nowrap" width="140">';
 
 				$propalstatic->id=$obj->propalid;
 				$propalstatic->ref=$obj->ref;
 
 				print '<table class="nobordernopadding"><tr class="nocellnopadd">';
-				print '<td class="nobordernopadding" nowrap="nowrap">';
+				print '<td class="nobordernopadding nowrap">';
 				print $propalstatic->getNomUrl(1);
 				print '</td>';
-				print '<td width="18" class="nobordernopadding" nowrap="nowrap">';
-				if ($db->jdate($obj->dp) < ($now - $conf->propal->cloture->warning_delay)) print img_warning($langs->trans("Late"));
+				print '<td width="18" class="nobordernopadding nowrap">';
+				if ($db->jdate($obj->dfv) < ($now - $conf->propal->cloture->warning_delay)) print img_warning($langs->trans("Late"));
 				print '</td>';
 				print '<td width="16" align="center" class="nobordernopadding">';
 				$filename=dol_sanitizeFileName($obj->ref);
@@ -400,17 +403,17 @@ if (! empty($conf->propal->enabled))
 				$var=!$var;
 				$obj = $db->fetch_object($resql);
 				print "<tr $bc[$var]>";
-				print '<td nowrap="nowrap">';
+				print '<td class="nowrap">';
 
 				$propalstatic->id=$obj->rowid;
 				$propalstatic->ref=$obj->ref;
 
 				print '<table class="nobordernopadding"><tr class="nocellnopadd">';
-				print '<td width="96" class="nobordernopadding" nowrap="nowrap">';
+				print '<td width="96" class="nobordernopadding nowrap">';
 				print $propalstatic->getNomUrl(1);
 				print '</td>';
 
-				print '<td width="16" class="nobordernopadding" nowrap="nowrap">';
+				print '<td width="16" class="nobordernopadding nowrap">';
 				print '&nbsp;';
 				print '</td>';
 
@@ -472,17 +475,17 @@ if (! empty($conf->propal->enabled))
 				$var=!$var;
 				$obj = $db->fetch_object($resql);
 				print "<tr $bc[$var]>";
-				print '<td width="20%" nowrap="nowrap">';
+				print '<td width="20%" class="nowrap">';
 
 				$propalstatic->id=$obj->rowid;
 				$propalstatic->ref=$obj->ref;
 
 				print '<table class="nobordernopadding"><tr class="nocellnopadd">';
-				print '<td width="96" class="nobordernopadding" nowrap="nowrap">';
+				print '<td width="96" class="nobordernopadding nowrap">';
 				print $propalstatic->getNomUrl(1);
 				print '</td>';
 
-				print '<td width="16" class="nobordernopadding" nowrap="nowrap">';
+				print '<td width="16" class="nobordernopadding nowrap">';
 				print '&nbsp;';
 				print '</td>';
 
@@ -509,10 +512,11 @@ if (! empty($conf->propal->enabled))
 }
 */
 
-print '</td></tr></table>';
+//print '</td></tr></table>';
+print '</div></div></div>';
 
-$db->close();
 
 llxFooter();
 
+$db->close();
 ?>

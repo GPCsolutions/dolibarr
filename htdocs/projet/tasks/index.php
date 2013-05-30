@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2006-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2006-2010 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2006-2010 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -33,7 +33,7 @@ $langs->load('projects');
 $langs->load('users');
 
 $id=GETPOST('id','int');
-$search_product=GETPOST('search_product');
+$search_project=GETPOST('search_project');
 
 
 // Security check
@@ -85,7 +85,7 @@ $projectsListId = $projectstatic->getProjectsAuthorizedForUser($user,$mine,1,$so
 
 // Get list of tasks in tasksarray and taskarrayfiltered
 // We need all tasks (even not limited to a user because a task to user can have a parent that is not affected to him).
-$tasksarray=$taskstatic->getTasksArray(0, 0, $projectstatic->id, $socid, 0, $search_product);
+$tasksarray=$taskstatic->getTasksArray(0, 0, $projectstatic->id, $socid, 0, $search_project);
 // We load also tasks limited to a particular user
 $tasksrole=($mine ? $taskstatic->getUserRolesForProjectsOrTasks(0,$user,$projectstatic->id,0) : '');
 
@@ -100,15 +100,16 @@ print '<td width="80">'.$langs->trans("RefTask").'</td>';
 print '<td>'.$langs->trans("LabelTask").'</td>';
 print '<td align="center">'.$langs->trans("DateStart").'</td>';
 print '<td align="center">'.$langs->trans("DateEnd").'</td>';
+print '<td align="center">'.$langs->trans("PlannedWorkload").'</td>';
 print '<td align="right">'.$langs->trans("Progress").'</td>';
 print '<td align="right">'.$langs->trans("TimeSpent").'</td>';
 print "</tr>\n";
 
 print '<tr class="liste_titre">';
 print '<td class="liste_titre">';
-print '<input type="text" class="flat" name="search_product" value="'.$search_product.'" size="8">';
+print '<input type="text" class="flat" name="search_project" value="'.$search_project.'" size="8">';
 print '</td>';
-print '<td class="liste_titre" colspan="5">';
+print '<td class="liste_titre" colspan="6">';
 print '&nbsp;';
 print '</td>';
 print '<td class="liste_titre" align="right"><input class="liste_titre" type="image" name="button_search" src="'.DOL_URL_ROOT.'/theme/'.$conf->theme.'/img/search.png" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'"></td>';

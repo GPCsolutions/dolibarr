@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -114,6 +114,47 @@ class DateLibTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * testNumBetweenDay
+     *
+     * @return	void
+     */
+    public function testNumBetweenDay()
+    {
+    	global $conf,$user,$langs,$db;
+		$conf=$this->savconf;
+		$user=$this->savuser;
+		$langs=$this->savlangs;
+		$db=$this->savdb;
+
+		// With same hours
+		$date1=dol_mktime(0, 0, 0, 1, 1, 2012);
+		$date2=dol_mktime(0, 0, 0, 1, 2, 2012);
+
+		$result=num_between_day($date1,$date2,1);
+    	print __METHOD__." result=".$result."\n";
+		$this->assertEquals(2,$result);
+
+		$result=num_between_day($date1,$date2,0);
+    	print __METHOD__." result=".$result."\n";
+		$this->assertEquals(1,$result);
+
+		// With different hours
+		$date1=dol_mktime(0, 0, 0, 1, 1, 2012);
+		$date2=dol_mktime(12, 0, 0, 1, 2, 2012);
+
+		$result=num_between_day($date1,$date2,1);
+    	print __METHOD__." result=".$result."\n";
+		$this->assertEquals(2,$result);
+
+		$result=num_between_day($date1,$date2,0);
+    	print __METHOD__." result=".$result."\n";
+		$this->assertEquals(1,$result);
+
+		return $result;
+    }
+
+
+    /**
      * testConvertTime2Seconds
      *
      * @return	void
@@ -175,6 +216,26 @@ class DateLibTest extends PHPUnit_Framework_TestCase
         $result=dol_print_date(0,'%Y-%m-%d %H:%M:%S',true);
        	print __METHOD__." result=".$result."\n";
     	$this->assertEquals('1970-01-01 00:00:00',$result);
+
+    	// Check %Y-%m-%d %H:%M:%S format
+    	$result=dol_print_date(16725225600,'%Y-%m-%d %H:%M:%S',true);	// http://www.epochconverter.com/
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals('2500-01-01 00:00:00',$result);
+
+    	// Check %Y-%m-%d %H:%M:%S format
+    	$result=dol_print_date(-1830384000,'%Y-%m-%d %H:%M:%S',true);	// http://www.epochconverter.com/
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals('1912-01-01 00:00:00',$result);	// dol_print_date use TZ (good) but epoch converter does not use it.
+
+    	// Check %Y-%m-%d %H:%M:%S format
+    	$result=dol_print_date(-11676096000,'%Y-%m-%d %H:%M:%S',true);	// http://www.epochconverter.com/
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals('1600-01-01 00:00:00',$result);
+
+    	// test with negative timezone
+    	$result=dol_print_date(-1,'%Y-%m-%d %H:%M:%S',true);	// http://www.epochconverter.com/
+    	print __METHOD__." result=".$result."\n";
+    	$this->assertEquals('1969-12-31 23:59:59',$result);
 
     	// Check dayhour format for fr_FR
     	$outputlangs=new Translate('',$conf);
@@ -263,19 +324,5 @@ class DateLibTest extends PHPUnit_Framework_TestCase
         return $result;
     }
 
-    /**
-	 *	testDolGetFirstDay
-	 *
-	 *	@return	void
-     */
-    public function testDolGetFirstDay()
-    {
-        global $conf,$user,$langs,$db;
-        $conf=$this->savconf;
-        $user=$this->savuser;
-        $langs=$this->savlangs;
-        $db=$this->savdb;
-
-    }
 }
 ?>

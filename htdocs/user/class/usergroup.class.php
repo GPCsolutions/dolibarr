@@ -1,11 +1,11 @@
 <?php
 /* Copyright (c) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (c) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (c) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (c) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -66,18 +66,24 @@ class UserGroup extends CommonObject
 	/**
 	 *	Charge un objet group avec toutes ces caracteristiques (excpet ->members array)
 	 *
-	 *	@param      int		$id     id du groupe a charger
-	 *	@return		int				<0 if KO, >0 if OK
+	 *	@param      int		$id			id du groupe a charger
+	 *	@param      string	$groupname	nom du groupe a charger
+	 *	@return		int					<0 if KO, >0 if OK
 	 */
-	function fetch($id)
+	function fetch($id='', $groupname='')
 	{
 		global $conf;
 
-		$this->id = $id;
-
 		$sql = "SELECT g.rowid, g.entity, g.nom as name, g.note, g.datec, g.tms as datem";
 		$sql.= " FROM ".MAIN_DB_PREFIX."usergroup as g";
-		$sql.= " WHERE g.rowid = ".$this->id;
+		if ($groupname)
+		{
+			$sql.= " WHERE g.nom = '".$this->db->escape($groupname)."'";
+		}
+		else
+		{
+			$sql.= " WHERE g.rowid = ".$id;
+		}
 
 		dol_syslog(get_class($this)."::fetch sql=".$sql);
 		$result = $this->db->query($sql);
@@ -90,7 +96,6 @@ class UserGroup extends CommonObject
 				$this->id = $obj->rowid;
 				$this->ref = $obj->rowid;
 				$this->entity = $obj->entity;
-				$this->nom  = $obj->name;        // depecated
 				$this->name = $obj->name;
 				$this->note = $obj->note;
 				$this->datec = $obj->datec;
@@ -169,21 +174,24 @@ class UserGroup extends CommonObject
 	}
 
 	/**
-	 * 	Return array of users id for group
+	 * 	Return array of users id for group this->id (or all if this->id not defined)
 	 *
-	 * 	@return		array of users
+	 * 	@param	string	$excludefilter		Filter to exclude
+	 * 	@return	array 						Array of users
 	 */
-	function listUsersForGroup()
+	function listUsersForGroup($excludefilter='')
 	{
 		global $conf, $user;
 
 		$ret=array();
 
-		$sql = "SELECT u.rowid, ug.entity as usergroup_entity";
-		$sql.= " FROM ".MAIN_DB_PREFIX."user as u,";
-		$sql.= " ".MAIN_DB_PREFIX."usergroup_user as ug";
-		$sql.= " WHERE ug.fk_user = u.rowid";
-		$sql.= " AND ug.fk_usergroup = ".$this->id;
+		$sql = "SELECT u.rowid";
+		if (! empty($this->id)) $sql.= ", ug.entity as usergroup_entity";
+		$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
+		if (! empty($this->id)) $sql.= ", ".MAIN_DB_PREFIX."usergroup_user as ug";
+		$sql.= " WHERE 1 = 1";
+		if (! empty($this->id)) $sql.= " AND ug.fk_user = u.rowid";
+		if (! empty($this->id)) $sql.= " AND ug.fk_usergroup = ".$this->id;
 		if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
 		{
 			$sql.= " AND u.entity IS NOT NULL";
@@ -192,12 +200,13 @@ class UserGroup extends CommonObject
 		{
 			$sql.= " AND u.entity IN (0,".$conf->entity.")";
 		}
+		if (! empty($excludefilter)) $sql.=' AND ('.$excludefilter.')';
 
 		dol_syslog(get_class($this)."::listUsersForGroup sql=".$sql,LOG_DEBUG);
-		$result = $this->db->query($sql);
-		if ($result)
+		$resql = $this->db->query($sql);
+		if ($resql)
 		{
-			while ($obj = $this->db->fetch_object($result))
+			while ($obj = $this->db->fetch_object($resql))
 			{
 				if (! array_key_exists($obj->rowid, $ret))
 				{
@@ -205,11 +214,13 @@ class UserGroup extends CommonObject
 					$newuser->fetch($obj->rowid);
 					$ret[$obj->rowid]=$newuser;
 				}
-
-				$ret[$obj->rowid]->usergroup_entity[]=$obj->usergroup_entity;
+				if (! empty($obj->usergroup_entity))
+				{
+					$ret[$obj->rowid]->usergroup_entity[]=$obj->usergroup_entity;
+				}
 			}
 
-			$this->db->free($result);
+			$this->db->free($resql);
 
 			return $ret;
 		}
@@ -239,13 +250,13 @@ class UserGroup extends CommonObject
 
 		$this->db->begin();
 
-		if ($rid)
+		if (! empty($rid))
 		{
 			// Si on a demande ajout d'un droit en particulier, on recupere
 			// les caracteristiques (module, perms et subperms) de ce droit.
 			$sql = "SELECT module, perms, subperms";
 			$sql.= " FROM ".MAIN_DB_PREFIX."rights_def";
-			$sql.= " WHERE id = '".$rid."'";
+			$sql.= " WHERE id = '".$this->db->escape($rid)."'";
 			$sql.= " AND entity = ".$conf->entity;
 
 			$result=$this->db->query($sql);
@@ -261,7 +272,7 @@ class UserGroup extends CommonObject
 			}
 
 			// Where pour la liste des droits a ajouter
-			$whereforadd="id=".$rid;
+			$whereforadd="id=".$this->db->escape($rid);
 			// Ajout des droits induits
 			if ($subperms)   $whereforadd.=" OR (module='$module' AND perms='$perms' AND (subperms='lire' OR subperms='read'))";
 			else if ($perms) $whereforadd.=" OR (module='$module' AND (perms='lire' OR perms='read') AND subperms IS NULL)";
@@ -272,12 +283,12 @@ class UserGroup extends CommonObject
 		}
 		else {
 			// Where pour la liste des droits a ajouter
-			if ($allmodule) $whereforadd="module='$allmodule'";
-			if ($allperms)  $whereforadd=" AND perms='$allperms'";
+			if (! empty($allmodule)) $whereforadd="module='".$this->db->escape($allmodule)."'";
+			if (! empty($allperms))  $whereforadd=" AND perms='".$this->db->escape($allperms)."'";
 		}
 
 		// Ajout des droits de la liste whereforadd
-		if ($whereforadd)
+		if (! empty($whereforadd))
 		{
 			//print "$module-$perms-$subperms";
 			$sql = "SELECT id";
@@ -339,13 +350,13 @@ class UserGroup extends CommonObject
 
 		$this->db->begin();
 
-		if ($rid)
+		if (! empty($rid))
 		{
 			// Si on a demande supression d'un droit en particulier, on recupere
 			// les caracteristiques module, perms et subperms de ce droit.
 			$sql = "SELECT module, perms, subperms";
 			$sql.= " FROM ".MAIN_DB_PREFIX."rights_def";
-			$sql.= " WHERE id = '".$rid."'";
+			$sql.= " WHERE id = '".$this->db->escape($rid)."'";
 			$sql.= " AND entity = ".$conf->entity;
 
 			$result=$this->db->query($sql);
@@ -361,7 +372,7 @@ class UserGroup extends CommonObject
 			}
 
 			// Where pour la liste des droits a supprimer
-			$wherefordel="id=".$rid;
+			$wherefordel="id=".$this->db->escape($rid);
 			// Suppression des droits induits
 			if ($subperms=='lire' || $subperms=='read') $wherefordel.=" OR (module='$module' AND perms='$perms' AND subperms IS NOT NULL)";
 			if ($perms=='lire' || $perms=='read')    $wherefordel.=" OR (module='$module')";
@@ -372,12 +383,12 @@ class UserGroup extends CommonObject
 		}
 		else {
 			// Where pour la liste des droits a supprimer
-			if ($allmodule) $wherefordel="module='$allmodule'";
-			if ($allperms)  $wherefordel=" AND perms='$allperms'";
+			if (! empty($allmodule)) $wherefordel="module='".$this->db->escape($allmodule)."'";
+			if (! empty($allperms))  $wherefordel=" AND perms='".$this->db->escape($allperms)."'";
 		}
 
 		// Suppression des droits de la liste wherefordel
-		if ($wherefordel)
+		if (! empty($wherefordel))
 		{
 			//print "$module-$perms-$subperms";
 			$sql = "SELECT id";
@@ -470,11 +481,11 @@ class UserGroup extends CommonObject
 
 				if ($perms)
 				{
-					if (! isset($this->rights)) $this->rights = (object) array(); // For avoid error
-					if (! isset($this->rights->$module) || ! is_object($this->rights->$module)) $this->rights->$module = (object) array();
+					if (! isset($this->rights)) $this->rights = new stdClass(); // For avoid error
+					if (! isset($this->rights->$module) || ! is_object($this->rights->$module)) $this->rights->$module = new stdClass();
 					if ($subperms)
 					{
-						if (! isset($this->rights->$module->$perms) || ! is_object($this->rights->$module->$perms)) $this->rights->$module->$perms = (object) array();
+						if (! isset($this->rights->$module->$perms) || ! is_object($this->rights->$module->$perms)) $this->rights->$module->$perms = new stdClass();
 						$this->rights->$module->$perms->$subperms = 1;
 					}
 					else
@@ -532,7 +543,7 @@ class UserGroup extends CommonObject
 			// Appel des triggers
 			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
 			$interface=new Interfaces($this->db);
-			$result=$interface->run_triggers('USER_DELETE',$this,$user,$langs,$conf);
+			$result=$interface->run_triggers('GROUP_DELETE',$this,$user,$langs,$conf);
 			if ($result < 0) { $error++; $this->errors=$interface->errors; }
 			// Fin appel triggers
 
@@ -628,7 +639,7 @@ class UserGroup extends CommonObject
 		$sql.= ", note = '" . $this->db->escape($this->note) . "'";
 		$sql.= " WHERE rowid = " . $this->id;
 
-		dol_syslog("Usergroup::update sql=".$sql);
+		dol_syslog(get_class($this)."::update sql=".$sql);
 		$resql = $this->db->query($sql);
 		if ($resql)
 		{

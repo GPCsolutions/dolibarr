@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -371,18 +371,18 @@ if ($rowid && $action != 'edit')
 	{
 		if (! $bankline->rappro)
 		{
-			print "<a class=\"butAction\" href=\"".$_SERVER["PHP_SELF"]."?rowid=".$subscription->id."&action=edit\">".$langs->trans("Modify")."</a>";
+			print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"]."?rowid=".$subscription->id."&action=edit\">".$langs->trans("Modify")."</a></div>";
 		}
 		else
 		{
-			print "<a class=\"butActionRefused\" title=\"".$langs->trans("BankLineConciliated")."\" href=\"#\">".$langs->trans("Modify")."</a>";
+			print '<div class="inline-block divButAction"><a class="butActionRefused" title="'.$langs->trans("BankLineConciliated")."\" href=\"#\">".$langs->trans("Modify")."</a></div>";
 		}
 	}
 
     // Supprimer
     if ($user->rights->adherent->cotisation->creer)
     {
-        print "<a class=\"butActionDelete\" href=\"".$_SERVER["PHP_SELF"]."?rowid=".$subscription->id."&action=delete\">".$langs->trans("Delete")."</a>\n";
+        print '<div class="inline-block divButAction"><a class="butActionDelete" href="'.$_SERVER["PHP_SELF"]."?rowid=".$subscription->id."&action=delete\">".$langs->trans("Delete")."</a></div>\n";
     }
 
     print '</div>';

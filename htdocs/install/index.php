@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -47,11 +47,6 @@ $formadmin=new FormAdmin('');	// Note: $db does not exist yet but we don't need 
 
 pHeader("", "check");   // Etape suivante = check
 
-
-print '<center>';
-print '<img src="../theme/dolibarr_logo.png" alt="Dolibarr logo"><br>';
-print DOL_VERSION.'<br><br>';
-print '</center>';
 
 // Ask installation language
 print '<br><br><center>';

@@ -1,4 +1,4 @@
-# Language file - en_US - cashdesk
+# Language file - Source file is en_US - cashdesk
 CHARSET=UTF-8
 CashDeskMenu=Point of sale
 CashDesk=Point of sale
@@ -13,6 +13,7 @@ CashDeskProducts=Products
 CashDeskStock=Stock
 CashDeskOn=on
 CashDeskThirdParty=Third party
+CashdeskDashboard=Point of sale access
 ShoppingCart=Shopping cart
 NewSell=New sell
 BackOffice=Back office
@@ -20,7 +21,6 @@ AddThisArticle=Add this article
 RestartSelling=Go back on sell
 SellFinished=Sell finished
 PrintTicket=Print ticket
-NoResults=No results
 NoProductFound=No article found
 ProductFound=product found
 ProductsFound=products found

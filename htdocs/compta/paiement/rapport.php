@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -154,7 +154,7 @@ if ($year)
                     $var=!$var;
                     $tfile = $dir . '/'.$year.'/'.$file;
                     $relativepath = $year.'/'.$file;
-                    print "<tr $bc[$var]>".'<td><a href="'.DOL_URL_ROOT . '/document.php?modulepart=facture_paiement&amp;file='.urlencode($relativepath).'">'.img_pdf().' '.$file.'</a></td>';
+                    print "<tr ".$bc[$var].">".'<td><a data-ajax="false" href="'.DOL_URL_ROOT . '/document.php?modulepart=facture_paiement&amp;file='.urlencode($relativepath).'">'.img_pdf().' '.$file.'</a></td>';
                     print '<td align="right">'.dol_print_size(dol_filesize($tfile)).'</td>';
                     print '<td align="right">'.dol_print_date(dol_filemtime($tfile),"dayhour").'</td></tr>';
                 }

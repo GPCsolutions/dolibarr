@@ -1,13 +1,13 @@
 <?php
 /* Copyright (C) 2003-2004 Rodolphe Quiedeville  <rodolphe@quiedeville.org>
  * Copyright (C) 2003      Jean-Louis Bergamo    <jlb@j1b.org>
- * Copyright (C) 2004-2012 Laurent Destailleur   <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2013 Laurent Destailleur   <eldy@users.sourceforge.net>
  * Copyright (C) 2007      Franky Van Liedekerke <franky.van.liedekerke@telenet.be>
- * Copyright (C) 2005-2007 Regis Houssin         <regis@dolibarr.fr>
+ * Copyright (C) 2005-2007 Regis Houssin         <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -44,7 +44,7 @@ print '<div style="padding-left: 30px;">'.img_picto_common('', 'dolibarr_box.png
 
 print $langs->trans("Version").' / '.$langs->trans("DolibarrLicense").':';
 print '<ul>';
-print '<li>'.DOL_VERSION.' / <a href="http://www.gnu.org/copyleft/gpl.html">GNU-GPL</a></li>';
+print '<li>'.DOL_VERSION.' / <a href="http://www.gnu.org/copyleft/gpl.html">GNU-GPL v3+</a></li>';
 print '</ul>';
 
 //print "<br>\n";
@@ -109,18 +109,13 @@ print '</ul>';
 
 
 print $langs->trans("OfficialWebHostingService").':';
-$url='http://www.dolicloud.com'; $title='DoliCloud';
+$url='http://wiki.dolibarr.org/index.php/Cloud_Solutions'; $title=$langs->trans('List');
+if (preg_match('/^fr_/i',$langs->getDefaultLang())) $url='http://wiki.dolibarr.org/index.php/Solutions_de_Cloud';
+if (preg_match('/^es_/i',$langs->getDefaultLang())) $url='http://wiki.dolibarr.org/index.php/Soluciones_en_la_Nube';
 print '<ul>';
 print '<li>';
 print '<a target="_blank" href="'.$url.'">'.$title.'</a>';
 print '</li>';
-if (preg_match('/^fr_/i',$langs->getDefaultLang()))
-{
-    $url='http://www.dolibox.fr'; $title='DoliBox';
-    print '<li>';
-    print '<a target="_blank" href="'.$url.'">'.$title.'</a>';
-    print '</li>';
-}
 print '</ul>';
 
 

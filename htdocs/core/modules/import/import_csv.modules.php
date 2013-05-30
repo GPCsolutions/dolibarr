@@ -1,10 +1,12 @@
 <?php
 /* Copyright (C) 2006-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2009-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2009-2012	Regis Houssin		<regis.houssin@capnetworks.com>
+ * Copyright (C) 2012      Christophe Battarel  <christophe.battarel@altairis.fr>
+ * Copyright (C) 2012       Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -64,8 +66,7 @@ class ImportCsv extends ModeleImports
 		global $conf,$langs;
 		$this->db = $db;
 
-		$this->separator=',';	// Change also function cleansep
-		if (! empty($conf->global->IMPORT_CSV_SEPARATOR_TO_USE)) $this->separator=$conf->global->IMPORT_CSV_SEPARATOR_TO_USE;
+		$this->separator=(GETPOST('separator')?GETPOST('separator'):(empty($conf->global->IMPORT_CSV_SEPARATOR_TO_USE)?',':$conf->global->IMPORT_CSV_SEPARATOR_TO_USE));
 		$this->enclosure='"';
 		$this->escape='"';
 
@@ -97,10 +98,9 @@ class ImportCsv extends ModeleImports
 	/**
 	 *	getDriverLabel
 	 *
-	 *	@param	string	$key	Key
 	 *	@return string	Label
 	 */
-	function getDriverLabel($key='')
+	function getDriverLabel()
 	{
 		return $this->label;
 	}
@@ -108,10 +108,9 @@ class ImportCsv extends ModeleImports
 	/**
 	 *	getDriverDesc
 	 *
-	 *	@param	string	$key	Key
 	 *	@return string	Description
 	 */
-	function getDriverDesc($key='')
+	function getDriverDesc()
 	{
 		return $this->desc;
 	}
@@ -129,10 +128,9 @@ class ImportCsv extends ModeleImports
 	/**
 	 *	getDriverVersion
 	 *
-	 *	@param	string	$key	Key
 	 *	@return string	Driver version
 	 */
-	function getDriverVersion($key='')
+	function getDriverVersion()
 	{
 		return $this->version;
 	}
@@ -140,10 +138,9 @@ class ImportCsv extends ModeleImports
 	/**
 	 *	getDriverLabel
 	 *
-	 *	@param	string	$key	Key
 	 *	@return string	Label of external lib
 	 */
-	function getLibLabel($key='')
+	function getLibLabel()
 	{
 		return $this->label_lib;
 	}
@@ -151,10 +148,9 @@ class ImportCsv extends ModeleImports
 	/**
 	 * getLibVersion
 	 *
-	 *	@param	string	$key	Key
 	 *	@return string	Version of external lib
 	 */
-	function getLibVersion($key='')
+	function getLibVersion()
 	{
 		return $this->version_lib;
 	}
@@ -180,7 +176,7 @@ class ImportCsv extends ModeleImports
 	 */
 	function write_title_example($outputlangs,$headerlinefields)
 	{
-		$s.=join($this->separator,array_map('cleansep',$headerlinefields));
+		$s=join($this->separator,array_map('cleansep',$headerlinefields));
 		return $s."\n";
 	}
 
@@ -269,6 +265,9 @@ class ImportCsv extends ModeleImports
 		{
 			$arrayres=fgetcsv($this->handle,100000,$this->separator,$this->enclosure,$this->escape);
 		}
+
+		// End of file
+		if ($arrayres === false) return false;
 
 		//var_dump($this->handle);
 		//var_dump($arrayres);exit;
@@ -541,9 +540,9 @@ class ImportCsv extends ModeleImports
 						if ($listfields) { $listfields.=', '; $listvalues.=', '; }
 						$listfields.=$fieldname;
 
-						if ($arrayrecord[($key-1)]['type'] < 0)      $listvalues.=($newval=='0'?$newval:"null");
-						elseif ($arrayrecord[($key-1)]['type'] == 0) $listvalues.="''";
-						elseif ($arrayrecord[($key-1)]['type'] > 0)	 $listvalues.="'".$this->db->escape($newval)."'";
+						if (empty($newval) && $arrayrecord[($key-1)]['type'] < 0)       $listvalues.=($newval=='0'?$newval:"null");
+						elseif (empty($newval) && $arrayrecord[($key-1)]['type'] == 0) $listvalues.="''";
+						else															 $listvalues.="'".$this->db->escape($newval)."'";
 					}
 					$i++;
 				}
@@ -582,9 +581,18 @@ class ImportCsv extends ModeleImports
 					    //var_dump($objimport->array_import_convertvalue); exit;
 
 						// Build SQL request
-						$sql ='INSERT INTO '.$tablename.'('.$listfields.', import_key';
-						if (! empty($objimport->array_import_tables_creator[0][$alias])) $sql.=', '.$objimport->array_import_tables_creator[0][$alias];
-						$sql.=') VALUES('.$listvalues.", '".$importid."'";
+						if (! tablewithentity($tablename))
+						{
+							$sql ='INSERT INTO '.$tablename.'('.$listfields.', import_key';
+							if (! empty($objimport->array_import_tables_creator[0][$alias])) $sql.=', '.$objimport->array_import_tables_creator[0][$alias];
+							$sql.=') VALUES('.$listvalues.", '".$importid."'";
+						}
+						else
+						{
+							$sql ='INSERT INTO '.$tablename.'('.$listfields.', import_key, entity';
+							if (! empty($objimport->array_import_tables_creator[0][$alias])) $sql.=', '.$objimport->array_import_tables_creator[0][$alias];
+							$sql.=') VALUES('.$listvalues.", '".$importid."', ".$conf->entity ;
+						}
 						if (! empty($objimport->array_import_tables_creator[0][$alias])) $sql.=', '.$user->id;
 						$sql.=')';
 						dol_syslog("import_csv.modules sql=".$sql);
@@ -628,12 +636,33 @@ class ImportCsv extends ModeleImports
 /**
  *	Clean a string from separator
  *
- *	@param	string	$value	Remove separator
- *	@return	string			String without separator
+ *	@param	string	$value	Remove standard separators
+ *	@return	string			String without separators
  */
 function cleansep($value)
 {
-	return str_replace(',','/',$value);
+	return str_replace(array(',',';'),'/',$value);
 };
+
+/**
+ * Returns if a table contains entity column
+ *
+ * @param  string 	$table	Table name
+ * @return int				1 if table contains entity, 0 if not and -1 if error
+ */
+function tablewithentity($table)
+{
+	global $db;
+	
+	$resql=$db->DDLDescTable($table,'entity');
+	if ($resql)
+	{
+		$i=0;
+		$obj=$db->fetch_object($resql);
+		if ($obj) return 1;
+		else return 0;
+	}
+	else return -1; 
+}
 
 ?>

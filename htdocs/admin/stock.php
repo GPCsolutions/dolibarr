@@ -1,12 +1,14 @@
 <?php
 /* Copyright (C) 2006      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2008-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012      Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2013      Philippe Grand       <philippe.grand@atoo-net.com>
+ * Copyright (C) 2013      Florian Henry       <florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -97,6 +99,16 @@ $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToM
 print_fiche_titre($langs->trans("StockSetup"),$linkback,'setup');
 print '<br>';
 
+$h = 0;
+
+$head[$h][0] = DOL_URL_ROOT."/admin/stock.php";
+$head[$h][1] = $langs->trans("Miscellaneous");
+$head[$h][2] = 'general';
+$hselected=$h;
+$h++;
+
+dol_fiche_head($head, $hselected, $langs->trans("ModuleSetup"));
+
 $form=new Form($db);
 $var=true;
 print '<table class="noborder" width="100%">';
@@ -124,9 +136,12 @@ print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">'
 print '</form>';
 print "</td>\n";
 print "</tr>\n";
-
+print '<br>';
+print '</table>';
+print '<br>';
 
 // Title rule for stock decrease
+print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print "  <td>".$langs->trans("RuleForStockManagementDecrease")."</td>\n";
 print "  <td align=\"right\" width=\"160\">&nbsp;</td>\n";
@@ -174,9 +189,11 @@ if (! empty($conf->expedition->enabled))
 	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 	print "</form>\n</td>\n</tr>\n";
 }
-
+print '</table>';
+print '<br>';
 
 // Title rule for stock increase
+print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print "  <td>".$langs->trans("RuleForStockManagementIncrease")."</td>\n";
 print "  <td align=\"right\" width=\"160\">&nbsp;</td>\n";

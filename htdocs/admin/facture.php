@@ -2,13 +2,13 @@
 /* Copyright (C) 2003-2004	Rodolphe Quiedeville		<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011	Laurent Destailleur			<eldy@users.sourceforge.net>
  * Copyright (C) 2005		Eric Seigne					<eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2012	Regis Houssin				<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin				<regis.houssin@capnetworks.com>
  * Copyright (C) 2008		Raphael Bertrand (Resultic)	<raphael.bertrand@resultic.fr>
  * Copyright (C) 2012		Juanjo Menent				<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -28,11 +28,13 @@
 
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/invoice.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 
 $langs->load("admin");
 $langs->load("errors");
 $langs->load('other');
+$langs->load('bills');
 
 if (! $user->admin) accessforbidden();
 
@@ -254,9 +256,9 @@ if ($action == 'set_FACTURE_DRAFT_WATERMARK')
 
 if ($action == 'set_FACTURE_FREE_TEXT')
 {
-	$free = GETPOST('FACTURE_FREE_TEXT','alpha');
+	$freetext = GETPOST('FACTURE_FREE_TEXT');	// No alpha here, we want exact string
 
-    $res = dolibarr_set_const($db, "FACTURE_FREE_TEXT",$free,'chaine',0,'',$conf->entity);
+    $res = dolibarr_set_const($db, "FACTURE_FREE_TEXT",$freetext,'chaine',0,'',$conf->entity);
 
 	if (! $res > 0) $error++;
 
@@ -304,6 +306,8 @@ $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToM
 print_fiche_titre($langs->trans("BillsSetup"),$linkback,'setup');
 print '<br>';
 
+$head = invoice_admin_prepare_head(null);
+dol_fiche_head($head, 'general', $langs->trans("Invoices"), 0, 'invoice');
 
 /*
  *  Numbering module
@@ -315,9 +319,9 @@ print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
-print '<td nowrap="nowrap">'.$langs->trans("Example").'</td>';
+print '<td class="nowrap">'.$langs->trans("Example").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Status").'</td>';
-print '<td align="center" width="16">'.$langs->trans("Infos").'</td>';
+print '<td align="center" width="16">'.$langs->trans("ShortInfo").'</td>';
 print '</tr>'."\n";
 
 clearstatcache();
@@ -367,7 +371,7 @@ foreach ($dirmodels as $reldir)
                             print '</td>';
 
                             // Show example of numbering module
-                            print '<td nowrap="nowrap">';
+                            print '<td class="nowrap">';
                             $tmp=$module->getExample();
                             if (preg_match('/^Error/',$tmp)) print '<div class="error">'.$langs->trans($tmp).'</div>';
                             elseif ($tmp=='NotConfigured') print $langs->trans($tmp);
@@ -482,7 +486,8 @@ print '<td>'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Status").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Default").'</td>';
-print '<td align="center" width="32" colspan="2">'.$langs->trans("Infos").'</td>';
+print '<td align="center" width="32">'.$langs->trans("ShortInfo").'</td>';
+print '<td align="center" width="32">'.$langs->trans("Preview").'</td>';
 print "</tr>\n";
 
 clearstatcache();
@@ -778,7 +783,8 @@ print "</table>\n";
 
 dol_htmloutput_mesg($mesg);
 
-$db->close();
 
 llxFooter();
+
+$db->close();
 ?>

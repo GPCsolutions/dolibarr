@@ -1,9 +1,9 @@
 <?php
-/* Copyright (C) 2012	Christophe Battarel	<christophe.battarel@altairis.fr>
+/* Copyright (C) 2012-2013	Christophe Battarel	<christophe.battarel@altairis.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -40,7 +40,13 @@ $mesg = '';
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
 if (! $sortorder) $sortorder="ASC";
-if (! $sortfield) $sortfield="s.nom";
+if (! $sortfield)
+{
+	if ($agentid > 0)
+		$sortfield="s.nom";
+	else
+	    $sortfield="u.lastname";
+}
 $page = GETPOST("page",'int');
 if ($page == -1) { $page = 0; }
 $offset = $conf->liste_limit * $page;
@@ -75,7 +81,7 @@ $titre=$langs->trans("Margins");
 $picto='margin';
 dol_fiche_head($head, 'agentMargins', $titre, 0, $picto);
 
-print '<form method="post" name="sel">';
+print '<form method="post" name="sel" action="'.$_SERVER['PHP_SELF'].'">';
 print '<table class="border" width="100%">';
 
 print '<tr><td width="20%">'.$langs->trans('CommercialAgent').'</td>';
@@ -93,7 +99,7 @@ print '<td width="20%">';
 $form->select_date($enddate,'enddate','','',1,"sel",1,1);
 print '</td>';
 print '<td style="text-align: center;">';
-print '<input type="submit" value="'.$langs->trans('Launch').'" />';
+print '<input type="submit" class="button" value="'.$langs->trans('Launch').'" />';
 print '</td></tr>';
 
 // Total Margin
@@ -118,10 +124,11 @@ if (! empty($conf->global->DISPLAY_MARK_RATES)) {
 print "</table>";
 print '</form>';
 
-$sql = "SELECT s.nom, s.rowid as socid, s.code_client, s.client, sc.fk_user as agent,";
-$sql.= " u.login,";
-$sql.= " sum(d.subprice * d.qty * (1 - d.remise_percent / 100)) as selling_price,";
-$sql.= " sum(d.buy_price_ht * d.qty) as buying_price, sum(((d.subprice * (1 - d.remise_percent / 100)) - d.buy_price_ht) * d.qty) as marge" ;
+$sql = "SELECT s.nom, s.rowid as socid, s.code_client, s.client, u.rowid as agent,";
+$sql.= " u.login, u.lastname, u.firstname,";
+$sql.= " sum(d.total_ht) as selling_price,";
+$sql.= $db->ifsql('f.type =2','sum(d.buy_price_ht * d.qty *-1)','sum(d.buy_price_ht * d.qty)')." as buying_price, ";
+$sql.= $db->ifsql('f.type =2','sum(d.total_ht + (d.buy_price_ht * d.qty))','sum(d.total_ht - (d.buy_price_ht * d.qty))')." as marge" ;
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 $sql.= ", ".MAIN_DB_PREFIX."facture as f";
 $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."element_contact e ON e.element_id = f.rowid and e.statut = 4 and e.fk_c_type_contact = ".(empty($conf->global->AGENT_CONTACT_TYPE)?-1:$conf->global->AGENT_CONTACT_TYPE);
@@ -153,17 +160,19 @@ if (isset($conf->global->ForceBuyingPriceIfNull) && $conf->global->ForceBuyingPr
 if ($agentid > 0)
   $sql.= " GROUP BY s.rowid";
 else
-  $sql.= " GROUP BY u.rowid";
+  $sql.= " GROUP BY u.rowid, s.nom, s.rowid, s.code_client, s.client, u.login, u.lastname, u.firstname, f.type ";
 $sql.= " ORDER BY $sortfield $sortorder ";
-$sql.= $db->plimit($conf->liste_limit +1, $offset);
+// TODO: calculate total to display then restore pagination
+//$sql.= $db->plimit($conf->liste_limit +1, $offset);
 
+dol_syslog('margin::agentMargins.php sql='.$sql,LOG_DEBUG);
 $result = $db->query($sql);
 if ($result)
 {
 	$num = $db->num_rows($result);
 
 	print '<br>';
-	print_barre_liste($langs->trans("MarginDetails"),$page,$_SERVER["PHP_SELF"],"",$sortfield,$sortorder,'',$num,0,'');
+	print_barre_liste($langs->trans("MarginDetails"),$page,$_SERVER["PHP_SELF"],"",$sortfield,$sortorder,'',0,0,'');
 
 	$i = 0;
 	print "<table class=\"noborder\" width=\"100%\">";
@@ -172,7 +181,7 @@ if ($result)
 	if ($agentid > 0)
 		print_liste_field_titre($langs->trans("Customer"),$_SERVER["PHP_SELF"],"s.nom","","&amp;agentid=".$agentid,'align="center"',$sortfield,$sortorder);
 	else
-		print_liste_field_titre($langs->trans("CommercialAgent"),$_SERVER["PHP_SELF"],"u.login","","&amp;agentid=".$agentid,'align="center"',$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("CommercialAgent"),$_SERVER["PHP_SELF"],"u.lastname","","&amp;agentid=".$agentid,'align="center"',$sortfield,$sortorder);
 
 	print_liste_field_titre($langs->trans("SellingPrice"),$_SERVER["PHP_SELF"],"selling_price","","&amp;agentid=".$agentid,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("BuyingPrice"),$_SERVER["PHP_SELF"],"buying_price","","&amp;agentid=".$agentid,'align="right"',$sortfield,$sortorder);
@@ -191,7 +200,7 @@ if ($result)
 	if ($num > 0)
 	{
 		$var=true;
-		while ($i < $num && $i < $conf->liste_limit)
+		while ($i < $num /*&& $i < $conf->liste_limit*/)
 		{
 			$objp = $db->fetch_object($result);
 
@@ -208,9 +217,8 @@ if ($result)
 				print "<td>".$companystatic->getNomUrl(1,'customer')."</td>\n";
 			}
 			else {
-				$userstatic->id=$objp->agent;
-				$userstatic->login=$objp->login;
-				print "<td>".$userstatic->getLoginUrl(1)."</td>\n";
+				$userstatic->fetch($objp->agent);
+				print "<td>".$userstatic->getFullName($langs,0,0,0)."</td>\n";
 			}
 			print "<td align=\"right\">".price($objp->selling_price)."</td>\n";
 			print "<td align=\"right\">".price($objp->buying_price)."</td>\n";
@@ -220,7 +228,7 @@ if ($result)
 			if (! empty($conf->global->DISPLAY_MARK_RATES))
 				print "<td align=\"right\">".(($markRate === '')?'n/a':price($markRate)."%")."</td>\n";
 			print "</tr>\n";
-			
+
 			$i++;
 
 			$cumul_achat += round($objp->buying_price, $rounding);

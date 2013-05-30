@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -74,6 +74,7 @@ if ($modulepart == 'ecm')
 
 top_httphead();
 
+//print '<!-- selecteddir = '.$selecteddir.', openeddir = '.$openeddir.', modulepart='.$modulepart.' -->'."\n";
 $userstatic=new User($db);
 $form=new Form($db);
 $ecmdirstatic = new EcmDirectory($db);
@@ -116,7 +117,7 @@ if (file_exists($fullpathselecteddir))
     	        // Loop on all database entries (sqltree) to find the one matching the subdir found into dir to scan
 		        foreach($sqltree as $key => $tmpval)
 		        {
-    	            //print "-- key=".$key." - ".$val['fullrelativename']." vs ".(($selecteddir != '/'?$selecteddir.'/':'').$file).'<br>';
+    	            //print "-- key=".$key." - ".$tmpval['fullrelativename']." vs ".(($selecteddir != '/'?$selecteddir.'/':'').$file)."<br>\n";
 		        	if ($tmpval['fullrelativename'] == (($selecteddir != '/'?$selecteddir.'/':'').$file))		// We found equivalent record into database
 		            {
 		                $val=$tmpval;

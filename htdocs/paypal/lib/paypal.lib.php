@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2008-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2011-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2011-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -36,6 +36,9 @@ function llxHeaderPaypal($title, $head = "")
 
 	header("Content-type: text/html; charset=".$conf->file->character_set_client);
 
+	$appli='Dolibarr';
+	if (!empty($conf->global->MAIN_APPLICATION_TITLE)) $appli=$conf->global->MAIN_APPLICATION_TITLE;
+
 	print '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">';
 	//print '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" http://www.w3.org/TR/1999/REC-html401-19991224/strict.dtd>';
 	print "\n";
@@ -43,7 +46,7 @@ function llxHeaderPaypal($title, $head = "")
 	print "<head>\n";
 	print '<meta name="robots" content="noindex,nofollow">'."\n";
 	print '<meta name="keywords" content="dolibarr,payment,online">'."\n";
-	print '<meta name="description" content="Welcome on Dolibarr online payment form">'."\n";
+	print '<meta name="description" content="Welcome on '.$appli.' online payment form">'."\n";
 	print "<title>".$title."</title>\n";
 	if ($head) print $head."\n";
 	if (! empty($conf->global->PAYPAL_CSS_URL)) print '<link rel="stylesheet" type="text/css" href="'.$conf->global->PAYPAL_CSS_URL.'?lang='.$langs->defaultlang.'">'."\n";
@@ -63,9 +66,6 @@ function llxHeaderPaypal($title, $head = "")
 
 		// Output standard javascript links
 		$ext='.js';
-		if (isset($conf->global->MAIN_OPTIMIZE_SPEED) && ($conf->global->MAIN_OPTIMIZE_SPEED & 0x01)) {
-			$ext='.jgz';
-		}	// mini='_mini', ext='.gz'
 
 		// JQuery. Must be before other includes
 		print '<!-- Includes JS for JQuery -->'."\n";
@@ -73,8 +73,8 @@ function llxHeaderPaypal($title, $head = "")
 		// jQuery jnotify
 		if (empty($conf->global->MAIN_DISABLE_JQUERY_JNOTIFY))
 		{
-			print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/plugins/jnotify/jquery.jnotify.min.js"></script>'."\n";
-			print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/core/js/jnotify.js"></script>'."\n";
+			print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/plugins/jnotify/jquery.jnotify.min'.$ext.'"></script>'."\n";
+			print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/core/js/jnotify'.$ext.'"></script>'."\n";
 		}
 	}
 	print "</head>\n";
@@ -116,7 +116,7 @@ function html_print_paypal_footer($fromcompany,$langs)
 		$line1.=($line1?" - ":"").$langs->transnoentities("CapitalOf",$fromcompany->capital)." ".$langs->transnoentities("Currency".$conf->currency);
 	}
 	// Prof Id 1
-	if ($fromcompany->idprof1 && ($fromcompany->pays_code != 'FR' || ! $fromcompany->idprof2))
+	if ($fromcompany->idprof1 && ($fromcompany->country_code != 'FR' || ! $fromcompany->idprof2))
 	{
 		$field=$langs->transcountrynoentities("ProfId1",$fromcompany->country_code);
 		if (preg_match('/\((.*)\)/i',$field,$reg)) $field=$reg[1];
@@ -177,13 +177,15 @@ function paypaladmin_prepare_head()
 	$head[$h][2] = 'paypalaccount';
 	$h++;
 
-	$object=(object) array();
+	$object=new stdClass();
 
     // Show more tabs from modules
     // Entries must be declared in modules descriptor with line
     // $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
-    // $this->tabs = array('entity:-tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to remove a tab
-    complete_head_from_modules($conf,$langs,$object,$head,$h,'paypaladmin');
+    // $this->tabs = array('entity:-tabname);   												to remove a tab
+	complete_head_from_modules($conf,$langs,$object,$head,$h,'paypaladmin');
+
+	complete_head_from_modules($conf,$langs,$object,$head,$h,'paypaladmin','remove');
 
     return $head;
 }
@@ -247,7 +249,7 @@ function getPaypalPaymentUrl($mode,$type,$ref='',$amount='9.99',$freetag='your_f
             else
             {
                 $out.='&securekey='.($mode?'<font color="#666666">':'');
-                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + order + order_ref)";
+                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + 'order' + order_ref)";
                 if ($mode == 0) $out.= dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . 'order' . $ref, 2);
                 $out.=($mode?'</font>':'');
             }
@@ -265,7 +267,7 @@ function getPaypalPaymentUrl($mode,$type,$ref='',$amount='9.99',$freetag='your_f
             else
             {
                 $out.='&securekey='.($mode?'<font color="#666666">':'');
-                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + invoice + invoice_ref)";
+                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + 'invoice' + invoice_ref)";
                 if ($mode == 0) $out.= dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . 'invoice' . $ref, 2);
                 $out.=($mode?'</font>':'');
             }
@@ -283,7 +285,7 @@ function getPaypalPaymentUrl($mode,$type,$ref='',$amount='9.99',$freetag='your_f
             else
             {
                 $out.='&securekey='.($mode?'<font color="#666666">':'');
-                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + contactline + contractline_ref)";
+                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + 'contactline' + contractline_ref)";
                 if ($mode == 0) $out.= dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . 'contractline' . $ref, 2);
                 $out.=($mode?'</font>':'');
             }
@@ -301,12 +303,16 @@ function getPaypalPaymentUrl($mode,$type,$ref='',$amount='9.99',$freetag='your_f
             else
             {
                 $out.='&securekey='.($mode?'<font color="#666666">':'');
-                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + membersubscription + member_ref)";
+                if ($mode == 1) $out.="hash('".$conf->global->PAYPAL_SECURITY_TOKEN."' + 'membersubscription' + member_ref)";
                 if ($mode == 0) $out.= dol_hash($conf->global->PAYPAL_SECURITY_TOKEN . 'membersubscription' . $ref, 2);
                 $out.=($mode?'</font>':'');
             }
         }
     }
+    
+    // For multicompany
+    $out.="&entity=".$conf->entity;
+    
     return $out;
 }
 
@@ -464,6 +470,7 @@ function callSetExpressCheckout($paymentAmount, $currencyCodeType, $paymentType,
     if (! empty($desc))  $nvpstr = $nvpstr . "&DESC=" . urlencode($desc);        // DESC deprecated by paypal -> PAYMENTREQUEST_n_DESC
 
 
+	$_SESSION["Payment_Amount"] = $paymentAmount;
     $_SESSION["currencyCodeType"] = $currencyCodeType;
     $_SESSION["PaymentType"] = $paymentType;
 

@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -25,20 +25,20 @@
 
 require '../main.inc.php';
 
-$langs->load("externalsite@externalsite");
+$langs->load("externalsite");
 
 if (empty($conf->global->EXTERNALSITE_URL))
 {
 	llxHeader();
-	print '<div class="error">Module ExternalSite was not configured properly.</div>';
+	print '<div class="error">'.$langs->trans('ExternalSiteModuleNotComplete').'</div>';
 	llxFooter();
 }
 
-$mainmenu=GETPOST('mainmenu');
-$leftmenu=GETPOST('leftmenu');
-$idmenu=GETPOST('idmenu');
-$theme=GETPOST('theme');
-$codelang=GETPOST('lang');
+$mainmenu=GETPOST('mainmenu', 'alpha');
+$leftmenu=GETPOST('leftmenu', 'alpha');
+$idmenu=GETPOST('idmenu', 'int');
+$theme=GETPOST('theme', 'alpha');
+$codelang=GETPOST('lang', 'alpha');
 
 print "
 <html>

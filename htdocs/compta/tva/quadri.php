@@ -3,11 +3,11 @@
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2004-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2006      Yannick Warnier      <ywarnier@beeznest.org>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -293,13 +293,13 @@ if ($conf->global->COMPTA_MODE == "CREANCES-DETTES")
 	}
 	print '<tr class="liste_total">';
 	print '<td align="right">'.$langs->trans("Total").':</td>';
-	print '<td nowrap="nowrap" align="right">'.price($subtot_coll_total).'</td>';
-	print '<td nowrap="nowrap" align="right">'.price($subtot_coll_vat).'</td>';
+	print '<td class="nowrap" align="right">'.price($subtot_coll_total).'</td>';
+	print '<td class="nowrap" align="right">'.price($subtot_coll_vat).'</td>';
 	print '<td></td>';
-	print '<td nowrap="nowrap" align="right">'.price($subtot_paye_total).'</td>';
-	print '<td nowrap="nowrap" align="right">'.price($subtot_paye_vat).'</td>';
+	print '<td class="nowrap" align="right">'.price($subtot_paye_total).'</td>';
+	print '<td class="nowrap" align="right">'.price($subtot_paye_vat).'</td>';
 	print '<td></td>';
-	print '<td nowrap="nowrap" align="right"><b>'.price($total).'</b>';
+	print '<td class="nowrap" align="right"><b>'.price($total).'</b>';
 	print '</td>';
 	print '</tr>';
 

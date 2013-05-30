@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2001-2002	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin			<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -143,11 +143,10 @@ print '</td><td valign="top">';
 $max=10;
 
 /*
- * Last modified proposals
+ * Last modified donations
  */
 
-$sql = "SELECT c.rowid, c.ref, c.fk_statut, c.societe, c.nom,";
-$sql.= " tms as datem, amount";
+$sql = "SELECT c.rowid, c.ref, c.fk_statut, c.societe, c.lastname, c.firstname, c.tms as datem, c.amount";
 $sql.= " FROM ".MAIN_DB_PREFIX."don as c";
 $sql.= " WHERE c.entity = ".$conf->entity;
 //$sql.= " AND c.fk_statut > 2";
@@ -176,18 +175,18 @@ if ($resql)
             $donation_static->id=$obj->rowid;
             $donation_static->ref=$obj->ref?$obj->ref:$obj->rowid;
 
-            print '<td width="96" class="nobordernopadding" nowrap="nowrap">';
+            print '<td width="96" class="nobordernopadding nowrap">';
             print $donation_static->getNomUrl(1);
             print '</td>';
 
             print '<td class="nobordernopadding">';
             print $obj->societe;
             print ($obj->societe && $obj->nom?' / ':'');
-            print $obj->nom;
+            print dolGetFirstLastname($obj->nom,$obj->firstname);
             print '</td>';
 
-            print '<td width="16" align="right" class="nobordernopadding">';
-            print price($obj->amount);
+            print '<td align="right" class="nobordernopadding">';
+            print price($obj->amount,1);
             print '</td>';
 
             // Date
@@ -206,7 +205,8 @@ else dol_print_error($db);
 
 print '</td></tr></table>';
 
-$db->close();
 
 llxFooter();
+
+$db->close();
 ?>

@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2003      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2013 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -31,7 +31,8 @@ $langs->load("compta");
 $langs->load("banks");
 $langs->load("bills");
 
-$id=$_REQUEST["id"];
+$id=GETPOST("id");
+$action=GETPOST('action');
 
 $mesg = '';
 
@@ -40,19 +41,25 @@ $socid = isset($_GET["socid"])?$_GET["socid"]:'';
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user, 'tax', '', '', 'charges');
 
+$tva = new Tva($db);
+
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
-include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
-$hookmanager=new HookManager($db);
 $hookmanager->initHooks(array('taxvatcard'));
 
 
-/**
- * Action ajout paiement tva
- */
-if ($_POST["action"] == 'add' && $_POST["cancel"] <> $langs->trans("Cancel"))
-{
-    $tva = new Tva($db);
 
+/**
+ * Actions
+ */
+
+if ($_POST["cancel"] == $langs->trans("Cancel"))
+{
+	header("Location: reglement.php");
+	exit;
+}
+
+if ($action == 'add' && $_POST["cancel"] <> $langs->trans("Cancel"))
+{
     $db->begin();
 
     $datev=dol_mktime(12,0,0, $_POST["datevmonth"], $_POST["datevday"], $_POST["datevyear"]);
@@ -76,13 +83,12 @@ if ($_POST["action"] == 'add' && $_POST["cancel"] <> $langs->trans("Cancel"))
     {
         $db->rollback();
         $mesg='<div class="error">'.$tva->error.'</div>';
-        $_GET["action"]="create";
+        $action="create";
     }
 }
 
-if ($_GET["action"] == 'delete')
+if ($action == 'delete')
 {
-    $tva = new Tva($db);
     $result=$tva->fetch($_GET['id']);
 
 	if ($tva->rappro == 0)
@@ -145,7 +151,7 @@ if ($id)
 }
 
 // Formulaire saisie tva
-if ($_GET["action"] == 'create')
+if ($action == 'create')
 {
     print "<form name='add' action=\"fiche.php\" method=\"post\">\n";
     print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
@@ -225,6 +231,9 @@ if ($id)
 	print $vatpayment->ref;
 	print '</td></tr>';
 
+	// Label
+	print '<tr><td>'.$langs->trans("Label").'</td><td>'.$vatpayment->label.'</td></tr>';
+
 	print "<tr>";
 	print '<td>'.$langs->trans("DatePayment").'</td><td colspan="3">';
 	print dol_print_date($vatpayment->datep,'day');
@@ -275,5 +284,4 @@ if ($id)
 $db->close();
 
 llxFooter();
-
 ?>

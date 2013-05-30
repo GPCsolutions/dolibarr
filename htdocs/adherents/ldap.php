@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2006 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2006 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2006 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -108,11 +108,11 @@ print '<td class="valeur">';
 print $form->showrefnav($adh,'id');
 print '</td></tr>';
 
-// Nom
+// Lastname
 print '<tr><td>'.$langs->trans("Lastname").'</td><td class="valeur">'.$adh->lastname.'&nbsp;</td>';
 print '</tr>';
 
-// Prenom
+// Firstname
 print '<tr><td width="15%">'.$langs->trans("Firstname").'</td><td class="valeur">'.$adh->firstname.'&nbsp;</td>';
 print '</tr>';
 
@@ -169,7 +169,7 @@ print '<div class="tabsAction">';
 
 if (! empty($conf->global->LDAP_MEMBER_ACTIVE) && $conf->global->LDAP_MEMBER_ACTIVE != 'ldap2dolibarr')
 {
-	print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$adh->id.'&amp;action=dolibarr2ldap">'.$langs->trans("ForceSynchronize").'</a>';
+	print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$adh->id.'&amp;action=dolibarr2ldap">'.$langs->trans("ForceSynchronize").'</a></div>';
 }
 
 print "</div>\n";

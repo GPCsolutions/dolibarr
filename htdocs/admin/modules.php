@@ -3,12 +3,12 @@
  * Copyright (C) 2003      Jean-Louis Bergamo   <jlb@j1b.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2011 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011	   Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -31,11 +31,12 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 $langs->load("errors");
 $langs->load("admin");
 
-$mode=isset($_GET["mode"])?GETPOST("mode"):(isset($_SESSION['mode'])?$_SESSION['mode']:0);
-$mesg=GETPOST("mesg");
-$action=GETPOST('action');
+$mode=GETPOST('mode', 'alpha')?GETPOST('mode', 'alpha'):(isset($_SESSION['mode'])?$_SESSION['mode']:0);
+$action=GETPOST('action','alpha');
+$value=GETPOST('value', 'alpha');
 
-if (!$user->admin) accessforbidden();
+if (! $user->admin)
+	accessforbidden();
 
 $specialtostring=array(0=>'common', 1=>'interfaces', 2=>'other', 3=>'functional', 4=>'marketplace');
 
@@ -46,19 +47,17 @@ $specialtostring=array(0=>'common', 1=>'interfaces', 2=>'other', 3=>'functional'
 
 if ($action == 'set' && $user->admin)
 {
-    $result=activateModule($_GET["value"]);
-    $mesg='';
-    if ($result) $mesg=$result;
-    header("Location: modules.php?mode=".$mode."&mesg=".urlencode($mesg));
+    $result=activateModule($value);
+    if ($result) setEventMessage($result, 'errors');
+    header("Location: modules.php?mode=".$mode);
 	exit;
 }
 
 if ($action == 'reset' && $user->admin)
 {
-    $result=unActivateModule($_GET["value"]);
-    $mesg='';
-    if ($result) $mesg=$result;
-    header("Location: modules.php?mode=".$mode."&mesg=".urlencode($mesg));
+    $result=unActivateModule($value);
+    if ($result) setEventMessage($result, 'errors');
+    header("Location: modules.php?mode=".$mode);
 	exit;
 }
 
@@ -71,8 +70,6 @@ $_SESSION["mode"]=$mode;
 
 $help_url='EN:First_setup|FR:Premiers_paramétrages|ES:Primeras_configuraciones';
 llxHeader('',$langs->trans("Setup"),$help_url);
-
-print_fiche_titre($langs->trans("ModulesSetup"),'','setup');
 
 
 // Search modules dirs
@@ -129,7 +126,8 @@ foreach ($modulesdir as $dir)
 		        	if (! empty($modNameLoaded[$modName]))
 		        	{
 		        		$mesg="Error: Module ".$modName." was found twice: Into ".$modNameLoaded[$modName]." and ".$dir.". You probably have an old file on your disk.<br>";
-		                dol_syslog($mesg, LOG_ERR);
+		        		setEventMessage($mesg, 'warnings');
+		        		dol_syslog($mesg, LOG_ERR);
 						continue;
 		        	}
 
@@ -194,6 +192,11 @@ asort($orders);
 //var_dump($categ);
 //var_dump($modules);
 
+$nbofactivatedmodules=count($conf->modules);
+$moreinfo=$langs->trans("TotalNumberOfActivatedModules",($nbofactivatedmodules-1));
+if ($nbofactivatedmodules <= 1) $moreinfo .= ' '.img_warning($langs->trans("YouMustEnableOneModule"));
+print load_fiche_titre($langs->trans("ModulesSetup"),$moreinfo,'setup');
+
 // Start to show page
 if (empty($mode)) $mode='common';
 if ($mode==='common')      print $langs->trans("ModulesDesc")."<br>\n";
@@ -203,12 +206,9 @@ if ($mode==='functional')  print $langs->trans("ModulesJobDesc")."<br>\n";
 if ($mode==='marketplace') print $langs->trans("ModulesMarketPlaceDesc")."<br>\n";
 if ($mode==='expdev')      print $langs->trans("ModuleFamilyExperimental")."<br>\n";
 
-$nbofactivatedmodules=count($conf->modules);
-print $langs->trans("TotalNumberOfActivatedModules",($nbofactivatedmodules-1));
-if ($nbofactivatedmodules <= 1) print ' '.img_warning($langs->trans("YouMustEnableOneModule"));
-print '<br>'."\n";
 
-print "<br>\n";
+//print '<br>'."\n";
+
 
 $h = 0;
 
@@ -266,11 +266,12 @@ $head[$h][2] = 'marketplace';
 $h++;
 
 
+print "<br>\n";
+
+
 dol_fiche_head($head, $mode, $langs->trans("Modules"));
 
-
-dol_htmloutput_errors($mesg);
-
+$var=true;
 
 if ($mode != 'marketplace')
 {
@@ -289,7 +290,6 @@ if ($mode != 'marketplace')
 
     // Show list of modules
 
-    $var=true;
     $oldfamily='';
 
     $familylib=array(
@@ -498,9 +498,10 @@ else
 
 dol_fiche_end();
 
-// Pour eviter bug mise en page IE
-print '<div class="tabsAction">';
-print '</div>';
+
+// Show warning about external users
+if ($mode != 'marketplace') print showModulesExludedForExternal($modules).'<br>'."\n";
+
 
 llxFooter();
 

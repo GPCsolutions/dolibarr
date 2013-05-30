@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -322,8 +322,11 @@ function build_rssfile($format,$title,$desc,$events_array,$outputfile,$filter=''
 		'<lastBuildDate>'.$date.'</lastBuildDate>'."\n".
 		'<generator>Dolibarr</generator>'."\n";
 
-        $urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',$dolibarr_main_url_root);
-  		$url=$urlwithouturlroot.DOL_URL_ROOT.'/public/agenda/agendaexport.php?format=rss&exportkey='.urlencode($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY);
+		// Define $urlwithroot
+		$urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',trim($dolibarr_main_url_root));
+		$urlwithroot=$urlwithouturlroot.DOL_URL_ROOT;			// This is to use external domain name found into config file
+		//$urlwithroot=DOL_MAIN_URL_ROOT;						// This is to use same domain name than current
+  		$url=$urlwithroot.'/public/agenda/agendaexport.php?format=rss&exportkey='.urlencode($conf->global->MAIN_AGENDA_XCAL_EXPORTKEY);
 		$form.='<link><![CDATA['.$url.']]></link>'."\n";
 
 		//print $form;

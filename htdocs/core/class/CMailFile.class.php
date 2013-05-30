@@ -5,11 +5,11 @@
  * Copyright (C) 2000-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2003      Jean-Louis Bergamo   <jlb@j1b.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -62,7 +62,7 @@ class CMailFile
 	var $css;
 	//! Defined css style for body background
 	var $styleCSS;
-	//! Defined bacckground directly in body tag
+	//! Defined background directly in body tag
 	var $bodyCSS;
 
 	// Image
@@ -85,8 +85,8 @@ class CMailFile
 	 *	CMailFile
 	 *
 	 *	@param 	string	$subject             Topic/Subject of mail
-	 *	@param 	string	$to                  Recipients emails (RFC 2822: "Nom prenom <email>[, ...]" ou "email[, ...]" ou "<email>[, ...]")
-	 *	@param 	string	$from                Sender email      (RFC 2822: "Nom prenom <email>[, ...]" ou "email[, ...]" ou "<email>[, ...]")
+	 *	@param 	string	$to                  Recipients emails (RFC 2822: "Nom firstname <email>[, ...]" ou "email[, ...]" ou "<email>[, ...]")
+	 *	@param 	string	$from                Sender email      (RFC 2822: "Nom firstname <email>[, ...]" ou "email[, ...]" ou "<email>[, ...]")
 	 *	@param 	string	$msg                 Message
 	 *	@param 	array	$filename_list       List of files to attach (full path of filename on file system)
 	 *	@param 	array	$mimetype_list       List of MIME type of attached files
@@ -104,11 +104,15 @@ class CMailFile
 	{
 		global $conf;
 
-		// We define end of line (RFC 822bis section 2.3)
+		// We define end of line (RFC 821).
 		$this->eol="\r\n";
-		// eol2 is for header fields to manage bugged MTA with option MAIN_FIX_FOR_BUGGED_MTA
-		$this->eol2=$this->eol;
-		if (! empty($conf->global->MAIN_FIX_FOR_BUGGED_MTA)) $this->eol2="\n";
+		// We define end of line for header fields (RFC 822bis section 2.3 says header must contains \r\n).
+		$this->eol2="\r\n";
+		if (! empty($conf->global->MAIN_FIX_FOR_BUGGED_MTA))
+		{
+			$this->eol="\n";
+			$this->eol2="\n";
+		}
 
 		// On defini mixed_boundary
 		$this->mixed_boundary = "multipart_x." . time() . ".x_boundary";
@@ -252,7 +256,7 @@ class CMailFile
 				if (!empty($css))
 				{
 					$this->css = $css;
-					$this->styleCSS = $this->buildCSS();
+					$this->buildCSS();
 				}
 				$msg = $this->html;
 				$msg = $this->checkIfHTML($msg);
@@ -304,7 +308,7 @@ class CMailFile
 				if (!empty($css))
 				{
 					$this->css = $css;
-					$this->styleCSS = $this->buildCSS();
+					$this->buildCSS();
 				}
 				$msg = $this->html;
 				$msg = $this->checkIfHTML($msg);
@@ -547,6 +551,7 @@ class CMailFile
 	/**
 	 *  Write content of a SMTP request into a dump file (mode = all)
 	 *  Used for debugging.
+	 *  Note that to see full SMTP protocol, you can use tcpdump -w /tmp/smtp -s 2000 port 25"
 	 *
 	 *  @return	void
 	 */
@@ -567,7 +572,7 @@ class CMailFile
 			}
 			elseif ($conf->global->MAIN_MAIL_SENDMODE == 'smtps')
 			{
-				fputs($fp, $this->smtps->log);
+				fputs($fp, $this->smtps->log);	// this->smtps->log is filled only if MAIN_MAIL_DEBUG was set to on
 			}
 
 			fclose($fp);
@@ -619,7 +624,7 @@ class CMailFile
             if ($this->css['bgcolor'])
             {
                 $this->styleCSS.= '  background-color: '.$this->css['bgcolor'].';';
-                $this->bodyCSS.= ' BGCOLOR="'.$this->css['bgcolor'].'"';
+                $this->bodyCSS.= ' bgcolor="'.$this->css['bgcolor'].'"';
             }
             if ($this->css['bgimage'])
             {
@@ -647,6 +652,10 @@ class CMailFile
 		// Sender
 		//$out.= "Sender: ".getValidAddress($this->addr_from,2)).$this->eol2;
 		$out.= "From: ".$this->getValidAddress($this->addr_from,3,1).$this->eol2;
+		if (! empty($conf->global->MAIN_MAIL_SENDMAIL_FORCE_BA))
+		{
+			$out.= "To: ".$this->getValidAddress($this->addr_to,0,1).$this->eol2;
+		}
 		$out.= "Return-Path: ".$this->getValidAddress($this->addr_from,0,1).$this->eol2;
 		if (isset($this->reply_to)  && $this->reply_to)  $out.= "Reply-To: ".$this->getValidAddress($this->reply_to,2).$this->eol2;
 		if (isset($this->errors_to) && $this->errors_to) $out.= "Errors-To: ".$this->getValidAddress($this->errors_to,2).$this->eol2;
@@ -738,6 +747,10 @@ class CMailFile
 
 		// Make RFC821 Compliant, replace bare linefeeds
 		$strContent = preg_replace("/(?<!\r)\n/si", "\r\n", $strContent);
+		if (! empty($conf->global->MAIN_FIX_FOR_BUGGED_MTA))
+		{
+			$strContent = preg_replace("/\r\n/si", "\n", $strContent);
+		}
 
         //$strContent = rtrim(chunk_split($strContent));    // Function chunck_split seems bugged
         $strContent = rtrim(wordwrap($strContent));
@@ -1007,7 +1020,7 @@ class CMailFile
 	/**
 	 * Return an address for SMTP protocol
 	 *
-	 * @param	string		$adresses		Example: 'John Doe <john@doe.com>' or 'john@doe.com'
+	 * @param	string		$address		Example: 'John Doe <john@doe.com>' or 'john@doe.com'
 	 * @param	int			$format			0=auto, 1=emails with <>, 2=emails without <>, 3=auto + label between "
 	 * @param	int			$encode			1=Encode name to RFC2822
 	 * @return	string						If format 0: '<john@doe.com>' or 'John Doe <john@doe.com>' or '=?UTF-8?B?Sm9obiBEb2U=?= <john@doe.com>'
@@ -1015,13 +1028,13 @@ class CMailFile
 	 *										If format 2: 'john@doe.com'
 	 *										If format 3: '<john@doe.com>' or '"John Doe" <john@doe.com>' or '"=?UTF-8?B?Sm9obiBEb2U=?=" <john@doe.com>'
 	 */
-	function getValidAddress($adresses,$format,$encode='')
+	function getValidAddress($address,$format,$encode='')
 	{
 		global $conf;
 
 		$ret='';
 
-		$arrayaddress=explode(',',$adresses);
+		$arrayaddress=explode(',',$address);
 
 		// Boucle sur chaque composant de l'adresse
 		foreach($arrayaddress as $val)

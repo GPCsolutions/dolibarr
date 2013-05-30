@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -54,7 +54,7 @@ class Menu
      * @param	string	$url        Url to follow on click
      * @param   string	$titre      Label of menu to add
      * @param   string	$level      Level of menu to add
-     * @param   int		$enabled    Menu active or not
+     * @param   int		$enabled    Menu active or not (0=Not active, 1=Active, 2=Active but grey)
      * @param   string	$target		Target lien
      * @param	string	$mainmenu	Main menu ('home', 'companies', 'products', ...)
      * @param	string	$leftmenu	Left menu ('setup', 'system', 'admintools', ...)

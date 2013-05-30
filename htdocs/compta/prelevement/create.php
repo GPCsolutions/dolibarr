@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2010      Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2012 Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -24,16 +24,18 @@
  *	\brief      Prelevement creation page
  */
 
-require '../bank/pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/bonprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/prelevement.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
+$langs->load("banks");
+$langs->load("categories");
 $langs->load("widthdrawals");
 $langs->load("companies");
-$langs->load("banks");
 $langs->load("bills");
 
 // Security check

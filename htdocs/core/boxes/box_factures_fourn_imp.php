@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2004-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -31,7 +31,7 @@ class box_factures_fourn_imp extends ModeleBoxes
 {
 	var $boxcode="oldestunpaidsupplierbills";
 	var $boximg="object_bill";
-	var $boxlabel;
+	var $boxlabel="BoxOldestUnpaidSupplierBills";
 	var $depends = array("facture","fournisseur");
 
 	var $db;
@@ -40,17 +40,6 @@ class box_factures_fourn_imp extends ModeleBoxes
 	var $info_box_head = array();
 	var $info_box_contents = array();
 
-
-	/**
-     *  Constructor
-	 */
-	function __construct()
-	{
-		global $langs;
-		$langs->load("boxes");
-
-		$this->boxlabel=$langs->transnoentitiesnoconv("BoxOldestUnpaidSupplierBills");
-	}
 
 	/**
 	 *  Load data into info_box_contents array to show array later.
@@ -72,7 +61,7 @@ class box_factures_fourn_imp extends ModeleBoxes
 		if ($user->rights->fournisseur->facture->lire)
 		{
 			$sql = "SELECT s.nom, s.rowid as socid,";
-			$sql.= " f.rowid as facid, f.facnumber, f.date_lim_reglement as datelimite,";
+			$sql.= " f.rowid as facid, f.ref_supplier, f.date_lim_reglement as datelimite,";
 			$sql.= " f.amount, f.datef as df,";
 			$sql.= " f.paye, f.fk_statut, f.type";
 			$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
@@ -84,7 +73,7 @@ class box_factures_fourn_imp extends ModeleBoxes
 			$sql.= " AND fk_statut = 1";
 			if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 			if($user->societe_id) $sql.= " AND s.rowid = ".$user->societe_id;
-			$sql.= " ORDER BY datelimite DESC, f.facnumber DESC ";
+			$sql.= " ORDER BY datelimite DESC, f.ref_supplier DESC ";
 			$sql.= $db->plimit($max, 0);
 
 			$result = $db->query($sql);
@@ -109,7 +98,7 @@ class box_factures_fourn_imp extends ModeleBoxes
                     'url' => DOL_URL_ROOT."/fourn/facture/fiche.php?facid=".$objp->facid);
 
 					$this->info_box_contents[$i][1] = array('td' => 'align="left"',
-                    'text' => $objp->facnumber,
+                    'text' => $objp->ref_supplier,
 					'text2'=> $late,
                     'url' => DOL_URL_ROOT."/fourn/facture/fiche.php?facid=".$objp->facid);
 

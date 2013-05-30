@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -52,7 +52,27 @@ $template_dir = DOL_DOCUMENT_ROOT.'/core/tpl/';
 $interfaces = new Interfaces($db);
 $triggers = $interfaces->getTriggersList(0,'priority');
 
-include $template_dir.'triggers.tpl.php';
+print '<table class="noborder">
+<tr class="liste_titre">
+<td colspan="2">'.$langs->trans("File").'</td>
+<td align="center">'.$langs->trans("Active").'</td>
+<td align="center">&nbsp;</td>
+</tr>
+';
+
+$var=True;
+foreach ($triggers as $trigger)
+{
+	$var=!$var;
+	print '<tr '.$bc[$var].'>';
+	print '<td valign="top" width="14" align="center">'.$trigger['picto'].'</td>';
+	print '<td valign="top">'.$trigger['file'].'</td>';
+	print '<td valign="top" align="center">'.$trigger['status'].'</td>';
+	print '<td valign="top">'.$form->textwithpicto('', $trigger['info']).'</td>';
+	print '</tr>';
+}
+
+print '</table>';
 
 llxFooter();
 

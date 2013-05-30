@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -54,10 +54,10 @@ if ($action == 'update' && $user->rights->adherent->creer && ! $_POST["cancel"])
 {
 	$db->begin();
 
-	$res=$object->update_note($_POST["note"],$user);
+	$res=$object->update_note(dol_html_entity_decode(GETPOST('note'), ENT_QUOTES));
 	if ($res < 0)
 	{
-		$mesg='<div class="error">'.$object->error.'</div>';
+		setEventMessage($object->error, 'errors');
 		$db->rollback();
 	}
 	else
@@ -81,8 +81,6 @@ if ($id)
 	$head = member_prepare_head($object);
 
 	dol_fiche_head($head, 'note', $langs->trans("Member"), 0, 'user');
-
-	dol_htmloutput_errors($msg);
 
 	print "<form method=\"post\" action=\"note.php\">";
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
@@ -169,7 +167,7 @@ if ($id)
 
     if ($user->rights->adherent->creer && $action != 'edit')
     {
-        print "<a class=\"butAction\" href=\"note.php?id=".$object->id."&amp;action=edit\">".$langs->trans('Modify')."</a>";
+        print '<div class="inline-block divButAction"><a class="butAction" href="note.php?id='.$object->id.'&amp;action=edit">'.$langs->trans('Modify')."</a></div>";
     }
 
     print "</div>";

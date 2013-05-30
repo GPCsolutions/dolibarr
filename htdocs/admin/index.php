@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -53,34 +53,40 @@ print $langs->trans("AreaForAdminOnly").' ';
 //print "<br>";
 print $langs->trans("SetupDescription2")."<br><br>";
 
-print "<br>";
-print "<br>";
-//print '<hr style="color: #DDDDDD;">';
-print img_picto('','puce').' '.$langs->trans("SetupDescription3")."<br>";
 print '<br>';
-print "<br>";
 //print '<hr style="color: #DDDDDD;">';
-print img_picto('','puce').' '.$langs->trans("SetupDescription4")."<br>";
-print "<br>";
+if (empty($conf->global->MAIN_INFO_SOCIETE_NOM) || empty($conf->global->MAIN_INFO_SOCIETE_COUNTRY)) $setupcompanynotcomplete=1;
+print img_picto('','puce').' '.$langs->trans("SetupDescription3",DOL_URL_ROOT.'/admin/company.php?mainmenu=home'.(empty($setupcompanynotcomplete)?'':'&action=edit'));
+if (! empty($setupcompanynotcomplete))
+{
+	$langs->load("errors");
+	$warnpicto=img_warning($langs->trans("WarningMandatorySetupNotComplete"));
+	print '<br><div class="warning"><a href="'.DOL_URL_ROOT.'/admin/company.php?mainmenu=home'.(empty($setupcompanynotcomplete)?'':'&action=edit').'">'.$warnpicto.' '.$langs->trans("WarningMandatorySetupNotComplete").'</a></div>';
+}
+print '<br>';
+print '<br>';
+print '<br>';
+//print '<hr style="color: #DDDDDD;">';
+print img_picto('','puce').' '.$langs->trans("SetupDescription4",DOL_URL_ROOT.'/admin/modules.php?mainmenu=home');
+if (count($conf->modules) <= 1)	// If only user module enabled
+{
+	$langs->load("errors");
+	$warnpicto=img_warning($langs->trans("WarningMandatorySetupNotComplete"));
+	print '<br><div class="warning"><a href="'.DOL_URL_ROOT.'/admin/modules.php?mainmenu=home">'.$warnpicto.' '.$langs->trans("WarningMandatorySetupNotComplete").'</a></div>';
+}
+print '<br>';
+print '<br>';
 print '<br>';
 //print '<hr style="color: #DDDDDD;">';
 print $langs->trans("SetupDescription5")."<br>";
 //print '<hr style="color: #DDDDDD;">';
 print "<br>";
 
-/*
-print '<table width="100%">';
-print '<tr '.$bc[false].'><td '.$bc[false].'>'.img_picto('','puce').' '.$langs->trans("SetupDescription3")."</td></tr>";
-print '<tr '.$bc[true].'><td '.$bc[true].'>'.img_picto('','puce').' '.$langs->trans("SetupDescription4")."</td></tr>";
-print '<tr '.$bc[false].'><td '.$bc[false].'>'.img_picto('','puce').' '.$langs->trans("SetupDescription5")."</td></tr>";
-print '</table>';
-*/
+// Show logo
+print '<center><div class="logo_setup"></div></center>';
 
-//print '<br>';
-//print info_admin($langs->trans("OnceSetupFinishedCreateUsers")).'<br>';
-
-
-$db->close();
 
 llxFooter();
+
+$db->close();
 ?>

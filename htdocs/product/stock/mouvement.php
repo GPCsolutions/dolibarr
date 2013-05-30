@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2001-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -35,7 +35,8 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 $langs->load("products");
 $langs->load("stocks");
 
-if (!$user->rights->produit->lire) accessforbidden();
+// Security check
+$result=restrictedArea($user,'stock');
 
 $id=GETPOST('id','int');
 $product_id=GETPOST("product_id");
@@ -48,9 +49,9 @@ $search_movement = isset($_REQUEST["search_movement"])?$_REQUEST["search_movemen
 $search_product = isset($_REQUEST["search_product"])?$_REQUEST["search_product"]:'';
 $search_warehouse = isset($_REQUEST["search_warehouse"])?$_REQUEST["search_warehouse"]:'';
 $search_user = isset($_REQUEST["search_user"])?$_REQUEST["search_user"]:'';
-$page = GETPOST("page");
-$sortfield = GETPOST("sortfield");
-$sortorder = GETPOST("sortorder");
+$page = GETPOST("page",'int');
+$sortfield = GETPOST("sortfield",'alpha');
+$sortorder = GETPOST("sortorder",'alpha');
 if ($page < 0) $page = 0;
 $offset = $conf->liste_limit * $page;
 

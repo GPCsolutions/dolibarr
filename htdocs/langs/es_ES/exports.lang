@@ -60,8 +60,8 @@ TypeOfLineServiceOrProduct=Tipo de línea (0=producto, 1=servicio)
 FileWithDataToImport=Archivo que contiene los datos a importar
 FileToImport=Archivo origen a importar
 FileMustHaveOneOfFollowingFormat=El archivo de importación debe tener uno de los siguientes formatos
-ChooseFormatOfFileToImport=Elija el formato de archivo que desea importar haciendo en el picto %s para seleccionarlo...
-ChooseFileToImport=Elija el archivo de importación y haga clic en el picto %s para seleccionarlo como archivo origen de importación...
+ChooseFormatOfFileToImport=Elija el formato de archivo que desea importar haciendo en la imagen %s para seleccionarlo...
+ChooseFileToImport=Elija el archivo de importación y haga clic en la imagen %s para seleccionarlo como archivo origen de importación...
 DownloadEmptyExample=Descargar archivo de ejemplo vacío
 SourceFileFormat=Formato del archivo origen
 FieldsInSourceFile=Campos en el archivo origen
@@ -116,3 +116,16 @@ Excel95FormatDesc=Archivo con formato <b>Excel</b> (.xls)<br>Este es el formato 
 Excel2007FormatDesc=Archivo con formato <b>Excel</b> (.xlsx)<br>Este es el formato nativo de Excel 2007 (SpreadsheetML).
 TsvFormatDesc=Archivo con formato <b>Valores separados por tabulador</b> (.tsv)<br>Este es un formato de archivo de texto en el que los campos son separados por un tabulador [tab].
 ExportFieldAutomaticallyAdded=Se ha añadido automáticamente el campo <b>%s</b>, ya que evitará que líneas idénticas sean consideradas como duplicadas (con este campo, cada línea tendrá un id propio).
+CsvOptions=Opciones del archivo CSV
+Separator=Separador
+Enclosure=Delimitador de campos
+SuppliersProducts=Productos de proveedores
+BankCode=Código banco
+DeskCode=Código oficina
+BankAccountNumber=Número cuenta
+BankAccountNumberKey=Dígito Control
+## filters
+SelectFilterFields=Si quiere aplicar un filtro sobre algunos valores, introdúzcalos aquí.
+FilterableFields=Campos filtrables
+FilteredFields=Campos filtrados
+FilteredFieldsValues=Valores de filtros

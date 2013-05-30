@@ -1,13 +1,13 @@
 <?php
 /* Copyright (C) 2007-2008 Jeremie Ollivier      <jeremie.o@laposte.net>
  * Copyright (C) 2008-2010 Laurent Destailleur   <eldy@uers.sourceforge.net>
- * Copyright (C) 2009      Regis Houssin         <regis@dolibarr.fr>
+ * Copyright (C) 2009      Regis Houssin         <regis.houssin@capnetworks.com>
  * Copyright (C) 2011      Juanjo Menent         <jmenent@2byte.es>
  * Copyright (C) 2012      Marcos García         <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -29,23 +29,23 @@ if (!empty($_SESSION["CASHDESK_ID_THIRDPARTY"]))
 	$company->fetch($_SESSION["CASHDESK_ID_THIRDPARTY"]);
 	$companyLink = $company->getNomUrl(1);
 }
-if (!empty($conf->global->CASHDESK_ID_BANKACCOUNT_CASH))
+if (!empty($_SESSION["CASHDESK_ID_BANKACCOUNT_CASH"]))
 {
 	$bankcash=new Account($db);
-	$bankcash->fetch($conf->global->CASHDESK_ID_BANKACCOUNT_CASH);
+	$bankcash->fetch($_SESSION["CASHDESK_ID_BANKACCOUNT_CASH"]);
 	$bankcash->label=$bankcash->ref;
 	$bankcashLink = $bankcash->getNomUrl(1);
 }
-if (!empty($conf->global->CASHDESK_ID_BANKACCOUNT_CB))
+if (!empty($_SESSION["CASHDESK_ID_BANKACCOUNT_CB"]))
 {
 	$bankcb=new Account($db);
-	$bankcb->fetch($conf->global->CASHDESK_ID_BANKACCOUNT_CB);
+	$bankcb->fetch($_SESSION["CASHDESK_ID_BANKACCOUNT_CB"]);
 	$bankcbLink = $bankcb->getNomUrl(1);
 }
-if (!empty($conf->global->CASHDESK_ID_BANKACCOUNT_CHEQUE))
+if (!empty($_SESSION["CASHDESK_ID_BANKACCOUNT_CHEQUE"]))
 {
 	$bankcheque=new Account($db);
-	$bankcheque->fetch($conf->global->CASHDESK_ID_BANKACCOUNT_CHEQUE);
+	$bankcheque->fetch($_SESSION["CASHDESK_ID_BANKACCOUNT_CHEQUE"]);
 	$bankchequeLink = $bankcheque->getNomUrl(1);
 }
 if (!empty($_SESSION["CASHDESK_ID_WAREHOUSE"]) && ! empty($conf->stock->enabled))
@@ -66,7 +66,7 @@ print '<li class="menu_choix1"><a href="affIndex.php?menu=facturation&id=NOUV"><
 // Open new tab on backoffice (this is not a disconnect from POS)
 print '<li class="menu_choix2"><a href=".." target="backoffice"><span>'.$langs->trans("BackOffice").'</span></a></li>';
 // Disconnect
-print '<li class="menu_choix0">'.$langs->trans("User").': '.$_SESSION['prenom'].' '.$_SESSION['nom'];
+print '<li class="menu_choix0">'.$langs->trans("User").': '.$_SESSION['firstname'].' '.$_SESSION['lastname'];
 print ' <a href="deconnexion.php">'.img_picto($langs->trans('Logout'), 'logout.png').'</a><br>';
 print $langs->trans("CashDeskThirdParty").': '.$companyLink.'<br>';
 /*print $langs->trans("CashDeskBankCash").': '.$bankcashLink.'<br>';

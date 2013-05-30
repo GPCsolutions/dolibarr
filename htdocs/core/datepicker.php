@@ -1,14 +1,14 @@
 <?php
 /* Copyright (C) phpBSM
  * Copyright (C) 2005-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2007 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2007 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This file is a modified version of datepicker.php from phpBSM to fix some
  * bugs, to add new features and to dramatically increase speed.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -224,16 +224,16 @@ function displayBox($selectedDate,$month,$year)
 		if($thedate==$selDate) $dayclass="dpSelected";
 		elseif($thedate==$today) $dayclass="dpToday";
 
-		if ($langs->trans("FormatDateShortJava")=="FormatDateShortJava")
+		if ($langs->trans("FormatDateShortJavaInput")=="FormatDateShortJavaInput")
 		{
-		    print "ERROR FormatDateShortJava not defined for language ".$langs->defaultlang;
+		    print "ERROR FormatDateShortJavaInput not defined for language ".$langs->defaultlang;
 		    exit;
 		}
 
 		// Sur click dans calendrier, appelle fonction dpClickDay
 		echo "<TD class=\"".$dayclass."\"";
 		echo " onMouseOver=\"dpHighlightDay(".$mydate["year"].",parseInt('".dol_print_date($thedate,"%m")."',10),".$mydate["mday"].",tradMonths)\"";
-		echo " onClick=\"dpClickDay(".$mydate["year"].",parseInt('".dol_print_date($thedate,"%m")."',10),".$mydate["mday"].",'".$langs->trans("FormatDateShortJava")."')\"";
+		echo " onClick=\"dpClickDay(".$mydate["year"].",parseInt('".dol_print_date($thedate,"%m")."',10),".$mydate["mday"].",'".$langs->trans("FormatDateShortJavaInput")."')\"";
 		echo ">".sprintf("%02s",$mydate["mday"])."</TD>";
 		$cols++;
 

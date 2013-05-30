@@ -1,10 +1,10 @@
 -- ===========================================================================
 -- Copyright (C) 2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
--- Copyright (C) 2010 Regis Houssin        <regis@dolibarr.fr>
+-- Copyright (C) 2010 Regis Houssin        <regis.houssin@capnetworks.com>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 2 of the License, or
+-- the Free Software Foundation; either version 3 of the License, or
 -- (at your option) any later version.
 --
 -- This program is distributed in the hope that it will be useful,
@@ -29,7 +29,8 @@ create table llx_projet_task
   datev					datetime,						-- date validation
   label					varchar(255) NOT NULL,
   description			text,
-  duration_effective	real DEFAULT 0 NOT NULL,
+  duration_effective			real DEFAULT 0 NOT NULL,
+  planned_workload			real DEFAULT 0 NOT NULL,
   progress				integer	DEFAULT 0,				-- percentage increase
   priority				integer	DEFAULT 0,				-- priority
   fk_user_creat			integer,						-- user who created the task

@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -30,6 +30,8 @@ if (! defined('NOCSRFCHECK'))    define('NOCSRFCHECK','1');
 
 require '../main.inc.php';
 
+$country=GETPOST('pays', 'alpha');
+
 
 /*
  * View
@@ -49,26 +51,26 @@ print '<!-- Ajax page called with url '.$_SERVER["PHP_SELF"].'?'.$_SERVER["QUERY
 dol_syslog(join(',',$_POST));
 
 // Generation liste des pays
-if(isset($_POST['pays']) && !empty($_POST['pays']))
+if (! empty($country))
 {
 	global $langs;
 	$langs->load("dict");
 
 	$sql = "SELECT rowid, code, libelle, active";
 	$sql.= " FROM ".MAIN_DB_PREFIX."c_pays";
-	$sql.= " WHERE active = 1 AND libelle LIKE '%" . utf8_decode($_POST['pays']) . "%'";
+	$sql.= " WHERE active = 1 AND libelle LIKE '%" . $db->escape(utf8_decode($country)) . "%'";
 	$sql.= " ORDER BY libelle ASC";
 
 	$resql=$db->query($sql);
 	if ($resql)
 	{
 		print '<ul>';
-		while($pays = $db->fetch_object($resql))
+		while($country = $db->fetch_object($resql))
 		{
 			print '<li>';
 			// Si traduction existe, on l'utilise, sinon on prend le libellé par défaut
-			print ($pays->code && $langs->trans("Country".$pays->code)!="Country".$pays->code?$langs->trans("Country".$pays->code):($pays->libelle!='-'?$pays->libelle:'&nbsp;'));
-			print '<span class="informal" style="display:none">'.$pays->rowid.'-idcache</span>';
+			print ($country->code && $langs->trans("Country".$country->code)!="Country".$country->code?$langs->trans("Country".$country->code):($country->libelle!='-'?$country->libelle:'&nbsp;'));
+			print '<span class="informal" style="display:none">'.$country->rowid.'-idcache</span>';
 			print '</li>';
 		}
 		print '</ul>';

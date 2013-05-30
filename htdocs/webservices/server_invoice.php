@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -67,7 +67,7 @@ $server->wsdl->addComplexType(
     	'sourceapplication' => array('name'=>'sourceapplication','type'=>'xsd:string'),
     	'login' => array('name'=>'login','type'=>'xsd:string'),
         'password' => array('name'=>'password','type'=>'xsd:string'),
-        'entity' => array('name'=>'entity','type'=>'xsd:string'),
+        'entity' => array('name'=>'entity','type'=>'xsd:string')
     )
 );
 // Define WSDL Return object
@@ -110,7 +110,7 @@ $server->wsdl->addComplexType(
     )
 );
 
-$server->wsdl->addComplexType(
+/*$server->wsdl->addComplexType(
     'LinesArray',
     'complexType',
     'array',
@@ -121,7 +121,7 @@ $server->wsdl->addComplexType(
         array('ref'=>'SOAP-ENC:arrayType','wsdl:arrayType'=>'tns:line[]')
     ),
     'tns:line'
-);
+);*/
 $server->wsdl->addComplexType(
     'LinesArray2',
     'complexType',
@@ -161,7 +161,7 @@ $server->wsdl->addComplexType(
         'total_net' => array('name'=>'type','type'=>'xsd:double'),
         'total_vat' => array('name'=>'type','type'=>'xsd:double'),
         'total' => array('name'=>'type','type'=>'xsd:double'),
-        'note' => array('name'=>'note','type'=>'xsd:string'),
+        'note_private' => array('name'=>'note_private','type'=>'xsd:string'),
         'note_public' => array('name'=>'note_public','type'=>'xsd:string'),
         'status' => array('name'=>'status','type'=>'xsd:int'),
         'close_code' => array('name'=>'close_code','type'=>'xsd:string'),
@@ -170,7 +170,7 @@ $server->wsdl->addComplexType(
         'lines' => array('name'=>'lines','type'=>'tns:LinesArray2')
     )
 );
-
+/*
 $server->wsdl->addComplexType(
     'InvoicesArray',
     'complexType',
@@ -182,7 +182,7 @@ $server->wsdl->addComplexType(
         array('ref'=>'SOAP-ENC:arrayType','wsdl:arrayType'=>'tns:invoice[]')
     ),
     'tns:invoice'
-);
+);*/
 $server->wsdl->addComplexType(
     'InvoicesArray2',
     'complexType',
@@ -294,7 +294,7 @@ function getInvoice($authentication,$id='',$ref='',$ref_ext='')
 					$linesresp[]=array(
 						'id'=>$line->rowid,
 						'type'=>$line->product_type,
-                        'desc'=>dol_htmlcleanlastbr($line->description),
+                        'desc'=>dol_htmlcleanlastbr($line->desc),
 					    'total_net'=>$line->total_ht,
 						'total_vat'=>$line->total_tva,
 						'total'=>$line->total_ttc,
@@ -324,7 +324,7 @@ function getInvoice($authentication,$id='',$ref='',$ref_ext='')
                         'total_net' => $invoice->total_ht,
                         'total_vat' => $invoice->total_tva,
                         'total' => $invoice->total_ttc,
-                        'note' => $invoice->note?$invoice->note:'',
+                        'note_private' => $invoice->note_private?$invoice->note_private:'',
                         'note_public' => $invoice->note_public?$invoice->note_public:'',
                         'status'=> $invoice->statut,
                         'close_code' => $invoice->close_code?$invoice->close_code:'',
@@ -377,7 +377,10 @@ function getInvoicesForThirdParty($authentication,$idthirdparty)
     $errorcode='';$errorlabel='';
     $error=0;
     $fuser=check_authentication($authentication,$error,$errorcode,$errorlabel);
-    // Check parameters
+
+	if ($fuser->societe_id) $socid=$fuser->societe_id;
+    
+	// Check parameters
 	if (! $error && empty($idthirdparty))
 	{
 		$error++;
@@ -394,9 +397,9 @@ function getInvoicesForThirdParty($authentication,$idthirdparty)
 		//$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as p ON pt.fk_product = p.rowid';
 		//$sql.=" WHERE f.fk_soc = s.rowid AND nom = '".$db->escape($idthirdparty)."'";
 		//$sql.=" WHERE f.fk_soc = s.rowid AND nom = '".$db->escape($idthirdparty)."'";
-		$sql.=" WHERE f.fk_soc = ".$db->escape($idthirdparty);
-		$sql.=" AND f.entity = ".$conf->entity;
-
+		$sql.=" WHERE f.entity = ".$conf->entity;
+		if ($idthirdparty != 'all' ) $sql.=" AND f.fk_soc = ".$db->escape($idthirdparty);
+		
 		$resql=$db->query($sql);
 		if ($resql)
 		{
@@ -410,6 +413,13 @@ function getInvoicesForThirdParty($authentication,$idthirdparty)
 			    $invoice=new Facture($db);
 			    $invoice->fetch($obj->facid);
 
+			    // Sécurité pour utilisateur externe
+			    if( $socid && ( $socid != $order->socid) )
+			    {
+			    	$error++;
+			    	$errorcode='PERMISSION_DENIED'; $errorlabel=$order->socid.' User does not have permission for this request';
+			    }
+			    			    
 				// Define lines of invoice
 				$linesresp=array();
 				foreach($invoice->lines as $line)
@@ -444,7 +454,7 @@ function getInvoicesForThirdParty($authentication,$idthirdparty)
                     'total_net' => $invoice->total_ht,
                     'total_vat' => $invoice->total_tva,
                     'total' => $invoice->total_ttc,
-                    'note' => $invoice->note?$invoice->note:'',
+                    'note_private' => $invoice->note_private?$invoice->note_private:'',
                     'note_public' => $invoice->note_public?$invoice->note_public:'',
                     'status'=> $invoice->statut,
                     'close_code' => $invoice->close_code?$invoice->close_code:'',
@@ -507,7 +517,7 @@ function createInvoice($authentication,$invoice)
         $newobject->type=$invoice['type'];
         $newobject->ref_ext=$invoice['ref_ext'];
         $newobject->date=dol_stringtotime($invoice['date'],'dayrfc');
-        $newobject->note=$invoice['note'];
+        $newobject->note_private=$invoice['note_private'];
         $newobject->note_public=$invoice['note_public'];
         $newobject->statut=$invoice['status'];
         $newobject->fk_project=$invoice['project_id'];

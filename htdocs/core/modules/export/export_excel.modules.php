@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -28,8 +28,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 
 
 /**
- *	\class      ExportExcel
- *	\brief      Class to build export files with Excel format
+ *	Class to build export files with Excel format
  */
 class ExportExcel extends ModeleExports
 {
@@ -85,7 +84,7 @@ class ExportExcel extends ModeleExports
 	/**
 	 * getDriverLabel
 	 *
-	 * @return string
+	 * @return 	string			Return driver label
 	 */
 	function getDriverLabel()
 	{
@@ -159,7 +158,7 @@ class ExportExcel extends ModeleExports
 		    $outputlangs->charset_output='ISO-8859-1';	// Because Excel 5 format is ISO
 		}
 
-		dol_syslog("ExportExcel::open_file file=".$file);
+		dol_syslog(get_class($this)."::open_file file=".$file);
         $this->file=$file;
 
 		$ret=1;
@@ -188,7 +187,7 @@ class ExportExcel extends ModeleExports
 
             $this->workbook->setActiveSheetIndex(0);
             $this->workbook->getActiveSheet()->setTitle($outputlangs->trans("Sheet"));
-            $this->workbook->getActiveSheet()->getDefaultRowDimension()->setRowHeight(15);
+            $this->workbook->getActiveSheet()->getDefaultRowDimension()->setRowHeight(16);
 		}
 		return $ret;
 	}
@@ -213,9 +212,10 @@ class ExportExcel extends ModeleExports
      *  @param      array		$array_export_fields_label   	Array with list of label of fields
      *  @param      array		$array_selected_sorted       	Array with list of field to export
      *  @param      Translate	$outputlangs    				Object lang to translate values
+     *  @param		array		$array_types					Array with types of fields
 	 * 	@return		int											<0 if KO, >0 if OK
 	 */
-	function write_title($array_export_fields_label,$array_selected_sorted,$outputlangs)
+	function write_title($array_export_fields_label,$array_selected_sorted,$outputlangs,$array_types)
 	{
 		// Create a format for the column headings
 		if (! empty($conf->global->MAIN_USE_PHP_WRITEEXCEL))
@@ -232,7 +232,7 @@ class ExportExcel extends ModeleExports
 		else
 		{
             $this->workbook->getActiveSheet()->getStyle('1')->getFont()->setBold(true);
-		    $this->workbook->getActiveSheet()->getStyle('1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+		    $this->workbook->getActiveSheet()->getStyle('1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_LEFT);
 		}
 
 		$this->col=0;
@@ -248,6 +248,10 @@ class ExportExcel extends ModeleExports
     		else
     		{
                 $this->workbook->getActiveSheet()->SetCellValueByColumnAndRow($this->col, $this->row+1, $outputlangs->transnoentities($alias));
+    		    if (! empty($array_types[$code]) && in_array($array_types[$code],array('Date','Number','TextAuto')))		// Set autowidth for some types
+                {
+                	$this->workbook->getActiveSheet()->getColumnDimension($this->column2Letter($this->col + 1))->setAutoSize(true);
+                }
     		}
 			$this->col++;
 		}
@@ -261,9 +265,10 @@ class ExportExcel extends ModeleExports
      *  @param      array		$array_selected_sorted      Array with list of field to export
      *  @param      resource	$objp                       A record from a fetch with all fields from select
      *  @param      Translate	$outputlangs                Object lang to translate values
+     *  @param		array		$array_types				Array with types of fields
 	 * 	@return		int										<0 if KO, >0 if OK
 	 */
-	function write_record($array_selected_sorted,$objp,$outputlangs)
+	function write_record($array_selected_sorted,$objp,$outputlangs,$array_types)
 	{
 		// Create a format for the column headings
 		if (! empty($conf->global->MAIN_USE_PHP_WRITEEXCEL))
@@ -276,11 +281,13 @@ class ExportExcel extends ModeleExports
 
 		foreach($array_selected_sorted as $code => $value)
 		{
-			$alias=str_replace(array('.','-'),'_',$code);
+			if (strpos($code,' as ') == 0) $alias=str_replace(array('.','-'),'_',$code);
+			else $alias=substr($code, strpos($code, ' as ') + 4);
             if (empty($alias)) dol_print_error('','Bad value for field with code='.$code.'. Try to redefine export.');
             $newvalue=$objp->$alias;
 
 			$newvalue=$this->excel_clean($newvalue);
+			$typefield=isset($array_types[$code])?$array_types[$code]:'';
 
 			// Traduction newvalue
 			if (preg_match('/^\((.*)\)$/i',$newvalue,$reg))
@@ -339,8 +346,19 @@ class ExportExcel extends ModeleExports
 			        $this->worksheet->write($this->row, $this->col, $newvalue);
     		    }
     		    else
-    		    {
-        		    $this->workbook->getActiveSheet()->SetCellValueByColumnAndRow($this->col, $this->row+1, $newvalue);
+				{
+    		    	if ($typefield == 'Text' || $typefield == 'TextAuto')
+    		    	{
+    		    		//$this->workbook->getActiveSheet()->getCellByColumnAndRow($this->col, $this->row+1)->setValueExplicit($newvalue, PHPExcel_Cell_DataType::TYPE_STRING);
+						$this->workbook->getActiveSheet()->SetCellValueByColumnAndRow($this->col, $this->row+1, (string) $newvalue);
+    		    		$coord=$this->workbook->getActiveSheet()->getCellByColumnAndRow($this->col, $this->row+1)->getCoordinate();
+    		    		$this->workbook->getActiveSheet()->getStyle($coord)->getNumberFormat()->setFormatCode('@');
+    		    		$this->workbook->getActiveSheet()->getStyle($coord)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_LEFT);
+    		    	}
+    		    	else
+    		    	{
+    		    		$this->workbook->getActiveSheet()->SetCellValueByColumnAndRow($this->col, $this->row+1, $newvalue);
+    		    	}
     		    }
 			}
 			$this->col++;
@@ -397,6 +415,29 @@ class ExportExcel extends ModeleExports
     	$newvalue=dol_string_nohtmltag($newvalue);
 
     	return $newvalue;
+    }
+
+
+    /**
+     * Convert a column to letter (1->A, 0->B, 27->AA, ...)
+     *
+     * @param 	int		$c		Column position
+     * @return 	string			Letter
+     */
+    function column2Letter($c)
+    {
+
+    	$c = intval($c);
+    	if ($c <= 0) return '';
+
+    	while ($c != 0)
+    	{
+    		$p = ($c - 1) % 26;
+    		$c = intval(($c - $p) / 26);
+    		$letter = chr(65 + $p) . $letter;
+    	}
+
+    	return $letter;
     }
 }
 

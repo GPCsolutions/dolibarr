@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -28,10 +28,8 @@
 include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
 
 /**
- *	\class      modBarcode
- *	\brief      Classe de description et activation du module Barcode
+ *	Classe de description et activation du module Barcode
  */
-
 class modBarcode extends DolibarrModules
 {
 
@@ -113,12 +111,12 @@ class modBarcode extends DolibarrModules
 		$this->remove($options);
 
 		$sql = array(
-				array('sql'=>'INSERT INTO llx_c_barcode_type (code, libelle, coder, example, entity) VALUES ("EAN8", "EAN8", 0, "1234567", __ENTITY__)','ignoreerror'=>1),
-				array('sql'=>'INSERT INTO llx_c_barcode_type (code, libelle, coder, example, entity) VALUES ("EAN13", "EAN13", 0, "123456789012", __ENTITY__)','ignoreerror'=>1),
-				array('sql'=>'INSERT INTO llx_c_barcode_type (code, libelle, coder, example, entity) VALUES ("UPC", "UPC", 0, "123456789012", __ENTITY__)','ignoreerror'=>1),
-				array('sql'=>'INSERT INTO llx_c_barcode_type (code, libelle, coder, example, entity) VALUES ("ISBN", "ISBN", 0, "123456789", __ENTITY__)','ignoreerror'=>1),
-				array('sql'=>'INSERT INTO llx_c_barcode_type (code, libelle, coder, example, entity) VALUES ("C39", "Code 39", 0, "1234567890", __ENTITY__)','ignoreerror'=>1),
-				array('sql'=>'INSERT INTO llx_c_barcode_type (code, libelle, coder, example, entity) VALUES ("C128", "Code 128", 0, "ABCD1234567890", __ENTITY__)','ignoreerror'=>1)
+				array('sql'=>"INSERT INTO llx_c_barcode_type (code, libelle, coder, example, entity) VALUES ('EAN8', 'EAN8', 0, '1234567', __ENTITY__)",'ignoreerror'=>1),
+				array('sql'=>"INSERT INTO llx_c_barcode_type (code, libelle, coder, example, entity) VALUES ('EAN13', 'EAN13', 0, '123456789012', __ENTITY__)",'ignoreerror'=>1),
+				array('sql'=>"INSERT INTO llx_c_barcode_type (code, libelle, coder, example, entity) VALUES ('UPC', 'UPC', 0, '123456789012', __ENTITY__)",'ignoreerror'=>1),
+				array('sql'=>"INSERT INTO llx_c_barcode_type (code, libelle, coder, example, entity) VALUES ('ISBN', 'ISBN', 0, '123456789', __ENTITY__)",'ignoreerror'=>1),
+				array('sql'=>"INSERT INTO llx_c_barcode_type (code, libelle, coder, example, entity) VALUES ('C39', 'Code 39', 0, '1234567890', __ENTITY__)",'ignoreerror'=>1),
+				array('sql'=>"INSERT INTO llx_c_barcode_type (code, libelle, coder, example, entity) VALUES ('C128', 'Code 128', 0, 'ABCD1234567890', __ENTITY__)",'ignoreerror'=>1)
 		);
 
 		return $this->_init($sql, $options);

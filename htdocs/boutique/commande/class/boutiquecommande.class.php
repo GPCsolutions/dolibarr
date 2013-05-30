@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -65,7 +65,7 @@ class BoutiqueCommande
     {
         global $conf;
 
-        $sql = "SELECT orders_id, customers_id, customers_name, customers_company, customers_street_address, customers_suburb, customers_city, customers_postcode, customers_state, customers_country, customers_telephone, customers_email_address, customers_address_format_id, delivery_name, delivery_company, delivery_street_address, delivery_suburb, delivery_city, delivery_postcode, delivery_state, delivery_country, delivery_address_format_id, billing_name, billing_company, billing_street_address, billing_suburb, billing_city, billing_postcode, billing_state, billing_country, billing_address_format_id, payment_method, cc_type, cc_owner, cc_number, cc_expires, last_modified, date_purchased, orders_status, orders_date_finished, currency, currency_value";
+        $sql = "SELECT orders_id, customers_id, customers_name, customers_company, customers_street_address, customers_suburb, customers_city, customers_postcode, customers_state, customers_country, customers_telephone, customers_email_address, customers_address_format_id, delivery_name, delivery_company, delivery_street_address, delivery_suburb, delivery_city, delivery_zipcode, delivery_state, delivery_country, delivery_address_format_id, billing_name, billing_company, billing_street_address, billing_suburb, billing_city, billing_zipcode, billing_state, billing_country, billing_address_format_id, payment_method, cc_type, cc_owner, cc_number, cc_expires, last_modified, date_purchased, orders_status, orders_date_finished, currency, currency_value";
         $sql.= " FROM ".$conf->global->OSC_DB_NAME.".".$conf->global->OSC_DB_TABLE_PREFIX."orders";
         $sql.= " WHERE orders_id = ".$id;
 
@@ -75,24 +75,24 @@ class BoutiqueCommande
             $array = $this->db->fetch_array($result);
 
             $this->id          = $array["orders_id"];
-            $this->client_id   = stripslashes($array["customers_id"]);
-            $this->client_name = stripslashes($array["customers_name"]);
+            $this->client_id   = $array["customers_id"];
+            $this->client_name = $array["customers_name"];
 
-            $this->payment_method = stripslashes($array["payment_method"]);
+            $this->payment_method = $array["payment_method"];
 
             $this->date = $this->db->jdate($array["date_purchased"]);
 
-            $this->delivery_adr->name = stripslashes($array["delivery_name"]);
-            $this->delivery_adr->street = stripslashes($array["delivery_street_address"]);
-            $this->delivery_adr->cp = stripslashes($array["delivery_postcode"]);
-            $this->delivery_adr->city = stripslashes($array["delivery_city"]);
-            $this->delivery_adr->country = stripslashes($array["delivery_country"]);
+            $this->delivery_adr->name = $array["delivery_name"];
+            $this->delivery_adr->street = $array["delivery_street_address"];
+            $this->delivery_adr->zip = $array["delivery_zipcode"];
+            $this->delivery_adr->city = $array["delivery_city"];
+            $this->delivery_adr->country = $array["delivery_country"];
 
-            $this->billing_adr->name = stripslashes($array["billing_name"]);
-            $this->billing_adr->street = stripslashes($array["billing_street_address"]);
-            $this->billing_adr->cp = stripslashes($array["billing_postcode"]);
-            $this->billing_adr->city = stripslashes($array["billing_city"]);
-            $this->billing_adr->country = stripslashes($array["billing_country"]);
+            $this->billing_adr->name = $array["billing_name"];
+            $this->billing_adr->street = $array["billing_street_address"];
+            $this->billing_adr->zip = $array["billing_zipcode"];
+            $this->billing_adr->city = $array["billing_city"];
+            $this->billing_adr->country = $array["billing_country"];
 
             $this->db->free();
 
@@ -106,7 +106,7 @@ class BoutiqueCommande
             if ( $result )
             {
                 $num = $this->db->num_rows($result);
-				
+
 				$i=0;
                 while ($i < $num)
                 {

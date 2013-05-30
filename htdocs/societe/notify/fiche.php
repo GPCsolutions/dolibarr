@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2003      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2010      Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2010-2012 Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -50,7 +50,7 @@ $offset = $conf->liste_limit * $page;
 $pageprev = $page - 1;
 $pagenext = $page + 1;
 if (! $sortorder) $sortorder="ASC";
-if (! $sortfield) $sortfield="c.name";
+if (! $sortfield) $sortfield="c.lastname";
 
 $now=dol_now();
 
@@ -141,7 +141,7 @@ if ($result > 0)
 
     print '<table class="border"width="100%">';
 
-    print '<tr><td width="20%">'.$langs->trans("ThirdPartyName").'</td><td colspan="3">';
+    print '<tr><td width="25%">'.$langs->trans("ThirdPartyName").'</td><td colspan="3">';
     print $form->showrefnav($object,'socid','',($user->societe_id?0:1),'rowid','nom');
     print '</td></tr>';
 
@@ -169,7 +169,7 @@ if ($result > 0)
         print '</td></tr>';
     }
 
-    print '<tr><td width="30%">'.$langs->trans("NbOfActiveNotifications").'</td>';
+    print '<tr><td>'.$langs->trans("NbOfActiveNotifications").'</td>';
     print '<td colspan="3">';
     $sql = "SELECT COUNT(n.rowid) as nb";
     $sql.= " FROM ".MAIN_DB_PREFIX."notify_def as n";
@@ -214,7 +214,7 @@ if ($result > 0)
     // Line with titles
     print '<table width="100%" class="noborder">';
     print '<tr class="liste_titre">';
-    print_liste_field_titre($langs->trans("Contact"),"fiche.php","c.name",'',$param,'"width="45%"',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Contact"),"fiche.php","c.lastname",'',$param,'"width="45%"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Action"),"fiche.php","a.titre",'',$param,'"width="35%"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Type"),"fiche.php","",'',$param,'"width="10%"',$sortfield,$sortorder);
     print_liste_field_titre('');
@@ -232,7 +232,7 @@ if ($result > 0)
 
         foreach($listofnotifiedevents as $notifiedevent)
         {
-            $label=$langs->trans("Notify_".$notifiedevent['code'])!=$langs->trans("Notify_".$notifiedevent['code'])?$langs->trans("Notify_".$notifiedevent['code']):$notifiedevent['label'];
+ 			$label=($langs->trans("Notify_".$notifiedevent['code'])!="Notify_".$notifiedevent['code']?$langs->trans("Notify_".$notifiedevent['code']):$notifiedevent['label']);
             $actions[$notifiedevent['rowid']]=$label;
         }
         print '<tr '.$bc[$var].'><td>';
@@ -269,7 +269,7 @@ if ($result > 0)
     // Line with titles
     print '<table width="100%" class="noborder">';
     print '<tr class="liste_titre">';
-    print_liste_field_titre($langs->trans("Contact"),"fiche.php","c.name",'',$param,'"width="45%"',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Contact"),"fiche.php","c.lastname",'',$param,'"width="45%"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Action"),"fiche.php","a.titre",'',$param,'"width="35%"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Type"),"fiche.php","",'',$param,'"width="10%"',$sortfield,$sortorder);
     print_liste_field_titre('','','');
@@ -278,7 +278,7 @@ if ($result > 0)
     // List of notifications for contacts
     $sql = "SELECT n.rowid, n.type,";
     $sql.= " a.code, a.label,";
-    $sql.= " c.rowid as contactid, c.name, c.firstname, c.email";
+    $sql.= " c.rowid as contactid, c.lastname, c.firstname, c.email";
     $sql.= " FROM ".MAIN_DB_PREFIX."c_action_trigger as a,";
     $sql.= " ".MAIN_DB_PREFIX."notify_def as n,";
     $sql.= " ".MAIN_DB_PREFIX."socpeople c";
@@ -301,7 +301,7 @@ if ($result > 0)
             $obj = $db->fetch_object($resql);
 
             $contactstatic->id=$obj->contactid;
-            $contactstatic->name=$obj->name;
+            $contactstatic->lastname=$obj->lastname;
             $contactstatic->firstname=$obj->firstname;
             print '<tr '.$bc[$var].'><td>'.$contactstatic->getNomUrl(1);
             if ($obj->type == 'email')
@@ -347,14 +347,14 @@ if ($result > 0)
     // Line with titles
     print '<table width="100%" class="noborder">';
     print '<tr class="liste_titre">';
-    print_liste_field_titre($langs->trans("Contact"),"fiche.php","c.name",'',$param,'',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Contact"),"fiche.php","c.lastname",'',$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Action"),"fiche.php","a.titre",'',$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Date"),"fiche.php","a.daten",'',$param,'align="right"',$sortfield,$sortorder);
     print '</tr>';
 
     // List
     $sql = "SELECT n.rowid, n.daten, n.email, n.objet_type, n.objet_id,";
-    $sql.= " c.rowid as id, c.name, c.firstname, c.email,";
+    $sql.= " c.rowid as id, c.lastname, c.firstname, c.email,";
     $sql.= " a.code, a.label";
     $sql.= " FROM ".MAIN_DB_PREFIX."c_action_trigger as a,";
     $sql.= " ".MAIN_DB_PREFIX."notify as n, ";
@@ -378,7 +378,7 @@ if ($result > 0)
             $obj = $db->fetch_object($resql);
 
             $contactstatic->id=$obj->id;
-            $contactstatic->name=$obj->name;
+            $contactstatic->lastname=$obj->lastname;
             $contactstatic->firstname=$obj->firstname;
             print '<tr '.$bc[$var].'><td>'.$contactstatic->getNomUrl(1);
             print $obj->email?' &lt;'.$obj->email.'&gt;':$langs->trans("NoMail");

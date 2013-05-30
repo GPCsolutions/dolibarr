@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2010      Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2010      Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -30,7 +30,9 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 $langs->load("commercial");
 $langs->load("orders");
 
-if (! $user->rights->mailing->lire || $user->societe_id > 0) accessforbidden();
+
+// Security check
+$result=restrictedArea($user,'mailing');
 
 
 /*
@@ -42,9 +44,9 @@ llxHeader('','EMailing',$help_url);
 
 print_fiche_titre($langs->trans("MailingArea"));
 
-print '<table class="notopnoleftnoright" width="100%">';
-
-print '<tr><td valign="top" width="30%" class="notopnoleft">';
+//print '<table class="notopnoleftnoright" width="100%">';
+//print '<tr><td valign="top" width="30%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
 
 
 // Recherche emails
@@ -139,7 +141,9 @@ if (is_resource($handle))
 
 print "</table><br>";
 
-print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
+
+//print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
 
 
 /*
@@ -172,9 +176,9 @@ if ($result)
 	  $var=!$var;
 
 	  print "<tr $bc[$var]>";
-	  print '<td nowrap="nowrap"><a href="fiche.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowEMail"),"email").' '.$obj->rowid.'</a></td>';
+	  print '<td class="nowrap"><a href="fiche.php?id='.$obj->rowid.'">'.img_object($langs->trans("ShowEMail"),"email").' '.$obj->rowid.'</a></td>';
 	  print '<td>'.dol_trunc($obj->titre,38).'</td>';
-	  print '<td align="center">'.dol_print_date($obj->date_creat,'day').'</td>';
+	  print '<td align="center">'.dol_print_date($db->jdate($obj->date_creat),'day').'</td>';
 	  print '<td align="center">'.($obj->nbemail?$obj->nbemail:"0").'</td>';
 	  $mailstatic=new Mailing($db);
 	  print '<td align="right">'.$mailstatic->LibStatut($obj->statut,5).'</td>';
@@ -196,11 +200,8 @@ else
 }
 
 
-
-print '</td></tr>';
-print '</table>';
-
-$db->close();
+//print '</td></tr></table>';
+print '</div></div></div>';
 
 
 if ($langs->file_exists("html/spam.html",0)) {
@@ -215,4 +216,5 @@ if ($langs->file_exists("html/spam.html",0)) {
 
 llxFooter();
 
+$db->close();
 ?>

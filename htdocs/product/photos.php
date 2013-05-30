@@ -2,11 +2,11 @@
 /* Copyright (C) 2001-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005      Eric Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -157,12 +157,12 @@ if ($object->id)
 
 	/*
 	 * Add a photo
-	*/
+	 */
 	if ($action == 'ajout_photo' && ($user->rights->produit->creer || $user->rights->service->creer) && ! empty($conf->global->MAIN_UPLOAD_DOC))
 	{
 		// Affiche formulaire upload
 		$formfile=new FormFile($db);
-		$formfile->form_attach_new_file($_SERVER["PHP_SELF"].'?id='.$object->id,$langs->trans("AddPhoto"),1);
+		$formfile->form_attach_new_file($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans("AddPhoto"), 1, 0, 1, 50, $object, '', false); // FIXME Regis: disabled for the moment
 	}
 
 	// Affiche photos
@@ -179,7 +179,8 @@ if ($object->id)
 		if ($object->nbphoto < 1)
 		{
 			print '<br>';
-			print '<table width="100%" valign="top" align="center" border="0" cellpadding="2" cellspacing="2">';				print '<tr align=center valign=middle border=1><td class="photo">';
+			print '<table width="100%" valign="top" align="center" border="0" cellpadding="2" cellspacing="2">';
+			print '<tr align=center valign=middle border=1><td class="photo">';
 			print "<br>".$langs->trans("NoPhotoYet")."<br><br>";
 			print '</td></tr>';
 			print '</table>';

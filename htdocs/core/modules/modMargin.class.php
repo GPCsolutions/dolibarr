@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**     \defgroup   margin     Module Margin
+/**     \defgroup   margin     Module margin
  *      \brief      Module to manage margins
  *      \file       htdocs/includes/modules/modMargin.class.php
  *      \ingroup    margin
@@ -52,7 +52,7 @@ class modMargin extends DolibarrModules
 		// Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
 		$this->description = "Margin management";
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
-		$this->version = 'experimental';
+		$this->version = 'dolibarr';
 		// Key used in llx_const table to save module status enabled/disabled (where MYMODULE is value of property name of module in uppercase)
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
 		// Where to store the module in setup page (0=common,1=interface,2=other)
@@ -80,7 +80,7 @@ class modMargin extends DolibarrModules
 		// New pages on tabs
 		$this->tabs = array(
 				'product:+margin:Margins:margins:$conf->margin->enabled:/margin/tabs/productMargins.php?id=__ID__',
-				'thirdparty:+margin:Margins:margins:$conf->margin->enabled:/margin/tabs/thirdpartyMargins.php?socid=__ID__'
+				'thirdparty:+margin:Margins:margins:$conf->margin->enabled && empty($user->societe_id):/margin/tabs/thirdpartyMargins.php?socid=__ID__'
 		);
 
 
@@ -102,7 +102,7 @@ class modMargin extends DolibarrModules
     			'type'=>'left',			// This is a Top menu entry
     			'titre'=>'Margins',
     			'mainmenu'=>'accountancy',
-    			'leftmenu'=>'margins',		// Use 1 if you also want to add left menu entries using this descriptor. Use 0 if left menu entries are defined in a file pre.inc.php (old school).
+    			'leftmenu'=>'margins',
     			'url'=>'/margin/index.php',
     			'langs'=>'margins',	// Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
     			'position'=>100,

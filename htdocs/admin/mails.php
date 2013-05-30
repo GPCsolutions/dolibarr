@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2007-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2009-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2009-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -40,7 +40,7 @@ $substitutionarrayfortest=array(
 '__EMAIL__' => 'TESTEMail',
 '__LASTNAME__' => 'TESTLastname',
 '__FIRSTNAME__' => 'TESTFirstname',
-'__SIGNATURE__' => (($user->signature && empty($conf->global->MAIL_DO_NOT_USE_SIGN))?$user->signature:''),
+'__SIGNATURE__' => (($user->signature && empty($conf->global->MAIN_MAIL_DO_NOT_USE_SIGN))?$user->signature:''),
 //'__PERSONALIZED__' => 'TESTPersonalized'	// Hiden because not used yet
 );
 complete_substitutions_array($substitutionarrayfortest, $langs);
@@ -140,6 +140,9 @@ if (($action == 'send' || $action == 'sendhtml') && GETPOST('cancel'))
 if (($action == 'send' || $action == 'sendhtml') && ! GETPOST('addfile') && ! GETPOST('addfilehtml') && ! GETPOST('removedfile') && ! GETPOST('cancel'))
 {
 	$error=0;
+	
+	
+	
 
 	$email_from='';
 	if (! empty($_POST["fromname"])) $email_from=$_POST["fromname"].' ';
@@ -152,7 +155,12 @@ if (($action == 'send' || $action == 'sendhtml') && ! GETPOST('addfile') && ! GE
 	$subject    = $_POST['subject'];
 	$body       = $_POST['message'];
 	$deliveryreceipt= $_POST["deliveryreceipt"];
-
+	
+	//Check if we have to decode HTML
+	if (!empty($conf->global->FCKEDITOR_ENABLE_MAILING) && dol_textishtml(dol_html_entity_decode($body, ENT_COMPAT | ENT_HTML401))) {
+		$body=dol_html_entity_decode($body, ENT_COMPAT | ENT_HTML401);
+	}
+	
 	// Create form object
 	include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
 	$formmail = new FormMail($db);
@@ -426,7 +434,7 @@ if ($action == 'edit')
 		// SuperAdministrator access only
 		if (empty($conf->multicompany->enabled) || ($user->admin && !$user->entity))
 		{
-			print '<input class="flat" name="MAIN_MAIL_SMTPS_PW" size="32" value="' . $mainsmtppw . '">';
+			print '<input class="flat" type="password" name="MAIN_MAIL_SMTPS_PW" size="32" value="' . $mainsmtppw . '">';
 		}
 		else
 		{
@@ -591,19 +599,19 @@ else
 
 	print '</table>';
 
-    // Warning 1
     if ($conf->global->MAIN_MAIL_SENDMODE == 'mail')
     {
         print '<br>';
+        /*
+	    // Warning 1
     	if ($linuxlike)
     	{
     		$sendmailoption=ini_get('mail.force_extra_parameters');
-    		//print 'x'.$sendmailoption;
     		if (empty($sendmailoption) || ! preg_match('/ba/',$sendmailoption))
     		{
     			print info_admin($langs->trans("SendmailOptionNotComplete"));
     		}
-    	}
+    	}*/
     	// Warning 2
    	    print info_admin($langs->trans("SendmailOptionMayHurtBuggedMTA"));
     }
@@ -657,11 +665,11 @@ else
 		print '<br>';
 	}
 
-	// Affichage formulaire de TEST simple
-	if ($action == 'test')
+	// Show email send test form
+	if ($action == 'test' || $action == 'testhtml')
 	{
 		print '<br>';
-		print_titre($langs->trans("DoTestSend"));
+		print_titre($action == 'testhtml'?$langs->trans("DoTestSendHTML"):$langs->trans("DoTestSend"));
 
 		// Cree l'objet formulaire mail
 		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
@@ -678,62 +686,16 @@ else
 		$formmail->withtopic=(isset($_POST['subject'])?$_POST['subject']:$langs->trans("Test"));
 		$formmail->withtopicreadonly=0;
 		$formmail->withfile=2;
-		$formmail->withbody=(isset($_POST['message'])?$_POST['message']:$langs->trans("PredefinedMailTest"));
+		$formmail->withbody=(isset($_POST['message'])?$_POST['message']:($action == 'testhtml'?$langs->trans("PredefinedMailTestHtml"):$langs->trans("PredefinedMailTest")));
 		$formmail->withbodyreadonly=0;
 		$formmail->withcancel=1;
 		$formmail->withdeliveryreceipt=1;
-		$formmail->withfckeditor=0;
-		// Tableau des substitutions
-		$formmail->substit=$substitutionarrayfortest;
-		// Tableau des parametres complementaires du post
-		$formmail->param["action"]="send";
-		$formmail->param["models"]="body";
-		$formmail->param["mailid"]=0;
-		$formmail->param["returnurl"]=$_SERVER["PHP_SELF"];
-
-		// Init list of files
-        if (GETPOST("mode")=='init')
-		{
-			$formmail->clear_attached_files();
-		}
-
-		$formmail->show_form('addfile','removefile');
-
-		print '<br>';
-	}
-
-	// Affichage formulaire de TEST HTML
-	if ($action == 'testhtml')
-	{
-		print '<br>';
-		print_titre($langs->trans("DoTestSendHTML"));
-
-		// Cree l'objet formulaire mail
-		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
-		$formmail = new FormMail($db);
-		$formmail->fromname = (isset($_POST['fromname'])?$_POST['fromname']:$conf->global->MAIN_MAIL_EMAIL_FROM);
-		$formmail->frommail = (isset($_POST['frommail'])?$_POST['frommail']:$conf->global->MAIN_MAIL_EMAIL_FROM);
-		$formmail->withfromreadonly=0;
-		$formmail->withsubstit=0;
-		$formmail->withfrom=1;
-		$formmail->witherrorsto=1;
-		$formmail->withto=(! empty($_POST['sendto'])?$_POST['sendto']:($user->email?$user->email:1));
-		$formmail->withtocc=(! empty($_POST['sendtocc'])?$_POST['sendtocc']:1);       // ! empty to keep field if empty
-		$formmail->withtoccc=(! empty($_POST['sendtoccc'])?$_POST['sendtoccc']:1);    // ! empty to keep field if empty
-		$formmail->withtopic=(isset($_POST['subject'])?$_POST['subject']:$langs->trans("Test"));
-		$formmail->withtopicreadonly=0;
-		$formmail->withfile=2;
-		$formmail->withbody=(isset($_POST['message'])?$_POST['message']:$langs->trans("PredefinedMailTestHtml"));
-		//$formmail->withbody='Test <b>aaa</b> __LOGIN__';
-		$formmail->withbodyreadonly=0;
-		$formmail->withcancel=1;
-		$formmail->withdeliveryreceipt=1;
-		$formmail->withfckeditor=1;
+		$formmail->withfckeditor=($action == 'testhtml'?1:0);
 		$formmail->ckeditortoolbar='dolibarr_mailings';
 		// Tableau des substitutions
 		$formmail->substit=$substitutionarrayfortest;
 		// Tableau des parametres complementaires du post
-		$formmail->param["action"]="sendhtml";
+		$formmail->param["action"]=($action == 'testhtml'?"sendhtml":"send");
 		$formmail->param["models"]="body";
 		$formmail->param["mailid"]=0;
 		$formmail->param["returnurl"]=$_SERVER["PHP_SELF"];
@@ -744,7 +706,7 @@ else
 			$formmail->clear_attached_files();
 		}
 
-		$formmail->show_form('addfilehtml','removefilehtml');
+		$formmail->show_form(($action == 'testhtml'?'addfilehtml':'addfile'),($action == 'testhtml'?'removefilehtml':'removefile'));
 
 		print '<br>';
 	}

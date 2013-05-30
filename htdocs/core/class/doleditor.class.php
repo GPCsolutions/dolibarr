@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -42,6 +42,7 @@ class DolEditor
 	var $cols;
 	var $height;
 	var $width;
+	var $readonly;
 
 
     /**
@@ -51,7 +52,7 @@ class DolEditor
      *      @param 	string	$content		        Content of WYSIWIG field
      *      @param	int		$width					Width in pixel of edit area (auto by default)
      *      @param 	int		$height			        Height in pixel of edit area (200px by default)
-     *      @param 	string	$toolbarname	        Name of bar set to use ('Full', 'dolibarr_notes', 'dolibarr_details', 'dolibarr_mailings')
+     *      @param 	string	$toolbarname	        Name of bar set to use ('Full', 'dolibarr_notes[_encoded]', 'dolibarr_details[_encoded]', 'dolibarr_mailings[_encoded]', ')
      *      @param  string	$toolbarlocation       	Where bar is stored :
      *                       		             	'In' each window has its own toolbar
      *                              		      	'Out:name' share toolbar into the div called 'name'
@@ -60,26 +61,27 @@ class DolEditor
 	 *      @param  int		$okforextendededitor    True=Allow usage of extended editor tool (like fckeditor)
      *      @param  int		$rows                   Size of rows for textarea tool
 	 *      @param  int		$cols                   Size of cols for textarea tool
+	 *      @param	int		$readonly				0=Read/Edit, 1=Read only
 	 */
-    function __construct($htmlname,$content,$width='',$height=200,$toolbarname='Basic',$toolbarlocation='In',$toolbarstartexpanded=false,$uselocalbrowser=true,$okforextendededitor=true,$rows=0,$cols=0)
+    function __construct($htmlname,$content,$width='',$height=200,$toolbarname='Basic',$toolbarlocation='In',$toolbarstartexpanded=false,$uselocalbrowser=true,$okforextendededitor=true,$rows=0,$cols=0,$readonly=0)
     {
     	global $conf,$langs;
 
-    	dol_syslog(get_class($this)."::DolEditor htmlname=".$htmlname." toolbarname=".$toolbarname);
+    	dol_syslog(get_class($this)."::DolEditor htmlname=".$htmlname." width=".$width." height=".$height." toolbarname=".$toolbarname);
 
     	if (! $rows) $rows=round($height/20);
     	if (! $cols) $cols=($width?round($width/6):80);
+		$shorttoolbarname=preg_replace('/_encoded$/','',$toolbarname);
 
         // Name of extended editor to use (FCKEDITOR_EDITORNAME can be 'ckeditor' or 'fckeditor')
         $defaulteditor='ckeditor';
         $this->tool=empty($conf->global->FCKEDITOR_EDITORNAME)?$defaulteditor:$conf->global->FCKEDITOR_EDITORNAME;
         $this->uselocalbrowser=$uselocalbrowser;
+        $this->readonly=$readonly;
 
         // Check if extended editor is ok. If not we force textarea
-        if (empty($conf->fckeditor->enabled) || ! $okforextendededitor)
-        {
-            $this->tool = 'textarea';
-        }
+        if (empty($conf->fckeditor->enabled) || ! $okforextendededitor) $this->tool = 'textarea';
+        if ($conf->browser->phone) $this->tool = 'textarea';
 
         // Define content and some properties
         if ($this->tool == 'ckeditor')
@@ -97,7 +99,7 @@ class DolEditor
         	$this->editor->Value	= $content;
         	$this->editor->Height   = $height;
         	if (! empty($width)) $this->editor->Width = $width;
-        	$this->editor->ToolbarSet = $toolbarname;
+        	$this->editor->ToolbarSet = $shorttoolbarname;
         	$this->editor->Config['AutoDetectLanguage'] = 'true';
         	$this->editor->Config['ToolbarLocation'] = $toolbarlocation ? $toolbarlocation : 'In';
         	$this->editor->Config['ToolbarStartExpanded'] = $toolbarstartexpanded;
@@ -124,7 +126,7 @@ class DolEditor
         {
     	    $this->content				= $content;
     	    $this->htmlname 			= $htmlname;
-    	    $this->toolbarname			= $toolbarname;
+    	    $this->toolbarname			= $shorttoolbarname;
     	    $this->toolbarstartexpanded = $toolbarstartexpanded;
             $this->rows					= max(ROWS_3,$rows);
             $this->cols					= max(40,$cols);
@@ -157,6 +159,7 @@ class DolEditor
         if (in_array($this->tool,array('textarea','ckeditor')))
         {
             $found=1;
+            //$out.= '<textarea id="'.$this->htmlname.'" name="'.$this->htmlname.'" rows="'.$this->rows.'" cols="'.$this->cols.'"'.($this->readonly?' disabled="disabled"':'').' class="flat">';
             $out.= '<textarea id="'.$this->htmlname.'" name="'.$this->htmlname.'" rows="'.$this->rows.'" cols="'.$this->cols.'" class="flat">';
             $out.= $this->content;
             $out.= '</textarea>';
@@ -170,13 +173,18 @@ class DolEditor
             	//$skin='v2';
             	$skin='kama';
 
+            	$htmlencode_force=preg_match('/_encoded$/',$this->toolbarname)?'true':'false';
+
             	$out.= '<script type="text/javascript">
             			$(document).ready(function () {
                             /* if (CKEDITOR.loadFullCore) CKEDITOR.loadFullCore(); */
                             /* should be editor=CKEDITOR.replace but what if serveral editors ? */
                             CKEDITOR.replace(\''.$this->htmlname.'\',
             					{
+            						/* property:xxx is same than CKEDITOR.config.property = xxx */
             						customConfig : ckeditorConfig,
+            						readOnly : '.($this->readonly?'true':'false').',
+                            		htmlEncodeOutput :'.$htmlencode_force.',
             						toolbar: \''.$this->toolbarname.'\',
             						toolbarStartupExpanded: '.($this->toolbarstartexpanded ? 'true' : 'false').',
             						width: '.($this->width ? '\''.$this->width.'\'' : '\'\'').',

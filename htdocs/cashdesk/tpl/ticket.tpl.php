@@ -5,7 +5,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -140,9 +140,9 @@ print $object->ref;
 
 <table class="totaux">
 <?php
-echo '<tr><th nowrap="nowrap">'.$langs->trans("TotalHT").'</th><td nowrap="nowrap">'.price2num($obj_facturation->prixTotalHt(),'MT')." ".$conf->currency."</td></tr>\n";
-echo '<tr><th nowrap="nowrap">'.$langs->trans("TotalVAT").'</th><td nowrap="nowrap">'.price2num($obj_facturation->montantTva(),'MT')." ".$conf->currency."</td></tr>\n";
-echo '<tr><th nowrap="nowrap">'.$langs->trans("TotalTTC").'</th><td nowrap="nowrap">'.price2num($obj_facturation->prixTotalTtc(),'MT')." ".$conf->currency."</td></tr>\n";
+echo '<tr><th class="nowrap">'.$langs->trans("TotalHT").'</th><td class="nowrap">'.price2num($obj_facturation->prixTotalHt(),'MT')." ".$conf->currency."</td></tr>\n";
+echo '<tr><th class="nowrap">'.$langs->trans("TotalVAT").'</th><td class="nowrap">'.price2num($obj_facturation->montantTva(),'MT')." ".$conf->currency."</td></tr>\n";
+echo '<tr><th class="nowrap">'.$langs->trans("TotalTTC").'</th><td class="nowrap">'.price2num($obj_facturation->prixTotalTtc(),'MT')." ".$conf->currency."</td></tr>\n";
 ?>
 </table>
 

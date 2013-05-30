@@ -5,7 +5,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -29,17 +29,21 @@ require_once DOL_DOCUMENT_ROOT.'/compta/deplacement/class/deplacementstats.class
 
 $langs->load("trips");
 
-$WIDTH=500;
-$HEIGHT=200;
+$WIDTH=DolGraph::getDefaultGraphSizeForStats('width');
+$HEIGHT=DolGraph::getDefaultGraphSizeForStats('height');
 
 $userid=GETPOST('userid','int'); if ($userid < 0) $userid=0;
 $socid=GETPOST('socid','int'); if ($socid < 0) $socid=0;
-// Securite acces client
+$id = GETPOST('id','int');
+
+// Security check
 if ($user->societe_id > 0)
 {
 	$action = '';
 	$socid = $user->societe_id;
 }
+if ($user->societe_id) $socid=$user->societe_id;
+$result = restrictedArea($user, 'deplacement', $id,'');
 
 $nowyear=strftime("%Y", dol_now());
 $year = GETPOST('year')>0?GETPOST('year'):$nowyear;
@@ -196,12 +200,13 @@ $head[$h][1] = $langs->trans("ByMonthYear");
 $head[$h][2] = 'byyear';
 $h++;
 
-complete_head_from_modules($conf,$langs,$object,$head,$h,'trip_stats');
+complete_head_from_modules($conf,$langs,null,$head,$h,'trip_stats');
 
 dol_fiche_head($head,'byyear',$langs->trans("Statistics"));
 
-print '<table class="notopnoleftnopadd" width="100%"><tr>';
-print '<td align="center" valign="top">';
+
+print '<div class="fichecenter"><div class="fichethirdleft">';
+
 
 // Show filter box
 print '<form name="stats" method="POST" action="'.$_SERVER["PHP_SELF"].'">';
@@ -262,8 +267,8 @@ foreach ($data as $val)
 print '</table>';
 
 
-print '</td>';
-print '<td align="center" valign="top">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
 
 // Show graphs
 print '<table class="border" width="100%"><tr valign="top"><td align="center">';
@@ -277,7 +282,10 @@ else {
 }
 print '</td></tr></table>';
 
-print '</td></tr></table>';
+
+print '</div></div></div>';
+print '<div style="clear:both"></div>';
+
 
 dol_fiche_end();
 

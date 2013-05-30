@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2002-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -159,11 +159,11 @@ if ($id > 0)
         print '<tr><td>'.$langs->trans("UserTitle").'</td><td class="valeur">'.$member->getCivilityLabel().'&nbsp;</td>';
         print '</tr>';
 
-        // Nom
+        // Lastname
         print '<tr><td>'.$langs->trans("Lastname").'</td><td class="valeur">'.$member->lastname.'&nbsp;</td>';
         print '</tr>';
 
-        // Prenom
+        // Firstname
         print '<tr><td>'.$langs->trans("Firstname").'</td><td class="valeur">'.$member->firstname.'&nbsp;</td>';
         print '</tr>';
 
@@ -196,8 +196,7 @@ if ($id > 0)
 
 
 		// List of document
-		$param='&socid='.$societe->id;
-		$formfile->list_of_documents($filearray,$member,'member',$param, 0, get_exdir($member->id,2,0,1).'/'.$member->id.'/');
+		$formfile->list_of_documents($filearray,$member,'member','', 0, get_exdir($member->id,2,0,1).'/'.$member->id.'/');
 
 		print "<br><br>";
 	}

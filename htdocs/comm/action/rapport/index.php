@@ -2,11 +2,11 @@
 /* Copyright (C) 2001-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2003      Eric Seigne          <erics@rycks.com>
  * Copyright (C) 2004-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -30,6 +30,7 @@ require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/comm/action/class/actioncomm.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/modules/action/rapport.pdf.php';
 
+$langs->load("agenda");
 $langs->load("commercial");
 
 $action=GETPOST('action','alpha');
@@ -102,8 +103,8 @@ if ($resql)
 	print '<table class="noborder" width="100%">';
 	print '<tr class="liste_titre">';
 	print '<td>'.$langs->trans("Date").'</td>';
-	print '<td align="center">'.$langs->trans("Nb").'</td>';
-	print '<td>'.$langs->trans("Action").'</td>';
+	print '<td align="center">'.$langs->trans("EventsNb").'</td>';
+	print '<td align="center">'.$langs->trans("Action").'</td>';
 	print '<td align="center">'.$langs->trans("PDF").'</td>';
 	print '<td align="center">'.$langs->trans("Date").'</td>';
 	print '<td align="center">'.$langs->trans("Size").'</td>';
@@ -121,8 +122,8 @@ if ($resql)
 			print "<td>".$obj->df."</td>\n";
 			print '<td align="center">'.$obj->cc.'</td>';
 
-			print '<td>';
-			print '<a href="'.$_SERVER["PHP_SELF"].'?action=builddoc&amp;page='.$page.'&amp;month='.$obj->month.'&amp;year='.$obj->year.'">'.img_picto('','filenew').'</a>';
+			print '<td align="center">';
+			print '<a href="'.$_SERVER["PHP_SELF"].'?action=builddoc&amp;page='.$page.'&amp;month='.$obj->month.'&amp;year='.$obj->year.'">'.img_picto($langs->trans('GenerateReport'),'filenew').'</a>';
 			print '</td>';
 
 			$name = "actions-".$obj->month."-".$obj->year.".pdf";
@@ -131,7 +132,7 @@ if ($resql)
 
 			if (file_exists($file))
 			{
-				print '<td align="center"><a href="'.DOL_URL_ROOT.'/document.php?page='.$page.'&amp;file='.urlencode($relativepath).'&amp;modulepart=actionsreport">'.img_pdf().'</a></td>';
+				print '<td align="center"><a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?page='.$page.'&amp;file='.urlencode($relativepath).'&amp;modulepart=actionsreport">'.img_pdf().'</a></td>';
 				print '<td align="center">'.dol_print_date(dol_filemtime($file),'dayhour').'</td>';
 				print '<td align="center">'.dol_print_size(dol_filesize($file)).'</td>';
 			}

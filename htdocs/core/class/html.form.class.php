@@ -4,7 +4,7 @@
  * Copyright (C) 2004      Benoit Mortier        <benoit.mortier@opensides.be>
  * Copyright (C) 2004      Sebastien Di Cintio   <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Eric Seigne           <eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2012 Regis Houssin         <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin         <regis.houssin@capnetworks.com>
  * Copyright (C) 2006      Andre Cianfarani      <acianfa@free.fr>
  * Copyright (C) 2006      Marc Barilley/Ocebo   <marc@ocebo.com>
  * Copyright (C) 2007      Franky Van Liedekerke <franky.van.liedekerker@telenet.be>
@@ -13,10 +13,11 @@
  * Copyright (C) 2010      Philippe Grand        <philippe.grand@atoo-net.com>
  * Copyright (C) 2011      Herve Prot            <herve.prot@symeos.com>
  * Copyright (C) 2012      Marcos García         <marcosgdf@gmail.com>
+ * Copyright (C) 2013      Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -51,7 +52,6 @@ class Form
     var $cache_availability=array();
     var $cache_demand_reason=array();
     var $cache_types_fees=array();
-    var $cache_currencies=array();
     var $cache_vatrates=array();
 
     var $tva_taux_value;
@@ -76,7 +76,7 @@ class Form
      * @param   string	$preselected	Name of Value to show/edit (not used in this function)
      * @param	object	$object			Object
      * @param	boolean	$perm			Permission to allow button to edit parameter
-     * @param	string	$typeofdata		Type of data ('string' by default, 'email', 'numeric:99', 'text' or 'textarea:rows:cols', 'day' or 'datepicker', 'ckeditor:dolibarr_zzz:width:height:savemethod:1:rows:cols', 'select:xxx'...)
+     * @param	string	$typeofdata		Type of data ('string' by default, 'email', 'numeric:99', 'text' or 'textarea:rows:cols', 'day' or 'datepicker', 'ckeditor:dolibarr_zzz:width:height:savemethod:1:rows:cols', 'select;xxx[:class]'...)
      * @param	string	$moreparam		More param to add on a href URL
      * @return	string					HTML edit field
      */
@@ -89,7 +89,7 @@ class Form
         // TODO change for compatibility
         if (! empty($conf->global->MAIN_USE_JQUERY_JEDITABLE) && ! preg_match('/^select;/',$typeofdata))
         {
-            if ($perm)
+            if (! empty($perm))
             {
                 $tmp=explode(':',$typeofdata);
                 $ret.= '<div class="editkey_'.$tmp[0].(! empty($tmp[1]) ? ' '.$tmp[1] : '').'" id="'.$htmlname.'">';
@@ -103,7 +103,7 @@ class Form
         }
         else
         {
-            $ret.='<table class="nobordernopadding" width="100%"><tr><td nowrap="nowrap">';
+            $ret.='<table class="nobordernopadding" width="100%"><tr><td class="nowrap">';
             $ret.=$langs->trans($text);
             $ret.='</td>';
             if (GETPOST('action') != 'edit'.$htmlname && $perm) $ret.='<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=edit'.$htmlname.'&amp;id='.$object->id.$moreparam.'">'.img_edit($langs->trans('Edit'),1).'</a></td>';
@@ -135,8 +135,7 @@ class Form
         $ret='';
 
         // When option to edit inline is activated
-        // TODO change for compatibility
-        if (! empty($conf->global->MAIN_USE_JQUERY_JEDITABLE) && ! preg_match('/^select;/',$typeofdata))
+        if (! empty($conf->global->MAIN_USE_JQUERY_JEDITABLE) && ! preg_match('/^select;|datehourpicker/',$typeofdata)) // FIXME add jquery timepicker
         {
             $ret.=$this->editInPlace($object, $value, $htmlname, $perm, $typeofdata, $editvalue, $extObject, $success);
         }
@@ -165,6 +164,10 @@ class Form
                 {
                     $ret.=$this->form_date($_SERVER['PHP_SELF'].'?id='.$object->id,$value,$htmlname);
                 }
+                else if ($typeofdata == 'datehourpicker')
+                {
+                	$ret.=$this->form_date($_SERVER['PHP_SELF'].'?id='.$object->id,$value,$htmlname,1,1);
+                }
                 else if (preg_match('/^select;/',$typeofdata))
                 {
                      $arraydata=explode(',',preg_replace('/^select;/','',$typeofdata));
@@ -183,7 +186,7 @@ class Form
                     $ret.=$doleditor->Create(1);
                 }
                 $ret.='</td>';
-                if ($typeofdata != 'day' && $typeofdata != 'datepicker') $ret.='<td align="left"><input type="submit" class="button" value="'.$langs->trans("Modify").'"></td>';
+                if ($typeofdata != 'day' && $typeofdata != 'datepicker' && $typeofdata != 'datehourpicker') $ret.='<td align="left"><input type="submit" class="button" value="'.$langs->trans("Modify").'"></td>';
                 $ret.='</tr></table>'."\n";
                 $ret.='</form>'."\n";
             }
@@ -192,6 +195,7 @@ class Form
                 if ($typeofdata == 'email')   $ret.=dol_print_email($value,0,0,0,0,1);
                 elseif (preg_match('/^text/',$typeofdata) || preg_match('/^note/',$typeofdata))  $ret.=dol_htmlentitiesbr($value);
                 elseif ($typeofdata == 'day' || $typeofdata == 'datepicker') $ret.=dol_print_date($value,'day');
+                elseif ($typeofdata == 'datehourpicker') $ret.=dol_print_date($value,'dayhour');
                 else if (preg_match('/^select;/',$typeofdata))
                 {
                     $arraydata=explode(',',preg_replace('/^select;/','',$typeofdata));
@@ -272,7 +276,7 @@ class Form
                 if (! empty($tmp[1])) $inputOption=$tmp[1];
                 if (! empty($tmp[2])) $savemethod=$tmp[2];
             }
-            else if (preg_match('/^datepicker/',$inputType))
+            else if ((preg_match('/^datepicker/',$inputType)) || (preg_match('/^datehourpicker/',$inputType)))
             {
                 $tmp=explode(':',$inputType);
                 $inputType=$tmp[0];
@@ -292,8 +296,8 @@ class Form
             {
             	$tmp=explode(':',$inputType);
             	$inputType=$tmp[0];
-            	if (! empty($tmp[1])) $rows=$tmp[1];
-            	if (! empty($tmp[2])) $cols=$tmp[2];
+            	$rows=(empty($tmp[1])?'8':$tmp[1]);
+            	$cols=(empty($tmp[2])?'80':$tmp[2]);
             }
             else if (preg_match('/^ckeditor/',$inputType))
             {
@@ -320,6 +324,10 @@ class Form
             if (! empty($savemethod))	$out.= '<input id="savemethod_'.$htmlname.'" value="'.$savemethod.'" type="hidden"/>'."\n";
             if (! empty($ext_element))	$out.= '<input id="ext_element_'.$htmlname.'" value="'.$ext_element.'" type="hidden"/>'."\n";
             if (! empty($success))		$out.= '<input id="success_'.$htmlname.'" value="'.$success.'" type="hidden"/>'."\n";
+            if ($inputType == 'textarea') {
+            	$out.= '<input id="textarea_'.$htmlname.'_rows" value="'.$rows.'" type="hidden"/>'."\n";
+            	$out.= '<input id="textarea_'.$htmlname.'_cols" value="'.$cols.'" type="hidden"/>'."\n";
+            }
 
             $out.= '<span id="viewval_'.$htmlname.'" class="viewval_'.$inputType.($button_only ? ' inactive' : ' active').'">'.$value.'</span>'."\n";
             $out.= '<span id="editval_'.$htmlname.'" class="editval_'.$inputType.($button_only ? ' inactive' : ' active').' hideobject">'.(! empty($editvalue) ? $editvalue : $value).'</span>'."\n";
@@ -336,7 +344,7 @@ class Form
      *	Show a text and picto with tooltip on text or picto
      *
      *	@param	string		$text				Text to show
-     *	@param	string		$htmltext			Content html of tooltip. Must be HTML/UTF8 encoded.
+     *	@param	string		$htmltext			HTML content of tooltip. Must be HTML/UTF8 encoded.
      *	@param	int			$tooltipon			1=tooltip sur texte, 2=tooltip sur picto, 3=tooltip sur les 2
      *	@param	int			$direction			-1=Le picto est avant, 0=pas de picto, 1=le picto est apres
      *	@param	string		$img				Code img du picto (use img_xxx() function to get it)
@@ -370,7 +378,12 @@ class Form
         $s="";
         if (empty($notabs))	$s.='<table class="nobordernopadding" summary=""><tr>';
         if ($direction < 0)	$s.='<'.$tag.$paramfortooltipimg.' valign="top" width="14">'.$img.'</'.$tag.'>';
-        if ($text != '')	$s.='<'.$tag.$paramfortooltiptd.'>'.(($direction < 0)?'&nbsp;':'').$text.(($direction > 0)?'&nbsp;':'').'</'.$tag.'>';
+        // Use another method to help avoid having a space in value in order to use this value with jquery
+        // TODO add this in css
+        //if ($text != '')	$s.='<'.$tag.$paramfortooltiptd.'>'.(($direction < 0)?'&nbsp;':'').$text.(($direction > 0)?'&nbsp;':'').'</'.$tag.'>';
+        $paramfortooltiptd.= (($direction < 0)?' style="padding-left: 3px !important;"':'');
+        $paramfortooltiptd.= (($direction > 0)?' style="padding-right: 3px !important;"':'');
+        if ((string) $text != '')	$s.='<'.$tag.$paramfortooltiptd.'>'.$text.'</'.$tag.'>';
         if ($direction > 0)	$s.='<'.$tag.$paramfortooltipimg.' valign="top" width="14">'.$img.'</'.$tag.'>';
         if (empty($notabs))	$s.='</tr></table>';
 
@@ -409,8 +422,9 @@ class Form
                 $htmltext = '';
             }
         }
-        // If info or help with smartphone, show only text
-        if (! empty($conf->browser->phone))
+
+        // If info or help with smartphone, show only text (tooltip can't works)
+        if (! empty($conf->dol_no_mouse_hover))
         {
             if ($type == 'info' || $type == 'help') return $text;
         }
@@ -432,7 +446,7 @@ class Form
      *  @param  string	$htmloption     Options html on select object
      *  @return	void
      */
-    function select_pays($selected='',$htmlname='pays_id',$htmloption='')
+    function select_pays($selected='',$htmlname='country_id',$htmloption='')
     {
         print $this->select_country($selected,$htmlname,$htmloption);
     }
@@ -443,9 +457,10 @@ class Form
      *  @param	string	$selected       Id or Code or Label of preselected country
      *  @param  string	$htmlname       Name of html select object
      *  @param  string	$htmloption     Options html on select object
+     *  @param	string	$maxlength		Max length for labels (0=no limit)
      *  @return string           		HTML string with select
      */
-    function select_country($selected='',$htmlname='pays_id',$htmloption='')
+    function select_country($selected='',$htmlname='country_id',$htmloption='',$maxlength=0)
     {
         global $conf,$langs;
 
@@ -495,7 +510,7 @@ class Form
                     {
                         $out.= '<option value="'.$row['rowid'].'">';
                     }
-                    $out.= $row['label'];
+                    $out.= dol_trunc($row['label'],$maxlength,'middle');
                     if ($row['code_iso']) $out.= ' ('.$row['code_iso'] . ')';
                     $out.= '</option>';
                 }
@@ -645,11 +660,11 @@ class Form
      *
      *	@param	string	$selected       Preselected type
      *	@param  string	$htmlname       Name of field in form
-     *  @param  string	$filter         Optionnal filters criteras
+     *  @param  string	$filter         Optionnal filters criteras (example: 's.rowid <> x')
      *	@param	int		$showempty		Add an empty field
      * 	@param	int		$showtype		Show third party type in combolist (customer, prospect or supplier)
      * 	@param	int		$forcecombo		Force to use combo box
-     *  @param	array	$event			Event options
+     *  @param	array	$event			Event options. Example: array(array('method'=>'getContacts', 'url'=>dol_buildpath('/core/ajax/contacts.php',1), 'htmlname'=>'contactid', 'params'=>array('add-customer-contact'=>'disabled')))
      * 	@return	string					HTML string with
      */
     function select_company($selected='',$htmlname='socid',$filter='',$showempty=0, $showtype=0, $forcecombo=0, $event=array())
@@ -664,8 +679,9 @@ class Form
         if (!$user->rights->societe->client->voir && !$user->societe_id) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
         $sql.= " WHERE s.entity IN (".getEntity('societe', 1).")";
         if (! empty($user->societe_id)) $sql.= " AND s.rowid = ".$user->societe_id;
-        if ($filter) $sql.= " AND ".$filter;
+        if ($filter) $sql.= " AND (".$filter.")";
         if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
+        if (! empty($conf->global->COMPANY_HIDE_INACTIVE_IN_COMBOBOX)) $sql.= " AND s.status<>0 ";
         $sql.= " ORDER BY nom ASC";
 
         dol_syslog(get_class($this)."::select_company sql=".$sql);
@@ -675,8 +691,31 @@ class Form
             if ($conf->use_javascript_ajax && $conf->global->COMPANY_USE_SEARCH_TO_SELECT && ! $forcecombo)
             {
                 //$minLength = (is_numeric($conf->global->COMPANY_USE_SEARCH_TO_SELECT)?$conf->global->COMPANY_USE_SEARCH_TO_SELECT:2);
-
-                $out.= ajax_combobox($htmlname, $event);
+                $out.= ajax_combobox($htmlname, $event, $conf->global->COMPANY_USE_SEARCH_TO_SELECT);
+				/*
+<<<<<<< HEAD
+				if ($selected && empty($selected_input_value))
+                {
+                	require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+                	$product = new Product($this->db);
+                	$product->fetch($selected);
+                	$selected_input_value=$product->ref;
+                }
+=======
+				if ($selected && empty($selected_input_value))
+                {
+                	require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+                	$product = new Product($this->db);
+                	$product->fetch($selected);
+                	$selected_input_value=$product->ref;
+                }
+>>>>>>> refs/remotes/origin/3.3
+                // mode=1 means customers products
+                $ajaxoptions=array();
+                $urloption='htmlname='.$htmlname.'&outjson=1&filter='.urlencode($filter).'&showtype='.$showtype;
+				$out.=ajax_autocompleter($selected, $htmlname, DOL_URL_ROOT.'/societe/ajax/company.php', $urloption, $conf->global->COMPANY_USE_SEARCH_TO_SELECT, 0, $ajaxoptions);
+                $out.='<input type="text" size="20" name="search_'.$htmlname.'" id="search_'.$htmlname.'" value="'.$selected_input_value.'" />';
+				*/
             }
 
             $out.= '<select id="'.$htmlname.'" class="flat" name="'.$htmlname.'">';
@@ -797,11 +836,14 @@ class Form
      *	@param	string	$showfunction   Add function into label
      *	@param	string	$moreclass		Add more class to class style
      *	@param	string	$showsoc	    Add company into label
+     * 	@param	int		$forcecombo		Force to use combo box
+     *  @param	array	$event			Event options. Example: array(array('method'=>'getContacts', 'url'=>dol_buildpath('/core/ajax/contacts.php',1), 'htmlname'=>'contactid', 'params'=>array('add-customer-contact'=>'disabled')))
+     *  @param	bool	$options_only	Return options only (for ajax treatment)
      *	@return	int						<0 if KO, Nb of contact in list if OK
      */
-    function select_contacts($socid,$selected='',$htmlname='contactid',$showempty=0,$exclude='',$limitto='',$showfunction=0, $moreclass='', $showsoc=0)
+    function select_contacts($socid,$selected='',$htmlname='contactid',$showempty=0,$exclude='',$limitto='',$showfunction=0, $moreclass='', $showsoc=0, $forcecombo=0, $event=array(), $options_only=false)
     {
-    	print $this->selectcontacts($socid,$selected,$htmlname,$showempty,$exclude,$limitto,$showfunction, $moreclass, $showsoc);
+    	print $this->selectcontacts($socid,$selected,$htmlname,$showempty,$exclude,$limitto,$showfunction, $moreclass, $options_only, $showsoc, $forcecombo, $event);
     	return $this->num;
     }
 
@@ -811,16 +853,18 @@ class Form
      *	@param	int		$socid      	Id ot third party or 0 for all
      *	@param  string	$selected   	Id contact pre-selectionne
      *	@param  string	$htmlname  	    Name of HTML field ('none' for a not editable field)
-     *	@param  int		$showempty     	0=no empty value, 1=add an empty value
+     *	@param  int		$showempty     	0=no empty value, 1=add an empty value, 2=add line 'Internal' (used by user edit)
      *	@param  string	$exclude        List of contacts id to exclude
      *	@param	string	$limitto		Disable answers that are not id in this array list
      *	@param	string	$showfunction   Add function into label
      *	@param	string	$moreclass		Add more class to class style
      *	@param	bool	$options_only	Return options only (for ajax treatment)
      *	@param	string	$showsoc	    Add company into label
+     * 	@param	int		$forcecombo		Force to use combo box
+     *  @param	array	$event			Event options. Example: array(array('method'=>'getContacts', 'url'=>dol_buildpath('/core/ajax/contacts.php',1), 'htmlname'=>'contactid', 'params'=>array('add-customer-contact'=>'disabled')))
      *	@return	 int						<0 if KO, Nb of contact in list if OK
      */
-    function selectcontacts($socid,$selected='',$htmlname='contactid',$showempty=0,$exclude='',$limitto='',$showfunction=0, $moreclass='', $options_only=false, $showsoc=0)
+    function selectcontacts($socid,$selected='',$htmlname='contactid',$showempty=0,$exclude='',$limitto='',$showfunction=0, $moreclass='', $options_only=false, $showsoc=0, $forcecombo=0, $event=array())
     {
         global $conf,$langs;
 
@@ -829,7 +873,7 @@ class Form
         $out='';
 
         // On recherche les societes
-        $sql = "SELECT sp.rowid, sp.name as name, sp.firstname, sp.poste";
+        $sql = "SELECT sp.rowid, sp.lastname, sp.firstname, sp.poste";
         if ($showsoc > 0) {
         	$sql.= " , s.nom as company";
         }
@@ -839,7 +883,7 @@ class Form
         }
         $sql.= " WHERE sp.entity IN (".getEntity('societe', 1).")";
         if ($socid > 0) $sql.= " AND sp.fk_soc=".$socid;
-        $sql.= " ORDER BY sp.name ASC";
+        $sql.= " ORDER BY sp.lastname ASC";
 
         dol_syslog(get_class($this)."::select_contacts sql=".$sql);
         $resql=$this->db->query($sql);
@@ -847,8 +891,14 @@ class Form
         {
             $num=$this->db->num_rows($resql);
 
+            if ($conf->use_javascript_ajax && $conf->global->CONTACT_USE_SEARCH_TO_SELECT && ! $forcecombo && ! $options_only)
+            {
+            	$out.= ajax_combobox($htmlname, $event);
+            }
+
             if ($htmlname != 'none' || $options_only) $out.= '<select class="flat'.($moreclass?' '.$moreclass:'').'" id="'.$htmlname.'" name="'.$htmlname.'">';
-            if ($showempty) $out.= '<option value="0"></option>';
+            if ($showempty == 1) $out.= '<option value="0"'.($selected=='0'?' selected="selected"':'').'></option>';
+            if ($showempty == 2) $out.= '<option value="0"'.($selected=='0'?' selected="selected"':'').'>'.$langs->trans("Internal").'</option>';
             $num = $this->db->num_rows($resql);
             $i = 0;
             if ($num)
@@ -861,8 +911,7 @@ class Form
                     $obj = $this->db->fetch_object($resql);
 
                     $contactstatic->id=$obj->rowid;
-                    $contactstatic->name=$obj->name;
-                    $contactstatic->lastname=$obj->name;
+                    $contactstatic->lastname=$obj->lastname;
                     $contactstatic->firstname=$obj->firstname;
 
                     if ($htmlname != 'none')
@@ -892,7 +941,7 @@ class Form
                         }
                     }
                     else
-                    {
+					{
                         if ($selected == $obj->rowid)
                         {
                             $out.= $contactstatic->getFullName($langs);
@@ -904,8 +953,8 @@ class Form
                 }
             }
             else
-            {
-            	$out.= '<option value="-1" selected="selected" disabled="disabled">'.$langs->trans("NoContactDefined").'</option>';
+			{
+            	$out.= '<option value="-1"'.($showempty==2?'':' selected="selected"').' disabled="disabled">'.$langs->trans($socid?"NoContactDefinedForThirdParty":"NoContactDefined").'</option>';
             }
             if ($htmlname != 'none' || $options_only)
             {
@@ -932,10 +981,10 @@ class Form
      * 	@param	int		$disabled		If select list must be disabled
      *  @param  array	$include        Array list of users id to include
      * 	@param	int		$enableonly		Array list of users id to be enabled. All other must be disabled
-     *  @param	int		$force_entity	Possibility to force entity
+     *  @param	int		$force_entity	0 or Id of environment to force
      * 	@return	void
      */
-    function select_users($selected='',$htmlname='userid',$show_empty=0,$exclude='',$disabled=0,$include='',$enableonly='',$force_entity=false)
+    function select_users($selected='',$htmlname='userid',$show_empty=0,$exclude='',$disabled=0,$include='',$enableonly='',$force_entity=0)
     {
         print $this->select_dolusers($selected,$htmlname,$show_empty,$exclude,$disabled,$include,$enableonly,$force_entity);
     }
@@ -950,15 +999,15 @@ class Form
      * 	@param	int		$disabled		If select list must be disabled
      *  @param  array	$include        Array list of users id to include
      * 	@param	int		$enableonly		Array list of users id to be enabled. All other must be disabled
-     *  @param	int		$force_entity	Possibility to force entity
+     *  @param	int		$force_entity	0 or Id of environment to force
      * 	@return	string					HTML select string
      */
-    function select_dolusers($selected='',$htmlname='userid',$show_empty=0,$exclude='',$disabled=0,$include='',$enableonly='',$force_entity=false)
+    function select_dolusers($selected='',$htmlname='userid',$show_empty=0,$exclude='',$disabled=0,$include='',$enableonly='',$force_entity=0)
     {
         global $conf,$user,$langs;
 
         // If no preselected user defined, we take current user
-        if ($selected < -1 && empty($conf->global->SOCIETE_DISABLE_DEFAULT_SALESREPRESENTATIVE)) $selected=$user->id;
+        if ((is_numeric($selected) && ($selected < -1 || empty($selected))) && empty($conf->global->SOCIETE_DISABLE_DEFAULT_SALESREPRESENTATIVE)) $selected=$user->id;
 
         // Permettre l'exclusion d'utilisateurs
         if (is_array($exclude))	$excludeUsers = implode("','",$exclude);
@@ -968,7 +1017,7 @@ class Form
         $out='';
 
         // On recherche les utilisateurs
-        $sql = "SELECT DISTINCT u.rowid, u.name as lastname, u.firstname, u.login, u.admin, u.entity";
+        $sql = "SELECT DISTINCT u.rowid, u.lastname as lastname, u.firstname, u.login, u.admin, u.entity";
         if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
         {
             $sql.= ", e.label";
@@ -996,7 +1045,7 @@ class Form
         if (! empty($user->societe_id)) $sql.= " AND u.fk_societe = ".$user->societe_id;
         if (is_array($exclude) && $excludeUsers) $sql.= " AND u.rowid NOT IN ('".$excludeUsers."')";
         if (is_array($include) && $includeUsers) $sql.= " AND u.rowid IN ('".$includeUsers."')";
-        $sql.= " ORDER BY u.name ASC";
+        $sql.= " ORDER BY u.lastname ASC";
 
         dol_syslog(get_class($this)."::select_dolusers sql=".$sql);
         $resql=$this->db->query($sql);
@@ -1007,7 +1056,7 @@ class Form
             if ($num)
             {
                 $out.= '<select class="flat" id="'.$htmlname.'" name="'.$htmlname.'"'.($disabled?' disabled="disabled"':'').'>';
-                if ($show_empty) $out.= '<option value="-1"'.($selected==-1?' selected="selected"':'').'>&nbsp;</option>'."\n";
+                if ($show_empty) $out.= '<option value="-1"'.((empty($selected) || $selected==-1)?' selected="selected"':'').'>&nbsp;</option>'."\n";
 
                 $userstatic=new User($this->db);
 
@@ -1143,6 +1192,18 @@ class Form
         {
             $sql.= ", pl.label as label_translated";
         }
+		// Price by quantity
+		if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY))
+		{
+			$sql.= ", (SELECT pp.rowid FROM ".MAIN_DB_PREFIX."product_price as pp WHERE pp.fk_product = p.rowid";
+			if ($price_level >= 1) $sql.= " AND price_level=".$price_level;
+			$sql.= " ORDER BY date_price";
+			$sql.= " DESC LIMIT 1) as price_rowid";
+			$sql.= ", (SELECT pp.price_by_qty FROM ".MAIN_DB_PREFIX."product_price as pp WHERE pp.fk_product = p.rowid";
+			if ($price_level >= 1) $sql.= " AND price_level=".$price_level;
+			$sql.= " ORDER BY date_price";
+			$sql.= " DESC LIMIT 1) as price_by_qty";
+		}
         $sql.= " FROM ".MAIN_DB_PREFIX."product as p";
         // Multilang : we add translation
         if (! empty($conf->global->MAIN_MULTILANGS))
@@ -1175,9 +1236,13 @@ class Form
             }
             else
             {
-                $sql.=" AND (p.ref LIKE '%".$filterkey."%' OR p.label LIKE '%".$filterkey."%'";
-                if (! empty($conf->global->MAIN_MULTILANGS)) $sql.=" OR pl.label LIKE '%".$filterkey."%'";
-                $sql.=")";
+                // For natural search
+                $scrit = explode(' ', $filterkey);
+                foreach ($scrit as $crit) {
+                    $sql.=" AND (p.ref LIKE '%".$crit."%' OR p.label LIKE '%".$crit."%'";
+                    if (! empty($conf->global->MAIN_MULTILANGS)) $sql.=" OR pl.label LIKE '%".$crit."%'";
+                    $sql.=")";
+                }
             }
 
             if (! empty($conf->barcode->enabled))
@@ -1204,143 +1269,51 @@ class Form
             $i = 0;
             while ($num && $i < $num)
             {
-                $outkey='';
-                $outval='';
-                $outref='';
-                $outlabel='';
-                $outdesc='';
-                $outtype='';
-                $outprice_ht='';
-                $outprice_ttc='';
-                $outpricebasetype='';
-                $outtva_tx='';
+            	$opt = '';
+				$optJson = array();
+				$objp = $this->db->fetch_object($result);
 
-                $objp = $this->db->fetch_object($result);
+				if(!empty($objp->price_by_qty) && $objp->price_by_qty == 1) { // Price by quantity will return many prices for the same product
+					$sql = "SELECT rowid, quantity, price, unitprice, remise_percent, remise";
+					$sql.= " FROM ".MAIN_DB_PREFIX."product_price_by_qty";
+					$sql.= " WHERE fk_product_price=".$objp->price_rowid;
+					$sql.= " ORDER BY quantity ASC";
 
-                $label=$objp->label;
-                if (! empty($objp->label_translated)) $label=$objp->label_translated;
-                if ($filterkey && $filterkey != '') $label=preg_replace('/('.preg_quote($filterkey).')/i','<strong>$1</strong>',$label,1);
+					dol_syslog(get_class($this)."::select_produits_do search price by qty sql=".$sql);
+					$result2 = $this->db->query($sql);
+					if ($result2)
+					{
+						$nb_prices = $this->db->num_rows($result2);
+						$j = 0;
+						while ($nb_prices && $j < $nb_prices) {
+							$objp2 = $this->db->fetch_object($result2);
 
-                $outkey=$objp->rowid;
-                $outref=$objp->ref;
-                $outlabel=$objp->label;
-                $outdesc=$objp->description;
-                $outtype=$objp->fk_product_type;
+							$objp->quantity = $objp2->quantity;
+							$objp->price = $objp2->price;
+							$objp->unitprice = $objp2->unitprice;
+							$objp->remise_percent = $objp2->remise_percent;
+							$objp->remise = $objp2->remise;
+							$objp->price_by_qty_rowid = $objp2->rowid;
 
-                $opt = '<option value="'.$objp->rowid.'"';
-                $opt.= ($objp->rowid == $selected)?' selected="selected"':'';
-                if (! empty($conf->stock->enabled) && $objp->fk_product_type == 0 && isset($objp->stock))
-                {
-                    if ($objp->stock > 0)
-                    {
-                        $opt.= ' style="background-color:#32CD32; color:#F5F5F5;"';
-                    }
-                    else if ($objp->stock <= 0)
-                    {
-                        $opt.= ' style="background-color:#FF0000; color:#F5F5F5;"';
-                    }
-                }
-                $opt.= '>';
-                $opt.= $objp->ref.' - '.dol_trunc($label,32).' - ';
+							$this->_construct_product_list_option($objp, $opt, $optJson, 0, $selected);
 
-                $objRef = $objp->ref;
-                if ($filterkey && $filterkey != '') $objRef=preg_replace('/('.preg_quote($filterkey).')/i','<strong>$1</strong>',$objRef,1);
-                $outval.=$objRef.' - '.dol_trunc($label,32).' - ';
+							$j++;
 
-                $found=0;
-                $currencytext=$langs->trans("Currency".$conf->currency);
-                $currencytextnoent=$langs->transnoentities("Currency".$conf->currency);
-                if (dol_strlen($currencytext) > 10) $currencytext=$conf->currency;	// If text is too long, we use the short code
-                if (dol_strlen($currencytextnoent) > 10) $currencytextnoent=$conf->currency;   // If text is too long, we use the short code
-
-                // Multiprice
-                if ($price_level >= 1)		// If we need a particular price level (from 1 to 6)
-                {
-                    $sql = "SELECT price, price_ttc, price_base_type, tva_tx";
-                    $sql.= " FROM ".MAIN_DB_PREFIX."product_price";
-                    $sql.= " WHERE fk_product='".$objp->rowid."'";
-                    $sql.= " AND price_level=".$price_level;
-                    $sql.= " ORDER BY date_price";
-                    $sql.= " DESC LIMIT 1";
-
-                    dol_syslog(get_class($this)."::select_produits_do search price for level '.$price_level.' sql=".$sql);
-                    $result2 = $this->db->query($sql);
-                    if ($result2)
-                    {
-                        $objp2 = $this->db->fetch_object($result2);
-                        if ($objp2)
-                        {
-                            $found=1;
-                            if ($objp2->price_base_type == 'HT')
-                            {
-                                $opt.= price($objp2->price,1).' '.$currencytext.' '.$langs->trans("HT");
-                                $outval.= price($objp2->price,1).' '.$currencytextnoent.' '.$langs->transnoentities("HT");
-                            }
-                            else
-                            {
-                                $opt.= price($objp2->price_ttc,1).' '.$currencytext.' '.$langs->trans("TTC");
-                                $outval.= price($objp2->price_ttc,1).' '.$currencytextnoent.' '.$langs->transnoentities("TTC");
-                            }
-                            $outprice_ht=price($objp2->price);
-                            $outprice_ttc=price($objp2->price_ttc);
-                            $outpricebasetype=$objp2->price_base_type;
-                            $outtva_tx=$objp2->tva_tx;
-                        }
-                    }
-                    else
-                    {
-                        dol_print_error($this->db);
-                    }
-                }
-
-                // If level no defined or multiprice not found, we used the default price
-                if (! $found)
-                {
-                    if ($objp->price_base_type == 'HT')
-                    {
-                        $opt.= price($objp->price,1).' '.$currencytext.' '.$langs->trans("HT");
-                        $outval.= price($objp->price,1).' '.$currencytextnoent.' '.$langs->transnoentities("HT");
-                    }
-                    else
-                    {
-                        $opt.= price($objp->price_ttc,1).' '.$currencytext.' '.$langs->trans("TTC");
-                        $outval.= price($objp->price_ttc,1).' '.$currencytextnoent.' '.$langs->transnoentities("TTC");
-                    }
-                    $outprice_ht=price($objp->price);
-                    $outprice_ttc=price($objp->price_ttc);
-                    $outpricebasetype=$objp->price_base_type;
-                    $outtva_tx=$objp->tva_tx;
-                }
-
-                if (! empty($conf->stock->enabled) && isset($objp->stock) && $objp->fk_product_type == 0)
-                {
-                    $opt.= ' - '.$langs->trans("Stock").':'.$objp->stock;
-                    $outval.=' - '.$langs->transnoentities("Stock").':'.$objp->stock;
-                }
-
-                if ($objp->duration)
-                {
-                    $duration_value = substr($objp->duration,0,dol_strlen($objp->duration)-1);
-                    $duration_unit = substr($objp->duration,-1);
-                    if ($duration_value > 1)
-                    {
-                        $dur=array("h"=>$langs->trans("Hours"),"d"=>$langs->trans("Days"),"w"=>$langs->trans("Weeks"),"m"=>$langs->trans("Months"),"y"=>$langs->trans("Years"));
-                    }
-                    else
-                    {
-                        $dur=array("h"=>$langs->trans("Hour"),"d"=>$langs->trans("Day"),"w"=>$langs->trans("Week"),"m"=>$langs->trans("Month"),"y"=>$langs->trans("Year"));
-                    }
-                    $opt.= ' - '.$duration_value.' '.$langs->trans($dur[$duration_unit]);
-                    $outval.=' - '.$duration_value.' '.$langs->transnoentities($dur[$duration_unit]);
-                }
-
-                $opt.= "</option>\n";
-
-                // Add new entry
-                // "key" value of json key array is used by jQuery automatically as selected value
-                // "label" value of json key array is used by jQuery automatically as text for combo box
-                $outselect.=$opt;
-                array_push($outjson, array('key'=>$outkey, 'value'=>$outref, 'label'=>$outval, 'label2'=>$outlabel, 'desc'=>$outdesc, 'type'=>$outtype, 'price_ht'=>$outprice_ht, 'price_ttc'=>$outprice_ttc, 'pricebasetype'=>$outpricebasetype, 'tva_tx'=>$outtva_tx));
+							// Add new entry
+							// "key" value of json key array is used by jQuery automatically as selected value
+							// "label" value of json key array is used by jQuery automatically as text for combo box
+							$outselect.=$opt;
+							array_push($outjson, $optJson);
+						}
+					}
+				} else {
+					$this->_construct_product_list_option($objp, $opt, $optJson, $price_level, $selected);
+					// Add new entry
+					// "key" value of json key array is used by jQuery automatically as selected value
+					// "label" value of json key array is used by jQuery automatically as text for combo box
+					$outselect.=$opt;
+					array_push($outjson, $optJson);
+				}
 
                 $i++;
             }
@@ -1357,6 +1330,185 @@ class Form
             dol_print_error($db);
         }
     }
+
+    /**
+     * _construct_product_list_option
+     * 
+     * @param 	resultset		&$objp			Resultset of fetch
+     * @param 	string		$opt			Option
+     * @param 	string		$optJson		Option
+     * @param 	int			$price_level	Price level
+     * @param 	string		$selected		Preselected value
+     * @return	
+     */
+	private function _construct_product_list_option(&$objp, &$opt, &$optJson, $price_level, $selected) 
+	{
+		global $langs,$conf,$user,$db;
+
+        $outkey='';
+        $outval='';
+        $outref='';
+        $outlabel='';
+        $outdesc='';
+        $outtype='';
+        $outprice_ht='';
+        $outprice_ttc='';
+        $outpricebasetype='';
+        $outtva_tx='';
+		$outqty=1;
+		$outdiscount=0;
+
+        $label=$objp->label;
+        if (! empty($objp->label_translated)) $label=$objp->label_translated;
+        if (! empty($filterkey) && $filterkey != '') $label=preg_replace('/('.preg_quote($filterkey).')/i','<strong>$1</strong>',$label,1);
+
+        $outkey=$objp->rowid;
+        $outref=$objp->ref;
+        $outlabel=$objp->label;
+        $outdesc=$objp->description;
+        $outtype=$objp->fk_product_type;
+
+        $opt = '<option value="'.$objp->rowid.'"';
+        $opt.= ($objp->rowid == $selected)?' selected="selected"':'';
+		$opt.= (!empty($objp->price_by_qty_rowid) && $objp->price_by_qty_rowid > 0)?' pbq="'.$objp->price_by_qty_rowid.'"':'';
+        if (! empty($conf->stock->enabled) && $objp->fk_product_type == 0 && isset($objp->stock))
+        {
+			if ($objp->stock > 0) $opt.= ' class="product_line_stock_ok"';
+			else if ($objp->stock <= 0) $opt.= ' class="product_line_stock_too_low"';
+        }
+        $opt.= '>';
+        $opt.= $objp->ref.' - '.dol_trunc($label,32).' - ';
+
+        $objRef = $objp->ref;
+        if (! empty($filterkey) && $filterkey != '') $objRef=preg_replace('/('.preg_quote($filterkey).')/i','<strong>$1</strong>',$objRef,1);
+        $outval.=$objRef.' - '.dol_trunc($label,32).' - ';
+
+        $found=0;
+        $currencytext=$langs->trans("Currency".$conf->currency);
+        $currencytextnoent=$langs->transnoentities("Currency".$conf->currency);
+        if (dol_strlen($currencytext) > 10) $currencytext=$conf->currency;	// If text is too long, we use the short code
+        if (dol_strlen($currencytextnoent) > 10) $currencytextnoent=$conf->currency;   // If text is too long, we use the short code
+
+        // Multiprice
+        if ($price_level >= 1)		// If we need a particular price level (from 1 to 6)
+        {
+            $sql = "SELECT price, price_ttc, price_base_type, tva_tx";
+            $sql.= " FROM ".MAIN_DB_PREFIX."product_price";
+            $sql.= " WHERE fk_product='".$objp->rowid."'";
+            $sql.= " AND price_level=".$price_level;
+            $sql.= " ORDER BY date_price";
+            $sql.= " DESC LIMIT 1";
+
+            dol_syslog(get_class($this)."::select_produits_do search price for level '.$price_level.' sql=".$sql);
+            $result2 = $this->db->query($sql);
+            if ($result2)
+            {
+                $objp2 = $this->db->fetch_object($result2);
+                if ($objp2)
+                {
+                    $found=1;
+                    if ($objp2->price_base_type == 'HT')
+                    {
+                        $opt.= price($objp2->price,1).' '.$currencytext.' '.$langs->trans("HT");
+                        $outval.= price($objp2->price,1).' '.$currencytextnoent.' '.$langs->transnoentities("HT");
+                    }
+                    else
+                    {
+                        $opt.= price($objp2->price_ttc,1).' '.$currencytext.' '.$langs->trans("TTC");
+                        $outval.= price($objp2->price_ttc,1).' '.$currencytextnoent.' '.$langs->transnoentities("TTC");
+                    }
+                    $outprice_ht=price($objp2->price);
+                    $outprice_ttc=price($objp2->price_ttc);
+                    $outpricebasetype=$objp2->price_base_type;
+                    $outtva_tx=$objp2->tva_tx;
+                }
+            }
+            else
+            {
+                dol_print_error($this->db);
+            }
+        }
+
+		// Price by quantity
+		if (!empty($objp->quantity) && $objp->quantity >= 1) {
+			$found = 1;
+			$outqty=$objp->quantity;
+			$outdiscount=$objp->remise_percent;
+			if ($objp->quantity == 1)
+			{
+				$opt.= price($objp->unitprice).' '.$currencytext."/";
+				$outval.= price($objp->unitprice).' '.$currencytextnoent."/";
+				$opt.= $langs->trans("Unit");	// Do not use strtolower because it breaks utf8 encoding
+				$outval.=$langs->transnoentities("Unit");
+			}
+			else
+			{
+				$opt.= price($objp->price).' '.$currencytext."/".$objp->quantity;
+				$outval.= price($objp->price).' '.$currencytextnoent."/".$objp->quantity;
+				$opt.= $langs->trans("Units");	// Do not use strtolower because it breaks utf8 encoding
+				$outval.=$langs->transnoentities("Units");
+			}
+
+			$outprice_ht=price($objp->unitprice);
+            $outprice_ttc=price($objp->unitprice * (1 + ($objp->tva_tx / 100)));
+            $outpricebasetype=$objp->price_base_type;
+            $outtva_tx=$objp->tva_tx;
+		}
+		if (!empty($objp->quantity) && $objp->quantity >= 1)
+		{
+			$opt.=" (".price($objp->unitprice).' '.$currencytext."/".$langs->trans("Unit").")";	// Do not use strtolower because it breaks utf8 encoding
+			$outval.=" (".price($objp->unitprice).' '.$currencytextnoent."/".$langs->transnoentities("Unit").")";	// Do not use strtolower because it breaks utf8 encoding
+		}
+		if (!empty($objp->remise_percent) && $objp->remise_percent >= 1)
+		{
+			$opt.=" - ".$langs->trans("Discount")." : ".vatrate($objp->remise_percent).' %';
+			$outval.=" - ".$langs->transnoentities("Discount")." : ".vatrate($objp->remise_percent).' %';
+		}
+
+        // If level no defined or multiprice not found, we used the default price
+        if (! $found)
+        {
+            if ($objp->price_base_type == 'HT')
+            {
+                $opt.= price($objp->price,1).' '.$currencytext.' '.$langs->trans("HT");
+                $outval.= price($objp->price,1).' '.$currencytextnoent.' '.$langs->transnoentities("HT");
+            }
+            else
+            {
+                $opt.= price($objp->price_ttc,1).' '.$currencytext.' '.$langs->trans("TTC");
+                $outval.= price($objp->price_ttc,1).' '.$currencytextnoent.' '.$langs->transnoentities("TTC");
+            }
+            $outprice_ht=price($objp->price);
+            $outprice_ttc=price($objp->price_ttc);
+            $outpricebasetype=$objp->price_base_type;
+            $outtva_tx=$objp->tva_tx;
+        }
+
+        if (! empty($conf->stock->enabled) && isset($objp->stock) && $objp->fk_product_type == 0)
+        {
+            $opt.= ' - '.$langs->trans("Stock").':'.$objp->stock;
+            $outval.=' - '.$langs->transnoentities("Stock").':'.$objp->stock;
+        }
+
+        if ($objp->duration)
+        {
+            $duration_value = substr($objp->duration,0,dol_strlen($objp->duration)-1);
+            $duration_unit = substr($objp->duration,-1);
+            if ($duration_value > 1)
+            {
+                $dur=array("h"=>$langs->trans("Hours"),"d"=>$langs->trans("Days"),"w"=>$langs->trans("Weeks"),"m"=>$langs->trans("Months"),"y"=>$langs->trans("Years"));
+            }
+            else
+            {
+                $dur=array("h"=>$langs->trans("Hour"),"d"=>$langs->trans("Day"),"w"=>$langs->trans("Week"),"m"=>$langs->trans("Month"),"y"=>$langs->trans("Year"));
+            }
+            $opt.= ' - '.$duration_value.' '.$langs->trans($dur[$duration_unit]);
+            $outval.=' - '.$duration_value.' '.$langs->transnoentities($dur[$duration_unit]);
+        }
+
+        $opt.= "</option>\n";
+		$optJson = array('key'=>$outkey, 'value'=>$outref, 'label'=>$outval, 'label2'=>$outlabel, 'desc'=>$outdesc, 'type'=>$outtype, 'price_ht'=>$outprice_ht, 'price_ttc'=>$outprice_ttc, 'pricebasetype'=>$outpricebasetype, 'tva_tx'=>$outtva_tx, 'qty'=>$outqty, 'discount'=>$outdiscount);
+	}
 
     /**
      *	Return list of products for customer (in Ajax if Ajax activated or go to select_produits_fournisseurs_do)
@@ -1408,7 +1560,7 @@ class Form
         $langs->load('stocks');
 
         $sql = "SELECT p.rowid, p.label, p.ref, p.price, p.duration,";
-        $sql.= " pfp.ref_fourn, pfp.rowid as idprodfournprice, pfp.price as fprice, pfp.quantity, pfp.unitprice,";
+        $sql.= " pfp.ref_fourn, pfp.rowid as idprodfournprice, pfp.price as fprice, pfp.quantity, pfp.remise_percent, pfp.remise, pfp.unitprice,";
         $sql.= " s.nom";
         $sql.= " FROM ".MAIN_DB_PREFIX."product as p";
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."product_fournisseur_price as pfp ON p.rowid = pfp.fk_product";
@@ -1435,7 +1587,7 @@ class Form
                 $sql .= " OR p.barcode LIKE '".$filterkey."'";
             }
         }
-        $sql.= " ORDER BY pfp.ref_fourn DESC";
+        $sql.= " ORDER BY pfp.ref_fourn DESC, pfp.quantity ASC";
 
         // Build output string
         $outselect='';
@@ -1448,7 +1600,8 @@ class Form
 
             $num = $this->db->num_rows($result);
 
-            $outselect.='<select class="flat" id="select'.$htmlname.'" name="'.$htmlname.'">';
+            //$outselect.='<select class="flat" id="select'.$htmlname.'" name="'.$htmlname.'">';	// remove select to have id same with combo and ajax
+            $outselect.='<select class="flat" id="'.$htmlname.'" name="'.$htmlname.'">';
             if (! $selected) $outselect.='<option value="0" selected="selected">&nbsp;</option>';
             else $outselect.='<option value="0">&nbsp;</option>';
 
@@ -1461,6 +1614,7 @@ class Form
                 $outref=$objp->ref;
                 $outval='';
                 $outqty=1;
+				$outdiscount=0;
 
                 $opt = '<option value="'.$objp->idprodfournprice.'"';
                 if ($selected && $selected == $objp->idprodfournprice) $opt.= ' selected="selected"';
@@ -1474,8 +1628,12 @@ class Form
                 $label = $objp->label;
                 if ($filterkey && $filterkey != '') $label=preg_replace('/('.preg_quote($filterkey).')/i','<strong>$1</strong>',$label,1);
 
-                $opt.=$objp->ref.' ('.$objp->ref_fourn.') - ';
-                $outval.=$objRef.' ('.$objRefFourn.') - ';
+                $opt.=$objp->ref;
+                if (! empty($objp->idprodfournprice)) $opt.=' ('.$objp->ref_fourn.')';
+                $opt.=' - ';
+                $outval.=$objRef;
+                if (! empty($objp->idprodfournprice)) $outval.=' ('.$objRefFourn.')';
+                $outval.=' - ';
                 $opt.=dol_trunc($objp->label,18).' - ';
                 $outval.=dol_trunc($label,18).' - ';
 
@@ -1486,23 +1644,33 @@ class Form
                     if (dol_strlen($currencytext) > 10) $currencytext=$conf->currency;   // If text is too long, we use the short code
                     if (dol_strlen($currencytextnoent) > 10) $currencytextnoent=$conf->currency;   // If text is too long, we use the short code
 
-                    $opt.= price($objp->fprice).' '.$currencytext."/".$objp->quantity;
-                    $outval.= price($objp->fprice).' '.$currencytextnoent."/".$objp->quantity;
+
                     $outqty=$objp->quantity;
+					$outdiscount=$objp->remise_percent;
                     if ($objp->quantity == 1)
                     {
-                        $opt.= strtolower($langs->trans("Unit"));
-                        $outval.=strtolower($langs->transnoentities("Unit"));
+	                    $opt.= price($objp->fprice).' '.$currencytext."/";
+                    	$outval.= price($objp->fprice).' '.$currencytextnoent."/";
+                    	$opt.= $langs->trans("Unit");	// Do not use strtolower because it breaks utf8 encoding
+                        $outval.=$langs->transnoentities("Unit");
                     }
                     else
                     {
-                        $opt.= strtolower($langs->trans("Units"));
-                        $outval.=strtolower($langs->transnoentities("Units"));
+    	                $opt.= price($objp->fprice).' '.$currencytext."/".$objp->quantity;
+	                    $outval.= price($objp->fprice).' '.$currencytextnoent."/".$objp->quantity;
+                    	$opt.= $langs->trans("Units");	// Do not use strtolower because it breaks utf8 encoding
+                        $outval.=$langs->transnoentities("Units");
                     }
+
                     if ($objp->quantity >= 1)
                     {
-                        $opt.=" (".price($objp->unitprice).' '.$currencytext."/".strtolower($langs->trans("Unit")).")";
-                        $outval.=" (".price($objp->unitprice).' '.$currencytextnoent."/".strtolower($langs->transnoentities("Unit")).")";
+                        $opt.=" (".price($objp->unitprice).' '.$currencytext."/".$langs->trans("Unit").")";	// Do not use strtolower because it breaks utf8 encoding
+                        $outval.=" (".price($objp->unitprice).' '.$currencytextnoent."/".$langs->transnoentities("Unit").")";	// Do not use strtolower because it breaks utf8 encoding
+                    }
+					if ($objp->remise_percent >= 1)
+                    {
+                        $opt.=" - ".$langs->trans("Discount")." : ".vatrate($objp->remise_percent).' %';
+                        $outval.=" - ".$langs->transnoentities("Discount")." : ".vatrate($objp->remise_percent).' %';
                     }
                     if ($objp->duration)
                     {
@@ -1522,11 +1690,20 @@ class Form
                 }
                 $opt .= "</option>\n";
 
+
                 // Add new entry
                 // "key" value of json key array is used by jQuery automatically as selected value
                 // "label" value of json key array is used by jQuery automatically as text for combo box
                 $outselect.=$opt;
-                array_push($outjson, array('key'=>$outkey, 'value'=>$outref, 'label'=>$outval, 'qty'=>$outqty, 'disabled'=>(empty($objp->idprodfournprice)?true:false)));
+                array_push($outjson, array('key'=>$outkey, 'value'=>$outref, 'label'=>$outval, 'qty'=>$outqty, 'discount'=>$outdiscount, 'disabled'=>(empty($objp->idprodfournprice)?true:false)));
+				// Exemple of var_dump $outjson
+				// array(1) {[0]=>array(6) {[key"]=>string(1) "2" ["value"]=>string(3) "ppp"
+				//           ["label"]=>string(76) "ppp (<strong>f</strong>ff2) - ppp - 20,00 Euros/1unité (20,00 Euros/unité)"
+				//      	 ["qty"]=>string(1) "1" ["discount"]=>string(1) "0" ["disabled"]=>bool(false)
+                //}
+                //var_dump($outval); var_dump(utf8_check($outval)); var_dump(json_encode($outval));
+                //$outval=array('label'=>'ppp (<strong>f</strong>ff2) - ppp - 20,00 Euros/ Unité (20,00 Euros/unité)');
+                //var_dump($outval); var_dump(utf8_check($outval)); var_dump(json_encode($outval));
 
                 $i++;
             }
@@ -1843,10 +2020,10 @@ class Form
     /**
      *      Return list of events that triggered an object creation
      *
-     *      @param	int		$selected        Id du type d'origine pre-selectionne
+     *      @param	int		$selected        Id or code of type origin to select by default
      *      @param  string	$htmlname        Nom de la zone select
      *      @param  string	$exclude         To exclude a code value (Example: SRC_PROP)
-     *		@param	int		$addempty		Add an empty entry
+     *		@param	int		$addempty		 Add an empty entry
      *		@return	void
      */
     function select_demand_reason($selected='',$htmlname='demandreasonid',$exclude='',$addempty=0)
@@ -1861,7 +2038,7 @@ class Form
         {
             if ($arraydemandreason['code']==$exclude) continue;
 
-            if ($selected == $arraydemandreason['id'])
+            if ($selected && ($selected == $arraydemandreason['id'] || $selected == $arraydemandreason['code']))
             {
                 print '<option value="'.$arraydemandreason['id'].'" selected="selected">';
             }
@@ -2126,22 +2303,20 @@ class Form
      *
      *    @param	int		$type				Type de categories (0=product, 1=supplier, 2=customer, 3=member)
      *    @param    string	$selected    		Id of category preselected
-     *    @param    string	$select_name		HTML field name
+     *    @param    string	$htmlname			HTML field name
      *    @param    int		$maxlength      	Maximum length for labels
      *    @param    int		$excludeafterid 	Exclude all categories after this leaf in category tree.
      *    @return	void
      */
-    function select_all_categories($type, $selected='', $select_name="", $maxlength=64, $excludeafterid=0)
+    function select_all_categories($type, $selected='', $htmlname="parent", $maxlength=64, $excludeafterid=0)
     {
         global $langs;
         $langs->load("categories");
 
-        if ($select_name=="") $select_name="catMere";
-
         $cat = new Categorie($this->db);
         $cate_arbo = $cat->get_full_arbo($type,$excludeafterid);
 
-        $output = '<select class="flat" name="'.$select_name.'">';
+        $output = '<select class="flat" name="'.$htmlname.'">';
         if (is_array($cate_arbo))
         {
             if (! count($cate_arbo)) $output.= '<option value="-1" disabled="disabled">'.$langs->trans("NoCategoriesDefined").'</option>';
@@ -2209,6 +2384,9 @@ class Form
         $formconfirm='';
         $inputok=array();
         $inputko=array();
+
+        // Clean parameters
+        $newselectedchoice=empty($selectedchoice)?"no":$selectedchoice;
 
         if (is_array($formquestion) && ! empty($formquestion))
         {
@@ -2292,8 +2470,8 @@ class Form
                 $autoOpen=false;
                 $dialogconfirm.='-'.$button;
             }
-            $pageyes=$page.'&action='.$action.'&confirm=yes';
-            $pageno=($useajax == 2?$page.'&confirm=no':'');
+            $pageyes=$page.(preg_match('/\?/',$page)?'&':'?').'action='.$action.'&confirm=yes';
+            $pageno=($useajax == 2 ? $page.(preg_match('/\?/',$page)?'&':'?').'confirm=no':'');
             // Add input fields into list of fields to read during submit (inputok and inputko)
             if (is_array($formquestion))
             {
@@ -2316,7 +2494,15 @@ class Form
             $formconfirm.='
             $(function() {
             	$( "#'.$dialogconfirm.'" ).dialog({
-                    autoOpen: '.($autoOpen ? "true" : "false").',
+                    autoOpen: '.($autoOpen ? "true" : "false").',';
+            		if ($newselectedchoice == 'no')
+            		{
+						$formconfirm.='
+						open: function() {
+            				$(this).parent().find("button.ui-button:eq(1)").focus();
+						},';
+            		}
+        			$formconfirm.='
                     resizable: false,
                     height: "'.$height.'",
                     width: "'.$width.'",
@@ -2362,11 +2548,12 @@ class Form
                     }
                 });
 
+
             	var button = "'.$button.'";
                 if (button.length > 0) {
                 	$( "#" + button ).click(function() {
                 		$("#'.$dialogconfirm.'").dialog("open");
-                	});
+        			});
                 }
             });
             </script>';
@@ -2396,7 +2583,6 @@ class Form
             $formconfirm.= '<tr class="valid">';
             $formconfirm.= '<td class="valid">'.$question.'</td>';
             $formconfirm.= '<td class="valid">';
-            $newselectedchoice=empty($selectedchoice)?"no":$selectedchoice;
             $formconfirm.= $this->selectyesno("confirm",$newselectedchoice);
             $formconfirm.= '</td>';
             $formconfirm.= '<td class="valid" align="center"><input class="button" type="submit" value="'.$langs->trans("Validate").'"></td>';
@@ -2580,9 +2766,11 @@ class Form
      *    @param	string		$page        Page
      *    @param	string		$selected    Date preselected
      *    @param    string		$htmlname    Name of input html field
+     *    @param    int			$displayhour Display hour selector
+     *    @param    int			$displaymin	 Display minutes selector
      *    @return	void
      */
-    function form_date($page, $selected, $htmlname)
+    function form_date($page, $selected, $htmlname,$displayhour=0,$displaymin=0)
     {
         global $langs;
 
@@ -2593,7 +2781,7 @@ class Form
             print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
             print '<table class="nobordernopadding" cellpadding="0" cellspacing="0">';
             print '<tr><td>';
-            print $this->select_date($selected,$htmlname,0,0,1,'form'.$htmlname);
+            print $this->select_date($selected,$htmlname,$displayhour,$displaymin,1,'form'.$htmlname);
             print '</td>';
             print '<td align="left"><input type="submit" class="button" value="'.$langs->trans("Modify").'"></td>';
             print '</tr></table></form>';
@@ -2712,7 +2900,7 @@ class Form
             print '<input type="hidden" name="action" value="setabsolutediscount">';
             print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
             print '<table class="nobordernopadding" cellpadding="0" cellspacing="0">';
-            print '<tr><td nowrap="nowrap">';
+            print '<tr><td class="nowrap">';
             if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS))
             {
                 if (! $filter || $filter=="fk_facture_source IS NULL") print $langs->trans("CompanyHasAbsoluteDiscount",price($amount),$langs->transnoentities("Currency".$conf->currency)).': ';    // If we want deposit to be substracted to payments only and not to total of final invoice
@@ -2727,12 +2915,12 @@ class Form
             if ($filter) $newfilter.=' AND ('.$filter.')';
             $nbqualifiedlines=$this->select_remises($selected,$htmlname,$newfilter,$socid,$maxvalue);
             print '</td>';
-            print '<td>';
+            print '<td class="nowrap">';
             if ($nbqualifiedlines > 0)
             {
-                print ' &nbsp; <input type="submit" class="button" value="'.$langs->trans("UseLine").'"';
-                if ($filter && $filter != "fk_facture_source IS NULL OR (fk_facture_source IS NOT NULL AND description='(DEPOSIT)')") print '" title="'.$langs->trans("UseCreditNoteInInvoicePayment");
-                print '">';
+                print ' &nbsp; <input type="submit" class="button" value="'.dol_escape_htmltag($langs->trans("UseLine")).'"';
+                if ($filter && $filter != "fk_facture_source IS NULL OR (fk_facture_source IS NOT NULL AND description='(DEPOSIT)')") print ' title="'.$langs->trans("UseCreditNoteInInvoicePayment").'"';
+                print '>';
             }
             if ($more) print $more;
             print '</td>';
@@ -2800,17 +2988,17 @@ class Form
     }
 
     /**
-     *    Output html select to select thirdparty
+     *  Output html select to select thirdparty
      *
-     *    @param	string	$page       Page
-     *    @param    string	$selected   Id preselected
-     *    @param    string	$htmlname	Name of HTML select
+     *  @param	string	$page       	Page
+     *  @param  string	$selected   	Id preselected
+     *  @param  string	$htmlname		Name of HTML select
      *  @param  string	$filter         Optionnal filters criteras
      *	@param	int		$showempty		Add an empty field
      * 	@param	int		$showtype		Show third party type in combolist (customer, prospect or supplier)
      * 	@param	int		$forcecombo		Force to use combo box
-     *  @param	array	$event			Event options
-     *    @return	void
+     *  @param	array	$event			Event options. Example: array(array('method'=>'getContacts', 'url'=>dol_buildpath('/core/ajax/contacts.php',1), 'htmlname'=>'contactid', 'params'=>array('add-customer-contact'=>'disabled')))
+     *  @return	void
      */
     function form_thirdparty($page, $selected='', $htmlname='socid', $filter='',$showempty=0, $showtype=0, $forcecombo=0, $event=array())
     {
@@ -2857,52 +3045,6 @@ class Form
     }
 
     /**
-     *      Load into the cache all currencies
-     *
-     *      @return     int             Nb of loaded lines, 0 if already loaded, <0 if KO
-     */
-    function load_cache_currencies()
-    {
-    	global $langs;
-
-    	$langs->load("dict");
-
-    	if (count($this->cache_currencies)) return 0;    // Cache deja charge
-
-    	$sql = "SELECT code_iso, label, unicode";
-        $sql.= " FROM ".MAIN_DB_PREFIX."c_currencies";
-        $sql.= " WHERE active = 1";
-        $sql.= " ORDER BY code_iso ASC";
-
-    	dol_syslog(get_class($this).'::load_cache_currencies sql='.$sql, LOG_DEBUG);
-    	$resql = $this->db->query($sql);
-    	if ($resql)
-    	{
-    		$num = $this->db->num_rows($resql);
-    		$i = 0;
-    		while ($i < $num)
-    		{
-    			$obj = $this->db->fetch_object($resql);
-
-    			// Si traduction existe, on l'utilise, sinon on prend le libelle par defaut
-    			$this->cache_currencies[$obj->code_iso]['label'] = ($obj->code_iso && $langs->trans("Currency".$obj->code_iso)!="Currency".$obj->code_iso?$langs->trans("Currency".$obj->code_iso):($obj->label!='-'?$obj->label:''));
-    			$this->cache_currencies[$obj->code_iso]['unicode'] = (array) json_decode($obj->unicode, true);
-    			$label[$obj->code_iso] = $this->cache_currencies[$obj->code_iso]['label'];
-    			$i++;
-    		}
-
-    		array_multisort($label, SORT_ASC, $this->cache_currencies);
-
-    		return $num;
-    	}
-    	else
-    	{
-    		dol_print_error($this->db);
-    		return -1;
-    	}
-    }
-
-    /**
      *  Retourne la liste des devises, dans la langue de l'utilisateur
      *
      *  @param	string	$selected    preselected currency code
@@ -2913,16 +3055,14 @@ class Form
     {
         global $conf,$langs,$user;
 
-        $langs->load("dict");
-
-        $this->load_cache_currencies();
+        $langs->load_cache_currencies('');
 
         $out='';
 
         if ($selected=='euro' || $selected=='euros') $selected='EUR';   // Pour compatibilite
 
         $out.= '<select class="flat" name="'.$htmlname.'">';
-        foreach ($this->cache_currencies as $code_iso => $currency)
+        foreach ($langs->cache_currencies as $code_iso => $currency)
         {
         	if ($selected && $selected == $code_iso)
         	{
@@ -2933,7 +3073,7 @@ class Form
         		$out.= '<option value="'.$code_iso.'">';
         	}
         	$out.= $currency['label'];
-        	$out.= ' ('.getCurrencySymbol($code_iso).')';
+        	$out.= ' ('.$langs->getCurrencySymbol($code_iso).')';
         	$out.= '</option>';
         }
         $out.= '</select>';
@@ -3041,19 +3181,19 @@ class Form
         //print "name=$name, selectedrate=$selectedrate, seller=".$societe_vendeuse->country_code." buyer=".$societe_acheteuse->country_code." buyer is company=".$societe_acheteuse->isACompany()." idprod=$idprod, info_bits=$info_bits type=$type";
         //exit;
 
-        // Get list of all VAT rates to show
+        // Define list of countries to use to search VAT rates to show
         // First we defined code_pays to use to find list
         if (is_object($societe_vendeuse))
         {
             $code_pays="'".$societe_vendeuse->country_code."'";
         }
         else
-        {
+       {
             $code_pays="'".$mysoc->country_code."'";   // Pour compatibilite ascendente
         }
         if (! empty($conf->global->SERVICE_ARE_ECOMMERCE_200238EC))    // If option to have vat for end customer for services is on
         {
-            if (! $societe_vendeuse->isInEEC() && $societe_acheteuse->isInEEC() && ! $societe_acheteuse->isACompany())
+            if (! $societe_vendeuse->isInEEC() && (! is_object($societe_acheteuse) || ($societe_acheteuse->isInEEC() && ! $societe_acheteuse->isACompany())))
             {
                 // We also add the buyer
                 if (is_numeric($type))
@@ -3081,7 +3221,6 @@ class Form
 
         // Now we get list
         $num = $this->load_cache_vatrates($code_pays);
-
         if ($num > 0)
         {
         	// Definition du taux a pre-selectionner (si defaulttx non force et donc vaut -1 ou '')
@@ -3202,26 +3341,30 @@ class Form
             $smin = '';
         }
 
+        $usecalendar='combo';
+        if (! empty($conf->use_javascript_ajax) && (empty($conf->global->MAIN_POPUP_CALENDAR) || $conf->global->MAIN_POPUP_CALENDAR != "none")) $usecalendar=empty($conf->global->MAIN_POPUP_CALENDAR)?'eldy':$conf->global->MAIN_POPUP_CALENDAR;
+		if ($conf->browser->phone) $usecalendar='combo';
+
         if ($d)
         {
             // Show date with popup
-            if (! empty($conf->use_javascript_ajax) && (empty($conf->global->MAIN_POPUP_CALENDAR) || $conf->global->MAIN_POPUP_CALENDAR != "none"))
+            if ($usecalendar != 'combo')
             {
             	$formated_date='';
                 //print "e".$set_time." t ".$conf->format_date_short;
                 if (strval($set_time) != '' && $set_time != -1)
                 {
                     //$formated_date=dol_print_date($set_time,$conf->format_date_short);
-                    $formated_date=dol_print_date($set_time,$langs->trans("FormatDateShort"));  // FormatDateShort for dol_print_date/FormatDateShortJava that is same for javascript
+                    $formated_date=dol_print_date($set_time,$langs->trans("FormatDateShortInput"));  // FormatDateShortInput for dol_print_date / FormatDateShortJavaInput that is same for javascript
                 }
 
                 // Calendrier popup version eldy
-                if (empty($conf->global->MAIN_POPUP_CALENDAR) || $conf->global->MAIN_POPUP_CALENDAR == "eldy")
+                if ($usecalendar == "eldy")
                 {
                     // Zone de saisie manuelle de la date
                     $retstring.='<input id="'.$prefix.'" name="'.$prefix.'" type="text" size="9" maxlength="11" value="'.$formated_date.'"';
                     $retstring.=($disabled?' disabled="disabled"':'');
-                    $retstring.=' onChange="dpChangeDay(\''.$prefix.'\',\''.$langs->trans("FormatDateShortJava").'\'); "';  // FormatDateShort for dol_print_date/FormatDateShortJava that is same for javascript
+                    $retstring.=' onChange="dpChangeDay(\''.$prefix.'\',\''.$langs->trans("FormatDateShortJavaInput").'\'); "';  // FormatDateShortInput for dol_print_date / FormatDateShortJavaInput that is same for javascript
                     $retstring.='>';
 
                     // Icone calendrier
@@ -3229,7 +3372,7 @@ class Form
                     {
                         $retstring.='<button id="'.$prefix.'Button" type="button" class="dpInvisibleButtons"';
                         $base=DOL_URL_ROOT.'/core/';
-                        $retstring.=' onClick="showDP(\''.$base.'\',\''.$prefix.'\',\''.$langs->trans("FormatDateShortJava").'\',\''.$langs->defaultlang.'\');">'.img_object($langs->trans("SelectDate"),'calendarday','class="datecallink"').'</button>';
+                        $retstring.=' onClick="showDP(\''.$base.'\',\''.$prefix.'\',\''.$langs->trans("FormatDateShortJavaInput").'\',\''.$langs->defaultlang.'\');">'.img_object($langs->trans("SelectDate"),'calendarday','class="datecallink"').'</button>';
                     }
                     else $retstring.='<button id="'.$prefix.'Button" type="button" class="dpInvisibleButtons">'.img_object($langs->trans("Disabled"),'calendarday','class="datecallink"').'</button>';
 
@@ -3239,13 +3382,12 @@ class Form
                 }
                 else
                 {
-                    print "Bad value of calendar";
+                    print "Bad value of MAIN_POPUP_CALENDAR";
                 }
             }
-
             // Show date with combo selects
-            if (empty($conf->use_javascript_ajax) || $conf->global->MAIN_POPUP_CALENDAR == "none")
-            {
+            else
+			{
                 // Day
                 $retstring.='<select'.($disabled?' disabled="disabled"':'').' class="flat" name="'.$prefix.'day">';
 
@@ -3256,15 +3398,7 @@ class Form
 
                 for ($day = 1 ; $day <= 31; $day++)
                 {
-                    if ($day == $sday)
-                    {
-                        $retstring.="<option value=\"$day\" selected=\"selected\">$day";
-                    }
-                    else
-                    {
-                        $retstring.="<option value=\"$day\">$day";
-                    }
-                    $retstring.="</option>";
+                    $retstring.='<option value="'.$day.'"'.($day == $sday ? ' selected="selected"':'').'>'.$day.'</option>';
                 }
 
                 $retstring.="</select>";
@@ -3295,15 +3429,7 @@ class Form
 
                     for ($year = $syear - 5; $year < $syear + 10 ; $year++)
                     {
-                        if ($year == $syear)
-                        {
-                            $retstring.="<option value=\"$year\" selected=\"true\">".$year;
-                        }
-                        else
-                        {
-                            $retstring.="<option value=\"$year\">".$year;
-                        }
-                        $retstring.="</option>";
+                        $retstring.='<option value="'.$year.'"'.($year == $syear ? ' selected="true"':'').'>'.$year.'</option>';
                     }
                     $retstring.="</select>\n";
                 }
@@ -3319,21 +3445,11 @@ class Form
             if ($empty) $retstring.='<option value="-1">&nbsp;</option>';
             for ($hour = 0; $hour < 24; $hour++)
             {
-                if (dol_strlen($hour) < 2)
-                {
-                    $hour = "0" . $hour;
-                }
-                if ($hour == $shour)
-                {
-                    $retstring.="<option value=\"$hour\" selected=\"true\">$hour</option>";
-                }
-                else
-                {
-                    $retstring.="<option value=\"$hour\">$hour</option>";
-                }
+                if (strlen($hour) < 2) $hour = "0" . $hour;
+                $retstring.='<option value="'.$hour.'"'.(($hour == $shour)?' selected="true"':'').'>'.$hour.(empty($conf->dol_optimize_smallscreen)?'':'H').'</option>';
             }
-            $retstring.="</select>";
-            $retstring.="H\n";
+            $retstring.='</select>';
+            if (empty($conf->dol_optimize_smallscreen)) $retstring.=":";
         }
 
         if ($m)
@@ -3343,21 +3459,10 @@ class Form
             if ($empty) $retstring.='<option value="-1">&nbsp;</option>';
             for ($min = 0; $min < 60 ; $min++)
             {
-                if (dol_strlen($min) < 2)
-                {
-                    $min = "0" . $min;
-                }
-                if ($min == $smin)
-                {
-                    $retstring.="<option value=\"$min\" selected=\"true\">$min</option>";
-                }
-                else
-                {
-                    $retstring.="<option value=\"$min\">$min</option>";
-                }
+                if (strlen($min) < 2) $min = "0" . $min;
+                $retstring.='<option value="'.$min.'"'.(($min == $smin)?' selected="true"':'').'>'.$min.(empty($conf->dol_optimize_smallscreen)?'':'').'</option>';
             }
-            $retstring.="</select>";
-            $retstring.="M\n";
+            $retstring.='</select>';
         }
 
         // Add a "Now" button
@@ -3367,10 +3472,10 @@ class Form
             $reset_scripts = "";
 
             // Generate the date part, depending on the use or not of the javascript calendar
-            if (empty($conf->global->MAIN_POPUP_CALENDAR) || $conf->global->MAIN_POPUP_CALENDAR == "eldy")
+            if ($usecalendar == "eldy")
             {
                 $base=DOL_URL_ROOT.'/core/';
-                $reset_scripts .= 'resetDP(\''.$base.'\',\''.$prefix.'\',\''.$langs->trans("FormatDateShortJava").'\',\''.$langs->defaultlang.'\');';
+                $reset_scripts .= 'resetDP(\''.$base.'\',\''.$prefix.'\',\''.$langs->trans("FormatDateShortJavaInput").'\',\''.$langs->defaultlang.'\');';
             }
             else
             {
@@ -3393,9 +3498,9 @@ class Form
                 if ($fullday) $reset_scripts .= ' } ';
             }
             // If reset_scripts is not empty, print the button with the reset_scripts in OnClick
-            if ($reset_scripts)
+            if ($reset_scripts && empty($conf->dol_optimize_smallscreen))
             {
-                $retstring.='<button class="dpInvisibleButtons datenowlink" id="'.$prefix.'ButtonNow" type="button" name="_useless" value="Now" onClick="'.$reset_scripts.'">';
+                $retstring.=' <button class="dpInvisibleButtons datenowlink" id="'.$prefix.'ButtonNow" type="button" name="_useless" value="Now" onClick="'.$reset_scripts.'">';
                 $retstring.=$langs->trans("Now");
                 $retstring.='</button> ';
             }
@@ -3413,10 +3518,13 @@ class Form
      *	@param	string	$prefix   	prefix
      *	@param  int		$iSecond  	Default preselected duration (number of seconds)
      * 	@param	int		$disabled	Disable the combo box
+     * 	@param	string	$typehour	if select then hour in select if text input in text
      *  @return	void
      */
-    function select_duration($prefix,$iSecond='',$disabled=0)
+    function select_duration($prefix,$iSecond='',$disabled=0,$typehour='select')
     {
+    	global $langs;
+    	
         if ($iSecond)
         {
             require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
@@ -3424,19 +3532,27 @@ class Form
             $hourSelected = convertSecondToTime($iSecond,'hour');
             $minSelected = convertSecondToTime($iSecond,'min');
         }
-
-        print '<select class="flat" name="'.$prefix.'hour"'.($disabled?' disabled="disabled"':'').'>';
-        for ($hour = 0; $hour < 24; $hour++)
+		
+        if ($typehour=='select') 
         {
-            print '<option value="'.$hour.'"';
-            if ($hourSelected == $hour)
-            {
-                print " selected=\"true\"";
-            }
-            print ">".$hour."</option>";
+	        print '<select class="flat" name="'.$prefix.'hour"'.($disabled?' disabled="disabled"':'').'>';
+	        for ($hour = 0; $hour < 24; $hour++)
+	        {
+	            print '<option value="'.$hour.'"';
+	            if ($hourSelected == $hour)
+	            {
+	                print " selected=\"true\"";
+	            }
+	            print ">".$hour."</option>";
+	        }
+	        print "</select>";
         }
-        print "</select>";
-        print "H &nbsp;";
+        elseif ($typehour=='text') 
+        {
+        	$fullhours=convertSecondToTime($iSecond,'fullhour');
+        	print '<input type="text" size="3" name="'.$prefix.'hour" class="flat" value="'.$fullhours.'">';
+        }
+        print $langs->trans('Hours'). "&nbsp;";
         print '<select class="flat" name="'.$prefix.'min"'.($disabled?' disabled="disabled"':'').'>';
         for ($min = 0; $min <= 55; $min=$min+5)
         {
@@ -3445,7 +3561,7 @@ class Form
             print '>'.$min.'</option>';
         }
         print "</select>";
-        print "M&nbsp;";
+        print $langs->trans('Minutes'). "&nbsp;";
     }
 
 
@@ -3692,14 +3808,16 @@ class Form
      */
     function showrefnav($object,$paramid,$morehtml='',$shownav=1,$fieldid='rowid',$fieldref='ref',$morehtmlref='',$moreparam='')
     {
+    	global $langs,$conf;
+
         $ret='';
         if (empty($fieldid))  $fieldid='rowid';
         if (empty($fieldref)) $fieldref='ref';
 
         //print "paramid=$paramid,morehtml=$morehtml,shownav=$shownav,$fieldid,$fieldref,$morehtmlref,$moreparam";
         $object->load_previous_next_ref((isset($object->next_prev_filter)?$object->next_prev_filter:''),$fieldid);
-        $previous_ref = $object->ref_previous?'<a href="'.$_SERVER["PHP_SELF"].'?'.$paramid.'='.urlencode($object->ref_previous).$moreparam.'">'.img_previous().'</a>':'';
-        $next_ref     = $object->ref_next?'<a href="'.$_SERVER["PHP_SELF"].'?'.$paramid.'='.urlencode($object->ref_next).$moreparam.'">'.img_next().'</a>':'';
+        $previous_ref = $object->ref_previous?'<a data-role="button" data-icon="arrow-l" data-iconpos="left" href="'.$_SERVER["PHP_SELF"].'?'.$paramid.'='.urlencode($object->ref_previous).$moreparam.'">'.(empty($conf->dol_use_jmobile)?img_picto($langs->trans("Previous"),'previous.png'):'&nbsp;').'</a>':'';
+        $next_ref     = $object->ref_next?'<a data-role="button" data-icon="arrow-r" data-iconpos="right" href="'.$_SERVER["PHP_SELF"].'?'.$paramid.'='.urlencode($object->ref_next).$moreparam.'">'.(empty($conf->dol_use_jmobile)?img_picto($langs->trans("Next"),'next.png'):'&nbsp;').'</a>':'';
 
         //print "xx".$previous_ref."x".$next_ref;
         if ($previous_ref || $next_ref || $morehtml) {
@@ -3770,28 +3888,36 @@ class Form
     {
         global $conf;
 
+        $entity = (! empty($object->entity) ? $object->entity : $conf->entity);
+        $id = (! empty($object->id) ? $object->id : $object->rowid);
+
         $ret='';$dir='';$file='';$altfile='';$email='';
 
         if ($modulepart=='societe')
         {
-            $dir=$conf->societe->multidir_output[$object->entity];
+            $dir=$conf->societe->multidir_output[$entity];
             $smallfile=$object->logo;
             $smallfile=preg_replace('/(\.png|\.gif|\.jpg|\.jpeg|\.bmp)/i','_small\\1',$smallfile);
-            if ($object->logo) $file=$object->id.'/logos/thumbs/'.$smallfile;
+            if ($object->logo) $file=$id.'/logos/thumbs/'.$smallfile;
         }
         else if ($modulepart=='userphoto')
         {
             $dir=$conf->user->dir_output;
-            if ($object->photo) $file=get_exdir($object->id,2).$object->photo;
+            if ($object->photo) $file=get_exdir($id, 2).$object->photo;
             if (! empty($conf->global->MAIN_OLD_IMAGE_LINKS)) $altfile=$object->id.".jpg";	// For backward compatibility
             $email=$object->email;
         }
         else if ($modulepart=='memberphoto')
         {
             $dir=$conf->adherent->dir_output;
-            if ($object->photo) $file=get_exdir($object->id,2).'photos/'.$object->photo;
+            if ($object->photo) $file=get_exdir($id, 2).'photos/'.$object->photo;
             if (! empty($conf->global->MAIN_OLD_IMAGE_LINKS)) $altfile=$object->id.".jpg";	// For backward compatibility
             $email=$object->email;
+        }else {
+        	$dir=$conf->$modulepart->dir_output;
+        	if ($object->photo) $file=get_exdir($id, 2).'photos/'.$object->photo;
+        	if (! empty($conf->global->MAIN_OLD_IMAGE_LINKS)) $altfile=$object->id.".jpg";	// For backward compatibility
+        	$email=$object->email;
         }
 
         if ($dir)
@@ -3800,14 +3926,14 @@ class Form
             if ($file && file_exists($dir."/".$file))
             {
                 // TODO Link to large image
-                $ret.='<a href="'.DOL_URL_ROOT.'/viewimage.php?modulepart='.$modulepart.'&entity='.$object->entity.'&file='.urlencode($file).'&cache='.$cache.'">';
-                $ret.='<img alt="Photo" id="photologo'.(preg_replace('/[^a-z]/i','_',$file)).'" class="photologo" border="0" width="'.$width.'" src="'.DOL_URL_ROOT.'/viewimage.php?modulepart='.$modulepart.'&entity='.$object->entity.'&file='.urlencode($file).'&cache='.$cache.'">';
+                $ret.='<a href="'.DOL_URL_ROOT.'/viewimage.php?modulepart='.$modulepart.'&entity='.$entity.'&file='.urlencode($file).'&cache='.$cache.'">';
+                $ret.='<img alt="Photo" id="photologo'.(preg_replace('/[^a-z]/i','_',$file)).'" class="photologo" border="0" width="'.$width.'" src="'.DOL_URL_ROOT.'/viewimage.php?modulepart='.$modulepart.'&entity='.$entity.'&file='.urlencode($file).'&cache='.$cache.'">';
                 $ret.='</a>';
             }
             else if ($altfile && file_exists($dir."/".$altfile))
             {
-                $ret.='<a href="'.DOL_URL_ROOT.'/viewimage.php?modulepart='.$modulepart.'&entity='.$object->entity.'&file='.urlencode($file).'&cache='.$cache.'">';
-                $ret.='<img alt="Photo alt" id="photologo'.(preg_replace('/[^a-z]/i','_',$file)).'" class="photologo" border="0" width="'.$width.'" src="'.DOL_URL_ROOT.'/viewimage.php?modulepart='.$modulepart.'&entity='.$object->entity.'&file='.urlencode($altfile).'&cache='.$cache.'">';
+                $ret.='<a href="'.DOL_URL_ROOT.'/viewimage.php?modulepart='.$modulepart.'&entity='.$entity.'&file='.urlencode($file).'&cache='.$cache.'">';
+                $ret.='<img alt="Photo alt" id="photologo'.(preg_replace('/[^a-z]/i','_',$file)).'" class="photologo" border="0" width="'.$width.'" src="'.DOL_URL_ROOT.'/viewimage.php?modulepart='.$modulepart.'&entity='.$entity.'&file='.urlencode($altfile).'&cache='.$cache.'">';
                 $ret.='</a>';
             }
             else
@@ -3832,17 +3958,17 @@ class Form
     /**
      *	Return select list of groups
      *
-     *  @param	string	$selected        Id group preselected
-     *  @param  string	$htmlname        Field name in form
-     *  @param  int		$show_empty      0=liste sans valeur nulle, 1=ajoute valeur inconnue
-     *  @param  string	$exclude         Array list of groups id to exclude
+     *  @param	string	$selected       Id group preselected
+     *  @param  string	$htmlname       Field name in form
+     *  @param  int		$show_empty     0=liste sans valeur nulle, 1=ajoute valeur inconnue
+     *  @param  string	$exclude        Array list of groups id to exclude
      * 	@param	int		$disabled		If select list must be disabled
-     *  @param  string	$include         Array list of groups id to include
+     *  @param  string	$include        Array list of groups id to include
      * 	@param	int		$enableonly		Array list of groups id to be enabled. All other must be disabled
-     * 	@param	int		$force_entity	Possibility to force entity
+     * 	@param	int		$force_entity	0 or Id of environment to force
      *  @return	void
      */
-    function select_dolgroups($selected='', $htmlname='groupid', $show_empty=0, $exclude='', $disabled=0, $include='', $enableonly='', $force_entity='')
+    function select_dolgroups($selected='', $htmlname='groupid', $show_empty=0, $exclude='', $disabled=0, $include='', $enableonly='', $force_entity=0)
     {
         global $conf,$user,$langs;
 

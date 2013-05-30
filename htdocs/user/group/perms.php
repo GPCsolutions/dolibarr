@@ -3,11 +3,11 @@
  * Copyright (C) 2002-2003 Jean-Louis Bergamo   <jlb@j1b.org>
  * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -33,9 +33,10 @@ $langs->load("users");
 $langs->load("admin");
 
 $id=GETPOST('id','int');
-$action=GETPOST("action");
-$confirm=GETPOST("confirm");
-$module=GETPOST("module");
+$action=GETPOST('action', 'alpha');
+$confirm=GETPOST('confirm', 'alpha');
+$module=GETPOST('module', 'alpha');
+$rights=GETPOST('rights', 'int');
 
 // Defini si peux lire les permissions
 $canreadperms=($user->admin || $user->rights->user->user->lire);
@@ -60,14 +61,14 @@ if ($action == 'addrights' && $caneditperms)
 {
     $editgroup = new Usergroup($db);
     $result=$editgroup->fetch($id);
-    if ($result > 0) $editgroup->addrights($_GET["rights"],$module);
+    if ($result > 0) $editgroup->addrights($rights, $module);
 }
 
 if ($action == 'delrights' && $caneditperms)
 {
     $editgroup = new Usergroup($db);
     $result=$editgroup->fetch($id);
-    if ($result > 0) $editgroup->delrights($_GET["rights"],$module);
+    if ($result > 0) $editgroup->delrights($rights, $module);
 }
 
 
@@ -276,9 +277,9 @@ if ($id)
                 if ($caneditperms)
                 {
                     print '<tr '. $bc[$var].'>';
-                    print '<td nowrap="nowrap">'.img_object('',$picto).' '.$objMod->getName();
+                    print '<td class="nowrap">'.img_object('',$picto).' '.$objMod->getName();
                     print '<a name="'.$objMod->getName().'">&nbsp;</a></td>';
-                    print '<td align="center" nowrap="nowrap">';
+                    print '<td align="center" class="nowrap">';
                     print '<a title='.$langs->trans("All").' alt='.$langs->trans("All").' href="perms.php?id='.$fgroup->id.'&amp;action=addrights&amp;module='.$obj->module.'#'.$objMod->getName().'">'.$langs->trans("All")."</a>";
                     print '/';
                     print '<a title='.$langs->trans("None").' alt='.$langs->trans("None").' href="perms.php?id='.$fgroup->id.'&amp;action=delrights&amp;module='.$obj->module.'#'.$objMod->getName().'">'.$langs->trans("None")."</a>";
@@ -291,7 +292,7 @@ if ($id)
             print '<tr '. $bc[$var].'>';
 
             // Module
-            print '<td nowrap="nowrap">'.img_object('',$picto).' '.$objMod->getName().'</td>';
+            print '<td class="nowrap">'.img_object('',$picto).' '.$objMod->getName().'</td>';
 
             if (in_array($obj->id, $permsgroup))
             {

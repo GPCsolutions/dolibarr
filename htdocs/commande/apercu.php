@@ -2,12 +2,12 @@
 /* Copyright (C) 2002-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2011 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011	   Juanjo Menent        <jmenent@2byte.es>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -128,7 +128,7 @@ if ($id > 0 || ! empty($ref))
 
 			print "<tr $bc[$var]><td>".$langs->trans("Order")." PDF</td>";
 
-			print '<td><a href="'.DOL_URL_ROOT . '/document.php?modulepart=commande&file='.urlencode($relativepath).'">'.$object->ref.'.pdf</a></td>';
+			print '<td><a data-ajax="false" href="'.DOL_URL_ROOT . '/document.php?modulepart=commande&file='.urlencode($relativepath).'">'.$object->ref.'.pdf</a></td>';
 			print '<td align="right">'.dol_print_size(dol_filesize($file)).'</td>';
 			print '<td align="right">'.dol_print_date(dol_filemtime($file),'dayhour').'</td>';
 			print '</tr>';
@@ -139,7 +139,7 @@ if ($id > 0 || ! empty($ref))
 			{
 				print "<tr $bc[$var]><td>Commande detaillee</td>";
 
-				print '<td><a href="'.DOL_URL_ROOT . '/document.php?modulepart=commande&file='.urlencode($relativepathdetail).'">'.$object->ref.'-detail.pdf</a></td>';
+				print '<td><a data-ajax="false" href="'.DOL_URL_ROOT . '/document.php?modulepart=commande&file='.urlencode($relativepathdetail).'">'.$object->ref.'-detail.pdf</a></td>';
 				print '<td align="right">'.dol_print_size(dol_filesize($filedetail)).'</td>';
 				print '<td align="right">'.dol_print_date(dol_filemtime($filedetail),'dayhour').'</td>';
 				print '</tr>';

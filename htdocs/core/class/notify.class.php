@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -135,7 +135,7 @@ class Notify
 
 		dol_syslog("Notify::send action=$action, socid=$socid, texte=$texte, objet_type=$objet_type, objet_id=$objet_id, file=$file");
 
-		$sql = "SELECT s.nom, c.email, c.rowid as cid, c.name, c.firstname,";
+		$sql = "SELECT s.nom, c.email, c.rowid as cid, c.lastname, c.firstname,";
 		$sql.= " a.rowid as adid, a.label, a.code, n.rowid";
         $sql.= " FROM ".MAIN_DB_PREFIX."socpeople as c,";
         $sql.= " ".MAIN_DB_PREFIX."c_action_trigger as a,";
@@ -157,7 +157,7 @@ class Notify
             {
                 $obj = $this->db->fetch_object($result);
 
-                $sendto = $obj->firstname . " " . $obj->name . " <".$obj->email.">";
+                $sendto = $obj->firstname . " " . $obj->lastname . " <".$obj->email.">";
 				$actiondefid = $obj->adid;
 
                 if (dol_strlen($sendto))
@@ -172,26 +172,30 @@ class Notify
                 	$message.= "\n";
                     $message.= $texte;
                     // Add link
+                    $link='';
                     switch($objet_type)
                     {
                     	case 'ficheinter':
-						    $link=DOL_URL_ROOT.'/fichinter/fiche.php?id='.$objet_id;
+						    $link='/fichinter/fiche.php?id='.$objet_id;
     						break;
                     	case 'propal':
-						    $link=DOL_URL_ROOT.'/comm/propal.php?id='.$objet_id;
+						    $link='/comm/propal.php?id='.$objet_id;
     						break;
     					case 'facture':
-						    $link=DOL_URL_ROOT.'/compta/facture.php?facid='.$objet_id;
+						    $link='/compta/facture.php?facid='.$objet_id;
     						break;
                     	case 'order':
-						    $link=DOL_URL_ROOT.'/commande/fiche.php?facid='.$objet_id;
+						    $link='/commande/fiche.php?facid='.$objet_id;
     						break;
     					case 'order_supplier':
-						    $link=DOL_URL_ROOT.'/fourn/commande/fiche.php?facid='.$objet_id;
+						    $link='/fourn/commande/fiche.php?facid='.$objet_id;
     						break;
                     }
-                    $urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',$dolibarr_main_url_root);
-                    if ($link) $message.="\n".$urlwithouturlroot.$link;
+					// Define $urlwithroot
+                    $urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',trim($dolibarr_main_url_root));
+					$urlwithroot=$urlwithouturlroot.DOL_URL_ROOT;			// This is to use external domain name found into config file
+					//$urlwithroot=DOL_MAIN_URL_ROOT;						// This is to use same domain name than current
+                    if ($link) $message.="\n".$urlwithroot.$link;
 
                     $filename = basename($file);
 

@@ -1,9 +1,9 @@
 <?php
-/* Copyright (C) 2005-2010 Laurent Destailleur       <eldy@users.sourceforge.net>
+/* Copyright (C) 2005-2012 Laurent Destailleur       <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -70,7 +70,7 @@ print_fiche_titre($langs->trans("Bookmarks"));
 if ($mesg) print $mesg;
 
 $sql = "SELECT b.fk_soc as rowid, b.dateb, b.rowid as bid, b.fk_user, b.url, b.target, b.title, b.favicon, b.position,";
-$sql.= " u.login, u.name, u.firstname";
+$sql.= " u.login, u.lastname, u.firstname";
 $sql.= " FROM ".MAIN_DB_PREFIX."bookmark as b LEFT JOIN ".MAIN_DB_PREFIX."user as u ON b.fk_user=u.rowid";
 $sql.= " WHERE 1=1";
 if (! $user->admin) $sql.= " AND (b.fk_user = ".$user->id." OR b.fk_user is NULL OR b.fk_user = 0)";
@@ -91,7 +91,7 @@ if ($resql)
     print_liste_field_titre($langs->trans("Title"),'','')."</td>";
     print_liste_field_titre($langs->trans("Link"),'','')."</td>";
     print_liste_field_titre($langs->trans("Target"),'','','','','align="center"')."</td>";
-    print_liste_field_titre($langs->trans("Owner"),$_SERVER["PHP_SELF"],"u.name","","",'align="center"',$sortfield,$sortorder);
+    print_liste_field_titre($langs->trans("Owner"),$_SERVER["PHP_SELF"],"u.lastname","","",'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Date"),$_SERVER["PHP_SELF"],"b.dateb","","",'align="center"',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Position"),$_SERVER["PHP_SELF"],"b.position","","",'align="right"',$sortfield,$sortorder);
     print_liste_field_titre('','','');
@@ -170,7 +170,11 @@ if ($resql)
         print '<td align="right">'.$obj->position."</td>";
 
         // Actions
-        print '<td align="right">';
+        print '<td align="right" class="nowrap">';
+        if ($user->rights->bookmark->creer)
+        {
+        	print "<a href=\"".DOL_URL_ROOT."/bookmarks/fiche.php?action=edit&id=".$obj->bid."&backtopage=".urlencode($_SERVER["PHP_SELF"])."\">".img_edit()."</a> ";
+        }
         if ($user->rights->bookmark->supprimer)
         {
             print "<a href=\"".$_SERVER["PHP_SELF"]."?action=delete&bid=$obj->bid\">".img_delete()."</a>";

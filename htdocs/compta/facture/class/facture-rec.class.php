@@ -1,12 +1,13 @@
 <?php
 /* Copyright (C) 2003-2005	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2009-2012	Regis Houssin			<regis@dolibarr.fr>
+ * Copyright (C) 2009-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2011	Juanjo Menent			<jmenent@2byte.es>
+ * Copyright (C) 2013       Florian Henry		  	<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -54,7 +55,8 @@ class FactureRec extends Facture
 	var $remise;
 	var $tva;
 	var $total;
-	var $note;
+	var $note_private;
+	var $note_public;
 	var $db_table;
 	var $propalid;
 	var $fk_project;
@@ -111,7 +113,8 @@ class FactureRec extends Facture
 			$sql.= ", datec";
 			$sql.= ", amount";
 			$sql.= ", remise";
-			$sql.= ", note";
+			$sql.= ", note_private";
+			$sql.= ", note_public";
 			$sql.= ", fk_user_author";
 			$sql.= ", fk_projet";
 			$sql.= ", fk_cond_reglement";
@@ -124,7 +127,8 @@ class FactureRec extends Facture
 			$sql.= ", ".$this->db->idate($now);
 			$sql.= ", '".$facsrc->amount."'";
 			$sql.= ", '".$facsrc->remise."'";
-			$sql.= ", '".$this->db->escape($this->note)."'";
+			$sql.= ", ".(!empty($this->note_private)?("'".$this->db->escape($this->note_private)."'"):"NULL");
+			$sql.= ", ".(!empty($this->note_public)?("'".$this->db->escape($this->note_public)."'"):"NULL");
 			$sql.= ", '".$user->id."'";
 			$sql.= ", ".(! empty($facsrc->fk_project)?"'".$facsrc->fk_project."'":"null");
 			$sql.= ", '".$facsrc->cond_reglement_id."'";
@@ -201,7 +205,7 @@ class FactureRec extends Facture
 	{
 		$sql = 'SELECT f.titre,f.fk_soc,f.amount,f.tva,f.total,f.total_ttc,f.remise_percent,f.remise_absolue,f.remise';
 		$sql.= ', f.date_lim_reglement as dlr';
-		$sql.= ', f.note, f.note_public, f.fk_user_author';
+		$sql.= ', f.note_private, f.note_public, f.fk_user_author';
 		$sql.= ', f.fk_mode_reglement, f.fk_cond_reglement';
 		$sql.= ', p.code as mode_reglement_code, p.libelle as mode_reglement_libelle';
 		$sql.= ', c.code as cond_reglement_code, c.libelle as cond_reglement_libelle, c.libelle_facture as cond_reglement_libelle_doc';
@@ -249,7 +253,7 @@ class FactureRec extends Facture
 				$this->cond_reglement_doc     = $obj->cond_reglement_libelle_doc;
 				$this->fk_project             = $obj->fk_projet;
 				$this->fk_facture_source      = $obj->fk_facture_source;
-				$this->note                   = $obj->note;
+				$this->note_private           = $obj->note_private;
 				$this->note_public            = $obj->note_public;
 				$this->user_author            = $obj->fk_user_author;
 				$this->modelpdf               = $obj->model_pdf;
@@ -336,7 +340,6 @@ class FactureRec extends Facture
 				$line->total_ht         = $objp->total_ht;
 				$line->total_tva        = $objp->total_tva;
 				$line->total_ttc        = $objp->total_ttc;
-				$line->export_compta    = $objp->fk_export_compta;
 				$line->code_ventilation = $objp->fk_code_ventilation;
 				$line->rang 			= $objp->rang;
 				$line->special_code 	= $objp->special_code;
@@ -410,6 +413,7 @@ class FactureRec extends Facture
      *	@param		int			$type				Type of line (0=product, 1=service)
      *	@param      int			$rang               Position of line
      *	@param		int			$special_code		Special code
+     *	@param		string		$label				Label of the line
      *	@return    	int             				<0 if KO, Id of line if OK
 	 */
 	function addline($facid, $desc, $pu_ht, $qty, $txtva, $fk_product=0, $remise_percent=0, $price_base_type='HT', $info_bits=0, $fk_remise_except='', $pu_ttc=0, $type=0, $rang=-1, $special_code=0, $label='')
@@ -444,7 +448,7 @@ class FactureRec extends Facture
 			// qty, pu, remise_percent et txtva
 			// TRES IMPORTANT: C'est au moment de l'insertion ligne qu'on doit stocker
 			// la part ht, tva et ttc, et ce au niveau de la ligne qui a son propre taux tva.
-			$tabprice=calcul_price_total($qty, $pu, $remise_percent, $txtva, 0, 0, 0, $price_base_type, $info_bits);
+			$tabprice=calcul_price_total($qty, $pu, $remise_percent, $txtva, 0, 0, 0, $price_base_type, $info_bits, $type);
 			$total_ht  = $tabprice[0];
 			$total_tva = $tabprice[1];
 			$total_ttc = $tabprice[2];

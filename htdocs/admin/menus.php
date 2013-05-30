@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2001-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2010 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -68,7 +68,7 @@ error_reporting($err);
 if ($action == 'update' && empty($_POST["cancel"]))
 {
 	$_SESSION["mainmenu"]="home";   // Le gestionnaire de menu a pu changer
-
+	
 	dolibarr_set_const($db, "MAIN_MENU_STANDARD",      $_POST["MAIN_MENU_STANDARD"],'chaine',0,'',$conf->entity);
 	dolibarr_set_const($db, "MAIN_MENU_SMARTPHONE",     $_POST["MAIN_MENU_SMARTPHONE"],'chaine',0,'',$conf->entity);
 
@@ -77,33 +77,37 @@ if ($action == 'update' && empty($_POST["cancel"]))
 
 	// Define list of menu handlers to initialize
 	$listofmenuhandler=array();
-	$listofmenuhandler[preg_replace('/((_back|_front)office)?\.php/i','',$_POST["MAIN_MENU_STANDARD"])]=1;
-	$listofmenuhandler[preg_replace('/((_back|_front)office)?\.php/i','',$_POST["MAIN_MENUFRONT_STANDARD"])]=1;
-	if (isset($_POST["MAIN_MENU_SMARTPHONE"]))      $listofmenuhandler[preg_replace('/((_back|_front)office)?\.php/i','',$_POST["MAIN_MENU_SMARTPHONE"])]=1;
-	if (isset($_POST["MAIN_MENUFRONT_SMARTPHONE"])) $listofmenuhandler[preg_replace('/((_back|_front)office)?\.php/i','',$_POST["MAIN_MENUFRONT_SMARTPHONE"])]=1;
+	$listofmenuhandler[preg_replace('/(_backoffice|_frontoffice|_menu)?\.php/i','',$_POST["MAIN_MENU_STANDARD"])]=1;
+	$listofmenuhandler[preg_replace('/(_backoffice|_frontoffice|_menu)?\.php/i','',$_POST["MAIN_MENUFRONT_STANDARD"])]=1;
+	if (isset($_POST["MAIN_MENU_SMARTPHONE"]))      $listofmenuhandler[preg_replace('/(_backoffice|_frontoffice|_menu)?\.php/i','',$_POST["MAIN_MENU_SMARTPHONE"])]=1;
+	if (isset($_POST["MAIN_MENUFRONT_SMARTPHONE"])) $listofmenuhandler[preg_replace('/(_backoffice|_frontoffice|_menu)?\.php/i','',$_POST["MAIN_MENUFRONT_SMARTPHONE"])]=1;
 
 	// Initialize menu handlers
 	foreach ($listofmenuhandler as $key => $val)
 	{
 		// Load sql init_menu_handler.sql file
-        $dir = "/core/menus/";
-	    $file='init_menu_'.$key.'.sql';
-	    $fullpath=dol_buildpath($dir.$file);
-
-		if (file_exists($fullpath))
+		$dirmenus=array_merge(array("/core/menus/"),(array) $conf->modules_parts['menus']);
+		foreach($dirmenus as $dirmenu)
 		{
-			$db->begin();
-
-			$result=run_sql($fullpath,1,'',1,$key,'none');
-			if ($result > 0)
+			$file='init_menu_'.$key.'.sql';
+		    $fullpath=dol_buildpath($dirmenu.$file);
+		    //print 'action='.$action.' Search menu into fullpath='.$fullpath.'<br>';exit;
+		    
+			if (file_exists($fullpath))
 			{
-				$db->commit();
-			}
-			else
-			{
-				$error++;
-				$errmsgs[]='Failed to initialize menu '.$key.'.';
-				$db->rollback();
+				$db->begin();
+	
+				$result=run_sql($fullpath,1,'',1,$key,'none');
+				if ($result > 0)
+				{
+					$db->commit();
+				}
+				else
+				{
+					$error++;
+					$errmsgs[]='Failed to initialize menu '.$key.'.';
+					$db->rollback();
+				}
 			}
 		}
 	}
@@ -145,7 +149,7 @@ $head[$h][2] = 'editor';
 $h++;
 
 $head[$h][0] = DOL_URL_ROOT."/admin/menus/other.php";
-$head[$h][1] = $langs->trans("Miscellanous");
+$head[$h][1] = $langs->trans("Miscellaneous");
 $head[$h][2] = 'misc';
 $h++;
 

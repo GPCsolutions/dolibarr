@@ -5,7 +5,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -40,7 +40,16 @@ $action = GETPOST('action','alpha');
  * Actions
  */
 
-if ($action == 'setvalue' && $user->admin)
+if ($action == 'setMAILING_EMAIL_UNSUBSCRIBE')
+{
+	$res=dolibarr_set_const($db, "MAILING_EMAIL_UNSUBSCRIBE",1,'chaine',0,'',$conf->entity);
+}
+if ($action == 'unsetMAILING_EMAIL_UNSUBSCRIBE')
+{
+	$res=dolibarr_del_const($db, "MAILING_EMAIL_UNSUBSCRIBE");
+}
+
+if ($action == 'setvalue')
 {
 	$db->begin();
 
@@ -94,7 +103,35 @@ llxHeader('',$langs->trans("MailingSetup"));
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
 print_fiche_titre($langs->trans("MailingSetup"),$linkback,'setup');
 
+$h = 0;
+
+$head[$h][0] = DOL_URL_ROOT."/admin/mailing.php";
+$head[$h][1] = $langs->trans("Miscellaneous");
+$head[$h][2] = 'general';
+$hselected=$h;
+$h++;
+
+dol_fiche_head($head, $hselected, $langs->trans("ModuleSetup"));
+
 dol_htmloutput_mesg($mesg);
+
+
+if (! empty($conf->use_javascript_ajax))
+{
+	print "\n".'<script type="text/javascript">';
+	print '$(document).ready(function () {
+            $("#generate_token").click(function() {
+            	$.get( "'.DOL_URL_ROOT.'/core/ajax/security.php", {
+            		action: \'getrandompassword\',
+            		generic: true
+				},
+				function(token) {
+					$("#MAILING_EMAIL_UNSUBSCRIBE_KEY").val(token);
+				});
+            });
+    });';
+	print '</script>';
+}
 
 print '<br>';
 print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
@@ -129,14 +166,14 @@ print '<tr '.$bc[$var].'><td>';
 print $langs->trans("ActivateCheckRead").'</td><td>';
 if (!empty($conf->global->MAILING_EMAIL_UNSUBSCRIBE))
 {
-	print '<a href="'.$_SERVER["PHP_SELF"].'?action=setvalue&value=off">';
+	print '<a href="'.$_SERVER["PHP_SELF"].'?action=unsetMAILING_EMAIL_UNSUBSCRIBE">';
 	print img_picto($langs->trans("Enabled"),'switch_on');
 	print '</a>';
 	$readonly='';
 }
 else
 {
-	print '<a href="'.$_SERVER["PHP_SELF"].'?action=setvalue&value=on">';
+	print '<a href="'.$_SERVER["PHP_SELF"].'?action=setMAILING_EMAIL_UNSUBSCRIBE">';
 	print img_picto($langs->trans("Disabled"),'switch_off');
 	print '</a>';
 	$readonly='disabled="disabled"';
@@ -146,13 +183,17 @@ print '</td></tr>';
 $var=!$var;
 print '<tr '.$bc[$var].'><td>';
 print $langs->trans("ActivateCheckReadKey").'</td><td>';
-print '<input size="32" type="text" name="MAILING_EMAIL_UNSUBSCRIBE_KEY" '.$readonly.' value="'.$conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY.'">';
+print '<input size="32" type="text" name="MAILING_EMAIL_UNSUBSCRIBE_KEY" id="MAILING_EMAIL_UNSUBSCRIBE_KEY" '.$readonly.' value="'.$conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY.'">';
+if (! empty($conf->use_javascript_ajax))
+	print '&nbsp;'.img_picto($langs->trans('Generate'), 'refresh', 'id="generate_token" class="linkobject"');
 print '</td></tr>';
 
-print '</table></form>';
+print '</table>';
 
 print '<br>';
 print '<div align="center"><input type="submit" class="button" value="'.$langs->trans("Modify").'"></div>';
+
+print '</form>';
 
 llxFooter();
 

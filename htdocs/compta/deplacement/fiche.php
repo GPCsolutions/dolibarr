@@ -1,12 +1,13 @@
 <?php
 /* Copyright (C) 2003		Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012	Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012		Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2013       Florian Henry		  	<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -49,8 +50,6 @@ $mesg = '';
 $object = new Deplacement($db);
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
-include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
-$hookmanager=new HookManager($db);
 $hookmanager->initHooks(array('tripsandexpensescard'));
 
 
@@ -236,13 +235,13 @@ else if ($action == 'setkm' && $user->rights->deplacement->creer)
 else if ($action == 'setnote_public' && $user->rights->deplacement->creer)
 {
     $object->fetch($id);
-    $result=$object->setValueFrom('note_public',GETPOST('note_public','alpha'));
+    $result=$object->update_note(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES),'_public');
     if ($result < 0) dol_print_error($db, $object->error);
 }
-else if ($action == 'setnote' && $user->rights->deplacement->creer)
+else if ($action == 'setnote_private' && $user->rights->deplacement->creer)
 {
     $object->fetch($id);
-    $result=$object->setValueFrom('note',GETPOST('note','alpha'));
+    $result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES),'_private');
     if ($result < 0) dol_print_error($db, $object->error);
 }
 
@@ -522,7 +521,7 @@ else if ($id)
             print '<tr><td>'.$langs->trans("Status").'</td><td>'.$object->getLibStatut(4).'</td></tr>';
 
             // Other attributes
-            $parameters=array('colspan' => ' colspan="3"');
+            $parameters=array('colspan' => ' colspan="3"', 'showblocbydefault' => 1);
             $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
 
             print "</table><br>";
@@ -578,7 +577,8 @@ else if ($id)
     }
 }
 
-$db->close();
 
 llxFooter();
+
+$db->close();
 ?>

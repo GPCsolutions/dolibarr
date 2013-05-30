@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2001-2006	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin			<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2012		Vinicius Nogueira		<viniciusvgn@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -32,7 +32,7 @@ require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 // Security check
 $orderid = GETPOST('orderid');
 if ($user->societe_id) $socid=$user->societe_id;
-$result = restrictedArea($user, 'commande_fournisseur', $orderid,'');
+$result = restrictedArea($user, 'fournisseur', $orderid, '', 'commande');
 
 $langs->load("suppliers");
 $langs->load("orders");
@@ -231,7 +231,7 @@ if (! empty($conf->fournisseur->enabled))
                 $var=!$var;
                 $obj = $db->fetch_object($resql);
                 print "<tr $bc[$var]>";
-                print '<td nowrap="nowrap">';
+                print '<td class="nowrap">';
                 print "<a href=\"fiche.php?id=".$obj->rowid."\">".img_object($langs->trans("ShowOrder"),"order").' '.$obj->ref."</a></td>";
                 print '<td><a href="'.DOL_URL_ROOT.'/fourn/fiche.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.dol_trunc($obj->nom,24).'</a></td></tr>';
                 $i++;
@@ -245,7 +245,7 @@ if (! empty($conf->fournisseur->enabled))
 /*
  * List of users allowed
  */
-$sql = "SELECT u.rowid, u.name, u.firstname";
+$sql = "SELECT u.rowid, u.lastname, u.firstname";
 $sql.= " FROM ".MAIN_DB_PREFIX."user as u,";
 $sql.= " ".MAIN_DB_PREFIX."user_rights as ur";
 $sql.= ", ".MAIN_DB_PREFIX."rights_def as rd";
@@ -276,7 +276,7 @@ if ($resql)
         print "<tr $bc[$var]>";
         print '<td>';
         $userstatic->id=$obj->rowid;
-        $userstatic->lastname=$obj->name;
+        $userstatic->lastname=$obj->lastname;
         $userstatic->firstname=$obj->firstname;
         print $userstatic->getNomUrl(1);
         print '</td>';
@@ -330,21 +330,21 @@ if ($resql)
             $obj = $db->fetch_object($resql);
 
             print "<tr $bc[$var]>";
-            print '<td width="20%" nowrap="nowrap">';
+            print '<td width="20%" class="nowrap">';
 
             $commandestatic->id=$obj->rowid;
             $commandestatic->ref=$obj->ref;
 
             print '<table class="nobordernopadding"><tr class="nocellnopadd">';
-            print '<td width="96" class="nobordernopadding" nowrap="nowrap">';
+            print '<td width="96" class="nobordernopadding nowrap">';
             print $commandestatic->getNomUrl(1);
             print '</td>';
 
-            print '<td width="16" class="nobordernopadding" nowrap="nowrap">';
+            print '<td width="16" class="nobordernopadding nowrap">';
             print '&nbsp;';
             print '</td>';
 
-            print '<td width="16" align="right" class="nobordernopadding">';
+            print '<td width="16" align="right" class="nobordernopadding hideonsmartphone">';
             $filename=dol_sanitizeFileName($obj->ref);
             $filedir=$conf->commande->dir_output . '/' . dol_sanitizeFileName($obj->ref);
             $urlsource=$_SERVER['PHP_SELF'].'?id='.$obj->rowid;
@@ -398,21 +398,21 @@ while ($i < $num)
 $var=!$var;
 $obj = $db->fetch_object($resql);
 print "<tr $bc[$var]>";
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 
 $commandestatic->id=$obj->rowid;
 $commandestatic->ref=$obj->ref;
 
 print '<table class="nobordernopadding"><tr class="nocellnopadd">';
-print '<td width="96" class="nobordernopadding" nowrap="nowrap">';
+print '<td width="96" class="nobordernopadding nowrap">';
 print $commandestatic->getNomUrl(1);
 print '</td>';
 
-print '<td width="16" class="nobordernopadding" nowrap="nowrap">';
+print '<td width="16" class="nobordernopadding nowrap">';
 print '&nbsp;';
 print '</td>';
 
-print '<td width="16" align="right" class="nobordernopadding">';
+print '<td width="16" align="right" class="nobordernopadding hideonsmartphone">';
 $filename=dol_sanitizeFileName($obj->ref);
 $filedir=$conf->commande->dir_output . '/' . dol_sanitizeFileName($obj->ref);
 $urlsource=$_SERVER['PHP_SELF'].'?id='.$obj->rowid;

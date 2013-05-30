@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2005		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2005-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2012		Regis Houssin			<regis@dolibarr.fr>
+ * Copyright (C) 2012		Regis Houssin			<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -51,11 +51,13 @@ if ($action == 'update' && ! $_POST['cancel'])
 	$edituser = new User($db);
 	$edituser->fetch($id);
 
-	$edituser->clicktodial_login    = $_POST["login"];
-	$edituser->clicktodial_password = $_POST["password"];
-	$edituser->clicktodial_poste    = $_POST["poste"];
+	$edituser->clicktodial_url      = GETPOST("url");
+	$edituser->clicktodial_login    = GETPOST("login");
+	$edituser->clicktodial_password = GETPOST("password");
+	$edituser->clicktodial_poste    = GETPOST("poste");
 
 	$result=$edituser->update_clicktodial();
+	if ($result < 0) setEventMessage($edituser->error,'errors');
 }
 
 
@@ -69,7 +71,7 @@ $form = new Form($db);
 llxHeader("","ClickToDial");
 
 
-if ($id)
+if ($id > 0)
 {
     $fuser = new User($db);
     $fuser->fetch($id);
@@ -102,18 +104,18 @@ if ($id)
     print '<td colspan="2">'.$fuser->lastname.'</td>';
     print "</tr>\n";
 
-    // Prenom
+    // Firstname
     print '<tr><td width="25%" valign="top">'.$langs->trans("Firstname").'</td>';
-    print '<td colspan="2">'.$fuser->name.'</td>';
+    print '<td colspan="2">'.$fuser->firstname.'</td>';
     print "</tr>\n";
 
     print "</table>\n";
     print "<br>\n";
 
-
+	// Edit mode
     if ($action == 'edit')
     {
-        print '<form action="clicktodial.php?id='.$_GET["id"].'" method="post">';
+        print '<form action="'.$_SERVER['PHP_SELF'].'?id='.$fuser->id.'" method="post">';
         print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
         print '<input type="hidden" name="action" value="update">';
         print '<table class="border" width="100%">';
@@ -122,13 +124,17 @@ if ($id)
         {
         	print '<tr><td width="25%" valign="top">ClickToDial URL</td>';
         	print '<td class="valeur">';
-            if (empty($conf->global->CLICKTODIAL_URL))
+        	print '<input name="url" value="'.(! empty($fuser->clicktodial_url)?$fuser->clicktodial_url:'').'" size="92">';
+        	if (empty($conf->global->CLICKTODIAL_URL) && empty($fuser->clicktodial_url))
             {
                 $langs->load("errors");
                 print '<font class="error">'.$langs->trans("ErrorModuleSetupNotComplete").'</font>';
             }
-            else print $form->textwithpicto($conf->global->CLICKTODIAL_URL,$langs->trans("ClickToDialUrlDesc"));
-        	print '</td>';
+            else
+           {
+            	print ' &nbsp; &nbsp; '.$form->textwithpicto($langs->trans("KeepEmptyToUseDefault").': '.$conf->global->CLICKTODIAL_URL,$langs->trans("ClickToDialUrlDesc"));
+           }
+            print '</td>';
         	print '</tr>';
         }
 
@@ -147,14 +153,16 @@ if ($id)
         print '<input name="poste" value="'.(! empty($fuser->clicktodial_poste)?$fuser->clicktodial_poste:'').'"></td>';
         print "</tr>\n";
 
-		print '<tr><td colspan="2" align="center"><input class="button" type="submit" value="'.$langs->trans("Save").'">';
-		print ' &nbsp; &nbsp; ';
-		print '<input class="button" type="submit" name="cancel" value="'.$langs->trans("Cancel").'">';
-		print '</td></tr>';
+        print '</table>';
 
-        print '</table></form>';
+        print '<br><center><input class="button" type="submit" value="'.$langs->trans("Save").'">';
+        print ' &nbsp; &nbsp; ';
+        print '<input class="button" type="submit" name="cancel" value="'.$langs->trans("Cancel").'">';
+        print '</center>';
+
+        print '</form>';
     }
-    else
+    else	// View mode
     {
 
         print '<table class="border" width="100%">';
@@ -163,12 +171,17 @@ if ($id)
         {
         	print "<tr>".'<td width="25%" valign="top">ClickToDial URL</td>';
         	print '<td class="valeur">';
-        	if (empty($conf->global->CLICKTODIAL_URL))
+        	$url=$conf->global->CLICKTODIAL_URL;
+        	if (! empty($fuser->clicktodial_url)) $url=$fuser->clicktodial_url;
+        	if (empty($url))
         	{
         	    $langs->load("errors");
         	    print '<font class="error">'.$langs->trans("ErrorModuleSetupNotComplete").'</font>';
         	}
-        	else print $form->textwithpicto($conf->global->CLICKTODIAL_URL,$langs->trans("ClickToDialUrlDesc"));
+        	else
+        	{
+        		print $form->textwithpicto((empty($fuser->clicktodial_url)?$langs->trans("DefaultLink").': ':'').$url,$langs->trans("ClickToDialUrlDesc"));
+        	}
         	print '</td>';
         	print '</tr>';
         }
@@ -192,7 +205,7 @@ if ($id)
 
     if (! empty($user->admin) && $action <> 'edit')
     {
-        print '<a class="butAction" href="clicktodial.php?id='.$fuser->id.'&amp;action=edit">'.$langs->trans("Modify").'</a>';
+        print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?id='.$fuser->id.'&amp;action=edit">'.$langs->trans("Modify").'</a>';
     }
 
     print "</div>\n";

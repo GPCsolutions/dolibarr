@@ -3,7 +3,7 @@
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 2 of the License, or
+-- the Free Software Foundation; either version 3 of the License, or
 -- (at your option) any later version.
 --
 -- This program is distributed in the hope that it will be useful,
@@ -22,6 +22,7 @@
 create table llx_user_clicktodial
 (
   fk_user       integer PRIMARY KEY,
+  url           varchar(255),
   login         varchar(32),
   pass          varchar(64),
   poste         varchar(20)

@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2005-2010 Laurent Destailleur  <eldy@uers.sourceforge.net>
- * Copyright (C) 2005-2010 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2013 Laurent Destailleur  <eldy@uers.sourceforge.net>
+ * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -51,8 +51,8 @@ if (! $sortfield) $sortfield="email";
 $id=GETPOST('id','int');
 $rowid=GETPOST('rowid','int');
 $action=GETPOST("action");
-$search_nom=GETPOST("search_nom");
-$search_prenom=GETPOST("search_prenom");
+$search_lastname=GETPOST("search_lastname");
+$search_firstname=GETPOST("search_firstname");
 $search_email=GETPOST("search_email");
 
 // Search modules dirs
@@ -113,7 +113,7 @@ if ($action == 'add')
 	}
 }
 
-if ($action == 'clear')
+if (GETPOST('clearlist'))
 {
 	// Chargement de la classe
 	$classname = "MailingTargets";
@@ -136,7 +136,7 @@ if ($action == 'delete')
 			$classname = "MailingTargets";
 			$obj = new $classname($db);
 			$obj->update_nb($id);
-			
+
 			header("Location: ".$_SERVER['PHP_SELF']."?id=".$id);
 			exit;
 		}
@@ -154,8 +154,8 @@ if ($action == 'delete')
 
 if ($_POST["button_removefilter"])
 {
-	$search_nom='';
-	$search_prenom='';
+	$search_lastname='';
+	$search_firstname='';
 	$search_email='';
 }
 
@@ -298,7 +298,7 @@ if ($object->fetch($id) >= 0)
 					}
 
 					print '<td>';
-					if (! $obj->picto) $obj->picto='generic';
+					if (empty($obj->picto)) $obj->picto='generic';
 					print img_object($langs->trans("Module").': '.get_class($obj),$obj->picto).' '.$obj->getDesc();
 					print '</td>';
 
@@ -307,7 +307,7 @@ if ($object->fetch($id) >= 0)
 					 print $modulename;
 					 print "</td>";
 					 */
-					$nbofrecipient=$obj->getNbOfRecipients();
+					$nbofrecipient=$obj->getNbOfRecipients('');
 					print '<td align="center">';
 					if ($nbofrecipient >= 0)
 					{
@@ -346,20 +346,7 @@ if ($object->fetch($id) >= 0)
 
 		print '</table>';
 		print '<br>';
-
-		print '<form action="'.$_SERVER['PHP_SELF'].'?action=clear&id='.$object->id.'" method="POST">';
-		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-		print_titre($langs->trans("ToClearAllRecipientsClickHere"));
-		print '<table class="noborder" width="100%">';
-		print '<tr class="liste_titre">';
-		print '<td class="liste_titre" align="right"><input type="submit" class="button" value="'.$langs->trans("TargetsReset").'"></td>';
-		print '</tr>';
-		print '</table>';
-		print '</form>';
-		print '<br>';
 	}
-
-
 
 	// List of selected targets
 	print "\n<!-- Liste destinataires selectionnes -->\n";
@@ -369,11 +356,11 @@ if ($object->fetch($id) >= 0)
 	print '<input type="hidden" name="sortorder" value="'.$sortorder.'">';
 	print '<input type="hidden" name="id" value="'.$object->id.'">';
 
-	$sql  = "SELECT mc.rowid, mc.nom, mc.prenom, mc.email, mc.other, mc.statut, mc.date_envoi, mc.source_url, mc.source_id, mc.source_type";
+	$sql  = "SELECT mc.rowid, mc.lastname, mc.firstname, mc.email, mc.other, mc.statut, mc.date_envoi, mc.source_url, mc.source_id, mc.source_type";
 	$sql .= " FROM ".MAIN_DB_PREFIX."mailing_cibles as mc";
 	$sql .= " WHERE mc.fk_mailing=".$object->id;
-	if ($search_nom)    $sql.= " AND mc.nom    LIKE '%".$db->escape($search_nom)."%'";
-	if ($search_prenom) $sql.= " AND mc.prenom LIKE '%".$db->escape($search_prenom)."%'";
+	if ($search_lastname)    $sql.= " AND mc.lastname    LIKE '%".$db->escape($search_lastname)."%'";
+	if ($search_firstname) $sql.= " AND mc.firstname LIKE '%".$db->escape($search_firstname)."%'";
 	if ($search_email)  $sql.= " AND mc.email  LIKE '%".$db->escape($search_email)."%'";
 	$sql .= $db->order($sortfield,$sortorder);
 	$sql .= $db->plimit($conf->liste_limit+1, $offset);
@@ -383,21 +370,23 @@ if ($object->fetch($id) >= 0)
 	{
 		$num = $db->num_rows($resql);
 
-		$parm = "&amp;id=".$object->id;
-		if ($search_nom)    $parm.= "&amp;search_nom=".urlencode($search_nom);
-		if ($search_prenom) $parm.= "&amp;search_prenom=".urlencode($search_prenom);
-		if ($search_email)  $parm.= "&amp;search_email=".urlencode($search_email);
+		$param = "&amp;id=".$object->id;
+		if ($search_lastname)  $param.= "&amp;search_lastname=".urlencode($search_lastname);
+		if ($search_firstname) $param.= "&amp;search_firstname=".urlencode($search_firstname);
+		if ($search_email)     $param.= "&amp;search_email=".urlencode($search_email);
 
-		print_barre_liste($langs->trans("MailSelectedRecipients"),$page,$_SERVER["PHP_SELF"],$parm,$sortfield,$sortorder,"",$num,$object->nbemail,'');
+		$cleartext='<br></div><div>'.$langs->trans("ToClearAllRecipientsClickHere").': '.'<input type="submit" name="clearlist" class="button" value="'.$langs->trans("TargetsReset").'">';
 
-		if ($page)			$parm.= "&amp;page=".$page;
+		print_barre_liste($langs->trans("MailSelectedRecipients").$cleartext,$page,$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,"",$num,$object->nbemail,'');
+
+		if ($page)			$param.= "&amp;page=".$page;
 		print '<table class="noborder" width="100%">';
 		print '<tr class="liste_titre">';
-		print_liste_field_titre($langs->trans("EMail"),$_SERVER["PHP_SELF"],"mc.email",$parm,"","",$sortfield,$sortorder);
-		print_liste_field_titre($langs->trans("Lastname"),$_SERVER["PHP_SELF"],"mc.nom",$parm,"","",$sortfield,$sortorder);
-		print_liste_field_titre($langs->trans("Firstname"),$_SERVER["PHP_SELF"],"mc.prenom",$parm,"","",$sortfield,$sortorder);
-		print_liste_field_titre($langs->trans("OtherInformations"),$_SERVER["PHP_SELF"],"",$parm,"","",$sortfield,$sortorder);
-		print_liste_field_titre($langs->trans("Source"),$_SERVER["PHP_SELF"],"",$parm,"",'align="center"',$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("EMail"),$_SERVER["PHP_SELF"],"mc.email",$param,"","",$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("Lastname"),$_SERVER["PHP_SELF"],"mc.lastname",$param,"","",$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("Firstname"),$_SERVER["PHP_SELF"],"mc.firstname",$param,"","",$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("OtherInformations"),$_SERVER["PHP_SELF"],"",$param,"","",$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("Source"),$_SERVER["PHP_SELF"],"",$param,"",'align="center"',$sortfield,$sortorder);
 
 		// Date sendinf
 		if ($object->statut < 2)
@@ -406,11 +395,11 @@ if ($object->fetch($id) >= 0)
 		}
 		else
 		{
-			print_liste_field_titre($langs->trans("DateSending"),$_SERVER["PHP_SELF"],"mc.date_envoi",$parm,'','align="center"',$sortfield,$sortorder);
+			print_liste_field_titre($langs->trans("DateSending"),$_SERVER["PHP_SELF"],"mc.date_envoi",$param,'','align="center"',$sortfield,$sortorder);
 		}
 
 		// Statut
-		print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"mc.statut",$parm,'','align="right"',$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"mc.statut",$param,'','align="right"',$sortfield,$sortorder);
 
 		print '</tr>';
 
@@ -422,11 +411,11 @@ if ($object->fetch($id) >= 0)
 		print '</td>';
 		// Name
 		print '<td class="liste_titre">';
-		print '<input class="flat" type="text" name="search_nom" size="12" value="'.$search_nom.'">';
+		print '<input class="flat" type="text" name="search_lastname" size="12" value="'.$search_lastname.'">';
 		print '</td>';
 		// Firstname
 		print '<td class="liste_titre">';
-		print '<input class="flat" type="text" name="search_prenom" size="10" value="'.$search_prenom.'">';
+		print '<input class="flat" type="text" name="search_firstname" size="10" value="'.$search_firstname.'">';
 		print '</td>';
 		// Other
 		print '<td class="liste_titre">';
@@ -452,8 +441,8 @@ if ($object->fetch($id) >= 0)
 
 				print "<tr $bc[$var]>";
 				print '<td>'.$obj->email.'</td>';
-				print '<td>'.$obj->nom.'</td>';
-				print '<td>'.$obj->prenom.'</td>';
+				print '<td>'.$obj->lastname.'</td>';
+				print '<td>'.$obj->firstname.'</td>';
 				print '<td>'.$obj->other.'</td>';
 				print '<td align="center">';
                 if (empty($obj->source_id) || empty($obj->source_type))
@@ -494,16 +483,16 @@ if ($object->fetch($id) >= 0)
 				if ($obj->statut == 0)
 				{
 					print '<td align="center">&nbsp;</td>';
-					print '<td align="right" nowrap="nowrap">'.$langs->trans("MailingStatusNotSent");
+					print '<td align="right" class="nowrap">'.$langs->trans("MailingStatusNotSent");
 					if ($user->rights->mailing->creer) {
-						print '<a href="'.$_SERVER['PHP_SELF'].'?action=delete&rowid='.$obj->rowid.$parm.'">'.img_delete($langs->trans("RemoveRecipient"));
+						print '<a href="'.$_SERVER['PHP_SELF'].'?action=delete&rowid='.$obj->rowid.$param.'">'.img_delete($langs->trans("RemoveRecipient"));
 					}
 					print '</td>';
 				}
 				else
 				{
 					print '<td align="center">'.$obj->date_envoi.'</td>';
-					print '<td align="right" nowrap="nowrap">';
+					print '<td align="right" class="nowrap">';
 					if ($obj->statut==-1) print $langs->trans("MailingStatusError").' '.img_error();
 					if ($obj->statut==1) print $langs->trans("MailingStatusSent").' '.img_picto($langs->trans("MailingStatusSent"),'statut4');
 					if ($obj->statut==2) print $langs->trans("MailingStatusRead").' '.img_picto($langs->trans("MailingStatusRead"),'statut6');

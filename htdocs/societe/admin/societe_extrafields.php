@@ -2,11 +2,11 @@
 /* Copyright (C) 2001-2002	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2003		Jean-Louis Bergamo		<jlb@j1b.org>
  * Copyright (C) 2004-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2012		Regis Houssin			<regis@dolibarr.fr>
+ * Copyright (C) 2012		Regis Houssin			<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -30,6 +30,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 
 $langs->load("companies");
 $langs->load("admin");
+$langs->load("members");
 
 $extrafields = new ExtraFields($db);
 $form = new Form($db);
@@ -41,7 +42,7 @@ foreach ($tmptype2label as $key => $val) $type2label[$key]=$langs->trans($val);
 
 $action=GETPOST('action', 'alpha');
 $attrname=GETPOST('attrname', 'alpha');
-$elementtype='company';
+$elementtype='societe';  //Must be the $element of the class that manage extrafield
 
 if (!$user->admin) accessforbidden();
 
@@ -70,13 +71,11 @@ print_fiche_titre($langs->trans("CompanySetup"),$linkback,'setup');
 
 $head = societe_admin_prepare_head(null);
 
-dol_fiche_head($head, 'attributes', $langs->trans("ThirdParty"), 0, 'company');
+dol_fiche_head($head, 'attributes', $langs->trans("ThirdParties"), 0, 'company');
 
 
 print $langs->trans("DefineHereComplementaryAttributes",$textobject).'<br>'."\n";
 print '<br>';
-
-dol_htmloutput_errors($mesg);
 
 // Load attribute_label
 $extrafields->fetch_name_optionals_label($elementtype);
@@ -84,11 +83,13 @@ $extrafields->fetch_name_optionals_label($elementtype);
 print "<table summary=\"listofattributes\" class=\"noborder\" width=\"100%\">";
 
 print '<tr class="liste_titre">';
+print '<td align="center">'.$langs->trans("Position").'</td>';
 print '<td>'.$langs->trans("Label").'</td>';
 print '<td>'.$langs->trans("AttributeCode").'</td>';
 print '<td>'.$langs->trans("Type").'</td>';
 print '<td align="right">'.$langs->trans("Size").'</td>';
-print '<td align="right">'.$langs->trans("Unique").'</td>';
+print '<td align="center">'.$langs->trans("Unique").'</td>';
+print '<td align="center">'.$langs->trans("Required").'</td>';
 print '<td width="80">&nbsp;</td>';
 print "</tr>\n";
 
@@ -97,11 +98,13 @@ foreach($extrafields->attribute_type as $key => $value)
 {
     $var=!$var;
     print "<tr ".$bc[$var].">";
+    print "<td>".$extrafields->attribute_pos[$key]."</td>\n";
     print "<td>".$extrafields->attribute_label[$key]."</td>\n";
     print "<td>".$key."</td>\n";
     print "<td>".$type2label[$extrafields->attribute_type[$key]]."</td>\n";
     print '<td align="right">'.$extrafields->attribute_size[$key]."</td>\n";
-    print '<td align="right">'.yn($extrafields->attribute_unique[$key])."</td>\n";
+    print '<td align="center">'.yn($extrafields->attribute_unique[$key])."</td>\n";
+    print '<td align="center">'.yn($extrafields->attribute_required[$key])."</td>\n";
     print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=edit&attrname='.$key.'">'.img_edit().'</a>';
     print "&nbsp; <a href=\"".$_SERVER["PHP_SELF"]."?action=delete&attrname=$key\">".img_delete()."</a></td>\n";
     print "</tr>";

@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2003-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2009 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -38,7 +38,7 @@ $ref=GETPOST('ref','alpha');
 // Security check
 $socid='';
 if (! empty($user->societe_id)) $socid=$user->societe_id;
-$result = restrictedArea($user, 'commande_fournisseur', $id,'');
+$result = restrictedArea($user, 'fournisseur', $id, '', 'commande');
 
 
 /*
@@ -133,7 +133,7 @@ if ($id > 0 || ! empty($ref))
 		print '<td class="liste_titre" align="left">'.$langs->trans("Comment").'</td>';
 		print '</tr>';
 
-		$sql = "SELECT l.fk_statut, l.datelog as dl, l.comment, u.rowid, u.login, u.firstname, u.name";
+		$sql = "SELECT l.fk_statut, l.datelog as dl, l.comment, u.rowid, u.login, u.firstname, u.lastname";
 		$sql.= " FROM ".MAIN_DB_PREFIX."commande_fournisseur_log as l";
 		$sql.= " , ".MAIN_DB_PREFIX."user as u ";
 		$sql.= " WHERE l.fk_commande = ".$commande->id;
@@ -157,14 +157,14 @@ if ($id > 0 || ! empty($ref))
 				print '<td width="20%">'.dol_print_date($db->jdate($obj->dl),"dayhour")."</td>\n";
 
 				// Statut
-				print '<td nowrap="nowrap">'.$commande->LibStatut($obj->fk_statut,4)."</td>\n";
+				print '<td class="nowrap">'.$commande->LibStatut($obj->fk_statut,4)."</td>\n";
 
 				// User
 				print '<td align="center"><a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$obj->rowid.'">';
 				print img_object($langs->trans("ShowUser"),'user').' '.$obj->login.'</a></td>';
 
 				// Comment
-				print '<td nowrap="nowrap" title="'.dol_escape_htmltag($obj->comment).'">'.dol_trunc($obj->comment,48)."</td>\n";
+				print '<td class="nowrap" title="'.dol_escape_htmltag($obj->comment).'">'.dol_trunc($obj->comment,48)."</td>\n";
 
 				print '</tr>';
 

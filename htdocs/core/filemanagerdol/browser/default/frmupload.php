@@ -7,7 +7,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -124,12 +124,12 @@ window.onload = function()
 		<form id="frmUpload" action="" target="frmUploadWorker" method="post" enctype="multipart/form-data" onsubmit="return OnSubmit();">
 			<table class="fullHeight" cellspacing="0" cellpadding="0" width="100%" border="0">
 				<tr>
-					<td nowrap="nowrap">
+					<td class="nowrap">
 						<span id="eUploadMessage">Upload a new file in this folder</span><br>
 						<table cellspacing="0" cellpadding="0" width="100%" border="0">
 							<tr>
 								<td width="100%"><input id="NewFile" name="NewFile" style="WIDTH: 100%" type="file"></td>
-								<td nowrap="nowrap">&nbsp;<input id="btnUpload" type="submit" value="Upload"></td>
+								<td class="nowrap">&nbsp;<input id="btnUpload" type="submit" value="Upload"></td>
 							</tr>
 						</table>
 					</td>

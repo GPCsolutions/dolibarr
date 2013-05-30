@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2002-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -133,7 +133,7 @@ if ($object->id)
 	print '<table class="border"width="100%">';
 
 	// Ref
-	print '<tr><td width="30%">'.$langs->trans("ThirdPartyName").'</td>';
+	print '<tr><td width="25%">'.$langs->trans("ThirdPartyName").'</td>';
 	print '<td colspan="3">';
 	print $form->showrefnav($object,'socid','',($user->societe_id?0:1),'rowid','nom');
 	print '</td></tr>';

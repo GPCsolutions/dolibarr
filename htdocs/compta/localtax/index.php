@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -59,7 +59,7 @@ function pt ($db, $sql, $date)
         $total = 0;
         print '<table class="noborder" width="100%">';
         print '<tr class="liste_titre">';
-        print '<td nowrap="nowrap" width="60%">'.$date.'</td>';
+        print '<td class="nowrap" width="60%">'.$date.'</td>';
         print '<td align="right">'.$langs->trans("Amount").'</td>';
         print '<td>&nbsp;</td>'."\n";
         print "</tr>\n";
@@ -69,10 +69,10 @@ function pt ($db, $sql, $date)
             $obj = $db->fetch_object($result);
             $var=!$var;
             print '<tr '.$bc[$var].'>';
-            print '<td nowrap="nowrap">'.$obj->dm."</td>\n";
+            print '<td class="nowrap">'.$obj->dm."</td>\n";
             $total = $total + $obj->mm;
 
-            print '<td nowrap="nowrap" align="right">'.price($obj->mm)."</td><td >&nbsp;</td>\n";
+            print '<td class="nowrap" align="right">'.price($obj->mm)."</td><td >&nbsp;</td>\n";
             print "</tr>\n";
 
             $i++;
@@ -100,7 +100,7 @@ $tva = new Tva($db);
 $textprevyear="<a href=\"index.php?year=" . ($year_current-1) . "\">".img_previous()."</a>";
 $textnextyear=" <a href=\"index.php?year=" . ($year_current+1) . "\">".img_next()."</a>";
 
-print_fiche_titre($langs->transcountry("LT2",$mysoc->pays_code),"$textprevyear ".$langs->trans("Year")." $year_start $textnextyear");
+print_fiche_titre($langs->transcountry("LT2",$mysoc->country_code),"$textprevyear ".$langs->trans("Year")." $year_start $textnextyear");
 
 print $langs->trans("VATReportBuildWithOptionDefinedInModule").'<br>';
 print '('.$langs->trans("TaxModuleSetupToModifyRules",DOL_URL_ROOT.'/admin/taxes.php').')<br>';
@@ -108,10 +108,10 @@ print '<br>';
 
 print '<table width="100%" class="nobordernopadding">';
 print '<tr><td>';
-print_titre($langs->transcountry("LT2Summary",$mysoc->pays_code));
+print_titre($langs->transcountry("LT2Summary",$mysoc->country_code));
 
 print '</td><td width="5">&nbsp;</td><td>';
-print_titre($langs->transcountry("LT2Paid",$mysoc->pays_code));
+print_titre($langs->transcountry("LT2Paid",$mysoc->country_code));
 print '</td></tr>';
 
 print '<tr><td width="50%" valign="top">';
@@ -179,9 +179,9 @@ for ($m = 1 ; $m < 13 ; $m++ )
     if ($i > 2) {
         print '<tr class="liste_total">';
         print '<td align="right">'.$langs->trans("SubTotal").':</td>';
-        print '<td nowrap="nowrap" align="right">'.price($subtotalcoll).'</td>';
-        print '<td nowrap="nowrap" align="right">'.price($subtotalpaye).'</td>';
-        print '<td nowrap="nowrap" align="right">'.price($subtotalpaye).'</td>';
+        print '<td class="nowrap" align="right">'.price($subtotalcoll).'</td>';
+        print '<td class="nowrap" align="right">'.price($subtotalpaye).'</td>';
+        print '<td class="nowrap" align="right">'.price($subtotalpaye).'</td>';
         print '<td>&nbsp;</td></tr>';
         $i = 0;
         $subtotalcoll=0; $subtotalpaye=0; $subtotal=0;

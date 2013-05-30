@@ -4,7 +4,7 @@
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2 of the License, or
+* the Free Software Foundation; either version 3 of the License, or
 * (at your option) any later version.
 *
 * This program is distributed in the hope that it will be useful,
@@ -745,7 +745,8 @@ class DolGraph
         $legends=array();
         $nblot=count($this->data[0])-1;    // -1 to remove legend
         $firstlot=0;
-        if ($nblot > 2) $firstlot = ($nblot - 2);        // We limit nblot to 2 because jflot can't manage more than 2 bars on same x
+        // work with line but not with bars
+        //if ($nblot > 2) $firstlot = ($nblot - 2);        // We limit nblot to 2 because jflot can't manage more than 2 bars on same x
 
         $i=$firstlot;
         $serie=array();
@@ -785,7 +786,7 @@ class DolGraph
 
         $this->_stringtoshow ='<!-- Build using '.$this->_library.' -->'."\n";
         $this->_stringtoshow.='<br><div align="center">'.$this->title.'</div><br>';
-        $this->_stringtoshow.='<div id="placeholder_'.$tag.'" style="width:'.$this->width.'px;height:'.$this->height.'px;"></div>'."\n";
+        $this->_stringtoshow.='<div id="placeholder_'.$tag.'" style="width:'.$this->width.'px;height:'.$this->height.'px;" class="dolgraph"></div>'."\n";
         $this->_stringtoshow.='<script id="'.$tag.'">'."\n";
         $this->_stringtoshow.='$(function () {'."\n";
         $i=$firstlot;
@@ -892,6 +893,22 @@ class DolGraph
     function show()
     {
         return $this->_stringtoshow;
+    }
+
+    /**
+     * getDefaultGraphSizeForStats
+     *
+     * @param	string	$direction		'width' or 'height'
+     * @param	string	$defaultsize	Value we want as default size
+     * @return	int						Value of width or height to use by default
+     */
+    static function getDefaultGraphSizeForStats($direction,$defaultsize='')
+    {
+    	global $conf;
+
+    	if ($direction == 'width')  return ($conf->dol_optimize_smallscreen?(empty($_SESSION['dol_screen_width'])?'280':$_SESSION['dol_screen_width']-40):($defaultsize?$defaultsize:'500'));
+    	if ($direction == 'height') return ($conf->dol_optimize_smallscreen?'160':($defaultsize?$defaultsize:'200'));
+    	return 0;
     }
 }
 

@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2003-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -43,8 +43,11 @@ llxHeader('',$langs->trans("Sendings"),$helpurl);
 
 print_fiche_titre($langs->trans("SendingsArea"));
 
-print '<table class="notopnoleftnoright" width="100%">';
-print '<tr><td valign="top" width="30%" class="notopnoleft">';
+
+//print '<table class="notopnoleftnoright" width="100%">';
+//print '<tr><td valign="top" width="30%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
+
 
 $var=false;
 print '<table class="noborder nohover" width="100%">';
@@ -142,7 +145,7 @@ if ($resql)
 			$var=!$var;
 			$obj = $db->fetch_object($resql);
 			print "<tr $bc[$var]>";
-			print '<td nowrap="nowrap">';
+			print '<td class="nowrap">';
 			$orderstatic->id=$obj->rowid;
 			$orderstatic->ref=$obj->ref;
 			print $orderstatic->getNomUrl(1);
@@ -159,10 +162,8 @@ if ($resql)
 }
 
 
-/*
- *
- */
-print '</td><td valign="top" width="70%">';
+//print '</td><td valign="top" width="70%">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
 
 
 /*
@@ -272,7 +273,9 @@ if ($resql)
 }
 else dol_print_error($db);
 
-print '</td></tr></table>';
+
+//print '</td></tr></table>';
+print '</div></div></div>';
 
 
 llxFooter();

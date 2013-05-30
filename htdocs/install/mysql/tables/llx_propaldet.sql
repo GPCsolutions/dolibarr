@@ -1,11 +1,11 @@
 -- ===================================================================
 -- Copyright (C) 2002-2003	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
--- Copyright (C) 2005-2012	Regis Houssin			<regis@dolibarr.fr>
+-- Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
 -- Copyright (C) 2010		Juanjo Menent			<jmenent@2byte.es>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 2 of the License, or
+-- the Free Software Foundation; either version 3 of the License, or
 -- (at your option) any later version.
 --
 -- This program is distributed in the hope that it will be useful,
@@ -29,9 +29,9 @@ create table llx_propaldet
   fk_remise_except					integer      NULL,               -- Lien vers table des remises fixes
   tva_tx							double(6,3)  DEFAULT 0, 	     -- taux tva
   localtax1_tx               		double(6,3)  DEFAULT 0,    		 -- localtax1 rate
-  localtax1_type			 		varchar(1)	  	 NULL, 			 -- localtax1 type
+  localtax1_type			 		varchar(10)	  	 NULL, 			 -- localtax1 type
   localtax2_tx               		double(6,3)  DEFAULT 0,    		 -- localtax2 rate
-  localtax2_type			 		varchar(1)	  	 NULL, 			 -- localtax2 type
+  localtax2_type			 		varchar(10)	  	 NULL, 			 -- localtax2 type
   qty								real,                            -- quantity
   remise_percent					real         DEFAULT 0,          -- pourcentage de remise
   remise							real         DEFAULT 0,          -- montant de la remise (obsolete)
@@ -48,7 +48,7 @@ create table llx_propaldet
   info_bits							integer      DEFAULT 0,          -- TVA NPR ou non
   
   buy_price_ht						double(24,8) DEFAULT 0,          -- prix d'achat HT
-  fk_product_fournisseur_price		int(11)      DEFAULT NULL,       -- reference prix fournisseur
+  fk_product_fournisseur_price		integer      DEFAULT NULL,       -- reference prix fournisseur
   
   special_code						integer      DEFAULT 0,          -- code pour les lignes speciales
   rang								integer      DEFAULT 0           -- ordre affichage sur la propal

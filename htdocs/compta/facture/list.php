@@ -3,14 +3,15 @@
  * Copyright (C) 2004      Eric Seigne           <eric.seigne@ryxeo.com>
  * Copyright (C) 2004-2012 Laurent Destailleur   <eldy@users.sourceforge.net>
  * Copyright (C) 2005      Marc Barilley / Ocebo <marc@ocebo.com>
- * Copyright (C) 2005-2012 Regis Houssin         <regis@dolibarr.fr>
+ * Copyright (C) 2005-2013 Regis Houssin         <regis.houssin@capnetworks.com>
  * Copyright (C) 2006      Andre Cianfarani      <acianfa@free.fr>
  * Copyright (C) 2010-2012 Juanjo Menent         <jmenent@2byte.es>
  * Copyright (C) 2012      Christophe Battarel   <christophe.battarel@altairis.fr>
+ * Copyright (C) 2013      Florian Henry		  	<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -97,9 +98,7 @@ $usehm=(! empty($conf->global->MAIN_USE_HOURMIN_IN_DATE_RANGE)?$conf->global->MA
 $object=new Facture($db);
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
-include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
-$hookmanager=new HookManager($db);
-$hookmanager->initHooks(array('invoicecard'));
+$hookmanager->initHooks(array('invoicelist'));
 
 $now=dol_now();
 
@@ -142,7 +141,7 @@ if (! $sall) $sql = 'SELECT';
 else $sql = 'SELECT DISTINCT';
 $sql.= ' f.rowid as facid, f.facnumber, f.type, f.increment, f.total as total_ht, f.tva as total_tva, f.total_ttc,';
 $sql.= ' f.datef as df, f.date_lim_reglement as datelimite,';
-$sql.= ' f.paye as paye, f.fk_statut, f.note,';
+$sql.= ' f.paye as paye, f.fk_statut,';
 $sql.= ' s.nom, s.rowid as socid';
 if (! $sall) $sql.= ', SUM(pf.amount) as am';   // To be able to sort on status
 $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s';
@@ -184,11 +183,11 @@ if ($search_societe)
 }
 if ($search_montant_ht)
 {
-    $sql.= ' AND f.total = \''.$db->escape(trim($search_montant_ht)).'\'';
+    $sql.= ' AND f.total = \''.$db->escape(price2num(trim($search_montant_ht))).'\'';
 }
 if ($search_montant_ttc)
 {
-    $sql.= ' AND f.total_ttc = \''.$db->escape(trim($search_montant_ttc)).'\'';
+    $sql.= ' AND f.total_ttc = \''.$db->escape(price2num(trim($search_montant_ttc))).'\'';
 }
 if ($month > 0)
 {
@@ -210,9 +209,9 @@ if ($search_user > 0)
 }
 if (! $sall)
 {
-    $sql.= ' GROUP BY f.rowid, f.facnumber, f.type, f.increment, f.total, f.total_ttc,';
+    $sql.= ' GROUP BY f.rowid, f.facnumber, f.type, f.increment, f.total,f.tva, f.total_ttc,';
     $sql.= ' f.datef, f.date_lim_reglement,';
-    $sql.= ' f.paye, f.fk_statut, f.note,';
+    $sql.= ' f.paye, f.fk_statut,';
     $sql.= ' s.nom, s.rowid';
 }
 else
@@ -256,7 +255,8 @@ if ($resql)
     $moreforfilter='';
  	if ($user->rights->societe->client->voir || $socid)
  	{
-	 	$moreforfilter.=$langs->trans('ThirdPartiesOfSaleRepresentative'). ': ';
+ 		$langs->load("commercial");
+ 		$moreforfilter.=$langs->trans('ThirdPartiesOfSaleRepresentative'). ': ';
 		$moreforfilter.=$formother->select_salesrepresentatives($search_sale,'search_sale',$user);
 	 	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
  	}
@@ -322,7 +322,7 @@ if ($resql)
             $datelimit=$db->jdate($objp->datelimite);
 
             print '<tr '.$bc[$var].'>';
-            print '<td nowrap="nowrap">';
+            print '<td class="nowrap">';
 
             $facturestatic->id=$objp->facid;
             $facturestatic->ref=$objp->facnumber;
@@ -332,12 +332,12 @@ if ($resql)
 
             print '<table class="nobordernopadding"><tr class="nocellnopadd">';
 
-            print '<td class="nobordernopadding" nowrap="nowrap">';
+            print '<td class="nobordernopadding nowrap">';
             print $facturestatic->getNomUrl(1,'',200,0,$notetoshow);
             print $objp->increment;
             print '</td>';
 
-            print '<td width="16" align="right" class="nobordernopadding">';
+            print '<td width="16" align="right" class="nobordernopadding hideonsmartphone">';
             $filename=dol_sanitizeFileName($objp->facnumber);
             $filedir=$conf->facture->dir_output . '/' . dol_sanitizeFileName($objp->facnumber);
             $urlsource=$_SERVER['PHP_SELF'].'?id='.$objp->facid;
@@ -368,16 +368,16 @@ if ($resql)
             print $thirdparty->getNomUrl(1,'customer');
             print '</td>';
 
-            print '<td align="right">'.price($objp->total_ht).' '.getCurrencySymbol($conf->currency).'</td>';
+            print '<td align="right">'.price($objp->total_ht).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
 
-            print '<td align="right">'.price($objp->total_tva).' '.getCurrencySymbol($conf->currency).'</td>';
+            print '<td align="right">'.price($objp->total_tva).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
 
-            print '<td align="right">'.price($objp->total_ttc).' '.getCurrencySymbol($conf->currency).'</td>';
+            print '<td align="right">'.price($objp->total_ttc).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
 
-            print '<td align="right">'.(! empty($paiement)?price($paiement).' '.getCurrencySymbol($conf->currency):'&nbsp;').'</td>';
+            print '<td align="right">'.(! empty($paiement)?price($paiement).' '.$langs->getCurrencySymbol($conf->currency):'&nbsp;').'</td>';
 
             // Affiche statut de la facture
-            print '<td align="right" nowrap="nowrap">';
+            print '<td align="right" class="nowrap">';
             print $facturestatic->LibStatut($objp->paye,$objp->fk_statut,5,$paiement,$objp->type);
             print "</td>";
             //print "<td>&nbsp;</td>";
@@ -394,10 +394,10 @@ if ($resql)
             // Print total
             print '<tr class="liste_total">';
             print '<td class="liste_total" colspan="4" align="left">'.$langs->trans('Total').'</td>';
-            print '<td class="liste_total" align="right">'.price($total_ht).' '.getCurrencySymbol($conf->currency).'</td>';
-            print '<td class="liste_total" align="right">'.price($total_tva).' '.getCurrencySymbol($conf->currency).'</td>';
-            print '<td class="liste_total" align="right">'.price($total_ttc).' '.getCurrencySymbol($conf->currency).'</td>';
-            print '<td class="liste_total" align="right">'.price($totalrecu).' '.getCurrencySymbol($conf->currency).'</td>';
+            print '<td class="liste_total" align="right">'.price($total_ht).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
+            print '<td class="liste_total" align="right">'.price($total_tva).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
+            print '<td class="liste_total" align="right">'.price($total_ttc).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
+            print '<td class="liste_total" align="right">'.price($totalrecu).' '.$langs->getCurrencySymbol($conf->currency).'</td>';
             print '<td class="liste_total" align="center">&nbsp;</td>';
             print '</tr>';
         }

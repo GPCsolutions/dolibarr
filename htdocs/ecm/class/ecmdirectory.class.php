@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2007-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2008-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2008-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -142,7 +142,8 @@ class EcmDirectory // extends CommonObject
 
 				$dir=$conf->ecm->dir_output.'/'.$this->getRelativePath();
 				$result=dol_mkdir($dir);
-
+				if ($result < 0) { $error++; $this->error="ErrorFailedToCreateDir"; }
+				
 				// Appel des triggers
 				include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
 				$interface=new Interfaces($this->db);
@@ -479,13 +480,13 @@ class EcmDirectory // extends CommonObject
 
 		$this->motherof=array();
 
-		// Charge tableau des meres
+		// Load array[child]=parent
 		$sql = "SELECT fk_parent as id_parent, rowid as id_son";
 		$sql.= " FROM ".MAIN_DB_PREFIX."ecm_directories";
 		$sql.= " WHERE fk_parent != 0";
 		$sql.= " AND entity = ".$conf->entity;
 
-		dol_syslog(get_class($this)."::get_full_arbo sql=".$sql);
+		dol_syslog(get_class($this)."::load_motherof sql=".$sql);
 		$resql = $this->db->query($sql);
 		if ($resql)
 		{

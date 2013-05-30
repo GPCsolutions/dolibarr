@@ -1,10 +1,10 @@
 -- ========================================================================
 -- Copyright (C) 2000-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
--- Copyright (C) 2005-2010 Houssin Regis        <regis@dolibarr.fr>
+-- Copyright (C) 2005-2013 Houssin Regis        <regis.houssin@capnetworks.com>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 2 of the License, or
+-- the Free Software Foundation; either version 3 of the License, or
 -- (at your option) any later version.
 --
 -- This program is distributed in the hope that it will be useful,
@@ -26,10 +26,10 @@ create table llx_societe_address
   fk_soc	         integer        DEFAULT 0,            --
   name               varchar(60),                         -- company name
   address            varchar(255),                        -- company adresse
-  cp                 varchar(10),                         -- zipcode
-  ville              varchar(50),                         -- town
+  zip                varchar(10),                         -- zipcode
+  town               varchar(50),                         -- town
   fk_pays            integer        DEFAULT 0,            --
-  tel                varchar(20),                         -- phone number
+  phone              varchar(20),                         -- phone number
   fax                varchar(20),                         -- fax number
   note               text,                                --
   fk_user_creat      integer,

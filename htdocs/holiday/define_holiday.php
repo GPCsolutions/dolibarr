@@ -1,17 +1,18 @@
 <?php
 /* Copyright (C) 2007-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2011      Dimitri Mouillard <dmouillard@teclib.com>
-*
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
+ * Copyright (C) 2013      Marcos García <marcosgdf@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
@@ -19,7 +20,7 @@
 /**
  *		File that defines the balance of paid holiday of users.
  *
- *   	\file       define_holiday.php
+ *   	\file       htdocs/holiday/define_holiday.php
  *		\ingroup    holiday
  *		\brief      File that defines the balance of paid holiday of users.
  */
@@ -31,7 +32,7 @@ require_once DOL_DOCUMENT_ROOT.'/holiday/common.inc.php';
 // Protection if external user
 if ($user->societe_id > 0) accessforbidden();
 
-// Si l'utilisateur n'a pas le droit de lire cette page
+// If the user does not have perm to read the page
 if(!$user->rights->holiday->define_holiday) accessforbidden();
 
 $action=GETPOST('action');
@@ -66,12 +67,22 @@ if ($action == 'update' && isset($_POST['update_cp']))
         $userValue = 0;
     }
 
-    // On ajoute la modification dans le LOG
-    $holiday->addLogCP($user->id,$userID,'Event : Manual update',$userValue);
+    //If the user set a comment, we add it to the log comment
+    $comment = ((isset($_POST['note_holiday'][$userID]) && !empty($_POST['note_holiday'][$userID])) ? ' ('.$_POST['note_holiday'][$userID].')' : '');
 
-    // Mise à jour des congés de l'utilisateur
+    // We add the modification to the log
+    $holiday->addLogCP($user->id,$userID, $langs->trans('ManualUpdate').$comment,$userValue);
+
+    // Update of the days of the employee
     $holiday->updateSoldeCP($userID,$userValue);
 
+    // If it first update of sold, we set date to avoid to have sold incremented by new month
+	$now=dol_now();
+    $sql = "UPDATE ".MAIN_DB_PREFIX."holiday_config SET";
+    $sql.= " value = '".dol_print_date($now,'%Y%m%d%H%M%S')."'";
+    $sql.= " WHERE name = 'lastUpdate' and value IS NULL";	// Add value IS NULL to be sure to update only at init.
+    dol_syslog('define_holiday update lastUpdate entry sql='.$sql);
+    $result = $db->query($sql);    
 
     $mesg='<div class="ok">'.$langs->trans('UpdateConfCPOK').'</div>';
 
@@ -100,7 +111,7 @@ elseif($action == 'add_event')
         $new_holiday = $nb_holiday + $add_holiday;
 
         // On ajoute la modification dans le LOG
-        $holiday->addLogCP($user->id,$userCP,'Event : '.$holiday->getNameEventCp($event),$new_holiday);
+        $holiday->addLogCP($user->id,$userCP, $holiday->getNameEventCp($event),$new_holiday);
 
         $holiday->updateSoldeCP($userCP,$new_holiday);
 
@@ -110,6 +121,7 @@ elseif($action == 'add_event')
     dol_htmloutput_mesg($message);
 }
 
+$langs->load('users');
 $var=true;
 $i = 0;
 
@@ -137,10 +149,11 @@ print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">'."\n";
 print '<input type="hidden" name="action" value="update" />';
 print '<table class="noborder" width="100%;">';
 print "<tr class=\"liste_titre\">";
-print '<td width="5%">User ID</td>';
-print '<td width="20%">'.$langs->trans('UserName').'</td>';
-print '<td width="10%">'.$langs->trans('Available').'</td>';
-print '<td>'.$langs->trans('UpdateButtonCP').'</td>';
+print '<td width="5%">'.$langs->trans('ID').'</td>';
+print '<td width="50%">'.$langs->trans('Employee').'</td>';
+print '<td width="20%" style="text-align:center">'.$langs->trans('Available').'</td>';
+print '<td width="20%" style="text-align:center">'.$langs->trans('Note').'</td>';
+print '<td style="text-align:center">'.$langs->trans('UpdateButtonCP').'</td>';
 print '</tr>';
 
 foreach($listUsers as $users)
@@ -152,13 +165,14 @@ foreach($listUsers as $users)
     print '<td>'.$users['rowid'].'</td>';
     print '<td>';
     $userstatic->id=$users['rowid'];
-    $userstatic->nom=$users['name'];
-    $userstatic->prenom=$users['firstname'];
+    $userstatic->lastname=$users['name'];
+    $userstatic->firstname=$users['firstname'];
     print $userstatic->getNomUrl(1);
     print '</td>';
-    print '<td>';
+    print '<td style="text-align:center">';
     print '<input type="text" value="'.$holiday->getCPforUser($users['rowid']).'" name="nb_holiday['.$users['rowid'].']" size="5" style="text-align: center;"/>';
-    print ' jours</td>'."\n";
+    print ' '.$langs->trans('days').'</td>'."\n";
+    print '<td style="text-align:center"><input type="text" value="" name="note_holiday['.$users['rowid'].']" size="30"/></td>';
     print '<td><input type="submit" name="update_cp['.$users['rowid'].']" value="'.dol_escape_htmltag($langs->trans("Update")).'" class="button"/></td>'."\n";
     print '</tr>';
 

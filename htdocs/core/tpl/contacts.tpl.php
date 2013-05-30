@@ -1,9 +1,9 @@
 <?php
-/* Copyright (C) 2012 Regis Houssin <regis@dolibarr.fr>
+/* Copyright (C) 2012 Regis Houssin <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -16,6 +16,13 @@
  *
  */
 
+if (! class_exists('Contact')) {
+	require DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+}
+if (! class_exists('FormCompany')) {
+	require DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
+}
+
 $module = $object->element;
 
 // Special cases
@@ -25,6 +32,7 @@ elseif ($module == 'invoice_supplier')	{ $permission=$user->rights->fournisseur-
 elseif ($module == 'order_supplier')	{ $permission=$user->rights->fournisseur->commande->creer; }
 elseif (! isset($permission))			{ $permission=$user->rights->$module->creer; } // If already defined by caller page
 
+$formcompany= new FormCompany($db);
 $companystatic=new Societe($db);
 $contactstatic=new Contact($db);
 $userstatic=new User($db);
@@ -52,7 +60,7 @@ $userstatic=new User($db);
 	<input type="hidden" name="source" value="internal" />
 
 	<tr <?php echo $bc[$var]; ?>>
-		<td nowrap="nowrap"><?php echo img_object('','user').' '.$langs->trans("Users"); ?></td>
+		<td class="nowrap"><?php echo img_object('','user').' '.$langs->trans("Users"); ?></td>
 		<td><?php echo $conf->global->MAIN_INFO_SOCIETE_NOM; ?></td>
 		<td><?php echo $form->select_users($user->id,'userid',0,(! empty($userAlreadySelected)?$userAlreadySelected:'')); ?></td>
 		<td><?php echo $formcompany->selectTypeContact($object, '', 'type','internal'); ?></td>
@@ -69,7 +77,7 @@ $userstatic=new User($db);
 	<?php $var=!$var; ?>
 
 	<tr <?php echo $bc[$var]; ?>>
-		<td nowrap="nowrap"><?php echo img_object('','contact').' '.$langs->trans("ThirdPartyContacts"); ?></td>
+		<td class="nowrap"><?php echo img_object('','contact').' '.$langs->trans("ThirdPartyContacts"); ?></td>
 		<?php if ($conf->use_javascript_ajax && ! empty($conf->global->COMPANY_USE_SEARCH_TO_SELECT)) { ?>
 		<td>
 			<?php
@@ -168,7 +176,7 @@ $userstatic=new User($db);
 			<?php echo $contactstatic->LibStatut($tab[$i]['status'],3); ?>
 			<?php if ($object->statut >= 0) echo '</a>'; ?>
 		</td>
-		<td align="center" nowrap="nowrap" colspan="2">
+		<td align="center" class="nowrap" colspan="2">
 			<?php if ($permission) { ?>
 				&nbsp;<a href="<?php echo $_SERVER["PHP_SELF"].'?id='.$object->id.'&amp;action=deletecontact&amp;lineid='.$tab[$i]['rowid']; ?>"><?php echo img_delete(); ?></a>
 			<?php } ?>

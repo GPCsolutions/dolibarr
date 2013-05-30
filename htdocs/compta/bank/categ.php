@@ -1,11 +1,12 @@
 <?php
 /* Copyright (C) 2001-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copytight (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copytight (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copytight (C) 2013      Charles-Fr BENKE		<charles.fr@benke.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -23,7 +24,11 @@
  *      \brief      Page ajout de categories bancaires
  */
 
-require 'pre.inc.php';
+require('../../main.inc.php');
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+
+$langs->load("banks");
+$langs->load("categories");
 
 if (!$user->rights->banque->configurer)
   accessforbidden();
@@ -31,7 +36,7 @@ if (!$user->rights->banque->configurer)
 
 
 /*
-* Actions ajout cat�gorie
+* Actions ajout catégorie
 */
 if ($_POST["action"] == 'add')
 {
@@ -55,7 +60,26 @@ if ($_POST["action"] == 'add')
 }
 
 /*
-* Action suppression cat�gorie
+* Action modification catégorie
+*/
+if ($_POST["action"] == 'update')
+{
+	if ($_POST["label"])
+	{
+		$sql = "UPDATE ".MAIN_DB_PREFIX."bank_categ ";
+		$sql.= "set label='".$db->escape($_POST["label"])."'";;
+		$sql.= " WHERE rowid = '".$_REQUEST['categid']."'";
+		$sql.= " AND entity = ".$conf->entity;
+		$result = $db->query($sql);
+
+		if (!$result)
+		{
+			dol_print_error($db);
+		}
+	}
+}
+/*
+* Action suppression catégorie
 */
 if ( $_REQUEST['action'] == 'delete' )
 {
@@ -77,7 +101,7 @@ if ( $_REQUEST['action'] == 'delete' )
 
 
 /*
- * Affichage liste des cat�gories
+ * Affichage liste des catégories
  */
 
 llxHeader();
@@ -86,9 +110,7 @@ llxHeader();
 print_fiche_titre($langs->trans("Rubriques"));
 
 
-print '<form method="post" action="categ.php">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-print "<input type=\"hidden\" name=\"action\" value=\"add\">";
+
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Ref").'</td><td colspan="2">'.$langs->trans("Label").'</td>';
@@ -112,9 +134,26 @@ if ($result)
       $var=!$var;
       print "<tr $bc[$var]>";
       print '<td><a href="'.DOL_URL_ROOT.'/compta/bank/budget.php?bid='.$objp->rowid.'">'.$objp->rowid.'</a></td>';
-      print "<td>$objp->label</td>";
-      print '<td style="text-align: center;"><a href="categ.php?categid='.$objp->rowid.'&amp;action=delete">'.img_delete().'</a></td>';
-      print "</tr>";
+		if (GETPOST("action") == 'edit' && GETPOST("categid")== $objp->rowid)
+		{
+			print "<td colspan=2>";
+			print '<form method="post" action="categ.php">';
+			print '<input type="hidden" name="action" value="update">';
+			print '<input type="hidden" name="categid" value="'.$objp->rowid.'">';
+			print '<input name="label" type="text" size=45 value="'.$objp->label.'">';
+			print '<input type="submit" class="button" value="'.$langs->trans("Edit").'">';
+
+			print "</form>";
+			print "</td>";
+		}
+		else
+		{
+			print "<td >".$objp->label."</td>";
+			print '<td style="text-align: center;">';
+			print '<a href="categ.php?categid='.$objp->rowid.'&amp;action=edit">'.img_edit().'</a>&nbsp;&nbsp;';
+			print '<a href="categ.php?categid='.$objp->rowid.'&amp;action=delete">'.img_delete().'</a></td>';
+		}
+		print "</tr>";
       $i++;
     }
   $db->free($result);
@@ -124,11 +163,14 @@ if ($result)
  * Affichage ligne ajout de categorie
  */
 $var=!$var;
+print '<form method="post" action="categ.php">';
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print "<input type=\"hidden\" name=\"action\" value=\"add\">";
 print "<tr $bc[$var]>";
 print "<td>&nbsp;</td><td><input name=\"label\" type=\"text\" size=45></td>";
 print '<td align="center"><input type="submit" class="button" value="'.$langs->trans("Add").'"></td></tr>';
-print "</table></form>";
-
+print "</form>";
+print "</table>";
 
 
 $db->close();

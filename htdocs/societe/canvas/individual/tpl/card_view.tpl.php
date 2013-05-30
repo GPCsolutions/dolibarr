@@ -1,9 +1,9 @@
 <?php
-/* Copyright (C) 2010-2011 Regis Houssin <regis@dolibarr.fr>
+/* Copyright (C) 2010-2011 Regis Houssin <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -82,14 +82,14 @@ dol_fiche_head($head, 'card', $langs->trans("ThirdParty"),0,'company');
 
 <tr>
 	<td width="25%"><?php echo $langs->trans('Zip'); ?></td>
-	<td width="25%"><?php echo $this->control->tpl['cp']; ?></td>
+	<td width="25%"><?php echo $this->control->tpl['zip']; ?></td>
 	<td width="25%"><?php echo $langs->trans('Town'); ?></td>
-	<td width="25%"><?php echo $this->control->tpl['ville']; ?></td>
+	<td width="25%"><?php echo $this->control->tpl['town']; ?></td>
 </tr>
 
 <tr>
 	<td><?php echo $langs->trans("Country"); ?></td>
-	<td colspan="3" nowrap="nowrap"><?php echo $this->control->tpl['country']; ?></td>
+	<td colspan="3" class="nowrap"><?php echo $this->control->tpl['country']; ?></td>
 </tr>
 
 <tr>

@@ -1,10 +1,10 @@
 <?php
-/* Copyright (C) 2010 Regis Houssin        <regis@dolibarr.fr>
+/* Copyright (C) 2010 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -56,14 +56,14 @@ $result = restrictedArea($user, 'projet', $id);
 if ($action == 'setnote_public' && $user->rights->projet->creer)
 {
 	$object->fetch($id);
-	$result=$object->update_note_public(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES));
+	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_public'), ENT_QUOTES),'_public');
 	if ($result < 0) dol_print_error($db,$object->error);
 }
 
 if ($action == 'setnote_private' && $user->rights->projet->creer)
 {
 	$object->fetch($id);
-	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES));
+	$result=$object->update_note(dol_html_entity_decode(GETPOST('note_private'), ENT_QUOTES), '_private');
 	if ($result < 0) dol_print_error($db,$object->error);
 }
 

@@ -2,11 +2,11 @@
 <?php
 /*
  * Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2009-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2009-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -30,7 +30,7 @@ $path=dirname(__FILE__).'/';
 
 // Test if batch mode
 if (substr($sapi_type, 0, 3) == 'cgi') {
-	echo "Error: You ar usingr PH for CGI. To execute ".$script_file." from command line, you must use PHP for CLI mode.\n";
+	echo "Error: You are using PHP for CGI. To execute ".$script_file." from command line, you must use PHP for CLI mode.\n";
 	exit;
 }
 
@@ -40,8 +40,6 @@ if (! isset($argv[1]) || ! $argv[1]) {
 }
 $now=$argv[1];
 
-// Recupere env dolibarr
-$version='1.10';
 
 require_once($path."../../htdocs/master.inc.php");
 //require_once(PHP_WRITEEXCEL_PATH."/class.writeexcel_workbook.inc.php");
@@ -51,14 +49,24 @@ require_once(PHPEXCEL_PATH."/PHPExcel.php");
 //require_once(PHPEXCEL_PATH."/PHPExcel/Writer/Excel2007.php");
 require_once(PHPEXCEL_PATH."/PHPExcel/Writer/Excel5.php");
 
+// Global variables
+$version=DOL_VERSION;
+$error=0;
 
+
+/*
+ * Main
+ */
+
+@set_time_limit(0);
+print "***** ".$script_file." (".$version.") pid=".getmypid()." *****\n";
 
 $fname = DOL_DATA_ROOT.'/export-contacts.xls';
 
 //$objPHPExcel = new writeexcel_workbook($fname);
 $objPHPExcel = new PHPExcel();
-$objPHPExcel->getProperties()->setCreator("Maarten Balliauw");
-$objPHPExcel->getProperties()->setLastModifiedBy("Maarten Balliauw");
+$objPHPExcel->getProperties()->setCreator("Dolibarr script");
+$objPHPExcel->getProperties()->setLastModifiedBy("Dolibarr script");
 $objPHPExcel->getProperties()->setTitle("Test Document");
 $objPHPExcel->getProperties()->setSubject("Test Document");
 $objPHPExcel->getProperties()->setDescription("Test document, generated using PHP classes.");
@@ -70,7 +78,7 @@ $objPHPExcel->getActiveSheet()->setTitle('Contacts');
 
 //$page->set_column(0,4,18); // A
 
-$sql = "SELECT distinct c.name as lastname, c.firstname, c.email, s.nom as name";
+$sql = "SELECT distinct c.lastname, c.firstname, c.email, s.nom as name";
 $sql.= " FROM ".MAIN_DB_PREFIX."socpeople as c";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s on s.rowid = c.fk_soc";
 

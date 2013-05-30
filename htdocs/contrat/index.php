@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2001-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -66,9 +66,10 @@ llxHeader();
 print_fiche_titre($langs->trans("ContractsArea"));
 
 
-print '<table class="notopnoleftnoright" width="100%">';
+//print '<table border="0" width="100%" class="notopnoleftnoright">';
+//print '<tr><td valign="top" width="30%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
 
-print '<tr><td width="30%" valign="top" class="notopnoleft">';
 
 // Search contract
 if (! empty($conf->contrat->enabled))
@@ -233,7 +234,7 @@ if (! empty($conf->contrat->enabled) && $user->rights->contrat->lire)
 	$sql.= " AND c.entity IN (".getEntity('contract').")";
 	$sql.= " AND c.statut = 0";
 	if (!$user->rights->societe->client->voir && !$socid) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
-	if ($socid) $sql.= " AND s.fk_soc = ".$socid;
+	if ($socid) $sql.= " AND c.fk_soc = ".$socid;
 
 	$resql = $db->query($sql);
 
@@ -284,7 +285,9 @@ if (! empty($conf->contrat->enabled) && $user->rights->contrat->lire)
 	}
 }
 
-print '</td><td width="70%" valign="top" class="notopnoleftnoright">';
+
+//print '</td><td valign="top" width="70%" class="notopnoleftnoright">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
 
 
 // Last modified contracts
@@ -331,7 +334,7 @@ if ($result)
 		$var=!$var;
 
 		print '<tr '.$bc[$var].'>';
-		print '<td width="100" nowrap="nowrap">';
+		print '<td width="110" class="nowrap">';
 		$staticcontrat->ref=($obj->ref?$obj->ref:$obj->cid);
 		$staticcontrat->id=$obj->cid;
 		print $staticcontrat->getNomUrl(1,16);
@@ -397,7 +400,7 @@ if ($resql)
 		$obj = $db->fetch_object($resql);
 		$var=!$var;
 		print '<tr '.$bc[$var].'>';
-		print '<td width="100" nowrap="nowrap">';
+		print '<td width="110" class="nowrap">';
 		$staticcontrat->ref=($obj->ref?$obj->ref:$obj->fk_contrat);
 		$staticcontrat->id=$obj->fk_contrat;
 		print $staticcontrat->getNomUrl(1,16);
@@ -423,7 +426,7 @@ if ($resql)
 		$staticcompany->nom=$obj->nom;
 		print $staticcompany->getNomUrl(1,'',20);
 		print '</td>';
-		print '<td nowrap="nowrap" align="right"><a href="'.DOL_URL_ROOT.'/contrat/fiche.php?id='.$obj->fk_contrat.'&ligne='.$obj->cid.'">';
+		print '<td class="nowrap" align="right"><a href="'.DOL_URL_ROOT.'/contrat/fiche.php?id='.$obj->fk_contrat.'&ligne='.$obj->cid.'">';
 		$dateend=$db->jdate($obj->date_fin_validite);
 		print $staticcontratligne->LibStatut($obj->statut, 3, ($dateend && $dateend < $now)?1:0);
 		print '</a></td>';
@@ -478,12 +481,12 @@ if ($resql)
 		$var=!$var;
 		print '<tr '.$bc[$var].'>';
 
-		print '<td width="100" nowrap="nowrap">';
+		print '<td width="110" class="nowrap">';
 		$staticcontrat->ref=($obj->ref?$obj->ref:$obj->fk_contrat);
 		$staticcontrat->id=$obj->fk_contrat;
 		print $staticcontrat->getNomUrl(1,16);
 		print '</td>';
-		print '<td nowrap="nowrap">';
+		print '<td class="nowrap">';
 		if ($obj->fk_product > 0)
 		{
     		$productstatic->id=$obj->fk_product;
@@ -558,12 +561,12 @@ if ($resql)
 		$var=!$var;
 		print '<tr '.$bc[$var].'>';
 
-		print '<td width="100" nowrap="nowrap">';
+		print '<td width="110" class="nowrap">';
 		$staticcontrat->ref=($obj->ref?$obj->ref:$obj->fk_contrat);
 		$staticcontrat->id=$obj->fk_contrat;
 		print $staticcontrat->getNomUrl(1,16);
 		print '</td>';
-		print '<td nowrap="nowrap">';
+		print '<td class="nowrap">';
 		if ($obj->fk_product > 0)
 		{
     		$productstatic->id=$obj->fk_product;
@@ -599,9 +602,9 @@ else
 	dol_print_error($db);
 }
 
-print '</td></tr></table>';
 
-print '<br>';
+//print '</td></tr></table>';
+print '</div></div></div>';
 
 
 llxFooter();

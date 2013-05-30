@@ -1,15 +1,7 @@
-/*
- * Language code: bg_BG
- * Automatic generated via autotranslator.php tool
- * Generation date 2012-09-08 17:16:45
- */
-
-
-// START - Lines generated via autotranslator.php tool (2012-09-08 17:16:45).
-// Reference language: en_US -> bg_BG
+# Dolibarr language file - Source file is en_US - install
 CHARSET=UTF-8
 InstallEasy=Просто следвайте инструкциите стъпка по стъпка.
-MiscellanousChecks=Предпоставки проверка
+MiscellaneousChecks=Предпоставки проверка
 DolibarrWelcome=Добре дошли в Dolibarr
 ConfFileExists=<b>%s</b> конфигурационен файл съществува.
 ConfFileDoesNotExists=<b>%s</b> конфигурационен файл не съществува!
@@ -132,8 +124,8 @@ YouMustCreateItAndAllowServerToWrite=Трябва да създадете таз
 CharsetChoice=Избор на знаците
 CharacterSetClient=Набор от символи, използвани за генерираните HTML уеб страници
 CharacterSetClientComment=Изберете набор от знаци за уеб дисплей. <br/> Default предлагания набор от символи е един от вашата база данни.
-CollationConnection=За символи сортиране
-CollationConnectionComment=Изберете кода на страницата, която определя подреждане характер, използван от база данни. Този параметър се нарича &quot;съпоставяне&quot; от някои бази данни. <br/> Този параметър не може да бъде определена, ако базата данни вече съществува.
+DBSortingCollation=За символи сортиране
+DBSortingCollationComment=Изберете кода на страницата, която определя подреждане характер, използван от база данни. Този параметър се нарича &quot;съпоставяне&quot; от някои бази данни. <br/> Този параметър не може да бъде определена, ако базата данни вече съществува.
 CharacterSetDatabase=Набор от знаци за база данни
 CharacterSetDatabaseComment=Изберете набор от символи, издирван за създаването на базата данни. <br/> Този параметър не може да бъде определена, ако базата данни вече съществува.
 YouAskDatabaseCreationSoDolibarrNeedToConnect=Ви помолим да създадете база данни <b>%s,</b> но за това, Dolibarr трябва да се свържете на сървъра <b>%s</b> с супер потребителски разрешения <b>%s.</b>
@@ -163,6 +155,11 @@ MigrationShippingDelivery2=Обнови съхранение на корабоп
 MigrationFinished=Миграцията работи
 LastStepDesc=<strong>Последна стъпка:</strong> Определете тук потребителско име и парола, планирате да използвате, за да се свържете с софтуер. Не губят, тъй като това е акаунт за администриране на всички останали.
 ActivateModule=Активиране на модул %s
+# ShowEditTechnicalParameters=Click here to show/edit advanced parameters (expert mode)
+
+#########
+# upgrade
+#########
 MigrationFixData=Решете denormalized данни
 MigrationOrder=Миграция на данни за поръчки на клиента
 MigrationSupplierOrder=Миграция на данни за поръчки на доставчика
@@ -210,4 +207,4 @@ MigrationProjectUserResp=Data Migration поле fk_user_resp на llx_projet ll
 MigrationProjectTaskTime=Актуализация на времето, прекарано в секунда
 MigrationActioncommElement=Актуализиране на данни за действия
 MigrationPaymentMode=Миграция на данни за плащане режим
-// STOP - Lines generated via autotranslator.php tool (2012-09-08 17:43:31).
+# MigrationCategorieAssociation=Migration of categories

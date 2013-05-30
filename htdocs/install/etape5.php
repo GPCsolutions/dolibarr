@@ -1,13 +1,13 @@
 <?php
 /* Copyright (C) 2004		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2004		Benoit Mortier			<benoit.mortier@opensides.be>
  * Copyright (C) 2004		Sebastien DiCintio		<sdicintio@ressource-toi.org>
- * Copyright (C) 2005-2012	Regis Houssin			<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -142,6 +142,10 @@ if ($action == "set" || empty($action) || preg_match('/upgrade/i',$action))
 
     $db=getDoliDBInstance($conf->db->type,$conf->db->host,$conf->db->user,$conf->db->pass,$conf->db->name,$conf->db->port);
 
+    // Create the global $hookmanager object
+    include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+    $hookmanager=new HookManager($db);
+        
     $ok = 0;
 
     // If first install
@@ -233,7 +237,7 @@ if ($action == "set" || empty($action) || preg_match('/upgrade/i',$action))
                         dolibarr_install_syslog('install/etape5.php Activate module file='.$file);
                         $res=dol_include_once("/core/modules/".$file);
 
-                        $res=Activate($modtoactivatenew,1);
+                        $res=activateModule($modtoactivatenew,1);
                         if (! $result) print 'ERROR in activating module file='.$file;
                     }
                 }
@@ -338,7 +342,7 @@ if ($action == "set")
 
         print $langs->trans("YouNeedToPersonalizeSetup")."<br><br>";
 
-        print '<center><a href="../admin/company.php?mainmenu=home&leftmenu=setup'.(isset($_POST["login"])?'&username='.urlencode($_POST["login"]):'').'">';
+        print '<center><a href="../admin/index.php?mainmenu=home&leftmenu=setup'.(isset($_POST["login"])?'&username='.urlencode($_POST["login"]):'').'">';
         print $langs->trans("GoToSetupArea");
         print '</a></center>';
     }

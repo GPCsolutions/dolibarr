@@ -5,7 +5,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -269,7 +269,8 @@ if ($socid > 0)
 	print_fiche_titre($langs->trans("NewGlobalDiscount"),'','');
 	print '<table class="border" width="100%">';
 	print '<tr><td width="38%">'.$langs->trans("AmountHT").'</td>';
-	print '<td><input type="text" size="5" name="amount_ht" value="'.$_POST["amount_ht"].'">&nbsp;'.$langs->trans("Currency".$conf->currency).'</td></tr>';
+	print '<td><input type="text" size="5" name="amount_ht" value="'.$_POST["amount_ht"].'">';
+	print '<span class="hideonsmartphone">&nbsp;'.$langs->trans("Currency".$conf->currency).'</span></td></tr>';
 	print '<tr><td width="38%">'.$langs->trans("VAT").'</td>';
 	print '<td>';
 	print $form->load_tva('tva_tx',GETPOST('tva_tx'),$mysoc,$objsoc);
@@ -322,7 +323,7 @@ if ($socid > 0)
 		print '<tr class="liste_titre">';
 		print '<td width="120" align="left">'.$langs->trans("Date").'</td>';	// Need 120+ for format with AM/PM
 		print '<td align="left">'.$langs->trans("ReasonDiscount").'</td>';
-		print '<td width="150" nowrap="nowrap">'.$langs->trans("ConsumedBy").'</td>';
+		print '<td width="150" class="nowrap">'.$langs->trans("ConsumedBy").'</td>';
 		print '<td width="120" align="right">'.$langs->trans("AmountHT").'</td>';
 		print '<td width="80" align="right">'.$langs->trans("VATRate").'</td>';
 		print '<td width="120" align="right">'.$langs->trans("AmountTTC").'</td>';
@@ -341,7 +342,7 @@ if ($socid > 0)
 			print '<td>'.dol_print_date($db->jdate($obj->dc),'dayhour').'</td>';
 			if ($obj->description == '(CREDIT_NOTE)')
 			{
-				print '<td nowrap="nowrap">';
+				print '<td class="nowrap">';
 				$facturestatic->id=$obj->fk_facture_source;
 				$facturestatic->ref=$obj->ref;
 				$facturestatic->type=$obj->type;
@@ -350,7 +351,7 @@ if ($socid > 0)
 			}
 			elseif ($obj->description == '(DEPOSIT)')
 			{
-				print '<td nowrap="nowrap">';
+				print '<td class="nowrap">';
 				$facturestatic->id=$obj->fk_facture_source;
 				$facturestatic->ref=$obj->ref;
 				$facturestatic->type=$obj->type;
@@ -363,7 +364,7 @@ if ($socid > 0)
 				print $obj->description;
 				print '</td>';
 			}
-			print '<td nowrap="nowrap">'.$langs->trans("NotConsumed").'</td>';
+			print '<td class="nowrap">'.$langs->trans("NotConsumed").'</td>';
 			print '<td align="right">'.price($obj->amount_ht).'</td>';
 			print '<td align="right">'.price2num($obj->tva_tx,'MU').'%</td>';
 			print '<td align="right">'.price($obj->amount_ttc).'</td>';
@@ -372,7 +373,7 @@ if ($socid > 0)
 			print '</td>';
 			if ($user->rights->societe->creer || $user->rights->facture->creer)
 			{
-				print '<td nowrap="nowrap">';
+				print '<td class="nowrap">';
 				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$objsoc->id.'&amp;action=split&amp;remid='.$obj->rowid.'">'.img_picto($langs->trans("SplitDiscount"),'split').'</a>';
 				print ' &nbsp; ';
 				print '<a href="'.$_SERVER["PHP_SELF"].'?id='.$objsoc->id.'&amp;action=remove&amp;remid='.$obj->rowid.'">'.img_delete($langs->trans("RemoveDiscount")).'</a>';
@@ -458,7 +459,7 @@ if ($socid > 0)
 		print '<tr class="liste_titre">';
 		print '<td width="120" align="left">'.$langs->trans("Date").'</td>';	// Need 120+ for format with AM/PM
 		print '<td align="left">'.$langs->trans("ReasonDiscount").'</td>';
-		print '<td width="150" nowrap="nowrap">'.$langs->trans("ConsumedBy").'</td>';
+		print '<td width="150" class="nowrap">'.$langs->trans("ConsumedBy").'</td>';
 		print '<td width="120" align="right">'.$langs->trans("AmountHT").'</td>';
 		print '<td width="80" align="right">'.$langs->trans("VATRate").'</td>';
 		print '<td width="120" align="right">'.$langs->trans("AmountTTC").'</td>';
@@ -498,7 +499,7 @@ if ($socid > 0)
 			print '<td>'.dol_print_date($db->jdate($obj->dc),'dayhour').'</td>';
 			if ($obj->description == '(CREDIT_NOTE)')
 			{
-				print '<td nowrap="nowrap">';
+				print '<td class="nowrap">';
 				$facturestatic->id=$obj->fk_facture_source;
 				$facturestatic->ref=$obj->ref;
 				$facturestatic->type=$obj->type;
@@ -507,7 +508,7 @@ if ($socid > 0)
 			}
 			elseif ($obj->description == '(DEPOSIT)')
 			{
-				print '<td nowrap="nowrap">';
+				print '<td class="nowrap">';
 				$facturestatic->id=$obj->fk_facture_source;
 				$facturestatic->ref=$obj->ref;
 				$facturestatic->type=$obj->type;
@@ -520,7 +521,7 @@ if ($socid > 0)
 				print $obj->description;
 				print '</td>';
 			}
-			print '<td align="left" nowrap="nowrap"><a href="'.DOL_URL_ROOT.'/compta/facture.php?facid='.$obj->rowid.'">'.img_object($langs->trans("ShowBill"),'bill').' '.$obj->facnumber.'</a></td>';
+			print '<td align="left" class="nowrap"><a href="'.DOL_URL_ROOT.'/compta/facture.php?facid='.$obj->rowid.'">'.img_object($langs->trans("ShowBill"),'bill').' '.$obj->facnumber.'</a></td>';
 			print '<td align="right">'.price($obj->amount_ht).'</td>';
 			print '<td align="right">'.price2num($obj->tva_tx,'MU').'%</td>';
 			print '<td align="right">'.price($obj->amount_ttc).'</td>';

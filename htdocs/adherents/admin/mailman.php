@@ -4,12 +4,12 @@
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Sebastien Di Cintio  <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
- * Copyright (C) 2005-2011 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2011 	   Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -51,14 +51,17 @@ $testunsubscribeemail = GETPOST("testunsubscribeemail");
 // Action mise a jour ou ajout d'une constante
 if ($action == 'update' || $action == 'add')
 {
-	$constname=GETPOST("constname");
-	$constvalue=GETPOST("constvalue");
-	$consttype=GETPOST("consttype");
-	$constnote=GETPOST("constnote");
-	$res=dolibarr_set_const($db,$constname,$constvalue,$type[$consttype],0,$constnote,$conf->entity);
-
-	if (! $res > 0) $error++;
-
+	foreach($_POST['constname'] as $key => $val)
+	{
+		$constname=$_POST["constname"][$key];
+		$constvalue=$_POST["constvalue"][$key];
+		$consttype=$_POST["consttype"][$key];
+		$constnote=$_POST["constnote"][$key];
+		$res=dolibarr_set_const($db,$constname,$constvalue,$type[$consttype],0,$constnote,$conf->entity);
+	
+		if (! $res > 0) $error++;
+	}
+	
 	if (! $error)
 	{
 		$mesg = '<div class="ok">'.$langs->trans("SetupSaved").'</div>';
@@ -159,9 +162,6 @@ dol_fiche_head($head, 'mailman', $langs->trans("Setup"), 0, 'user');
 dol_htmloutput_mesg($mesg);
 
 
-/*
- * Mailman
- */
 $var=!$var;
 if (! empty($conf->global->ADHERENT_USE_MAILMAN))
 {
@@ -180,6 +180,8 @@ if (! empty($conf->global->ADHERENT_USE_MAILMAN))
 
     print_fiche_titre($langs->trans('MailmanTitle'), $lien,'');
 
+    print '<br>';
+    
     // JQuery activity
     print '<script type="text/javascript">
     var i1=0;
@@ -196,12 +198,10 @@ if (! empty($conf->global->ADHERENT_USE_MAILMAN))
     });
     </script>';
 
-    form_constantes($constantes);
+    form_constantes($constantes,1);
 
     print '*'.$langs->trans("FollowingConstantsWillBeSubstituted").'<br>';
     print '%LISTE%, %MAILMAN_ADMINPW%, %EMAIL% <br>';
-
-    print '<br>';
 }
 else
 {
@@ -219,12 +219,12 @@ if (! empty($conf->global->ADHERENT_USE_MAILMAN))
     print '<form action="'.$_SERVER["PHP_SELF"].'">';
     print '<input type="hidden" name="action" value="testsubscribe">';
     print $langs->trans("TestSubscribe").'<br>';
-    print $langs->trans("EMail").' <input type="email" name="testsubscribeemail" value="'.GETPOST('testsubscribeemail').'"> <input class="button" type="submit" value="'.$langs->trans("Test").'"><br>';
+    print $langs->trans("EMail").' <input type="email" class="flat" name="testsubscribeemail" value="'.GETPOST('testsubscribeemail').'"> <input class="button" type="submit" value="'.$langs->trans("Test").'"><br>';
     print '</form>';
     print '<form action="'.$_SERVER["PHP_SELF"].'">';
     print '<input type="hidden" name="action" value="testunsubscribe">';
     print $langs->trans("TestUnSubscribe").'<br>';
-    print $langs->trans("EMail").' <input type="email" name="testunsubscribeemail" value="'.GETPOST('testunsubscribeemail').'"> <input class="button" type="submit" value="'.$langs->trans("Test").'"><br>';
+    print $langs->trans("EMail").' <input type="email" class="flat" name="testunsubscribeemail" value="'.GETPOST('testunsubscribeemail').'"> <input class="button" type="submit" value="'.$langs->trans("Test").'"><br>';
     print '</form>';
 }
 

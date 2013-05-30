@@ -1,11 +1,12 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2011 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013      Florian Henry		  	<florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -56,16 +57,16 @@ class pdf_expedition_merou extends ModelePdfExpedition
 		$this->page_largeur = $formatarray['width'];
 		$this->page_hauteur = round($formatarray['height']/2);
 		$this->format = array($this->page_largeur,$this->page_hauteur);
-		$this->marge_gauche=10;
-		$this->marge_droite=10;
-		$this->marge_haute=10;
-		$this->marge_basse=10;
+		$this->marge_gauche=isset($conf->global->MAIN_PDF_MARGIN_LEFT)?$conf->global->MAIN_PDF_MARGIN_LEFT:10;
+		$this->marge_droite=isset($conf->global->MAIN_PDF_MARGIN_RIGHT)?$conf->global->MAIN_PDF_MARGIN_RIGHT:10;
+		$this->marge_haute =isset($conf->global->MAIN_PDF_MARGIN_TOP)?$conf->global->MAIN_PDF_MARGIN_TOP:10;
+		$this->marge_basse =isset($conf->global->MAIN_PDF_MARGIN_BOTTOM)?$conf->global->MAIN_PDF_MARGIN_BOTTOM:10;
 
 		$this->option_logo = 1;
 
 		// Recupere emmetteur
 		$this->emetteur=$mysoc;
-		if (! $this->emetteur->pays_code) $this->emetteur->pays_code=substr($langs->defaultlang,-2);    // By default if not defined
+		if (! $this->emetteur->country_code) $this->emetteur->country_code=substr($langs->defaultlang,-2);    // By default if not defined
 	}
 
 
@@ -78,13 +79,11 @@ class pdf_expedition_merou extends ModelePdfExpedition
      *  @param		int			$hidedetails		Do not show line details
      *  @param		int			$hidedesc			Do not show desc
      *  @param		int			$hideref			Do not show ref
-     *  @param		object		$hookmanager		Hookmanager object
      *  @return     int         	    			1=OK, 0=KO
 	 */
-	function write_file(&$object,$outputlangs,$srctemplatepath='',$hidedetails=0,$hidedesc=0,$hideref=0,$hookmanager=false)
+	function write_file(&$object,$outputlangs,$srctemplatepath='',$hidedetails=0,$hidedesc=0,$hideref=0)
 	{
-		global $user,$conf,$langs,$mysoc;
-		$default_font_size = pdf_getPDFFontSize($outputlangs);
+		global $user,$conf,$langs,$mysoc,$hookmanager;
 
 		$object->fetch_thirdparty();
 
@@ -147,8 +146,10 @@ class pdf_expedition_merou extends ModelePdfExpedition
 				$nblignes = count($object->lines);
 
 				$pdf=pdf_getInstance($this->format,'mm','l');
+				$default_font_size = pdf_getPDFFontSize($outputlangs);
 				$heightforinfotot = 0;	// Height reserved to output the info and total part
-				$heightforfooter = 28;	// Height reserved to output the footer (value include bottom margin)
+		        $heightforfreetext= (isset($conf->global->MAIN_PDF_FREETEXT_HEIGHT)?$conf->global->MAIN_PDF_FREETEXT_HEIGHT:5);	// Height reserved to output the free text on last page
+	            $heightforfooter = $this->marge_basse + 8;	// Height reserved to output the footer (value include bottom margin)
                 $pdf->SetAutoPageBreak(1,0);
 
 			    if (class_exists('TCPDF'))
@@ -182,7 +183,7 @@ class pdf_expedition_merou extends ModelePdfExpedition
 				// New page
 				$pdf->AddPage();
 				$pagenb++;
-				$this->_pagehead($pdf, $object, 1, $outputlangs, $hookmanager);
+				$this->_pagehead($pdf, $object, 1, $outputlangs);
 				$pdf->SetFont('','', $default_font_size - 3);
 				$pdf->MultiCell(0, 3, '');		// Set interline to 3
 				$pdf->SetTextColor(0,0,0);
@@ -191,6 +192,27 @@ class pdf_expedition_merou extends ModelePdfExpedition
 				$tab_top_newpage = (empty($conf->global->MAIN_PDF_DONOTREPEAT_HEAD)?42:10);
 				$tab_height = $this->page_hauteur - $tab_top - $heightforfooter;
 				$tab_height_newpage = $this->page_hauteur - $tab_top_newpage - $heightforfooter;
+				
+				// Affiche notes
+				if (! empty($object->note_public))
+				{				
+					$pdf->SetFont('','', $default_font_size - 1);
+					$pdf->writeHTMLCell(190, 3, $this->marge_gauche, $tab_top, dol_htmlentitiesbr($object->note_public), 0, 1);
+					$nexY = $pdf->GetY();
+					$height_note=$nexY-$tab_top;
+				
+					// Rect prend une longueur en 3eme param
+					$pdf->SetDrawColor(192,192,192);
+					$pdf->Rect($this->marge_gauche, $tab_top-1, $this->page_largeur-$this->marge_gauche-$this->marge_droite, $height_note+1);
+				
+					$tab_height = $tab_height - $height_note;
+					$tab_top = $nexY+6;
+				}
+				else
+				{
+					$height_note=0;
+				}
+				
 
 				$pdf->SetFillColor(240,240,240);
 				$pdf->SetTextColor(0,0,0);
@@ -242,6 +264,15 @@ class pdf_expedition_merou extends ModelePdfExpedition
 					$pdf->SetXY(170, $curY);
 					$pdf->MultiCell(30, 3, $object->lines[$i]->qty_shipped, 0, 'C', 0);
 
+					// Add line
+					if (! empty($conf->global->MAIN_PDF_DASH_BETWEEN_LINES) && $i < ($nblignes - 1))
+					{
+						$pdf->SetLineStyle(array('dash'=>'1,1','color'=>array(210,210,210)));
+						//$pdf->SetDrawColor(190,190,200);
+						$pdf->line($this->marge_gauche, $nexY+1, $this->page_largeur - $this->marge_droite, $nexY+1);
+						$pdf->SetLineStyle(array('dash'=>0));
+					}
+
 					$nexY+=2;    // Passe espace entre les lignes
 
 					// Detect if some page were added automatically and output _tableau for past pages
@@ -256,7 +287,7 @@ class pdf_expedition_merou extends ModelePdfExpedition
 						{
 							$this->_tableau($pdf, $tab_top_newpage - 1, $this->page_hauteur - $tab_top_newpage - $heightforfooter, 0, $outputlangs, 1, 1);
 						}
-						$this->_pagefoot($pdf,$object,$outputlangs);
+						$this->_pagefoot($pdf,$object,$outputlangs,1);
 						$pagenb++;
 						$pdf->setPage($pagenb);
 						$pdf->setPageOrientation('', 1, 0);	// The only function to edit the bottom margin of current page to set it.
@@ -271,7 +302,7 @@ class pdf_expedition_merou extends ModelePdfExpedition
 						{
 							$this->_tableau($pdf, $tab_top_newpage - 1, $this->page_hauteur - $tab_top_newpage - $heightforfooter, 0, $outputlangs, 1, 1);
 						}
-						$this->_pagefoot($pdf,$object,$outputlangs);
+						$this->_pagefoot($pdf,$object,$outputlangs,1);
 						// New page
 						$pdf->AddPage();
 						$pagenb++;
@@ -281,13 +312,13 @@ class pdf_expedition_merou extends ModelePdfExpedition
 				// Show square
 				if ($pagenb == 1)
 				{
-					$this->_tableau($pdf, $tab_top, $this->page_hauteur - $tab_top - $heightforinfotot - $heightforfooter, 0, $outputlangs, 0, 0);
-					$bottomlasttab=$this->page_hauteur - $heightforinfotot - $heightforfooter + 1;
+					$this->_tableau($pdf, $tab_top, $this->page_hauteur - $tab_top - $heightforinfotot - $heightforfreetext - $heightforfooter, 0, $outputlangs, 0, 0);
+					$bottomlasttab=$this->page_hauteur - $heightforinfotot - $heightforfreetext - $heightforfooter + 1;
 				}
 				else
 				{
-					$this->_tableau($pdf, $tab_top_newpage - 1, $this->page_hauteur - $tab_top_newpage - $heightforinfotot - $heightforfooter, 0, $outputlangs, 1, 0);
-					$bottomlasttab=$this->page_hauteur - $heightforinfotot - $heightforfooter + 1;
+					$this->_tableau($pdf, $tab_top_newpage - 1, $this->page_hauteur - $tab_top_newpage - $heightforinfotot - $heightforfreetext - $heightforfooter, 0, $outputlangs, 1, 0);
+					$bottomlasttab=$this->page_hauteur - $heightforinfotot - $heightforfreetext - $heightforfooter + 1;
 				}
 
 				// Pied de page
@@ -365,9 +396,10 @@ class pdf_expedition_merou extends ModelePdfExpedition
 	 *   	@param	PDF			&$pdf     			PDF
 	 * 		@param	Object		$object				Object to show
 	 *      @param	Translate	$outputlangs		Object lang for output
+	 *      @param	int			$hidefreetext		1=Hide free text
 	 *      @return	void
 	 */
-	function _pagefoot(&$pdf, $object, $outputlangs)
+	function _pagefoot(&$pdf, $object, $outputlangs,$hidefreetext=0)
 	{
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 		$pdf->SetFont('','', $default_font_size - 2);
@@ -536,10 +568,10 @@ class pdf_expedition_merou extends ModelePdfExpedition
 			$object->GetUrlTrackingStatus($object->tracking_number);
 			if (! empty($object->tracking_url))
 			{
-				if ($object->expedition_method_id > 0)
+				if ($object->shipping_method_id > 0)
 				{
 					// Get code using getLabelFromKey
-					$code=$outputlangs->getLabelFromKey($this->db,$object->expedition_method_id,'c_shipment_mode','rowid','code');
+					$code=$outputlangs->getLabelFromKey($this->db,$object->shipping_method_id,'c_shipment_mode','rowid','code');
 					$label=$outputlangs->trans("SendingMethod".strtoupper($code))." :";
 				}
 				else

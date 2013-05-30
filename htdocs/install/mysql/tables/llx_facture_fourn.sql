@@ -1,12 +1,12 @@
 -- ===========================================================================
 -- Copyright (C) 2001-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
 -- Copyright (C) 2007      Laurent Destailleur  <eldy@users.sourceforge.net>
--- Copyright (C) 2007-2012 Regis Houssin        <regis@dolibarr.fr>
+-- Copyright (C) 2007-2012 Regis Houssin        <regis.houssin@capnetworks.com>
 -- Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 2 of the License, or
+-- the Free Software Foundation; either version 3 of the License, or
 -- (at your option) any later version.
 --
 -- This program is distributed in the hope that it will be useful,
@@ -22,8 +22,8 @@
 create table llx_facture_fourn
 (
   rowid					integer AUTO_INCREMENT PRIMARY KEY,
-  
-  facnumber				varchar(50) NOT NULL,
+  ref					varchar(30),
+  ref_supplier			varchar(50) NOT NULL,
   entity				integer  DEFAULT 1 NOT NULL,	 -- multi company id
 
   ref_ext				varchar(30),                  -- reference into an external system (not used by dolibarr)
@@ -61,7 +61,7 @@ create table llx_facture_fourn
   fk_cond_reglement		integer  DEFAULT 1 NOT NULL,   -- condition de reglement (30 jours, fin de mois ...)
   date_lim_reglement 	date,                          -- date limite de reglement
 
-  note					text,
+  note_private			text,
   note_public			text,
   model_pdf				varchar(255),
   import_key			varchar(14),

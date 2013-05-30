@@ -5,7 +5,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -23,16 +23,18 @@
  *	\brief      Prelevement statistics
  */
 
-require '../bank/pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/prelevement.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/bonprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/ligneprelevement.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+
+$langs->load("banks");
+$langs->load("categories");
+$langs->load("withdrawals");
 
 // Security check
 if ($user->societe_id > 0) accessforbidden();
-
-$langs->load("withdrawals");
-$langs->load("categories");
 
 // Get supervariables
 $prev_id = GETPOST('id','int');
@@ -58,13 +60,6 @@ if ($prev_id)
 		print '<tr><td width="20%">'.$langs->trans("Ref").'</td><td>'.$bon->getNomUrl(1).'</td></tr>';
 		print '<tr><td width="20%">'.$langs->trans("Date").'</td><td>'.dol_print_date($bon->datec,'day').'</td></tr>';
 		print '<tr><td width="20%">'.$langs->trans("Amount").'</td><td>'.price($bon->amount).'</td></tr>';
-		print '<tr><td width="20%">'.$langs->trans("File").'</td><td>';
-
-		$relativepath = 'receipts/'.$bon->ref;
-
-		print '<a href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
-
-		print '</td></tr>';
 
 		// Status
 		print '<tr><td width="20%">'.$langs->trans('Status').'</td>';
@@ -92,7 +87,16 @@ if ($prev_id)
 
 		print '</table>';
 
-		print '</div>';
+		print '<br>';
+
+		print '<table class="border" width="100%"><tr><td width="20%">';
+		print $langs->trans("WithdrawalFile").'</td><td>';
+		$relativepath = 'receipts/'.$bon->ref;
+		print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$relativepath.'</a>';
+		print '</td></tr></table>';
+
+		dol_fiche_end();
+
 	}
 	else
 	{

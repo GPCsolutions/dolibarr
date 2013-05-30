@@ -1,4 +1,4 @@
-# Dolibarr language file - en_US - categories
+# Dolibarr language file - Source file is en_US - categories
 CHARSET=UTF-8
 Category=Category
 Categories=Categories
@@ -92,3 +92,11 @@ CatSupList=List of supplier categories
 CatCusList=List of customer/prospect categories
 CatProdList=List of products categories
 CatMemberList=List of members categories
+CatSupLinks=Links between suppliers and categories
+CatCusLinks=Links between customers/prospects and categories
+CatProdLinks=Links between products/services and categories
+CatMemberLinks=Links between members and categories
+CatProdLinks=Products
+CatCusLinks=Customer/Prospects
+CatSupLinks=Suppliers
+DeleteFromCat=Remove from category

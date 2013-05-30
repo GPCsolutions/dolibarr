@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2003-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2011 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -32,7 +32,7 @@ class box_actions extends ModeleBoxes
 {
 	var $boxcode="lastactions";
 	var $boximg="object_action";
-	var $boxlabel;
+	var $boxlabel="BoxLastActions";
 	var $depends = array("agenda");
 
 	var $db;
@@ -41,17 +41,6 @@ class box_actions extends ModeleBoxes
 	var $info_box_head = array();
 	var $info_box_contents = array();
 
-
-	/**
-	 *  Constructor
-	 */
-	function __construct()
-	{
-		global $langs;
-		$langs->load("boxes");
-
-		$this->boxlabel=$langs->transnoentitiesnoconv("BoxLastActions");
-	}
 
 	/**
      *  Load data for box to show them later
@@ -76,14 +65,15 @@ class box_actions extends ModeleBoxes
 			$sql.= " ta.code,";
 			$sql.= " s.nom, s.rowid as socid";
 			$sql.= " FROM (".MAIN_DB_PREFIX."c_actioncomm AS ta, ";
-			if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= " ".MAIN_DB_PREFIX."societe_commerciaux AS sc, ";
 			$sql.= MAIN_DB_PREFIX."actioncomm AS a)";
+			if (! $user->rights->societe->client->voir && ! $user->societe_id) $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON a.fk_soc = sc.fk_soc";
 			$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON a.fk_soc = s.rowid";
 			$sql.= " WHERE a.fk_action = ta.id";
 			$sql.= " AND a.entity = ".$conf->entity;
 			$sql.= " AND a.percent >= 0 AND a.percent < 100";
-			if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
-			if($user->societe_id)	$sql.= " AND s.rowid = ".$user->societe_id;
+			if (! $user->rights->societe->client->voir && ! $user->societe_id) $sql.= " AND (a.fk_soc IS NULL OR sc.fk_user = " .$user->id . ")";
+			if($user->societe_id)   $sql.= " AND s.rowid = ".$user->societe_id;
+			if (! $user->rights->agenda->allactions->read) $sql.= " AND (a.fk_user_author = ".$user->id . " OR a.fk_user_action = ".$user->id . " OR a.fk_user_done = ".$user->id . ")";
 			$sql.= " ORDER BY a.datec DESC";
 			$sql.= $db->plimit($max, 0);
 
@@ -111,7 +101,7 @@ class box_actions extends ModeleBoxes
 					'logo' => ("action"),
 					'url' => DOL_URL_ROOT."/comm/action/fiche.php?id=".$objp->id);
 
-					$this->info_box_contents[$i][1] = array('td' => 'align="left" nowrap="1"',
+					$this->info_box_contents[$i][1] = array('td' => 'align="left"',
 					'text' => dol_trunc($label,32),
 					'text2'=> $late,
 					'url' => DOL_URL_ROOT."/comm/action/fiche.php?id=".$objp->id);
@@ -124,7 +114,7 @@ class box_actions extends ModeleBoxes
 					'text' => dol_trunc($objp->nom,24),
 					'url' => DOL_URL_ROOT."/societe/soc.php?socid=".$objp->socid);
 
-					$this->info_box_contents[$i][4] = array('td' => 'align="left" nowrap="nowrap"',
+					$this->info_box_contents[$i][4] = array('td' => 'align="left" class="nowrap"',
 					'text' => dol_print_date($datelimite, "dayhour"));
 
 					$this->info_box_contents[$i][5] = array('td' => 'align="right"',

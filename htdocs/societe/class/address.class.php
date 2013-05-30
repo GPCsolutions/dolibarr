@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2002-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2006 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2011 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -38,15 +38,10 @@ class Address
 	var $socid;
 	var $name;
 	var $address;
-	var $cp;			// deprecated
 	var $zip;
-	var $ville;			// deprecated
 	var $town;
-	var $pays_id;		// deprecated
 	var $country_id;
-	var $pays_code;		// deprecated
 	var $country_code;
-	var $tel;			// deprecated
 	var $phone;
 	var $fax;
 	var $note;
@@ -195,11 +190,11 @@ class Address
 			$sql.= " SET label = '" . $this->db->escape($this->label) ."'"; // Champ obligatoire
 			$sql.= ", name = '" . $this->db->escape($this->name) ."'"; // Champ obligatoire
 			$sql.= ", address = ".($this->address?"'".$this->db->escape($this->address)."'":"null");
-			$sql.= ", cp = ".($this->zip?"'".$this->db->escape($this->zip)."'":"null");
-			$sql.= ", ville = ".($this->town?"'".$this->db->escape($this->town)."'":"null");
+			$sql.= ", zip = ".($this->zip?"'".$this->db->escape($this->zip)."'":"null");
+			$sql.= ", town = ".($this->town?"'".$this->db->escape($this->town)."'":"null");
 			$sql.= ", fk_pays = '" . ($this->country_id?$this->country_id:'0') ."'";
 			$sql.= ", note = ".($this->note?"'".$this->db->escape($this->note)."'":"null");
-			$sql.= ", tel = ".($this->phone?"'".$this->db->escape($this->phone)."'":"null");
+			$sql.= ", phone = ".($this->phone?"'".$this->db->escape($this->phone)."'":"null");
 			$sql.= ", fax = ".($this->fax?"'".$this->db->escape($this->fax)."'":"null");
 			if ($user) $sql .= ",fk_user_modif = '".$user->id."'";
 			$sql .= " WHERE fk_soc = '" . $socid ."' AND rowid = '" . $id ."'";
@@ -271,7 +266,7 @@ class Address
 			{
 				$sql = 'SELECT a.rowid as id, a.label, a.name, a.address, a.datec as dc';
 				$sql .= ', a.tms as date_update, a.fk_soc';
-				$sql .= ', a.cp as zip, a.ville as town, a.note, a.fk_pays as country_id, a.tel, a.fax';
+				$sql .= ', a.zip, a.town, a.note, a.fk_pays as country_id, a.phone, a.fax';
 				$sql .= ', p.code as country_code, p.libelle as country';
 				$sql .= ' FROM '.MAIN_DB_PREFIX.'societe_address as a';
 				$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_pays as p ON a.fk_pays = p.rowid';
@@ -299,17 +294,9 @@ class Address
 						$line->country_id		= $objp->country_id;
 						$line->country_code		= $objp->country_id?$objp->country_code:'';
 						$line->country			= $objp->country_id?($langs->trans('Country'.$objp->country_code)!='Country'.$objp->country_code?$langs->trans('Country'.$objp->country_code):$objp->country):'';
-						$line->phone			= $objp->tel;
+						$line->phone			= $objp->phone;
 						$line->fax				= $objp->fax;
 						$line->note				= $objp->note;
-
-						// deprecated
-						$line->cp				= $line->zip;
-						$line->ville			= $line->town;
-						$line->pays_id			= $line->country_id;
-						$line->pays_code		= $line->country_code;
-						$line->pays				= $line->country;
-						$line->tel				= $line->phone;
 
 						$this->lines[$i]		= $line;
 						$i++;
@@ -350,7 +337,7 @@ class Address
 
 		$sql = 'SELECT a.rowid, a.fk_soc, a.label, a.name, a.address, a.datec as date_creation';
 		$sql .= ', a.tms as date_update';
-		$sql .= ', a.cp as zip, a.ville as town, a.note, a.fk_pays as country_id, a.tel, a.fax';
+		$sql .= ', a.zip, a.town, a.note, a.fk_pays as country_id, a.phone, a.fax';
 		$sql .= ', p.code as country_code, p.libelle as country';
 		$sql .= ' FROM '.MAIN_DB_PREFIX.'societe_address as a';
 		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_pays as p ON a.fk_pays = p.rowid';
@@ -378,17 +365,9 @@ class Address
 				$this->country_code 	= $obj->country_id?$obj->country_code:'';
 				$this->country			= $obj->country_id?($langs->trans('Country'.$obj->country_code)!='Country'.$obj->country_code?$langs->trans('Country'.$obj->country_code):$obj->country):'';
 
-				$this->phone			= $obj->tel;
+				$this->phone			= $obj->phone;
 				$this->fax				= $obj->fax;
 				$this->note				= $obj->note;
-
-				// deprecated
-				$this->cp				= $this->zip;
-				$this->ville			= $this->town;
-				$this->pays_id			= $this->country_id;
-				$this->pays_code		= $this->country_code;
-				$this->pays				= $this->country;
-				$this->tel				= $this->phone;
 
 				$result = 1;
 			}

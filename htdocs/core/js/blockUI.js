@@ -1,8 +1,8 @@
-// Copyright (C) 2012	Regis Houssin	<regis@dolibarr.fr>
+// Copyright (C) 2012	Regis Houssin	<regis.houssin@capnetworks.com>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation; either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -94,7 +94,7 @@ $(document).ready(function() {
 			css: {
 				border: 'none',
 				padding: '15px',
-				background: '#000 url(/theme/eldy/img/working2.gif) no-repeat 10px center',
+				background: '#000 url(' +  indicatorBlockUI + ') no-repeat 10px center',
 				'-webkit-border-radius': '10px',
 				'-moz-border-radius': '10px',
 				'border-radius': '10px',

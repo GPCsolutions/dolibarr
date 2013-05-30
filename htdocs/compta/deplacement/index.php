@@ -2,11 +2,11 @@
 /* Copyright (C) 2003		Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011	Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004		Eric Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2011	Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2011	Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -131,7 +131,7 @@ $max=10;
 
 $langs->load("boxes");
 
-$sql = "SELECT u.rowid as uid, u.name, u.firstname, d.rowid, d.dated as date, d.tms as dm, d.km, d.fk_statut";
+$sql = "SELECT u.rowid as uid, u.lastname, u.firstname, d.rowid, d.dated as date, d.tms as dm, d.km, d.fk_statut";
 $sql.= " FROM ".MAIN_DB_PREFIX."deplacement as d, ".MAIN_DB_PREFIX."user as u";
 if (!$user->rights->societe->client->voir && !$user->societe_id) $sql.= ", ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= " WHERE u.rowid = d.fk_user";
@@ -168,7 +168,7 @@ if ($result)
             $deplacementstatic->ref=$obj->rowid;
             $deplacementstatic->id=$obj->rowid;
             $userstatic->id=$obj->uid;
-            $userstatic->lastname=$obj->name;
+            $userstatic->lastname=$obj->lastname;
             $userstatic->firstname=$obj->firstname;
             print '<tr '.$bc[$var].'>';
             print '<td>'.$deplacementstatic->getNomUrl(1).'</td>';

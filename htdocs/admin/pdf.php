@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2001-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2011 Regis Houssin        <regis@dolibarr.fr>
- * Copyright (C) 2012	   Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2012-2103 Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -24,11 +24,12 @@
  */
 
 require '../main.inc.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/html.formadmin.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/usergroups.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
-require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
-require_once DOL_DOCUMENT_ROOT.'/core/class/html.formadmin.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
 
 $langs->load("admin");
 $langs->load("languages");
@@ -50,22 +51,35 @@ if ($action == 'update')
 {
 	dolibarr_set_const($db, "MAIN_PDF_FORMAT",    $_POST["MAIN_PDF_FORMAT"],'chaine',0,'',$conf->entity);
 
-	dolibarr_set_const($db, "MAIN_PROFID1_IN_ADDRESS",    $_POST["MAIN_PROFID1_IN_ADDRESS"],'chaine',0,'',$conf->entity);
+	
     dolibarr_set_const($db, "MAIN_PROFID2_IN_ADDRESS",    $_POST["MAIN_PROFID2_IN_ADDRESS"],'chaine',0,'',$conf->entity);
 	dolibarr_set_const($db, "MAIN_PROFID3_IN_ADDRESS",    $_POST["MAIN_PROFID3_IN_ADDRESS"],'chaine',0,'',$conf->entity);
 	dolibarr_set_const($db, "MAIN_PROFID4_IN_ADDRESS",    $_POST["MAIN_PROFID4_IN_ADDRESS"],'chaine',0,'',$conf->entity);
+	dolibarr_set_const($db, "MAIN_PROFID4_IN_ADDRESS",    $_POST["MAIN_PROFID4_IN_ADDRESS"],'chaine',0,'',$conf->entity);
 	dolibarr_set_const($db, "MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT",    $_POST["MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT"],'chaine',0,'',$conf->entity);
-	
-	if ($conf->global->MAIN_FEATURES_LEVEL > 1)
-	{
-		dolibarr_set_const($db, "MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS", $_POST["MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS"],'chaine',0,'',$conf->entity);
-		dolibarr_set_const($db, "MAIN_GENERATE_DOCUMENTS_HIDE_DESC",    $_POST["MAIN_GENERATE_DOCUMENTS_HIDE_DESC"],'chaine',0,'',$conf->entity);
-		dolibarr_set_const($db, "MAIN_GENERATE_DOCUMENTS_HIDE_REF",     $_POST["MAIN_GENERATE_DOCUMENTS_HIDE_REF"],'chaine',0,'',$conf->entity);
-	}
-	
+
+	dolibarr_set_const($db, "MAIN_TVAINTRA_NOT_IN_ADDRESS",    $_POST["MAIN_TVAINTRA_NOT_IN_ADDRESS"],'chaine',0,'',$conf->entity);
+	dolibarr_set_const($db, "MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS", $_POST["MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS"],'chaine',0,'',$conf->entity);
+	dolibarr_set_const($db, "MAIN_GENERATE_DOCUMENTS_HIDE_DESC",    $_POST["MAIN_GENERATE_DOCUMENTS_HIDE_DESC"],'chaine',0,'',$conf->entity);
+	dolibarr_set_const($db, "MAIN_GENERATE_DOCUMENTS_HIDE_REF",     $_POST["MAIN_GENERATE_DOCUMENTS_HIDE_REF"],'chaine',0,'',$conf->entity);
+
 	header("Location: ".$_SERVER["PHP_SELF"]."?mainmenu=home&leftmenu=setup");
 	exit;
 }
+
+if ($action == 'activate_pdfsecurity')
+{
+	dolibarr_set_const($db, "PDF_SECURITY_ENCRYPTION", "1",'chaine',0,'',$conf->entity);
+	header("Location: ".$_SERVER["PHP_SELF"]."?mainmenu=home&leftmenu=setup");
+	exit;
+}
+else if ($action == 'disable_pdfsecurity')
+{
+	dolibarr_del_const($db, "PDF_SECURITY_ENCRYPTION",$conf->entity);
+	header("Location: ".$_SERVER["PHP_SELF"]."?mainmenu=home&leftmenu=setup");
+	exit;
+}
+
 
 
 /*
@@ -209,26 +223,30 @@ if ($action == 'edit')	// Edit
 	print $form->selectyesno('MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT',(! empty($conf->global->MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT))?$conf->global->MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT:0,1);
     print '</td></tr>';
     
-    if ($conf->global->MAIN_FEATURES_LEVEL > 1)
-    {
-    	//Desc
-    	$var=!$var;
-    	print '<tr '.$bc[$var].'><td>'.$langs->trans("HideDescOnPDF").'</td><td>';
-    	print $form->selectyesno('MAIN_GENERATE_DOCUMENTS_HIDE_DESC',(! empty($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DESC))?$conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DESC:0,1);
-    	print '</td></tr>';
-    	
-    	//Ref
-    	$var=!$var;
-    	print '<tr '.$bc[$var].'><td>'.$langs->trans("HideRefOnPDF").'</td><td>';
-    	print $form->selectyesno('MAIN_GENERATE_DOCUMENTS_HIDE_REF',(! empty($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_REF))?$conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_REF:0,1);
-    	print '</td></tr>';
-    	
-    	//Details
-    	$var=!$var;
-    	print '<tr '.$bc[$var].'><td>'.$langs->trans("HideDetailsOnPDF").'</td><td>';
-    	print $form->selectyesno('MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS',(! empty($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS))?$conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS:0,1);
-    	print '</td></tr>';
-    }
+    // Hide Tva Intra on adress
+    $var=!$var;
+    print '<tr '.$bc[$var].'><td>'.$langs->trans("ShowVATIntaInAddress").'</td><td>';
+    print $form->selectyesno('MAIN_TVAINTRA_NOT_IN_ADDRESS',(! empty($conf->global->MAIN_TVAINTRA_NOT_IN_ADDRESS))?$conf->global->MAIN_TVAINTRA_NOT_IN_ADDRESS:0,1);
+    print '</td></tr>';
+
+    //Desc
+    $var=!$var;
+    print '<tr '.$bc[$var].'><td>'.$langs->trans("HideDescOnPDF").'</td><td>';
+    print $form->selectyesno('MAIN_GENERATE_DOCUMENTS_HIDE_DESC',(! empty($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DESC))?$conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DESC:0,1);
+    print '</td></tr>';
+
+    //Ref
+    $var=!$var;
+    print '<tr '.$bc[$var].'><td>'.$langs->trans("HideRefOnPDF").'</td><td>';
+    print $form->selectyesno('MAIN_GENERATE_DOCUMENTS_HIDE_REF',(! empty($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_REF))?$conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_REF:0,1);
+    print '</td></tr>';
+
+    //Details
+    $var=!$var;
+    print '<tr '.$bc[$var].'><td>'.$langs->trans("HideDetailsOnPDF").'</td><td>';
+    print $form->selectyesno('MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS',(! empty($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS))?$conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS:0,1);
+    print '</td></tr>';
+
 
 	print '</table>';
 
@@ -365,37 +383,134 @@ else	// Show
     print_fiche_titre($langs->trans("Other"),'','').'<br>';
 	$var=true;
     print '<table summary="more" class="noborder" width="100%">';
-    print '<tr class="liste_titre"><td>'.$langs->trans("Parameter").'</td><td width="200px">'.$langs->trans("Value").'</td></tr>';
+    print '<tr class="liste_titre"><td>'.$langs->trans("Parameter").'</td><td width="200px" colspan="2">'.$langs->trans("Value").'</td></tr>';
 
+    
     // Hide any PDF informations
     $var=!$var;
-    print '<tr '.$bc[$var].'><td>'.$langs->trans("HideAnyVATInformationOnPDF").'</td><td>';
+    print '<tr '.$bc[$var].'><td>'.$langs->trans("HideAnyVATInformationOnPDF").'</td><td colspan="2">';
     print yn($conf->global->MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT,1);
     print '</td></tr>';
-       
-    if ($conf->global->MAIN_FEATURES_LEVEL > 1)
-    {
-    	//Desc
-    	$var=!$var;
-    	print '<tr '.$bc[$var].'><td>'.$langs->trans("HideDescOnPDF").'</td><td>';
-    	print yn($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DESC,1);
-    	print '</td></tr>';
-    	 
-    	//Ref
-    	$var=!$var;
-    	print '<tr '.$bc[$var].'><td>'.$langs->trans("HideRefOnPDF").'</td><td>';
-    	print yn($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_REF,1);
-    	print '</td></tr>';
-    	 
-    	//Details
-    	$var=!$var;
-    	print '<tr '.$bc[$var].'><td>'.$langs->trans("HideDetailsOnPDF").'</td><td>';
-    	print yn($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS,1);
-    	print '</td></tr>';
-    }
+
+    
+	// Encrypt and protect PDF
+	$var=!$var;
+	print "<tr ".$bc[$var].">";
+	print '<td>';
+	$text = $langs->trans("ProtectAndEncryptPdfFiles");
+	$desc = $form->textwithpicto($text,$langs->transnoentities("ProtectAndEncryptPdfFilesDesc"),1);
+	print $desc;
+	print '</td>';
+	print '<td width="60">';
+	if($conf->global->PDF_SECURITY_ENCRYPTION == 1)
+	{
+		print img_picto($langs->trans("Active"),'tick');
+	}
+	print '</td>';
+	print '<td align="center" width="140">';
+	if ($conf->global->PDF_SECURITY_ENCRYPTION == 0)
+	{
+		print '<a href="'.$_SERVER["PHP_SELF"].'?action=activate_pdfsecurity">'.$langs->trans("Activate").'</a>';
+	}
+	if($conf->global->PDF_SECURITY_ENCRYPTION == 1)
+	{
+		print '<a href="'.$_SERVER["PHP_SELF"].'?action=disable_pdfsecurity">'.$langs->trans("Disable").'</a>';
+	}
+	print "</td>";
+	
+	print "</td>";
+	print '</tr>';
+	
+	// Hide Tva Intra on adress
+	$var=!$var;
+	print '<tr '.$bc[$var].'><td>'.$langs->trans("ShowVATIntaInAddress").'</td><td colspan="2">';
+	print yn($conf->global->MAIN_TVAINTRA_NOT_IN_ADDRESS,1);
+	print '</td></tr>';
+	
+	//Desc
+	$var=!$var;
+	print '<tr '.$bc[$var].'><td>'.$langs->trans("HideDescOnPDF").'</td><td colspan="2">';
+	print yn($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DESC,1);
+	print '</td></tr>';
+
+	//Ref
+	$var=!$var;
+	print '<tr '.$bc[$var].'><td>'.$langs->trans("HideRefOnPDF").'</td><td colspan="2">';
+	print yn($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_REF,1);
+	print '</td></tr>';
+
+	//Details
+	$var=!$var;
+	print '<tr '.$bc[$var].'><td>'.$langs->trans("HideDetailsOnPDF").'</td><td colspan="2">';
+	print yn($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS,1);
+	print '</td></tr>';
+
 
 	print '</table>';
 
+
+	/*
+	 *  Library
+	 */
+	print '<br>';
+	print_titre($langs->trans("Library"));
+
+	print '<table class="noborder" width="100%">'."\n";
+
+	print '<tr class="liste_titre">'."\n";
+	print '<td>'.$langs->trans("Name").'</td>'."\n";
+	print '<td>'.$langs->trans("Value").'</td>'."\n";
+	print "</tr>\n";
+
+	$var=false;
+	if (! empty($dolibarr_pdf_force_fpdf))
+	{
+		$var=!$var;
+		print '<tr '.$bc[$var].'>'."\n";
+		print '<td>dolibarr_pdf_force_fpdf</td>'."\n";
+		print '<td>';
+		print $dolibarr_pdf_force_fpdf;
+		print '</td>';
+		print '</tr>';
+	}
+
+	$var=!$var;
+	print '<tr '.$bc[$var].'>'."\n";
+	print '<td>'.$langs->trans("LibraryToBuildPDF").'</td>'."\n";
+	print '<td>';
+	$i=0;
+	$pdf=pdf_getInstance('A4');
+	if (class_exists('FPDF') && ! class_exists('TCPDF'))
+	{
+		if ($i) print ' + ';
+		print 'FPDF';
+		print ' ('.@constant('FPDF_PATH').')';
+		$i++;
+	}
+	if (class_exists('TCPDF'))
+	{
+		if ($i) print ' + ';
+		print 'TCPDF';
+		print ' ('.@constant('TCPDF_PATH').')';
+		$i++;
+	}
+	if (class_exists('FPDI'))
+	{
+		if ($i) print ' + ';
+		print 'FPDI';
+		print ' ('.@constant('FPDI_PATH').')';
+		$i++;
+	}
+	print '<!-- $conf->global->MAIN_USE_FPDF = '.$conf->global->MAIN_USE_FPDF.' -->';
+	print '</td>'."\n";
+	print '</tr>'."\n";
+
+	print "</table>\n";
+
+	if (! empty($dolibarr_pdf_force_fpdf))
+	{
+		print info_admin($langs->trans("WarningUsingFPDF")).'<br>';
+	}
 
     print '<div class="tabsAction">';
     print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=edit">'.$langs->trans("Modify").'</a>';
@@ -404,7 +519,7 @@ else	// Show
 }
 
 
-$db->close();
-
 llxFooter();
+
+$db->close();
 ?>

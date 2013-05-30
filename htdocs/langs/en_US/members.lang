@@ -1,4 +1,4 @@
-# Dolibarr language file - en_US - members
+# Dolibarr language file - Source file is en_US - members
 CHARSET=UTF-8
 MembersArea=Members area
 PublicMembersArea=Public members area
@@ -87,7 +87,7 @@ ListOfSubscriptions=List of subscriptions
 SendCardByMail=Send card by Email
 AddMember=Add member
 MemberType=Member type
-NoTypeDefinedGoToSetup=No member types defined. Go to setup - Members types
+NoTypeDefinedGoToSetup=No member types defined. Go to menu "Members types"
 NewMemberType=New member type
 WelcomeEMail=Welcome e-mail
 SubscriptionRequired=Subscription required
@@ -155,8 +155,9 @@ ShowTypeCard=Show type '%s'
 HTPasswordExport=htpassword file generation
 NoThirdPartyAssociatedToMember=No third party associated to this member
 ThirdPartyDolibarr=Dolibarr third party
-MembersAndSubscriptions= Members and Suscriptions
+MembersAndSubscriptions= Members and Subscriptions
 MoreActions=Complementary action on recording
+MoreActionsOnSubscription=Complementary action, suggested by default when recording a subscription
 MoreActionBankDirect=Create a direct transaction record on account
 MoreActionBankViaInvoice=Create an invoice and payment on account
 MoreActionInvoiceOnly=Create an invoice with no payment
@@ -170,7 +171,7 @@ LastSubscriptionDate=Last subscription date
 LastSubscriptionAmount=Last subscription amount
 MembersStatisticsByCountries=Members statistics by country
 MembersStatisticsByState=Members statistics by state/province
-MembersStatisticsByTowne=Members statistics by town
+MembersStatisticsByTown=Members statistics by town
 NbOfMembers=Number of members
 NoValidatedMemberYet=No validated members found
 MembersByCountryDesc=This screen show you statistics on members by countries. Graphic depends however on Google online graph service and is available only if an internet connection is is working.
@@ -196,3 +197,9 @@ Collectivités=Organizations
 Particuliers=Personal
 Entreprises=Companies
 DOLIBARRFOUNDATION_PAYMENT_FORM=To make your subscription payment using a bank transfer, see page <a target="_blank" href="http://wiki.dolibarr.org/index.php/Subscribe#To_subscribe_making_a_bank_transfer">http://wiki.dolibarr.org/index.php/Subscribe</a>.<br>To pay using a Credit Card or Paypal, click on button at bottom of this page.<br> 
+ByProperties=By characteristics
+MembersStatisticsByProperties=Members statistics by characteristics
+MembersByNature=Members by nature
+VATToUseForSubscriptions=VAT rate to use for subscriptions
+NoVatOnSubscription=No TVA for subscriptions
+MEMBER_PAYONLINE_SENDEMAIL=Email to warn when Dolibarr receive a confirmation of a validated payment for subscription

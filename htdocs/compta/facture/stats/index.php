@@ -5,7 +5,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -27,15 +27,15 @@ require '../../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/dolgraph.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facturestats.class.php';
 
-$WIDTH=500;
-$HEIGHT=200;
+$WIDTH=DolGraph::getDefaultGraphSizeForStats('width');
+$HEIGHT=DolGraph::getDefaultGraphSizeForStats('height');
 
 $mode=GETPOST("mode")?GETPOST("mode"):'customer';
 if ($mode == 'customer' && ! $user->rights->facture->lire) accessforbidden();
 if ($mode == 'supplier' && ! $user->rights->fournisseur->facture->lire) accessforbidden();
 
-$userid=GETPOST('userid','int'); if ($userid < 0) $userid=0;
-$socid=GETPOST('socid','int'); if ($socid < 0) $socid=0;
+$userid=GETPOST('userid','int');
+$socid=GETPOST('socid','int');
 // Security check
 if ($user->societe_id > 0)
 {
@@ -55,6 +55,7 @@ $endyear=$year;
  */
 
 $langs->load("bills");
+$langs->load("companies");
 
 $form=new Form($db);
 
@@ -210,12 +211,13 @@ $h++;
 if ($mode == 'customer') $type='invoice_stats';
 if ($mode == 'supplier') $type='supplier_invoice_stats';
 
-complete_head_from_modules($conf,$langs,$object,$head,$h,$type);
+complete_head_from_modules($conf,$langs,null,$head,$h,$type);
 
 dol_fiche_head($head,'byyear',$langs->trans("Statistics"));
 
-print '<table class="notopnoleftnopadd" width="100%"><tr>';
-print '<td align="center" valign="top">';
+
+print '<div class="fichecenter"><div class="fichethirdleft">';
+
 
 //if (empty($socid))
 //{
@@ -231,12 +233,13 @@ print '<td align="center" valign="top">';
 	print $form->select_company($socid,'socid',$filter,1);
 	print '</td></tr>';
 	// User
-	print '<tr><td>'.$langs->trans("User").'/'.$langs->trans("SalesRepresentative").'</td><td>';
+	print '<tr><td>'.$langs->trans("CreatedBy").'</td><td>';
 	print $form->select_users($userid,'userid',1);
 	print '</td></tr>';
 	// Year
 	print '<tr><td>'.$langs->trans("Year").'</td><td>';
 	if (! in_array($year,$arrayyears)) $arrayyears[$year]=$year;
+	if (! in_array($nowyear,$arrayyears)) $arrayyears[$nowyear]=$nowyear;
 	arsort($arrayyears);
 	print $form->selectarray('year',$arrayyears,$year,0);
 	print '</td></tr>';
@@ -280,8 +283,8 @@ foreach ($data as $val)
 print '</table>';
 
 
-print '</td>';
-print '<td align="center" valign="top">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
+
 
 // Show graphs
 print '<table class="border" width="100%"><tr valign="top"><td align="center">';
@@ -295,7 +298,10 @@ else {
 }
 print '</td></tr></table>';
 
-print '</td></tr></table>';
+
+print '</div></div></div>';
+print '<div style="clear:both"></div>';
+
 
 dol_fiche_end();
 

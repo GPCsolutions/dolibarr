@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2001-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -29,6 +29,7 @@ require_once DOL_DOCUMENT_ROOT.'/projet/class/task.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/project.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/modules/project/modules_project.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 
 $langs->load("projects");
 $langs->load('companies');
@@ -43,23 +44,24 @@ if ($id == '' && $ref == '' && ($action != "create" && $action != "add" && $acti
 $mine = GETPOST('mode')=='mine' ? 1 : 0;
 //if (! $user->rights->projet->all->lire) $mine=1;	// Special for projects
 
-
-// Security check
-$socid=0;
-if ($user->societe_id > 0) $socid=$user->societe_id;
-$result = restrictedArea($user, 'projet', $id);
-
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
-include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
-$hookmanager=new HookManager($db);
 $hookmanager->initHooks(array('projectcard'));
 
 $object = new Project($db);
+$extrafields = new ExtraFields($db);
 $object->fetch($id,$ref);
 if ($object->id > 0)
 {
 	$object->fetch_thirdparty();
 }
+
+// Security check
+$socid=0;
+if ($user->societe_id > 0) $socid=$user->societe_id;
+$result = restrictedArea($user, 'projet', $object->id);
+
+// fetch optionals attributes and labels
+$extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
 
 $date_start=dol_mktime(0,0,0,GETPOST('projectmonth','int'),GETPOST('projectday','int'),GETPOST('projectyear','int'));
 $date_end=dol_mktime(0,0,0,GETPOST('projectendmonth','int'),GETPOST('projectendday','int'),GETPOST('projectendyear','int'));;
@@ -135,6 +137,9 @@ if ($action == 'add' && $user->rights->projet->creer)
         $object->date_start=$date_start;
         $object->date_end=$date_end;
 
+        // Fill array 'array_options' with data from add form
+        $ret = $extrafields->setOptionalsFromPost($extralabels,$object);
+
         $result = $object->create($user);
         if ($result > 0)
         {
@@ -203,6 +208,9 @@ if ($action == 'update' && ! $_POST["cancel"] && $user->rights->projet->creer)
         $object->public       = GETPOST('public','alpha');
         $object->date_start   = empty($_POST["project"])?'':$date_start;
         $object->date_end     = empty($_POST["projectend"])?'':$date_end;
+
+        // Fill array 'array_options' with data from add form
+        $ret = $extrafields->setOptionalsFromPost($extralabels,$object);
 
         $result=$object->update($user);
 
@@ -407,6 +415,10 @@ if ($action == 'create' && $user->rights->projet->creer)
     // Other options
     $parameters=array();
     $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action); // Note that $action and $object may have been modified by hook
+    if (empty($reshook) && ! empty($extrafields->attribute_label))
+    {
+    	print $object->showOptionals($extrafields,'edit');
+    }
 
     print '</table>';
 
@@ -431,6 +443,7 @@ else
     dol_htmloutput_mesg($mesg);
 
     if ($object->societe->id > 0)  $result=$object->societe->fetch($object->societe->id);
+    $res=$object->fetch_optionals($object->id,$extralabels);
 
     // To verify role of users
     $userAccess = $object->restrictedProjectArea($user,'read');
@@ -542,6 +555,10 @@ else
         // Other options
         $parameters=array();
         $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action); // Note that $action and $object may have been modified by hook
+        if (empty($reshook) && ! empty($extrafields->attribute_label))
+        {
+        	print $object->showOptionals($extrafields,'edit');
+        }
 
         print '</table>';
 
@@ -604,7 +621,10 @@ else
         // Other options
         $parameters=array();
         $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action); // Note that $action and $object may have been modified by hook
-
+        if (empty($reshook) && ! empty($extrafields->attribute_label))
+        {
+        	print $object->showOptionals($extrafields);
+        }
         print '</table>';
     }
 
@@ -720,10 +740,13 @@ else
 
         print '</td><td valign="top" width="50%">';
 
-        // List of actions on element
-        include_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
-        $formactions=new FormActions($db);
-        $somethingshown=$formactions->showactions($object,'project',$socid);
+        if (!empty($object->id))
+        {
+	        // List of actions on element
+	        include_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
+	        $formactions=new FormActions($db);
+	        $somethingshown=$formactions->showactions($object,'project',$socid);
+        }
 
         print '</td></tr></table>';
     }

@@ -1,9 +1,10 @@
 <?php
 /* Copyright (C) 2011-2012      Juanjo Menent	    <jmenent@2byte.es>
+ * Copyright (C) 2011-2013      Philippe Grand	    <philippe.grand@atoo-net.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -27,6 +28,7 @@ require_once DOL_DOCUMENT_ROOT.'/contrat/class/contrat.class.php';
 
 $langs->load("admin");
 $langs->load("errors");
+$langs->load("contracts");
 
 if (!$user->admin) accessforbidden();
 
@@ -88,6 +90,20 @@ print_fiche_titre($langs->trans("ContractsSetup"),$linkback,'setup');
 
 print "<br>";
 
+$h = 0;
+
+$head[$h][0] = DOL_URL_ROOT."/admin/contract.php";
+$head[$h][1] = $langs->trans("Contracts");
+$head[$h][2] = 'Contract';
+$hselected=$h;
+$h++;
+
+dol_fiche_head($head, $hselected, $langs->trans("ModuleSetup"));
+
+/*
+ * Contracts Numbering model
+ */
+
 print_titre($langs->trans("ContractsNumberingModules"));
 
 print '<table class="noborder" width="100%">';
@@ -96,7 +112,7 @@ print '<td width="100">'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
 print '<td>'.$langs->trans("Example").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Status").'</td>';
-print '<td align="center" width="16">'.$langs->trans("Infos").'</td>';
+print '<td align="center" width="16">'.$langs->trans("ShortInfo").'</td>';
 print "</tr>\n";
 
 clearstatcache();
@@ -129,8 +145,8 @@ if (is_resource($handle))
                 print $module->info();
                 print '</td>';
 
-                // Show example of numbering module
-                print '<td nowrap="nowrap">';
+                // Show example of numbering model
+                print '<td class="nowrap">';
                 $tmp=$module->getExample();
                 if (preg_match('/^Error/',$tmp)) { $langs->load("errors"); print '<div class="error">'.$langs->trans($tmp).'</div>'; }
                 elseif ($tmp=='NotConfigured') print $langs->trans($tmp);

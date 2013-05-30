@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2001-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2003      Eric Seigne          <erics@rycks.com>
- * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -143,20 +143,20 @@ if ($socid) $param.="&socid=".$socid;
 if ($showbirthday) $param.="&showbirthday=1";
 if ($pid) $param.="&projectid=".$pid;
 if ($type) $param.="&type=".$type;
+if ($actioncode) $param.="&actioncode=".$actioncode;
 
 $sql = "SELECT s.nom as societe, s.rowid as socid, s.client,";
 $sql.= " a.id, a.datep as dp, a.datep2 as dp2,";
-//$sql.= " a.datea as da, a.datea2 as da2,";
 $sql.= " a.fk_contact, a.note, a.label, a.percent as percent,";
 $sql.= " c.code as acode, c.libelle,";
 $sql.= " ua.login as loginauthor, ua.rowid as useridauthor,";
 $sql.= " ut.login as logintodo, ut.rowid as useridtodo,";
 $sql.= " ud.login as logindone, ud.rowid as useriddone,";
-$sql.= " sp.name, sp.firstname";
-$sql.= " FROM (".MAIN_DB_PREFIX."c_actioncomm as c,";
-if (! $user->rights->societe->client->voir && ! $socid) $sql.= " ".MAIN_DB_PREFIX."societe_commerciaux as sc,";
+$sql.= " sp.lastname, sp.firstname";
+$sql.= " FROM ".MAIN_DB_PREFIX."c_actioncomm as c,";
 $sql.= " ".MAIN_DB_PREFIX.'user as u,';
-$sql.= " ".MAIN_DB_PREFIX."actioncomm as a)";
+$sql.= " ".MAIN_DB_PREFIX."actioncomm as a";
+if (! $user->rights->societe->client->voir && ! $socid) $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON a.fk_soc = sc.fk_soc";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON a.fk_soc = s.rowid";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople as sp ON a.fk_contact = sp.rowid";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."user as ua ON a.fk_user_author = ua.rowid";
@@ -164,10 +164,10 @@ $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."user as ut ON a.fk_user_action = ut.rowid";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."user as ud ON a.fk_user_done = ud.rowid";
 $sql.= " WHERE c.id = a.fk_action";
 $sql.= ' AND a.fk_user_author = u.rowid';
-$sql.= ' AND a.entity IN ('.getEntity().')';	// To limit to entity
+$sql.= ' AND a.entity IN ('.getEntity().')';    // To limit to entity
 if ($actioncode) $sql.=" AND c.code='".$db->escape($actioncode)."'";
 if ($pid) $sql.=" AND a.fk_project=".$db->escape($pid);
-if (! $user->rights->societe->client->voir && ! $socid) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
+if (! $user->rights->societe->client->voir && ! $socid) $sql.= " AND (a.fk_soc IS NULL OR sc.fk_user = " .$user->id . ")";
 if ($socid) $sql.= " AND s.rowid = ".$socid;
 if ($type) $sql.= " AND c.id = ".$type;
 if ($status == 'done') { $sql.= " AND (a.percent = 100 OR (a.percent = -1 AND a.datep2 <= '".$db->idate($now)."'))"; }
@@ -238,7 +238,7 @@ if ($resql)
 	$i = 0;
 	print '<table class="liste" width="100%">';
 	print '<tr class="liste_titre">';
-	print_liste_field_titre($langs->trans("Action"),$_SERVER["PHP_SELF"],"acode",$param,"","",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Action"),$_SERVER["PHP_SELF"],"a.label",$param,"","",$sortfield,$sortorder);
 	//print_liste_field_titre($langs->trans("Title"),$_SERVER["PHP_SELF"],"a.label",$param,"","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateStart"),$_SERVER["PHP_SELF"],"a.datep",$param,'','align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateEnd"),$_SERVER["PHP_SELF"],"a.datep2",$param,'','align="center"',$sortfield,$sortorder);
@@ -276,7 +276,7 @@ if ($resql)
 		//print dol_trunc($obj->label,12);
 		//print '</td>';
 
-		print '<td align="center" nowrap="nowrap">';
+		print '<td align="center" class="nowrap">';
 		print dol_print_date($db->jdate($obj->dp),"day");
 		$late=0;
 		if ($obj->percent == 0 && $obj->dp && $db->jdate($obj->dp) < ($now - $delay_warning)) $late=1;
@@ -286,7 +286,7 @@ if ($resql)
 		if ($late) print img_warning($langs->trans("Late")).' ';
 		print '</td>';
 
-		print '<td align="center" nowrap="nowrap">';
+		print '<td align="center" class="nowrap">';
 		print dol_print_date($db->jdate($obj->dp2),"day");
 		print '</td>';
 
@@ -306,7 +306,7 @@ if ($resql)
 		print '<td>';
 		if ($obj->fk_contact > 0)
 		{
-			$contactstatic->name=$obj->name;
+			$contactstatic->lastname=$obj->lastname;
 			$contactstatic->firstname=$obj->firstname;
 			$contactstatic->id=$obj->fk_contact;
 			print $contactstatic->getNomUrl(1,'',10);
@@ -354,7 +354,7 @@ if ($resql)
 		print '</td>';
 
 		// Status/Percent
-		print '<td align="right" nowrap="nowrap">'.$actionstatic->LibStatut($obj->percent,6).'</td>';
+		print '<td align="right" class="nowrap">'.$actionstatic->LibStatut($obj->percent,6).'</td>';
 
 		print "</tr>\n";
 		$i++;

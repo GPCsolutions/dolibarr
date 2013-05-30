@@ -33,7 +33,7 @@ SearchAContract=Rechercher un contrat
 DeleteAContract=Supprimer un contrat
 CloseAContract=Clôturer un contrat
 ConfirmDeleteAContract=Êtes-vous sûr de vouloir supprimer ce contrat et tous ses services ?
-ConfirmValidateContract=Êtes-vous sûr de vouloir valider ce contrat ?
+ConfirmValidateContract=Êtes-vous sûr de vouloir valider ce contrat sous la référence <b>%s</b> ?
 ConfirmCloseContract=Ceci fermera tous les services actifs et inactifs. Êtes-vous sûr de vouloir clôturer ce contrat ?
 ConfirmCloseService=Êtes-vous sûr de vouloir fermer ce service à la date du <b>%s</b> ?
 ValidateAContract=Valider un contrat
@@ -86,6 +86,10 @@ PaymentRenewContractId=Renouvellement service (numéro %s)
 ExpiredSince=Expiré le
 RelatedContracts=Contrats associés
 NoExpiredServices=Pas de services actifs expirés
+ListOfServicesToExpireWithDuration=Liste des services actifs pour expirer à %s days
+ListOfServicesToExpire=Liste des services actifs pour expirer
+Service=Service
+
 ##### Types de contacts #####
 TypeContact_contrat_internal_SALESREPSIGN=Commercial signataire du contrat
 TypeContact_contrat_internal_SALESREPFOLL=Commercial suivi du contrat

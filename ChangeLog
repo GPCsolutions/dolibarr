@@ -2,45 +2,193 @@
 English Dolibarr ChangeLog
 --------------------------------------------------------------
 
-
-***** ChangeLog for 3.3 compared to 3.2.2 *****
+***** ChangeLog for 3.5 compared to 3.4 *****
 For users:
+- New: [ task #877 ] Reorganize menus
+- New: [ task #858 ] Holiday module: note on manual holiday assignation
+- New: [ task #892 ] Add option in thridparty customer/supplier admin to hide non active in select_company method
+- New: [ task #531 ] Add a workload on tasks
+- New: Add graph of bank account input/output into input-output report page.
+- New: Add script export-bank-receipts.
+- New: Add option "filter=bank" onto script rebuild_merge_pdf.php to merge
+  PDF that has one payment on a specific bank account.*
+- New: [ task #901 ] Add Extrafeild on Fiche Inter
+- New: Show process id in all command line scripts
+For developers:
+- New: DolGraph can build graph with three lines.
+
+
+***** ChangeLog for 3.4 compared to 3.3.2 *****
+For users:
+- New: Can use ODS templates as document templates.
+- New: Add link to autofill/reset with quantity to ship when creating a
+  delivery receipt.
+- New: Event into calendar use different colors for different users.
+- New: Support revenue stamp onto invoices.
+- New: Add a tab "consumption" on thirdparties to list products bought/sells.
+- New: Some performance enhancements.
+- New: Can attach files onto trip and expenses modules.
+- New: Add hidden option MAIN_PDF_TITLE_BACKGROUND_COLOR.
+- New: Merge tab customer and prospect.
+- New: Add ES formated address country rule.
+- New: Can define a hierarchical responsible on user and add a tree view to 
+  see hierarchy of users.
+- New: Can expand/collapse menus, categories and users list.
+- New: extra parameters are supported into ODT/ODS templates.
+- New: total per vat rate are available as tags for ODT/ODS templates.
+- New: Some part of interface use more CSS3 (ie: agenda)
+- New: [ task #707 ] Create option "ProfIdx is mandatory to validate a invoice".
+- New: Can define if we want to use VAT or not for subscriptions (foundation module).
+- New: Can define a default choice for "More action when recording a
+  subscription" (foundation module).
+- New: Add link to check professional id for India.
+- New: [ task #731 ] Uniformize ref generation
+- New: [ task #748 ] Add a link "Dolibarr" into left menu
+- New: Script email_unpaid_invoices_to_representative accepts now a parameter "test"
+  and a "late delay".
+- New: Can define different clicktodial setups for each user.
+- New: Add hidden option INVOICE_CAN_NEVER_BE_REMOVED.
+- New: Enhance agenda module to reach RFC2445 ("type" not enabled by default and add
+  "busy" information).
+- New: Add module Opensurvey.
+- New: Default approver for holidays is set by default to hierchical parent.
+- First change to prepare feature "click to print" (IPP) for PDF.
+- New: [ task #350 ] Merge tab customer and prospect.
+- New: [ task #710 ] Add substitution into mailing send (and HTML is now valid).
+- New: [ task #711 ] Add combobox for contact, as done for product/thirdparty.
+- New: [ task #714 ] In Emailing module admin autogenerate security key of READRECEIPT.
+- New: [ task #743 ] GED : Add aministration option to disable autotree display.
+- New: [ task #767 ] Customer Address fallback when a contact doesn't have an address.
+- New: [ task #768 ] WYSIWYG for all mails.
+- New: [ task #773 ] Add Project document in GED(ECM) modules.
+- New: [ task #783 ] Add more types for extra parameters (lists, phone, emails, checkbox,
+  prices, radio).
+- New: [ task #798 ] Add range limit date on product/services as it is done on order 
+  and invoice.
+- New: [ task #814 ] Add extrafield feature for projects ands tasks.
+- New: [ task #770 ] Add ODT document generation for Projects module.
+- New: [ task #741 ] Add intervention box.
+- New: [ task #826 ] Optionnal increase stock when deleting an invoice already validated.
+- New: [ task #823 ] Shipping_validate email notification.
+- New: [ task #900 ] Review code of ficheinter.class.php
+
+For translators:
+- Update language files.
+
+For developers:
+- System of menu managers has been rewritten to reduce code to do same things. 
+- An external module can force its theme.
+- Add function dol_set_focus('#xxx').
+- A mymodule can bring its own core/modules/mymodule/modules_mymodule.php file.
+- Removed some not used libraries.
+- More web services.
+- Renamed some database fields, code variables and parameters from french to english.
+- First change to manage margins on contracts.
+- Add hook getFormMail.
+- Function plimit of databases drivers accept -1 as value (it means default value set
+  into conf->liste_limit).
+- New: Add option dol_hide_topmenu, dol_hide_leftmenu, dol_optimize_smallscreen,
+  dol_no_mouse_hover and dol_use_jmobile onto login page (to support different terminal).
+- New: dol_syslog method accept a suffix to use different log files for log. 
+- New: Type of fields are received by export format handlers.
+- New: when adding an action, we can define a free code to tag it for a specific need.
+- New: Enhance Dolibarr migration process to include migration script of external 
+  modules.
+- New: [ task #811 ] Uniformanize note field.
+  
+
+WARNING: If you used external modules, some of them may need to be upgraded due to:
+- Fields of classes were renamed to be normalized (nom, prenom, cp, ville, adresse, tel
+  were renamed into lastname, firstname, zip, town, address, phone).
+  This may also be true for some fields into web services.
+- If module use hook pdf_writelinedesc, module may have to add return 1 at end of 
+  function to keep same behaviour.
+
+  
+
+***** ChangeLog for 3.3.2 compared to 3.3.1 *****
+
+- Fix: Dutch (nl_NL) translation
+- Generalize fix: file with a specific mask not found, again
+- Fix: translations and BILL_SUPPLIER_BUILDDOC trigger
+- Fix: Can't reset payment due date
+- Fix: Orderstoinvoice didn't act as expected when no order was checked
+- Fix: Bad link to all proposals into Third party card if customer is prospect
+- Fix: Some bugs on withdrawal rejects
+- Fix: [ bug #774 ] Bug on creating event with box "all day" crossed
+- Fix: [ bug #787 ] Invoice supplier box incorrect tooltip when delay on payment
+- Fix: [ bug #789 ] VAT not being calculated in POS
+- Fix: [ bug #790 ] Spanish localtax RE not being correctly calculated
+- Fix: [ bug #794 ] Lost filter on zipcode in prospect list 
+- Fix: [ bug #806 ] Margins module with orders2invoice does not respect cost price
+- Fix: [ bug #810 ] Cannot update ODT template path
+- Fix: [ bug #816 ] Sales journal does not reflect localtaxes
+- Fix: [ bug #817 ] Purchases journal does not reflect localtaxes
+- Fix: [ bug #824 ] MAIN_DB_PREFIX not use into dictionnary
+- Fix: [ bug #828 ] Error when code_region is not a number in llx_c_regions (with postgres)
+- Fix: [ bug #855 ] Holiday approval email in French
+- Fix: [ bug #856 ] (Holidays module) Mail error if destination user doesn't have an email
+- Fix: [ bug #857 ] Invoice created from shipment does not have the order discount
+- Fix: [ bug #861 ] Impossible to create a new event in agenda
+- Fix: [ bug #827 ] AJAX search does not respect multiprice level
+- Fix: [ bug #865 ] Dolibarr navigation array in project/task do not work
+- Fix: [ bug #866 ] Standing order from an invoice suggests invoice total amount instead of remaining to pay
+- Fix: [ bug #788 ] Date of linked interventions are not shown
+- Fix: external users should not see costprice and margin infos
+- Fix: [ bug #806 ] Tasks are ordered alphabetically instead of chronological order
+***** ChangeLog for 3.3.1 compared to 3.3 *****
+
+- Fix: [ bug #733 ] Mass emailing tools do not support <style HTML tag
+- Fix: Package for launchpad
+- Fix: [ bug #736 ] Missing column in llx_c_chargesociales  
+- Fix: Localtax2 for Spain must be based into buyer
+- Fix: [ bug #762 ] Bad profit calculation in Reporting
+- Fix: bug dictionnary with wrong prefix table
+
+
+
+***** ChangeLog for 3.3 compared to 3.2.3 *****
+For users:
+- New: Add holiday module, to declare and follow holidays of your employees.
+- New: Add margin management module.
+- New: Add new theme Amarok.
 - New: [ task #289 ] Can reorder tasks.
-- New: Add field "signature" into thirdparty card. If filled, text is added 
-  at end of predefined email texts. If option MAIL_DO_NOT_USE_SIGN is on, this
-  feature is disabled.
+- New: Add field "signature" into user card. If filled, text is added 
+       at end of predefined email texts. If option MAIN_MAIL_DO_NOT_USE_SIGN is on, this
+       feature is disabled.
+- New: Can input a payment back onto an credit note.
 - New: Add link "Back to list" on all cards.
 - New: After first install, warning are visible onto mandatory setup not
-  configured. Show also total number of activated modules.
+       configured. Show also total number of activated modules.
 - New: Can filter list of proposal, order or invoice on sales representative.
 - New: Add supplier ref on supplier orders.
-- New: Can export supplier orders.
+- New: Can export supplier orders and customers shipments.
 - New: First change to install external plugins from gui (experimental). 
 - New: Monaco is like France for default vat calculation
 - New: Can list elements (invoices, orders or proposals) on a particular
   user contact). This allow to view a "basket" of its elements.
-- New: Add bank account on payment list of invoice card.
+- New: Show bank account on payment list of invoice card.
 - New: Cloning project allow to clones task, notes, files, contacts. 
 - New: Enhance default style.
 - New: Can edit and resiliate member status from list.
 - New: Can insert URL links into elements lines. Also reported into PDF.
 - New: When a member is validated, we can subscribe to mailing-lists
-  according to its type.
+       according to its type.
+- New: Add a tab into members statistics to count members by nature.
 - New: Add link to third party into sells and purchase journal.
 - New: Suggest a method to generate a backup file for user with no access
-  to mysqldump binary.
-- New: Can use extrafields on contacts/addresses.
+       to mysqldump binary.
+- New: Can also use extrafields on contacts/addresses and users.
 - New: Support unique field for extrafields.
-- New: Extra fields supports more types (now int, string, double, date, datetime).
+- New: Extra fields supports more types (int, string, double, date, datetime).
 - New: Can correct stock of a warehouse from warehouse card.
-- New: [ task #185 ]: Can input amount when correcting stock to recalculate PMP.
-- New: [ task #454 ]: Add "No category" into filters on category.
+- New: [ task #185 ] Can input amount when correcting stock to recalculate PMP.
+- New: [ task #454 ] Add "No category" into filters on category.
 - New: Auto check box on page to edit interface options of user.
 - New: More surface control on stock correction page.
 - New: Add great britain provinces.
-- New: Update libs/tools/logo for DoliWamp.
 - New: [ task #494 ] Send an email to foundation when a new member has auto-subscribed.
-- New: [ task #326 ]: Add a numbering module to suggest automatically a product ref.
+- New: [ task #326 ] Add a numbering module to suggest automatically a product ref.
 - New: Add conditional substitution IF/ELSEIF/ENDIF for ODT templates.
 - New: Add unit foot2, inch2, foot3 and inch3 for surface and volumes.
 - New: Can select thirdparties into emailing targets, even if module category is not enabled.
@@ -49,15 +197,38 @@ For users:
 - New: Add a selection module for emailing to enter a recipient from gui.
 - New: Allow to search thirds and products from barcodes directly from the permanent mini search left box.
 - New: Allow to search product from barcodes directly from invoices, proposals... through AJAX.
-New experimental modules:
-- New: Add margin and commissions management module.
-- New: Add holiday module.
+- New: Can make one invoice for several orders.
+- New: POS module can works with only one payment method (cach, chq, credit card).
+- New: Add possibility to defined position/job of a user.
+- New: Add hidden option to add slashes between lines into PDF.
+- New: [ task #210 ] Can choose cash account during POS login.
+- New: [ task #104 ] Can create an invoice from several orders.
+- New: Update libs/tools/logo for DoliWamp (now use PHP 5.3).
+- New: Added ODT Template tag {object_total_discount_ht}
+- New: Add new import options: Third parties bank details, warehouses and stocks, categories and suppliers prices
+- New: English bank account need a bank code (called sort code) to identify an account. 
+- New: Can choose menu entry to show with external site module.
+- New: Add hidden option MAIN_PDF_MARGIN_LEFT, MAIN_PDF_MARGIN_RIGHT, MAIN_PDF_MARGIN_TOP, MAIN_PDF_MARGIN_BOTTOM to force margins of generated PDF.
+- New: [ task #314 ] Can define if prof id are mandatory or not.
+- New: Add button on order card to create intervention from services.
+- New: Add search box to find products by supplier reference.
+- New: Add option MAIN_HELPCENTER_LINKTOUSE to define target link "I need help" onto logon page. 
+- New: [ task #608 ] Can clone a supplier order with prices updates
+- New: [ task #559 ] Can define a discount % regarding quantity in supplier prices and price by quantity in customer prices
+- New: [ task #527 ] After cloning a suplier invoice, go onto invoice ref into edit mode
 
-- Fix: [ bug #499 ]: Supplier order input method not translated
-- Fix: No images into product description lines as PDF generation does
-  not work with this.
+New experimental module:
+- New: Add commissions management module.
+
+- Fix: [ bug #499 ] Supplier order input method not translated
+- Fix: No images into product description lines as PDF generation does not work with this.
 - Fix: Errors weren't being shown in customer's & supplier's orders
-- Fix: Lastname wasn't being recorded in xinputuser emailing module
+- Fix: Lastname wasn't being recorded in xinputuser emailing module.
+- Fix: [ bug #653 ] Error while creating agenda additional attributes
+- Fix: [ bug #654 ] Event rapport PDF showing ActionAC_OTH_AUTO
+- Fix: [ bug #658 ] Search on bank do not work for description
+- Fix: [ bug #659 ] Comment in recurrent invoices is not stored
+- Fix: [ bug #622 ] Attaching wrong file when sending the invoice via e-mail
 
 For developers:
 - New: Add webservice for thirdparty creation and list.
@@ -76,11 +247,42 @@ For developers:
   expedition, order supplier and order invoice (lines included), intervention card, project, tasks.
 - New: Add ChromePHP output into syslog module.
 - New: Add PRODUCT_PRICE_MODIFY trigger.
+- New: Created function to retrieve total amount of discount of an invoice/proposal...
+- New: We can use a dynamic value ($conf->global->XXX for example) into titles of menus.
+- New: Use PHP classes DateTime* for some data functions instead of adodb 
+- Qual: Renamed SUPPLIER_INVOICE_BUILDDOC trigger to BILL_SUPPLIER_BUILDDOC
+- Qual: Renamed INVOICE_SUPPLIER_DELETE trigger to BILL_SUPPLIER_DELETE
+- Qual: Renamed SUPLIER_ORDER_BUILDDOC trigger to ORDER_SUPPLIER_BUILDDOC
+- Qual: Renamed CONTRACTLINE_DELETE trigger to CONTRACT_LINE_DELETE
+- Qual: Renamed all ficheinter.class.php triggers so that they start with 'FICHINTER_'
+- Fix: [ bug #655 ] ORDER_REOPEN trigger incorrectly named
+- Fix: [ bug #656 ] Contracts trigger CONTRACT_MODIFY incorrectly named
+- Fix: [ bug #657 ] Usergroup class' GROUP_DELETE trigger incorrectly named
 
 For translators:
 - New: Update language files (de, tr, pt, ca, es, en, fr).
 - New: Added bg_BG autotranslated language.
 - New: Translate the donation receipt.
+
+Dolibarr license has also been updated from GPLv2+ to GPLv3+.
+
+
+
+***** ChangeLog for 3.2.3 compared to 3.2.2 *****
+
+- Fix: Some permission into agenda module.
+- Fix: Generation of PDF was not using correct font for some languages.
+- Fix some translations.
+- Fix: [ bug #607 ] Nom de société avec guillemets.
+- Fix: Option MAIN_MAIL_SENDMAIL_FORCE_BA and MAIN_FIX_BUGGED_MTA was not
+  complete.
+- Fix: comaptiblity with multicompany module.
+- Fix: Bad label when validating/paying an invoice from POS module.
+- Fix: Correct recipient into rouget template.
+- Fix: A lot of fix into PDF pagebreak management.
+- Update VAT for some countries.
+- Firstname was missing when sending email from file list.
+- Added en_SA language.
 
 
 

@@ -2,11 +2,11 @@
 /* Copyright (C) 2001-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -64,7 +64,7 @@ function pt ($db, $sql, $date)
         $total = 0;
         print '<table class="noborder" width="100%">';
         print '<tr class="liste_titre">';
-        print '<td nowrap="nowrap" width="60%">'.$date.'</td>';
+        print '<td class="nowrap" width="60%">'.$date.'</td>';
         print '<td align="right">'.$langs->trans("Amount").'</td>';
         print '<td>&nbsp;</td>'."\n";
         print "</tr>\n";
@@ -74,10 +74,10 @@ function pt ($db, $sql, $date)
             $obj = $db->fetch_object($result);
             $var=!$var;
             print '<tr '.$bc[$var].'>';
-            print '<td nowrap="nowrap">'.$obj->dm."</td>\n";
+            print '<td class="nowrap">'.$obj->dm."</td>\n";
             $total = $total + $obj->mm;
 
-            print '<td nowrap="nowrap" align="right">'.price($obj->mm)."</td><td >&nbsp;</td>\n";
+            print '<td class="nowrap" align="right">'.price($obj->mm)."</td><td >&nbsp;</td>\n";
             print "</tr>\n";
 
             $i++;
@@ -188,9 +188,9 @@ for ($m = 1 ; $m < 13 ; $m++ )
     if ($i > 2) {
         print '<tr class="liste_total">';
         print '<td align="right"><a href="quadri_detail.php?leftmenu=tax_vat&q='.($m/3).'&year='.$y.'">'.$langs->trans("SubTotal").'</a>:</td>';
-        print '<td nowrap="nowrap" align="right">'.price($subtotalcoll).'</td>';
-        print '<td nowrap="nowrap" align="right">'.price($subtotalpaye).'</td>';
-        print '<td nowrap="nowrap" align="right">'.price($subtotal).'</td>';
+        print '<td class="nowrap" align="right">'.price($subtotalcoll).'</td>';
+        print '<td class="nowrap" align="right">'.price($subtotalpaye).'</td>';
+        print '<td class="nowrap" align="right">'.price($subtotal).'</td>';
         print '<td>&nbsp;</td></tr>';
         $i = 0;
         $subtotalcoll=0; $subtotalpaye=0; $subtotal=0;

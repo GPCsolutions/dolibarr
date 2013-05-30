@@ -1,9 +1,9 @@
 <?php
-/* Copyright (C) 2010-2012 Regis Houssin  <regis@dolibarr.fr>
+/* Copyright (C) 2010-2012 Regis Houssin  <regis.houssin@capnetworks.com>
 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -62,10 +62,10 @@ class pdf_baleine extends ModelePDFProjects
 		$this->page_largeur = $formatarray['width'];
 		$this->page_hauteur = $formatarray['height'];
 		$this->format = array($this->page_largeur,$this->page_hauteur);
-		$this->marge_gauche=10;
-		$this->marge_droite=10;
-		$this->marge_haute=10;
-		$this->marge_basse=10;
+		$this->marge_gauche=isset($conf->global->MAIN_PDF_MARGIN_LEFT)?$conf->global->MAIN_PDF_MARGIN_LEFT:10;
+		$this->marge_droite=isset($conf->global->MAIN_PDF_MARGIN_RIGHT)?$conf->global->MAIN_PDF_MARGIN_RIGHT:10;
+		$this->marge_haute =isset($conf->global->MAIN_PDF_MARGIN_TOP)?$conf->global->MAIN_PDF_MARGIN_TOP:10;
+		$this->marge_basse =isset($conf->global->MAIN_PDF_MARGIN_BOTTOM)?$conf->global->MAIN_PDF_MARGIN_BOTTOM:10;
 
 		$this->option_logo = 1;                    // Affiche logo FAC_PDF_LOGO
 		$this->option_tva = 1;                     // Gere option tva FACTURE_TVAOPTION
@@ -73,7 +73,7 @@ class pdf_baleine extends ModelePDFProjects
 
 		// Recupere emmetteur
 		$this->emetteur=$mysoc;
-		if (! $this->emetteur->pays_code) $this->emetteur->pays_code=substr($langs->defaultlang,-2);    // Par defaut, si n'�tait pas d�fini
+		if (! $this->emetteur->country_code) $this->emetteur->country_code=substr($langs->defaultlang,-2);    // By default if not defined
 
 		// Defini position des colonnes
 		$this->posxref=$this->marge_gauche+1;
@@ -108,8 +108,6 @@ class pdf_baleine extends ModelePDFProjects
 		{
 			$nblignes = count($object->lines);
 
-			$default_font_size = pdf_getPDFFontsize($outputlangs);
-
 			$objectref = dol_sanitizeFileName($object->ref);
 			$dir = $conf->projet->dir_output;
 			if (! preg_match('/specimen/i',$objectref)) $dir.= "/" . $objectref;
@@ -127,8 +125,10 @@ class pdf_baleine extends ModelePDFProjects
 			if (file_exists($dir))
 			{
                 $pdf=pdf_getInstance($this->format);
+                $default_font_size = pdf_getPDFFontSize($outputlangs);	// Must be after pdf_getInstance
                 $heightforinfotot = 50;	// Height reserved to output the info and total part
-                $heightforfooter = 25;	// Height reserved to output the footer (value include bottom margin)
+		        $heightforfreetext= (isset($conf->global->MAIN_PDF_FREETEXT_HEIGHT)?$conf->global->MAIN_PDF_FREETEXT_HEIGHT:5);	// Height reserved to output the free text on last page
+	            $heightforfooter = $this->marge_basse + 8;	// Height reserved to output the footer (value include bottom margin)
                 $pdf->SetAutoPageBreak(1,0);
 
                 if (class_exists('TCPDF'))
@@ -225,6 +225,15 @@ class pdf_baleine extends ModelePDFProjects
 					$pdf->SetFont('','', $default_font_size - 1);   // On repositionne la police par defaut
 					$nexY = $pdf->GetY();
 
+					// Add line
+					if (! empty($conf->global->MAIN_PDF_DASH_BETWEEN_LINES) && $i < ($nblignes - 1))
+					{
+						$pdf->SetLineStyle(array('dash'=>'1,1','color'=>array(210,210,210)));
+						//$pdf->SetDrawColor(190,190,200);
+						$pdf->line($this->marge_gauche, $nexY+1, $this->page_largeur - $this->marge_droite, $nexY+1);
+						$pdf->SetLineStyle(array('dash'=>0));
+					}
+
 					$nexY+=2;    // Passe espace entre les lignes
 
 					// Detect if some page were added automatically and output _tableau for past pages
@@ -239,7 +248,7 @@ class pdf_baleine extends ModelePDFProjects
 						{
 							$this->_tableau($pdf, $tab_top_newpage, $this->page_hauteur - $tab_top_newpage - $heightforfooter, 0, $outputlangs, 1, 1);
 						}
-						$this->_pagefoot($pdf,$object,$outputlangs);
+						$this->_pagefoot($pdf,$object,$outputlangs,1);
 						$pagenb++;
 						$pdf->setPage($pagenb);
 						$pdf->setPageOrientation('', 1, 0);	// The only function to edit the bottom margin of current page to set it.
@@ -254,7 +263,7 @@ class pdf_baleine extends ModelePDFProjects
 						{
 							$this->_tableau($pdf, $tab_top_newpage, $this->page_hauteur - $tab_top_newpage - $heightforfooter, 0, $outputlangs, 1, 1);
 						}
-						$this->_pagefoot($pdf,$object,$outputlangs);
+						$this->_pagefoot($pdf,$object,$outputlangs,1);
 						// New page
 						$pdf->AddPage();
 						if (! empty($tplidx)) $pdf->useTemplate($tplidx);
@@ -265,13 +274,13 @@ class pdf_baleine extends ModelePDFProjects
 				// Show square
 				if ($pagenb == 1)
 				{
-					$this->_tableau($pdf, $tab_top, $this->page_hauteur - $tab_top - $heightforinfotot - $heightforfooter, 0, $outputlangs, 0, 0);
-					$bottomlasttab=$this->page_hauteur - $heightforinfotot - $heightforfooter + 1;
+					$this->_tableau($pdf, $tab_top, $this->page_hauteur - $tab_top - $heightforinfotot - $heightforfreetext - $heightforfooter, 0, $outputlangs, 0, 0);
+					$bottomlasttab=$this->page_hauteur - $heightforinfotot - $heightforfreetext - $heightforfooter + 1;
 				}
 				else
 				{
-					$this->_tableau($pdf, $tab_top_newpage, $this->page_hauteur - $tab_top_newpage - $heightforinfotot - $heightforfooter, 0, $outputlangs, 1, 0);
-					$bottomlasttab=$this->page_hauteur - $heightforinfotot - $heightforfooter + 1;
+					$this->_tableau($pdf, $tab_top_newpage, $this->page_hauteur - $tab_top_newpage - $heightforinfotot - $heightforfreetext - $heightforfooter, 0, $outputlangs, 1, 0);
+					$bottomlasttab=$this->page_hauteur - $heightforinfotot - $heightforfreetext - $heightforfooter + 1;
 				}
 
 				/*
@@ -425,11 +434,12 @@ class pdf_baleine extends ModelePDFProjects
 	 *   	@param	PDF			&$pdf     			PDF
 	 * 		@param	Object		$object				Object to show
 	 *      @param	Translate	$outputlangs		Object lang for output
+	 *      @param	int			$hidefreetext		1=Hide free text
 	 *      @return	void
 	 */
-	function _pagefoot(&$pdf,$object,$outputlangs)
+	function _pagefoot(&$pdf,$object,$outputlangs,$hidefreetext=0)
 	{
-		return pdf_pagefoot($pdf,$outputlangs,'DELIVERY_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object);
+		return pdf_pagefoot($pdf,$outputlangs,'PROJECT_FREE_TEXT',$this->emetteur,$this->marge_basse,$this->marge_gauche,$this->page_hauteur,$object,0,$hidefreetext);
 	}
 
 }

@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2008-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2008-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2008-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -48,8 +48,12 @@ print $langs->trans("HelpCenterDesc2")."<br>\n";
 
 print '<br>';
 
-print $langs->trans("ToGoBackToDolibarr",DOL_URL_ROOT.'/');
-//print '<img src="dolibarr_logo2.png" height="22" alt="Dolibarr" title="Dolibarr">';
+$homeurl=DOL_URL_ROOT.'/';
+if (GETPOST('dol_hide_toptmenu'))  $homeurl.=(strpos($homeurl,'?')===false?'?':'&').'dol_hide_toptmenu=1';
+if (GETPOST('dol_hide_leftmenu'))  $homeurl.=(strpos($homeurl,'?')===false?'?':'&').'dol_hide_leftmenu=1';
+if (GETPOST('dol_no_mouse_hover')) $homeurl.=(strpos($homeurl,'?')===false?'?':'&').'dol_no_mouse_hover=1';
+if (GETPOST('dol_use_jmobile'))    $homeurl.=(strpos($homeurl,'?')===false?'?':'&').'dol_use_jmobile=1';
+print $langs->trans("ToGoBackToDolibarr",$homeurl);
 
 print '<br><br>';
 
@@ -57,8 +61,7 @@ $style1='color: #333344; font-size: 16px; font-weight: bold';
 $style2='color: #5D4455; font-weight: bold;';
 
 print "\n";
-print '<table border="0" style="spacing: 4px; padding: 0px" width="100%">';
-print '<tr><td width="50%" valign="top">';
+print '<div style="width: 100%"><div class="inline-block">';
 print "\n";
 
 // Forum/wiki support
@@ -74,12 +77,12 @@ print '<br>'.$langs->trans("TypeOfHelp").'/'.$langs->trans("Efficiency").'/'.$la
 print $langs->trans("TypeHelpDev").'/'.img_picto_common('','redstar','',1).img_picto_common('','redstar','',1).'/'.img_picto_common('','star','',1).img_picto_common('','star','',1).img_picto_common('','star','',1).img_picto_common('','star','',1);
 
 print '</td></tr></table>';
-
 print '</td>';
 print '</tr>';
 
 print '<tr>';
 print '<td align="center" valign="top">';
+
 print '<table class="nocellnopadd">';
 /*print '<tr><td align="center" valign="top">';
 print img_picto_common('','who.png','',1);
@@ -100,8 +103,7 @@ print '</table>'."\n";
 print "\n";
 
 
-print '</td><td width="50%" valign="top">'."\n";
-print "\n";
+print '</div><div class="inline-block">';
 
 
 // Online support
@@ -135,9 +137,10 @@ print '</td>';
 print '</tr>';
 print '</table>'."\n";
 
-print '</td></tr>';
-print '<tr><td width="50%" valign="top">'."\n";
-print "\n";
+
+
+print '</div><div class="inline-block">';
+
 
 // EMail support
 print '<table class="login" width="100%">';
@@ -171,8 +174,9 @@ print '</td>';
 print '</tr>';
 print '</table>'."\n";
 
-print '</td><td width="50%" valign="top">'."\n";
-print "\n";
+
+print '</div><div class="inline-block">';
+
 
 // Other support
 print '<table class="login" width="100%">';
@@ -208,9 +212,10 @@ print '</tr>';
 print '</table>'."\n";
 print "\n";
 
-print '</td>';
-print '</tr>';
-print '</table>';
+
+print '<div style="clear: both"></div>';
+print '</div>';
+
 
 pFooter();
 ?>

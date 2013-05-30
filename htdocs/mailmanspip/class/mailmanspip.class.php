@@ -4,12 +4,12 @@
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Sebastien Di Cintio  <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
- * Copyright (C) 2009      Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2009      Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -39,6 +39,11 @@ class MailmanSpip
 {
     var $db;
     var $error;
+
+    var $mladded_ok;
+    var $mladded_ko;
+    var $mlremoved_ok;
+    var $mlremoved_ko;
 
 
     /**
@@ -106,11 +111,12 @@ class MailmanSpip
     /**
      * Function used to connect to Mailman
      *
-     * @param  object 	$object 	Object with the data
-     * @param  string 	$url    	Mailman URL to be called with patterns
-     * @return mixed				Boolean or string
+     * @param	object 	$object 	Object with the data
+     * @param	string 	$url    	Mailman URL to be called with patterns
+     * @param	string	$list		Name of mailing-list
+     * @return 	mixed				Boolean or string
      */
-    function callMailman($object, $url)
+    private function callMailman($object, $url, $list)
     {
         global $conf;
 
@@ -137,6 +143,7 @@ class MailmanSpip
         curl_setopt($ch, CURLOPT_FAILONERROR, true);
         @curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         $result = curl_exec($ch);
         dol_syslog('result curl_exec='.$result);
@@ -174,7 +181,7 @@ class MailmanSpip
                     require_once DOL_DOCUMENT_ROOT.'/core/lib/security2.lib.php';
                     $mdpass=dol_hash($object->pass);
                     $htpass=crypt($object->pass,makesalt());
-                    $query = "INSERT INTO spip_auteurs (nom, email, login, pass, htpass, alea_futur, statut) VALUES(\"".$object->firstname." ".$object->lastname."\",\"".$object->email."\",\"".$object->login."\",\"$mdpass\",\"$htpass\",FLOOR(32000*RAND()),\"1comite\")";
+                    $query = "INSERT INTO spip_auteurs (nom, email, login, pass, htpass, alea_futur, statut) VALUES(\"".dolGetFirstLastname($object->firstname,$object->lastname)."\",\"".$object->email."\",\"".$object->login."\",\"$mdpass\",\"$htpass\",FLOOR(32000*RAND()),\"1comite\")";
 
                     $result = $mydb->query($query);
 
@@ -297,6 +304,9 @@ class MailmanSpip
 
         dol_syslog(get_class($this)."::add_to_mailman");
 
+        $this->mladded_ok=array();
+        $this->mladded_ko=array();
+
         if (! function_exists("curl_init"))
         {
             $langs->load("errors");
@@ -329,17 +339,19 @@ class MailmanSpip
                 }
 
                 //We call Mailman to subscribe the user
-                $result = $this->callMailman($object, $conf->global->ADHERENT_MAILMAN_URL);
+                $result = $this->callMailman($object, $conf->global->ADHERENT_MAILMAN_URL, $list);
 
 				if ($result === false)
 				{
+					$this->mladded_ko[$list]=$object->email;
 				    return -2;
 				}
+				else $this->mladded_ok[$list]=$object->email;
             }
             return count($lists);
         }
         else
-        {
+       {
             $this->error="ADHERENT_MAILMAN_URL not defined";
             return -1;
         }
@@ -357,6 +369,18 @@ class MailmanSpip
     {
         global $conf,$langs,$user;
 
+        dol_syslog(get_class($this)."::del_to_mailman");
+
+        $this->mlremoved_ok=array();
+        $this->mlremoved_ko=array();
+
+        if (! function_exists("curl_init"))
+        {
+            $langs->load("errors");
+            $this->error=$langs->trans("ErrorFunctionNotAvailableInPHP","curl_init");
+            return -1;
+        }
+
         if (! empty($conf->global->ADHERENT_MAILMAN_UNSUB_URL))
         {
             if ($listes=='' && ! empty($conf->global->ADHERENT_MAILMAN_LISTS))
@@ -373,19 +397,23 @@ class MailmanSpip
                 $tmp=explode(':',$list);
                 if (! empty($tmp[1]))
                 {
-                    if ($object->element == 'member' && $object->type != $tmp[1])    // Filter on member type label
+                    $list=$tmp[1];
+                	if ($object->element == 'member' && $object->type != $tmp[1])    // Filter on member type label
                     {
-                        continue;
+                        dol_syslog("We ignore list ".$list." because object member type ".$object->type." does not match ".$tmp[0], LOG_DEBUG);
+                    	continue;
                     }
                 }
 
                 //We call Mailman to unsubscribe the user
-                $result = $this->callMailman($object, $conf->global->ADHERENT_MAILMAN_UNSUB_URL);
+                $result = $this->callMailman($object, $conf->global->ADHERENT_MAILMAN_UNSUB_URL, $list);
 
 				if ($result === false)
 				{
+					$this->mlremoved_ko[$list]=$object->email;
 				    return -2;
 				}
+				else $this->mlremoved_ok[$list]=$object->email;
             }
             return count($lists);
         }

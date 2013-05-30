@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2001-2002 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2006-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2009      Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2009      Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -75,9 +75,13 @@ if (! GETPOST("action"))
     }
 }
 
+// Define $urlwithroot
 $urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',trim($dolibarr_main_url_root));
-$urlok=$urlwithouturlroot.DOL_URL_ROOT.'/public/paybox/paymentok.php?';
-$urlko=$urlwithouturlroot.DOL_URL_ROOT.'/public/paybox/paymentko.php?';
+$urlwithroot=$urlwithouturlroot.DOL_URL_ROOT;			// This is to use external domain name found into config file
+//$urlwithroot=DOL_MAIN_URL_ROOT;						// This is to use same domain name than current
+
+$urlok=$urlwithroot.'/public/paybox/paymentok.php?';
+$urlko=$urlwithroot.'/public/paybox/paymentko.php?';
 
 // Complete urls
 $SOURCE=GETPOST("source",'alpha');
@@ -761,7 +765,7 @@ if ($found && ! $error)	// We are in a management option and no error
 }
 else
 {
-	dol_print_error_email();
+	dol_print_error_email('ERRORNEWPAYMENTPAYBOX');
 }
 
 print '</td></tr>'."\n";

@@ -1,9 +1,9 @@
 <?php
-/* Copyright (C) 2011-2012 Regis Houssin  <regis@dolibarr.fr>
+/* Copyright (C) 2011-2012 Regis Houssin  <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -54,6 +54,7 @@ if (! empty($field) && ! empty($element) && ! empty($table_element) && ! empty($
 	$loadmethod			= GETPOST('loadmethod','alpha',2);
 	$savemethod			= GETPOST('savemethod','alpha',2);
 	$savemethodname		= (! empty($savemethod) ? $savemethod : 'setValueFrom');
+	$newelement			= $element;
 
 	$view='';
 	$format='text';
@@ -66,20 +67,22 @@ if (! empty($field) && ! empty($element) && ! empty($table_element) && ! empty($
 		$subelement = $regs[2];
 	}
 
-	if ($element == 'propal') $element = 'propale';
-	else if ($element == 'fichinter') $element = 'ficheinter';
-	else if ($element == 'product') $element = 'produit';
+	if ($element == 'propal') $newelement = 'propale';
+	else if ($element == 'fichinter') $newelement = 'ficheinter';
+	else if ($element == 'product') $newelement = 'produit';
+	else if ($element == 'member') $newelement = 'adherent';
 	else if ($element == 'order_supplier') {
-		$element = 'fournisseur';
+		$newelement = 'fournisseur';
 		$subelement = 'commande';
 	}
 	else if ($element == 'invoice_supplier') {
-		$element = 'fournisseur';
+		$newelement = 'fournisseur';
 		$subelement = 'facture';
 	}
+	else $newelement = $element;
 
-	if (! empty($user->rights->$element->creer) || ! empty($user->rights->$element->write)
-	|| (isset($subelement) && (! empty($user->rights->$element->$subelement->creer) || ! empty($user->rights->$element->$subelement->write)))
+	if (! empty($user->rights->$newelement->creer) || ! empty($user->rights->$newelement->write)
+	|| (isset($subelement) && (! empty($user->rights->$newelement->$subelement->creer) || ! empty($user->rights->$newelement->$subelement->write)))
 	|| ($element == 'payment' && $user->rights->facture->paiement)
 	|| ($element == 'payment_supplier' && $user->rights->fournisseur->facture->creer))
 	{

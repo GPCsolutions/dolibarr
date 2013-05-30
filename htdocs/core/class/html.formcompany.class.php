@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2008-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2008-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2008-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -238,7 +238,7 @@ class FormCompany
 			dol_syslog(get_class($this)."::select_departement num=".$num,LOG_DEBUG);
 			if ($num)
 			{
-				$pays='';
+				$country='';
 				while ($i < $num)
 				{
 					$obj = $this->db->fetch_object($result);
@@ -247,13 +247,13 @@ class FormCompany
 						$out.= '<option value="0">&nbsp;</option>';
 					}
 					else {
-						if (! $pays || $pays != $obj->country)
+						if (! $country || $country != $obj->country)
 						{
 							// Affiche la rupture si on est en mode liste multipays
 							if (! $country_codeid && $obj->country_code)
 							{
 								$out.= '<option value="-1" disabled="disabled">----- '.$obj->country." -----</option>\n";
-								$pays=$obj->country;
+								$country=$obj->country;
 							}
 						}
 
@@ -312,7 +312,7 @@ class FormCompany
 			$i = 0;
 			if ($num)
 			{
-				$pays='';
+				$country='';
 				while ($i < $num)
 				{
 					$obj = $this->db->fetch_object($resql);
@@ -320,13 +320,13 @@ class FormCompany
 						print '<option value="0">&nbsp;</option>';
 					}
 					else {
-						if ($pays == '' || $pays != $obj->country)
+						if ($country == '' || $country != $obj->country)
 						{
 							// Show break
 							$key=$langs->trans("Country".strtoupper($obj->country_code));
 							$valuetoshow=($key != "Country".strtoupper($obj->country_code))?$obj->country_code." - ".$key:$obj->country;
 							print '<option value="-1" disabled="disabled">----- '.$valuetoshow." -----</option>\n";
-							$pays=$obj->country;
+							$country=$obj->country;
 						}
 
 						if ($selected > 0 && $selected == $obj->code)
@@ -454,7 +454,7 @@ class FormCompany
 			$i = 0;
 			if ($num)
 			{
-				$pays='';
+				$country='';
 				while ($i < $num)
 				{
 					$obj = $this->db->fetch_object($result);
@@ -462,11 +462,11 @@ class FormCompany
 						$out.= '<option value="0">&nbsp;</option>';
 					}
 					else {
-						if (! $pays || $pays != $obj->country) {
+						if (! $country || $country != $obj->country) {
 							// Affiche la rupture si on est en mode liste multipays
 							if (! $country_codeid && $obj->country_code) {
 								$out.= '<option value="0">----- '.$obj->country." -----</option>\n";
-								$pays=$obj->country;
+								$country=$obj->country;
 							}
 						}
 
@@ -507,7 +507,7 @@ class FormCompany
 	 *  @param  string		$selected       Pre-selected third party
 	 *  @param  string		$htmlname       Name of HTML form
 	 * 	@param	array		$limitto		Disable answers that are not id in this array list
-	 *  @param	int			$forceid		This is to force antoher object id than object->id
+	 *  @param	int			$forceid		This is to force another object id than object->id
 	 * 	@return	void
 	 * 	TODO obsolete ?
 	 * 	cette fonction doit utiliser du javascript quoi qu'il en soit !
@@ -625,17 +625,20 @@ class FormCompany
      */
 	function selectTypeContact($object, $selected, $htmlname = 'type', $source='internal', $order='code', $showempty=0)
 	{
-		$lesTypes = $object->liste_type_contact($source, $order);
-		print '<select class="flat" name="'.$htmlname.'" id="'.$htmlname.'">';
-		if ($showempty) print '<option value="0"></option>';
-		foreach($lesTypes as $key=>$value)
+		if (is_object($object) && method_exists($object, 'liste_type_contact'))
 		{
-			print '<option value="'.$key.'"';
-			if ($key == $selected)
-			    print ' selected';
-			print '>'.$value.'</option>';
+			$lesTypes = $object->liste_type_contact($source, $order);
+			print '<select class="flat" name="'.$htmlname.'" id="'.$htmlname.'">';
+			if ($showempty) print '<option value="0"></option>';
+			foreach($lesTypes as $key=>$value)
+			{
+				print '<option value="'.$key.'"';
+				if ($key == $selected)
+					print ' selected';
+				print '>'.$value.'</option>';
+			}
+			print "</select>\n";
 		}
-		print "</select>\n";
 	}
 
 	/**

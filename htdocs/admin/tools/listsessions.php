@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2004-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -104,10 +104,13 @@ print_barre_liste($langs->trans("Sessions"), $page, $_SERVER["PHP_SELF"],"",$sor
 $savehandler=ini_get("session.save_handler");
 $savepath=ini_get("session.save_path");
 $openbasedir=ini_get("open_basedir");
+$phparray=phpinfo_array();
+$suhosin=empty($phparray['suhosin']["suhosin.session.encrypt"]["local"])?'':$phparray['suhosin']["suhosin.session.encrypt"]["local"];
 
 print '<b>'.$langs->trans("SessionSaveHandler").'</b>: '.$savehandler.'<br>';
 print '<b>'.$langs->trans("SessionSavePath").'</b>: '.$savepath.'<br>';
 if ($openbasedir) print '<b>'.$langs->trans("OpenBaseDir").'</b>: '.$openbasedir.'<br>';
+if ($suhosin) print '<b>'.$langs->trans("SuhosinSessionEncrypt").'</b>: '.$suhosin.'<br>';
 print '<br>';
 
 if ($action == 'purge')
@@ -148,16 +151,16 @@ if ($savehandler == 'files')
 		print '<td>'.$sessionentry['login'].'</td>';
 
 		// ID
-		print '<td align="left" nowrap="nowrap">';
+		print '<td align="left" class="nowrap">';
 		if ("$key" == session_id()) print $form->textwithpicto($key,$langs->trans("YourSession"));
 		else print $key;
 		print '</td>';
 
 		// Date creation
-		print '<td align="left" nowrap="nowrap">'.dol_print_date($sessionentry['creation'],'%Y-%m-%d %H:%M:%S').'</td>';
+		print '<td align="left" class="nowrap">'.dol_print_date($sessionentry['creation'],'%Y-%m-%d %H:%M:%S').'</td>';
 
 		// Date modification
-		print '<td align="left" nowrap="nowrap">'.dol_print_date($sessionentry['modification'],'%Y-%m-%d %H:%M:%S').'</td>';
+		print '<td align="left" class="nowrap">'.dol_print_date($sessionentry['modification'],'%Y-%m-%d %H:%M:%S').'</td>';
 
 		// Age
 		print '<td>'.$sessionentry['age'].'</td>';

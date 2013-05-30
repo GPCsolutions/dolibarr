@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2001-2002	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin			<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -24,6 +24,7 @@
 
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 
 $langs->load("admin");
 
@@ -44,6 +45,23 @@ if (isset($title))
 {
 	print_fiche_titre($langs->trans($title), '', 'setup');
 }
+
+
+
+print '<table class="noborder" width="100%">';
+print '<tr class="liste_titre"><td>'.$langs->trans("Parameter").'</td><td>'.$langs->trans("Value").'</td></tr>';
+print "\n";
+
+$var=false;
+
+// Recupere la version de l'OS
+$phpversion=version_php();
+print "<tr ".$bc[$var].'><td  width="220px">'.$langs->trans("Version")."</td><td>".$phpversion."</td></tr>\n";
+
+print '</table>';
+print '<br>';
+
+
 
 // Get php_info array
 $phparray=phpinfo_array();
@@ -68,7 +86,12 @@ foreach($phparray as $key => $value)
 			print '<td>'.$keyparam.'</td>';
 			$valtoshow=$keyvalue;
 			if ($keyparam == 'X-ChromePhp-Data') $valtoshow=dol_trunc($keyvalue,80);
-			print '<td colspan="2">'.$valtoshow.'</td>';
+			print '<td colspan="2">';
+			if ($keyparam == 'Path') $valtoshow=join('; ',explode(';',trim($valtoshow)));
+			if ($keyparam == 'PATH') $valtoshow=join('; ',explode(';',trim($valtoshow)));
+			if ($keyparam == '_SERVER["PATH"]') $valtoshow=join('; ',explode(';',trim($valtoshow)));
+			print $valtoshow;
+			print '</td>';
 			print '</tr>';
 		}
 		else
@@ -82,7 +105,7 @@ foreach($phparray as $key => $value)
 				print '<td>';
 				$valtoshow=$keyvalue2;
 				if ($keyparam == 'disable_functions') $valtoshow=join(', ',explode(',',trim($valtoshow)));
-				//print $keyparam2.' = ';
+				//print $keyparam;
 				print $valtoshow;
 				$i++;
 				print '</td>';

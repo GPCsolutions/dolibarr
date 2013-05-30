@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2004-2011	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2012		Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -41,6 +41,8 @@ $modules = array(
 'PRODUCTDESC' => 'FCKeditorForProduct',
 'MAILING' => 'FCKeditorForMailing',
 'DETAILS' => 'FCKeditorForProductDetails',
+'USERSIGN' => 'FCKeditorForUserSignature',
+'MAIL' => 'FCKeditorForMail'
 );
 // Conditions pour que l'option soit proposee
 $conditions = array(
@@ -48,6 +50,8 @@ $conditions = array(
 'PRODUCTDESC' => (! empty($conf->product->enabled) || ! empty($conf->service->enabled)),
 'MAILING' => ! empty($conf->mailing->enabled),
 'DETAILS' => (! empty($conf->facture->enabled) || ! empty($conf->propal->enabled) || ! empty($conf->commande->enabled)),
+'USERSIGN' => 1,
+'MAIL' => (! empty($conf->facture->enabled) || ! empty($conf->propal->enabled) || ! empty($conf->commande->enabled))
 );
 // Picto
 $picto = array(
@@ -55,6 +59,8 @@ $picto = array(
 'PRODUCTDESC' => 'product',
 'MAILING' => 'email',
 'DETAILS' => 'generic',
+'USERSIGN' => 'user',
+'MAIL' => 'email'
 );
 
 

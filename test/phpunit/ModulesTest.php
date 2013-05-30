@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -138,7 +138,7 @@ class ModulesTest extends PHPUnit_Framework_TestCase
     		$mod=new $class($db);
             $result=$mod->remove();
             $result=$mod->init();
-        	$this->assertLessThan($result, 0);
+        	$this->assertLessThan($result, 0, $modlabel);
         	print __METHOD__." result=".$result."\n";
 		}
 

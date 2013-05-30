@@ -1,9 +1,9 @@
 // Copyright (C) 2005-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
-// Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+// Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Foundation; either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -643,16 +643,27 @@ function setConstant(url, code, input, entity) {
 			// Enable another element
 			if (type == "disabled") {
 				$.each(data, function(key, value) {
-					$("#" + value).removeAttr("disabled");
-					if ($("#" + value).hasClass("butActionRefused") == true) {
-						$("#" + value).removeClass("butActionRefused");
-						$("#" + value).addClass("butAction");
+					var newvalue=((value.search("^#") < 0 && value.search("^\.") < 0) ? "#" : "") + value;
+					$(newvalue).removeAttr("disabled");
+					if ($(newvalue).hasClass("butActionRefused") == true) {
+						$(newvalue).removeClass("butActionRefused");
+						$(newvalue).addClass("butAction");
 					}
 				});
+			} else if (type == "enabled") {
+				$.each(data, function(key, value) {
+					var newvalue=((value.search("^#") < 0 && value.search("^\.") < 0) ? "#" : "") + value;
+					$(newvalue).attr("disabled", true);
+					if ($(newvalue).hasClass("butAction") == true) {
+						$(newvalue).removeClass("butAction");
+						$(newvalue).addClass("butActionRefused");
+					}
+				});				
 			// Show another element
 			} else if (type == "showhide" || type == "show") {
 				$.each(data, function(key, value) {
-					$("#" + value).show();
+					var newvalue=((value.search("^#") < 0 && value.search("^\.") < 0) ? "#" : "") + value;
+					$(newvalue).show();
 				});
 			// Set another constant
 			} else if (type == "set") {
@@ -687,16 +698,27 @@ function delConstant(url, code, input, entity) {
 			// Disable another element
 			if (type == "disabled") {
 				$.each(data, function(key, value) {
-					$("#" + value).attr("disabled", true);
-					if ($("#" + value).hasClass("butAction") == true) {
-						$("#" + value).removeClass("butAction");
-						$("#" + value).addClass("butActionRefused");
+					var newvalue=((value.search("^#") < 0 && value.search("^\.") < 0) ? "#" : "") + value;
+					$(newvalue).attr("disabled", true);
+					if ($(newvalue).hasClass("butAction") == true) {
+						$(newvalue).removeClass("butAction");
+						$(newvalue).addClass("butActionRefused");
 					}
 				});
+			} else if (type == "enabled") {
+				$.each(data, function(key, value) {
+					var newvalue=((value.search("^#") < 0 && value.search("^\.") < 0) ? "#" : "") + value;
+					$(newvalue).removeAttr("disabled");
+					if ($(newvalue).hasClass("butActionRefused") == true) {
+						$(newvalue).removeClass("butActionRefused");
+						$(newvalue).addClass("butAction");
+					}
+				});				
 			// Hide another element
 			} else if (type == "showhide" || type == "hide") {
 				$.each(data, function(key, value) {
-					$("#" + value).hide();
+					var newvalue=((value.search("^#") < 0 && value.search("^\.") < 0) ? "#" : "") + value;
+					$(newvalue).hide();
 				});
 			// Delete another constant
 			} else if (type == "del") {
@@ -718,9 +740,10 @@ function delConstant(url, code, input, entity) {
  * 
  */
 function confirmConstantAction(action, url, code, input, box, entity, yesButton, noButton) {
+	var boxConfirm = box;
 	$("#confirm_" + code)
-			.attr("title", box.title)
-			.html(box.content)
+			.attr("title", boxConfirm.title)
+			.html(boxConfirm.content)
 			.dialog({
 				resizable: false,
 				height: 170,
@@ -728,6 +751,7 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
 				modal: true,
 				buttons: [
 					{
+						id : 'yesButton_' + code,
 						text : yesButton,
 						click : function() {
 							if (action == "set") {
@@ -737,9 +761,9 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
 							}
 							// Close dialog
 							$(this).dialog("close");
-							// Execute another function
-							if (box.function) {
-								var fnName = box.function;
+							// Execute another method
+							if (boxConfirm.method) {
+								var fnName = boxConfirm.method;
 								if (window.hasOwnProperty(fnName)) {
 									window[fnName]();
 								}
@@ -747,6 +771,7 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
 						}
 					},
 					{
+						id : 'noButton_' + code,
 						text : noButton,
 						click : function() {
 							$(this).dialog("close");
@@ -754,14 +779,25 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
 					}
 				]
 			});
+	// For information dialog box only, hide the noButton
+	if (boxConfirm.info) {
+		$("#noButton_" + code).button().hide();
+	}
 }
 
-/* This is to allow to transform all select box into ajax autocomplete box
- * with just one line: $(function() { $( "#listmotifcons" ).combobox(); });
+/* 
+ * ================================================================= 
+ * This is to allow to transform all select box into ajax autocomplete box
+ * with just one line: $(function() { $( "#idofmylist" ).combobox(); });
+ * ================================================================= 
  */
 (function( $ ) {
 	$.widget( "ui.combobox", {
+		options: {
+			minLengthToAutocomplete: 0,
+		},
         _create: function() {
+        	var savMinLengthToAutocomplete = this.options.minLengthToAutocomplete;
             var self = this,
                 select = this.element.hide(),
                 selected = select.children( ":selected" ),
@@ -771,7 +807,7 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
                 .val( value )
                 .autocomplete({
                     delay: 0,
-                    minLength: 0,
+                    minLength: this.options.minLengthToAutocomplete,
                     source: function( request, response ) {
                         var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
                         response( select.children( "option" ).map(function() {
@@ -844,7 +880,9 @@ function confirmConstantAction(action, url, code, input, box, entity, yesButton,
                     }
 
                     // pass empty string as value to search for, displaying all results
+                    input.autocomplete({ minLength: 0 });
                     input.autocomplete( "search", "" );
+                    input.autocomplete({ minLength: savMinLengthToAutocomplete });
                     input.focus();
                 });
         },

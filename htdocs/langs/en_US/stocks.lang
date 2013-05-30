@@ -1,7 +1,8 @@
-# Dolibarr language file - en_US - stocks
+# Dolibarr language file - Source file is en_US - stocks
 CHARSET=UTF-8
 WarehouseCard=Warehouse card
 Warehouse=Warehouse
+Warehouses=Warehouses
 NewWarehouse=New warehouse / Stock area
 WarehouseEdit=Modify warehouse
 MenuNewWarehouse=New warehouse
@@ -38,6 +39,7 @@ NumberOfUnit=Number of units
 UnitPurchaseValue=Unit purchase price
 TotalStock=Total in stock
 StockTooLow=Stock too low
+StockLowerThanLimit=Stock lower than alert limit
 EnhancedValue=Value
 PMPValue=Weighted average price
 PMPValueShort=WAP
@@ -53,6 +55,7 @@ DeStockOnShipment=Decrease real stocks on shipment validation
 ReStockOnBill=Increase real stocks on suppliers invoices/credit notes validation
 ReStockOnValidateOrder=Increase real stocks on suppliers orders approbation
 ReStockOnDispatchOrder=Increase real stocks on manual dispatching into warehouses, after supplier order receiving
+ReStockOnDeleteInvoice=Increase real stocks on invoice deletion
 OrderStatusNotReadyToDispatch=Order has not yet or no more a status that allows dispatching of products in stock warehouses.
 StockDiffPhysicTeoric=Reason for difference stock physical and theoretical
 NoPredefinedProductToDispatch=No predefined products for this object. So no dispatching in stock is required.
@@ -84,4 +87,5 @@ PersonalStock=Personal stock %s
 ThisWarehouseIsPersonalStock=This warehouse represents personal stock of %s %s
 SelectWarehouseForStockDecrease=Choose warehouse to use for stock decrease
 SelectWarehouseForStockIncrease=Choose warehouse to use for stock increase
+NoStockAction=No stock action
 LastWaitingSupplierOrders=Orders waiting for receptions

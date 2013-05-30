@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -19,7 +19,7 @@
 /**
  *  Displays the log of actions performed in the module.
  *
- *  \file       view_log.php
+ *  \file       htdocs/holiday/view_log.php
  *  \ingroup    holiday
  */
 
@@ -39,11 +39,14 @@ if(!$user->rights->holiday->view_log) accessforbidden();
  * View
 */
 
+$langs->load('users');
+
 llxHeader(array(),$langs->trans('CPTitreMenu'));
 
 
 $cp = new Holiday($db);
-$log_holiday = $cp->fetchLog('','');
+//Recent changes are more important than old changes
+$log_holiday = $cp->fetchLog('ORDER BY cpl.rowid DESC','');
 
 print_fiche_titre($langs->trans('LogCP'));
 
@@ -55,7 +58,7 @@ print '<td class="liste_titre">'.$langs->trans('ID').'</td>';
 print '<td class="liste_titre" align="center">'.$langs->trans('Date').'</td>';
 print '<td class="liste_titre">'.$langs->trans('ActionByCP').'</td>';
 print '<td class="liste_titre">'.$langs->trans('UserUpdateCP').'</td>';
-print '<td class="liste_titre">'.$langs->trans('ActionTypeCP').'</td>';
+print '<td class="liste_titre">'.$langs->trans('Description').'</td>';
 print '<td class="liste_titre" align="right">'.$langs->trans('PrevSoldeCP').'</td>';
 print '<td class="liste_titre" align="right">'.$langs->trans('NewSoldeCP').'</td>';
 
@@ -75,11 +78,11 @@ foreach($cp->logs as $logs_CP)
    	print '<tr '.$bc[$var].'>';
    	print '<td>'.$logs_CP['rowid'].'</td>';
    	print '<td style="text-align: center;">'.$logs_CP['date_action'].'</td>';
-   	print '<td>'.$user_action->getFullName($langs).'</td>';
-   	print '<td>'.$user_update->getFullName($langs).'</td>';
+   	print '<td>'.$user_action->getNomUrl(1).'</td>';
+   	print '<td>'.$user_update->getNomUrl(1).'</td>';
    	print '<td>'.$logs_CP['type_action'].'</td>';
-   	print '<td style="text-align: right;">'.$logs_CP['prev_solde'].' jours</td>';
-   	print '<td style="text-align: right;">'.$logs_CP['new_solde'].' jours</td>';
+   	print '<td style="text-align: right;">'.$logs_CP['prev_solde'].' '.$langs->trans('days').'</td>';
+   	print '<td style="text-align: right;">'.$logs_CP['new_solde'].' '.$langs->trans('days').'</td>';
    	print '</tr>'."\n";
 
 }
@@ -87,7 +90,7 @@ foreach($cp->logs as $logs_CP)
 if($log_holiday == '2')
 {
     print '<tr>';
-    print '<td colspan="7" class="pair" style="text-align: center; padding: 5px;">'.$langs->trans('NoResult').'</td>';
+    print '<td colspan="7" class="pair" style="text-align: center; padding: 5px;">'.$langs->trans('NoResults').'</td>';
     print '</tr>';
 }
 

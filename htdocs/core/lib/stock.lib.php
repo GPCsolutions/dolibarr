@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -66,7 +66,7 @@ function stock_prepare_head($object)
     // Show more tabs from modules
     // Entries must be declared in modules descriptor with line
     // $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
-    // $this->tabs = array('entity:-tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to remove a tab
+    // $this->tabs = array('entity:-tabname);   												to remove a tab
     complete_head_from_modules($conf,$langs,$object,$head,$h,'stock');
 
     $head[$h][0] = DOL_URL_ROOT.'/product/stock/info.php?id='.$object->id;
@@ -74,7 +74,9 @@ function stock_prepare_head($object)
 	$head[$h][2] = 'info';
 	$h++;
 
-	return $head;
+    complete_head_from_modules($conf,$langs,$object,$head,$h,'stock','remove');
+
+    return $head;
 }
 
 ?>

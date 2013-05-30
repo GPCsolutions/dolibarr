@@ -3,11 +3,11 @@
  * Copyright (C) 2002-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -26,8 +26,7 @@
 
 
 /**
- *	\class      DoliDBSqlite
- *	\brief      Class to manage Dolibarr database access for a Sqlite database
+ *	Class to manage Dolibarr database access for a Sqlite database
  */
 class DoliDBSqlite
 {
@@ -416,12 +415,14 @@ class DoliDBSqlite
             {
                 $this->transaction_opened++;
                 dol_syslog("BEGIN Transaction",LOG_DEBUG);
+				dol_syslog('',0,1);
             }
             return $ret;
         }
         else
         {
             $this->transaction_opened++;
+			dol_syslog('',0,1);
             return 1;
         }
     }
@@ -434,7 +435,8 @@ class DoliDBSqlite
      */
     function commit($log='')
     {
-        if ($this->transaction_opened<=1)
+		dol_syslog('',0,-1);
+    	if ($this->transaction_opened<=1)
         {
             $ret=$this->query("COMMIT");
             if ($ret)
@@ -445,8 +447,8 @@ class DoliDBSqlite
             return $ret;
         }
         else
-        {
-            $this->transaction_opened--;
+       {
+       		$this->transaction_opened--;
             return 1;
         }
     }
@@ -459,7 +461,8 @@ class DoliDBSqlite
      */
     function rollback($log='')
     {
-        if ($this->transaction_opened<=1)
+		dol_syslog('',0,-1);
+    	if ($this->transaction_opened<=1)
         {
             $ret=$this->query("ROLLBACK");
             $this->transaction_opened=0;
@@ -617,16 +620,17 @@ class DoliDBSqlite
 
 
 	/**
-	 *	Define limits of request
-	 *
-	 *	@param	int		$limit      nombre maximum de lignes retournees
-	 *	@param	int		$offset     numero de la ligne a partir de laquelle recuperer les ligne
-	 *	@return	string      		chaine exprimant la syntax sql de la limite
+     *	Define limits and offset of request
+     *
+     *	@param	int		$limit      Maximum number of lines returned (-1=conf->liste_limit, 0=no limit)
+     *	@param	int		$offset     Numero of line from where starting fetch
+     *	@return	string      		String with SQL syntax to add a limit and offset
 	 */
     function plimit($limit=0,$offset=0)
     {
         global $conf;
-        if (! $limit) $limit=$conf->liste_limit;
+        if (empty($limit)) return "";
+        if ($limit < 0) $limit=$conf->liste_limit;
         if ($offset > 0) return " LIMIT $offset,$limit ";
         else return " LIMIT $limit ";
     }
@@ -1153,7 +1157,9 @@ class DoliDBSqlite
     {
         $sql = "ALTER TABLE ".$table;
         $sql .= " MODIFY COLUMN ".$field_name." ".$field_desc['type'];
-        if ($field_desc['type'] == 'int' || $field_desc['type'] == 'varchar') $sql.="(".$field_desc['value'].")";
+        if ($field_desc['type'] == 'tinyint' || $field_desc['type'] == 'int' || $field_desc['type'] == 'varchar') {
+        	$sql.="(".$field_desc['value'].")";
+        }
 
         dol_syslog(get_class($this)."::DDLUpdateField ".$sql,LOG_DEBUG);
         if (! $this->query($sql))

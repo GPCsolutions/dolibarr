@@ -1,11 +1,12 @@
 <?php
 /* Copyright (C) 2005-2009	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2006		Marc Barilley		<marc@ocebo.com>
+ * Copyright (C) 2011-2013  Philippe Grand      <philippe.grand@atoo-net.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -52,7 +53,7 @@ function facturefourn_prepare_head($object)
     // Show more tabs from modules
     // Entries must be declared in modules descriptor with line
     // $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
-    // $this->tabs = array('entity:-tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to remove a tab
+    // $this->tabs = array('entity:-tabname);   												to remove a tab
     complete_head_from_modules($conf,$langs,$object,$head,$h,'supplier_invoice');
 
     if (empty($conf->global->MAIN_DISABLE_NOTES_TAB))
@@ -77,7 +78,9 @@ function facturefourn_prepare_head($object)
 	$head[$h][2] = 'info';
 	$h++;
 
-	return $head;
+    complete_head_from_modules($conf,$langs,$object,$head,$h,'supplier_invoice','remove');
+
+    return $head;
 }
 
 
@@ -142,6 +145,46 @@ function ordersupplier_prepare_head($object)
 	$head[$h][1] = $langs->trans("OrderFollow");
 	$head[$h][2] = 'info';
 	$h++;
+
+	return $head;
+}
+
+/**
+ *  Return array head with list of tabs to view object informations.
+ *
+ *  @param	Object	$object		order
+ *  @return	array   	        head array with tabs
+ */
+function supplierorder_admin_prepare_head($object)
+{
+	global $langs, $conf, $user;
+
+	$h = 0;
+	$head = array();
+
+	$head[$h][0] = DOL_URL_ROOT."/admin/supplier_order.php";
+	$head[$h][1] = $langs->trans("SupplierOrder");
+	$head[$h][2] = 'order';
+	$h++;
+
+	$head[$h][0] = DOL_URL_ROOT."/admin/supplier_invoice.php";
+	$head[$h][1] = $langs->trans("SuppliersInvoice");
+	$head[$h][2] = 'invoice';
+	$h++;
+
+	complete_head_from_modules($conf,$langs,$object,$head,$h,'supplierorder_admin');
+
+	$head[$h][0] = DOL_URL_ROOT.'/admin/supplierorder_extrafields.php';
+	$head[$h][1] = $langs->trans("ExtraFieldsSupplierOrders");
+	$head[$h][2] = 'supplierorder';
+	$h++;
+
+	$head[$h][0] = DOL_URL_ROOT.'/admin/supplierinvoice_extrafields.php';
+	$head[$h][1] = $langs->trans("ExtraFieldsSupplierInvoices");
+	$head[$h][2] = 'supplierinvoice';
+	$h++;
+
+	complete_head_from_modules($conf,$langs,$object,$head,$h,'supplierorder_admin','remove');
 
 	return $head;
 }

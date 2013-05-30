@@ -1,11 +1,11 @@
 <?php
-/* Copyright (C) 2010-2012	Regis Houssin		<regis@dolibarr.fr>
+/* Copyright (C) 2010-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2012		Christophe Battarel	<christophe.battarel@altairis.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -51,7 +51,7 @@
 		{
 			echo $form->select_type_of_lines($line->product_type, 'type', 1, 1);
 		}
-	?>
+		?>
 
 		<input id="product_label" name="product_label" size="40" value="<?php echo $label; ?>"<?php echo $placeholder . ((! empty($line->fk_product) && empty($line->label)) ? ' disabled="disabled"' : ''); ?>>
 		<input type="hidden" id="origin_label_cache" name="origin_label_cache" value="<?php echo $line->product_label; ?>" />
@@ -105,7 +105,12 @@
 	<?php } ?>
 
 	<td align="right">
-	<?php if (($line->info_bits & 2) != 2) { ?>
+	<?php if (($line->info_bits & 2) != 2) {
+		// I comment this because it shows info even when not required
+		// for example always visible on invoice but must be visible only if stock module on and stock decrease option is on invoice validation and status is not validated
+		// must also not be output for most entities (proposal, intervention, ...)
+		//if($line->qty > $line->stock) print img_picto($langs->trans("StockTooLow"),"warning", 'style="vertical-align: bottom;"')." ";
+	?>
 		<input size="3" type="text" class="flat" name="qty" value="<?php echo $line->qty; ?>">
 	<?php } else { ?>
 		&nbsp;
@@ -329,7 +334,7 @@ $(document).ready(function() {
 
 <?php } ?>
 
-	<?php if (! empty($conf->margin->enabled)) { ?>         
+	<?php if (! empty($conf->margin->enabled)) { ?>
 	$.post('<?php echo DOL_URL_ROOT; ?>/fourn/ajax/getSupplierPrices.php', {'idprod': <?php echo $line->fk_product?$line->fk_product:0; ?>}, function(data) {
 		if (data && data.length > 0) {
 			var options = '';

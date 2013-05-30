@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2005      Matthieu Valleton    <mv@seeschloss.org>
  * Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2007      Patrick Raguin	  	<patrick.raguin@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -42,10 +42,10 @@ $type 		= GETPOST('type','alpha');
 $urlfrom	= GETPOST('urlfrom','alpha');
 
 $socid=GETPOST('socid','int');
-$nom=GETPOST('nom');
+$label=GETPOST('label');
 $description=GETPOST('description');
 $visible=GETPOST('visible');
-$catMere=GETPOST('catMere');
+$parent=GETPOST('parent');
 
 if ($origin)
 {
@@ -107,13 +107,13 @@ if ($action == 'add' && $user->rights->categorie->creer)
 
 	$object = new Categorie($db);
 
-	$object->label			= $nom;
-	$object->description	= $description;
+	$object->label			= $label;
+	$object->description	= dol_htmlcleanlastbr($description);
 	$object->socid			= ($socid ? $socid : 'null');
 	$object->visible		= $visible;
 	$object->type			= $type;
 
-	if ($catMere != "-1") $object->id_mere = $catMere;
+	if ($parent != "-1") $object->fk_parent = $parent;
 
 	if (! $object->label)
 	{
@@ -191,6 +191,8 @@ if ($user->rights->categorie->creer)
 	 */
 	if ($action == 'create' || $_POST["addcat"] == 'addcat')
 	{
+		dol_set_focus('#label');
+
 		print '<form action="'.$_SERVER['PHP_SELF'].'?type='.$type.'" method="POST">';
 		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 		print '<input type="hidden" name="urlfrom" value="'.$urlfrom.'">';
@@ -198,7 +200,6 @@ if ($user->rights->categorie->creer)
 		print '<input type="hidden" name="addcat" value="addcat">';
 		print '<input type="hidden" name="id" value="'.GETPOST('origin').'">';
 		print '<input type="hidden" name="type" value="'.$type.'">';
-		print '<input type="hidden" name="nom" value="'.dol_escape_htmltag($nom).'">';
 		if ($origin) print '<input type="hidden" name="origin" value="'.$origin.'">';
 		if ($catorigin)	print '<input type="hidden" name="catorigin" value="'.$catorigin.'">';
 
@@ -210,7 +211,7 @@ if ($user->rights->categorie->creer)
 
 		// Ref
 		print '<tr>';
-		print '<td width="25%" class="fieldrequired">'.$langs->trans("Ref").'</td><td><input name="nom" size="25" value="'.$nom.'">';
+		print '<td width="25%" class="fieldrequired">'.$langs->trans("Ref").'</td><td><input id="label" class="flat" name="label" size="25" value="'.$label.'">';
 		print'</td></tr>';
 
 		// Description
@@ -222,7 +223,7 @@ if ($user->rights->categorie->creer)
 
 		// Parent category
 		print '<tr><td>'.$langs->trans("AddIn").'</td><td>';
-		print $form->select_all_categories($type,$catorigin);
+		print $form->select_all_categories($type, $catorigin);
 		print '</td></tr>';
 
 		print '</table>';
@@ -237,7 +238,8 @@ if ($user->rights->categorie->creer)
 	}
 }
 
-$db->close();
 
 llxFooter();
+
+$db->close();
 ?>

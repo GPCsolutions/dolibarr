@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -118,11 +118,25 @@ $server->register(
     'WS to get skeleton'
 );
 
+// Register WSDL
+$server->register(
+	'createSkeleton',
+	// Entry values
+	array('authentication'=>'tns:authentication','skeleton'=>'tns:skeleton'),
+	// Exit values
+	array('result'=>'tns:result','id'=>'xsd:string'),
+	$ns,
+	$ns.'#createSkeleton',
+	$styledoc,
+	$styleuse,
+	'WS to create a skeleton'
+);
+
 
 
 
 /**
- * Get produt or service
+ * Get Skeleton
  *
  * @param	array		$authentication		Array of authentication information
  * @param	int			$id					Id of object
@@ -192,6 +206,67 @@ function getSkeleton($authentication,$id,$ref='',$ref_ext='')
 }
 
 
+/**
+ * Create Skeleton
+ *
+ * @param	array		$authentication		Array of authentication information
+ * @param	Skeleton	$skeleton		    $skeleton
+ * @return	array							Array result
+ */
+function createSkeleton($authentication,$skeleton)
+{
+	global $db,$conf,$langs;
+
+	$now=dol_now();
+
+	dol_syslog("Function: createSkeleton login=".$authentication['login']);
+
+	if ($authentication['entity']) $conf->entity=$authentication['entity'];
+
+	// Init and check authentication
+	$objectresp=array();
+	$errorcode='';$errorlabel='';
+	$error=0;
+	$fuser=check_authentication($authentication,$error,$errorcode,$errorlabel);
+	// Check parameters
+
+
+	if (! $error)
+	{
+		$newobject=new Skeleton($db);
+		$newobject->prop1=$skeleton->prop1;
+		$newobject->prop2=$skeleton->prop2;
+		//...
+
+		$db->begin();
+
+		$result=$newobject->create($fuser);
+		if ($result <= 0)
+		{
+			$error++;
+		}
+
+		if (! $error)
+		{
+			$db->commit();
+			$objectresp=array('result'=>array('result_code'=>'OK', 'result_label'=>''),'id'=>$newobject->id,'ref'=>$newobject->ref);
+		}
+		else
+		{
+			$db->rollback();
+			$error++;
+			$errorcode='KO';
+			$errorlabel=$newobject->error;
+		}
+	}
+
+	if ($error)
+	{
+		$objectresp = array('result'=>array('result_code' => $errorcode, 'result_label' => $errorlabel));
+	}
+
+	return $objectresp;
+}
 
 // Return the results.
 $server->service($HTTP_RAW_POST_DATA);

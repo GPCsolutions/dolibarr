@@ -1,10 +1,10 @@
 <?php
-/* Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+/* Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -123,11 +123,11 @@ else if ($action == 'delete')
 
 $form = new Form($db);
 
-llxHeader('',$langs->trans("Miscellanous"));
+llxHeader('',$langs->trans("Miscellaneous"));
 
 print_fiche_titre($langs->trans("SecuritySetup"),'','setup');
 
-print $langs->trans("MiscellanousDesc")."<br>\n";
+print $langs->trans("MiscellaneousDesc")."<br>\n";
 print "<br>\n";
 
 $head=security_prepare_head();
@@ -146,14 +146,15 @@ print '<td width="100">&nbsp;</td>';
 print "</tr>\n";
 
 $var=!$var;
-if (empty($conf->global->MAIN_SESSION_TIMEOUT)) $conf->global->MAIN_SESSION_TIMEOUT=ini_get("session.gc_maxlifetime");
+$sessiontimeout=ini_get("session.gc_maxlifetime");
+if (empty($conf->global->MAIN_SESSION_TIMEOUT)) $conf->global->MAIN_SESSION_TIMEOUT=$sessiontimeout;
 print '<form action="'.$_SERVER["PHP_SELF"].'?action=MAIN_SESSION_TIMEOUT" method="POST">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<tr '.$bc[$var].'>';
 print '<td>'.$langs->trans("SessionTimeOut").'</td><td align="right">';
 print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_SESSION_TIMEOUT" type="text" size="6" value="'.htmlentities($conf->global->MAIN_SESSION_TIMEOUT).'"> '.strtolower($langs->trans("Seconds"));
 print '</td>';
 print '<td align="right">';
@@ -200,7 +201,6 @@ if (function_exists("imagecreatefrompng"))
 }
 else
 {
-    $form = new Form($db);
     $desc = $form->textwithpicto('',$langs->transnoentities("EnableGDLibraryDesc"),1,'warning');
     print $desc;
 }
@@ -250,7 +250,7 @@ $max=@ini_get('upload_max_filesize');
 if ($max) print ' '.$langs->trans("MustBeLowerThanPHPLimit",$max*1024,$langs->trans("Kb")).'.';
 else print ' '.$langs->trans("NoMaxSizeByPHPLimit").'.';
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_UPLOAD_DOC" type="text" size="6" value="'.htmlentities($conf->global->MAIN_UPLOAD_DOC).'"> '.$langs->trans("Kb");
 print '</td>';
 print '<td align="right">';
@@ -265,7 +265,7 @@ print '<tr '.$bc[$var].'>';
 print '<td>'.$langs->trans("UMask").'</td><td align="right">';
 print $form->textwithpicto('',$langs->trans("UMaskExplanation"));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_UMASK" type="text" size="6" value="'.htmlentities($conf->global->MAIN_UMASK).'">';
 print '</td>';
 print '<td align="right">';

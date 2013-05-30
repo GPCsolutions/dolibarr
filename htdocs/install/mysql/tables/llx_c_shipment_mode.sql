@@ -3,7 +3,7 @@
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 2 of the License, or
+-- the Free Software Foundation; either version 3 of the License, or
 -- (at your option) any later version.
 --
 -- This program is distributed in the hope that it will be useful,
@@ -18,11 +18,12 @@
 
 create table llx_c_shipment_mode
 (
-  rowid            integer PRIMARY KEY,
+  rowid            integer AUTO_INCREMENT PRIMARY KEY,
   tms              timestamp,
   code             varchar(30) NOT NULL,
   libelle          varchar(50) NOT NULL,
   description      text,
+  tracking         varchar(256) NOT NULL,
   active           tinyint DEFAULT 0,
   module           varchar(32) NULL
 )ENGINE=innodb;

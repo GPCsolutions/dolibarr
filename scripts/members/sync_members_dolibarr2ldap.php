@@ -1,12 +1,12 @@
 #!/usr/bin/php
 <?php
-/*
+/**
  * Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2006-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -30,25 +30,28 @@ $path=dirname(__FILE__).'/';
 
 // Test if batch mode
 if (substr($sapi_type, 0, 3) == 'cgi') {
-    echo "Error: You ar usingr PH for CGI. To execute ".$script_file." from command line, you must use PHP for CLI mode.\n";
+    echo "Error: You are using PHP for CGI. To execute ".$script_file." from command line, you must use PHP for CLI mode.\n";
     exit;
 }
-
-// Main
-$version='1.11';
-$path=str_replace($script_file,'',$_SERVER["PHP_SELF"]);
-@set_time_limit(0);
-$error=0;
 
 require_once($path."../../htdocs/master.inc.php");
 require_once(DOL_DOCUMENT_ROOT."/core/class/ldap.class.php");
 require_once(DOL_DOCUMENT_ROOT."/adherents/class/adherent.class.php");
 
-
 $langs->load("main");
 
+// Global variables
+$version=DOL_VERSION;
+$error=0;
 
-print "***** $script_file ($version) *****\n";
+
+
+/*
+ * Main
+ */
+
+@set_time_limit(0);
+print "***** ".$script_file." (".$version.") pid=".getmypid()." *****\n";
 
 if (! isset($argv[1]) || ! $argv[1]) {
     print "Usage: $script_file now\n";

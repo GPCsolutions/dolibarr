@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2006-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2006-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2006-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -195,7 +195,7 @@ print $langs->trans("BackupDescY").'<br><br>';
 
 			<div class="formelementrow"><input type="checkbox" name="disable_fk"
 				value="yes" id="checkbox_disable_fk" checked="checked" /> <label
-				for="checkbox_disable_fk"> <?php echo $langs->trans("CommandsToDisableForeignKeysForImport"); ?></label>
+				for="checkbox_disable_fk"> <?php echo $langs->trans("CommandsToDisableForeignKeysForImport"); ?> <?php print img_info($langs->trans('CommandsToDisableForeignKeysForImportWarning')); ?></label>
 			</div>
 			<label for="select_sql_compat"> <?php echo $langs->trans("ExportCompatibility"); ?></label>
 

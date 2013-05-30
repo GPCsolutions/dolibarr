@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2010-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2011-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2011-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -66,8 +66,12 @@ class AllTests
 		$suite->addTestSuite('AdminLibTest');
 		require_once dirname(__FILE__).'/DateLibTest.php';
 		$suite->addTestSuite('DateLibTest');
+		//require_once dirname(__FILE__).'/DateLibTzFranceTest.php';
+		//$suite->addTestSuite('DateLibTzFranceTest');
 		require_once dirname(__FILE__).'/FilesLibTest.php';
 		$suite->addTestSuite('FilesLibTest');
+		require_once dirname(__FILE__).'/JsonLibTest.php';
+		$suite->addTestSuite('JsonLibTest');
 		require_once dirname(__FILE__).'/ImagesLibTest.php';
 		$suite->addTestSuite('ImagesLibTest');
 		require_once dirname(__FILE__).'/FunctionsTest.php';
@@ -109,8 +113,10 @@ class AllTests
 
         require_once dirname(__FILE__).'/CommandeTest.php';
         $suite->addTestSuite('CommandeTest');
-		require_once dirname(__FILE__).'/CommandeFournisseurTest.php';
+
+        require_once dirname(__FILE__).'/CommandeFournisseurTest.php';
         $suite->addTestSuite('CommandeFournisseurTest');
+
         require_once dirname(__FILE__).'/ContratTest.php';
         $suite->addTestSuite('ContratTest');
         require_once dirname(__FILE__).'/FactureTest.php';
@@ -131,12 +137,23 @@ class AllTests
         $suite->addTestSuite('CompanyBankAccountTest');
         require_once dirname(__FILE__).'/ChargeSocialesTest.php';
         $suite->addTestSuite('ChargeSocialesTest');
+        require_once dirname(__FILE__).'/HolidayTest.php';
+        $suite->addTestSuite('HolidayTest');
 
         require_once dirname(__FILE__).'/CategorieTest.php';
         $suite->addTestSuite('CategorieTest');
 
-        require_once dirname(__FILE__).'/WebservicesTest.php';
-        $suite->addTestSuite('WebservicesTest');
+        require_once dirname(__FILE__).'/WebservicesInvoicesTest.php';
+        $suite->addTestSuite('WebservicesInvoicesTest');
+        require_once dirname(__FILE__).'/WebservicesOrdersTest.php';
+        $suite->addTestSuite('WebservicesOrdersTest');
+        require_once dirname(__FILE__).'/WebservicesOtherTest.php';
+        $suite->addTestSuite('WebservicesOtherTest');
+        require_once dirname(__FILE__).'/WebservicesThirdpartyTest.php';
+        $suite->addTestSuite('WebservicesThirdpartyTest');
+        require_once dirname(__FILE__).'/WebservicesUserTest.php';
+        $suite->addTestSuite('WebservicesUserTest');
+
         require_once dirname(__FILE__).'/ExportTest.php';
         $suite->addTestSuite('ExportTest');
         require_once dirname(__FILE__).'/ImportTest.php';

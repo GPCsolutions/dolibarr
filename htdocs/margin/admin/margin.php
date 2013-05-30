@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -99,6 +99,7 @@ if ($action == 'contact')
     if (dolibarr_set_const($db, 'AGENT_CONTACT_TYPE', $_POST['AGENT_CONTACT_TYPE'], 'chaine', 0, '', $conf->entity) > 0)
     {
           $conf->global->AGENT_CONTACT_TYPE = $_POST['AGENT_CONTACT_TYPE'];
+          setEventMessage($langs->trans("RecordModifiedSuccessfully"));
     }
     else
     {
@@ -125,9 +126,8 @@ print_fiche_titre($langs->trans("MemberMainOptions"),'','');
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
 print '<td width=300>'.$langs->trans("Description").'</td>';
-
 print '<td colspan="2" align="center">'.$langs->trans("Value").'</td>'."\n";
-print '<td align="left">'.$langs->trans("Details").'</td>'."\n";
+print '<td align="left">'.$langs->trans("Description").'</td>'."\n";
 print '</tr>';
 
 $var=true;
@@ -161,8 +161,6 @@ print '</form>';
 $var=!$var;
 print '<tr '.$bc[$var].'>';
 print '<td>'.$langs->trans("DisplayMarginRates").'</td>';
-
-
 print '<td colspan="2" align="center">';
 if (! empty($conf->use_javascript_ajax))
 {
@@ -187,8 +185,6 @@ print '</tr>';
 $var=!$var;
 print '<tr '.$bc[$var].'>';
 print '<td>'.$langs->trans("DisplayMarkRates").'</td>';
-
-
 print '<td colspan="2" align="center">';
 if (! empty($conf->use_javascript_ajax))
 {
@@ -208,9 +204,10 @@ else
 print '</td>';
 print '<td>'.$langs->trans('MarkRate').' = '.$langs->trans('Margin').' / '.$langs->trans('SellingPrice').'</td>';
 print '</tr>';
-print '<tr>';
-print '<td>'.$langs->trans("ForceBuyingPriceIfNull").'</td>';
 
+$var=!$var;
+print '<tr '.$bc[$var].'>';
+print '<td>'.$langs->trans("ForceBuyingPriceIfNull").'</td>';
 print '<td colspan="2" align="center">';
 if (! empty($conf->use_javascript_ajax))
 {

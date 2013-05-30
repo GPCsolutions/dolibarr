@@ -1,9 +1,10 @@
 <?php
-/* Copyright (C) 2008-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2008-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
+ * Copyright (C) 2012		Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -62,12 +63,19 @@ function shipping_prepare_head($object)
 	$head[$h][1] = $langs->trans("ContactsAddresses");
 	$head[$h][2] = 'contact';
 	$h++;
+	
+	$head[$h][0] = DOL_URL_ROOT."/expedition/note.php?id=".$object->id;
+	$head[$h][1] = $langs->trans("Notes");
+	$head[$h][2] = 'note';
+	$h++;
 
 	// Show more tabs from modules
 	// Entries must be declared in modules descriptor with line
-	// $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
-	// $this->tabs = array('entity:-tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to remove a tab
+    // $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
+    // $this->tabs = array('entity:-tabname);   												to remove a tab
 	complete_head_from_modules($conf,$langs,$object,$head,$h,'delivery');
+
+	complete_head_from_modules($conf,$langs,$object,$head,$h,'delivery','remove');
 
 	return $head;
 }
@@ -104,10 +112,15 @@ function delivery_prepare_head($object)
 
 	// Show more tabs from modules
 	// Entries must be declared in modules descriptor with line
-	// $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
-	// $this->tabs = array('entity:-tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to remove a tab
+    // $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
+    // $this->tabs = array('entity:-tabname);   				to remove a tab
+    	// complete_head_from_modules  use $object->id for this link so we temporary change it
+        $tmpObjectId = $object->id;
+	$object->id = $object->origin_id;
 	complete_head_from_modules($conf,$langs,$object,$head,$h,'delivery');
 
+	complete_head_from_modules($conf,$langs,$object,$head,$h,'delivery','remove');
+	$object->id = $tmpObjectId;
 	return $head;
 }
 
@@ -127,7 +140,7 @@ function show_list_sending_receive($origin,$origin_id,$filter='')
 	$product_static=new Product($db);
 	$expedition=new Expedition($db);
 
-	$sql = "SELECT obj.rowid, obj.fk_product, obj.label, obj.description, obj.product_type as fk_product_type, obj.qty as qty_asked";
+	$sql = "SELECT obj.rowid, obj.fk_product, obj.label, obj.description, obj.product_type as fk_product_type, obj.qty as qty_asked, obj.date_start, obj.date_end";
 	$sql.= ", ed.qty as qty_shipped, ed.fk_expedition as expedition_id, ed.fk_origin_line";
 	$sql.= ", e.rowid as sendingid, e.ref as exp_ref, e.date_creation, e.date_delivery, e.date_expedition,";
 	//if ($conf->livraison_bon->enabled) $sql .= " l.rowid as livraison_id, l.ref as livraison_ref, l.date_delivery, ld.qty as qty_received,";
@@ -182,7 +195,7 @@ function show_list_sending_receive($origin,$origin_id,$filter='')
 				print "<tr $bc[$var]>";
 
 				// Sending id
-				print '<td align="left" nowrap="nowrap"><a href="'.DOL_URL_ROOT.'/expedition/fiche.php?id='.$objp->expedition_id.'">'.img_object($langs->trans("ShowSending"),'sending').' '.$objp->exp_ref.'<a></td>';
+				print '<td align="left" class="nowrap"><a href="'.DOL_URL_ROOT.'/expedition/fiche.php?id='.$objp->expedition_id.'">'.img_object($langs->trans("ShowSending"),'sending').' '.$objp->exp_ref.'<a></td>';
 
 				// Description
 				if ($objp->fk_product > 0)
@@ -254,22 +267,22 @@ function show_list_sending_receive($origin,$origin_id,$filter='')
 				//print '<td align="center">'.$objp->qty_asked.'</td>';
 
 				// Date creation
-				print '<td align="center" nowrap="nowrap">'.dol_print_date($db->jdate($objp->date_creation),'day').'</td>';
+				print '<td align="center" class="nowrap">'.dol_print_date($db->jdate($objp->date_creation),'day').'</td>';
 
 				// Date shipping creation
-				print '<td align="center" nowrap="nowrap">'.dol_print_date($db->jdate($objp->date_delivery),'day').'</td>';
+				print '<td align="center" class="nowrap">'.dol_print_date($db->jdate($objp->date_delivery),'day').'</td>';
 
 				// Qty shipped
 				print '<td align="center">'.$objp->qty_shipped.'</td>';
 
 				// Informations on receipt
-				if ($conf->livraison_bon->enabled)
+				if (! empty($conf->livraison_bon->enabled))
 				{
 					include_once DOL_DOCUMENT_ROOT.'/livraison/class/livraison.class.php';
 					$expedition->id=$objp->sendingid;
 					$expedition->fetchObjectLinked($expedition->id,$expedition->element);
 					//var_dump($expedition->linkedObjects);
-					$receiving=$expedition->linkedObjects['delivery'][0];
+					$receiving=(! empty($expedition->linkedObjects['delivery'][0])?$expedition->linkedObjects['delivery'][0]:'');
 
 					if (! empty($receiving))
 					{

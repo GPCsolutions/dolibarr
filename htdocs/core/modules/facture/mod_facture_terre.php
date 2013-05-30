@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2005-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -137,7 +137,7 @@ class mod_facture_terre extends ModeleNumRefFactures
 		$sql.= " AND entity = ".$conf->entity;
 
 		$resql=$db->query($sql);
-		dol_syslog("mod_facture_terre::getNextValue sql=".$sql);
+		dol_syslog(get_class($this)."::getNextValue sql=".$sql);
 		if ($resql)
 		{
 			$obj = $db->fetch_object($resql);
@@ -146,7 +146,7 @@ class mod_facture_terre extends ModeleNumRefFactures
 		}
 		else
 		{
-			dol_syslog("mod_facture_terre::getNextValue sql=".$sql, LOG_ERR);
+			dol_syslog(get_class($this)."::getNextValue sql=".$sql, LOG_ERR);
 			return -1;
 		}
 
@@ -160,7 +160,7 @@ class mod_facture_terre extends ModeleNumRefFactures
             $sql.= " WHERE facnumber LIKE '".$prefix."____-".$num."'";
             $sql.= " AND entity = ".$conf->entity;
 
-            dol_syslog("mod_facture_terre::getNextValue sql=".$sql);
+            dol_syslog(get_class($this)."::getNextValue sql=".$sql);
             $resql=$db->query($sql);
             if ($resql)
             {
@@ -177,7 +177,7 @@ class mod_facture_terre extends ModeleNumRefFactures
     		$yymm = strftime("%y%m",$date);
     		$num = sprintf("%04s",$max+1);
 
-    		dol_syslog("mod_facture_terre::getNextValue return ".$prefix.$yymm."-".$num);
+    		dol_syslog(get_class($this)."::getNextValue return ".$prefix.$yymm."-".$num);
     		return $prefix.$yymm."-".$num;
 		}
 		else dol_print_error('','Bad parameter for getNextValue');

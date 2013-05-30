@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2004		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2005-2011	Laurent Destailleur		<eldy@users.sourceforge.org>
- * Copyright (C) 2011-2012	Regis Houssin			<regis@dolibarr.fr>
+ * Copyright (C) 2011-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2012  Juanjo Menent			<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -71,7 +71,7 @@ if ($action == 'setvalue' && $user->admin)
 	if (! $error)
   	{
   		$db->commit();
-  		$mesg='<div class="ok">'.$langs->trans("SetupSaved").'</div>';
+  		setEventMessage($langs->trans("SetupSaved"));
   	}
   	else
   	{
@@ -100,37 +100,13 @@ dol_fiche_head($head, 'paypalaccount', $langs->trans("ModuleSetup"));
 
 print $langs->trans("PaypalDesc")."<br>\n";
 
-if ($conf->use_javascript_ajax)
-{
-    print "\n".'<script type="text/javascript" language="javascript">';
-    print '$(document).ready(function () {
-            $("#apidoc").hide();
-            $("#apidoca").click(function() {
-                $("#apidoca").hide();
-                $("#apidoc").show();
-            });
-
-            $("#generate_token").click(function() {
-            	$.get( "'.DOL_URL_ROOT.'/core/ajax/security.php", {
-            		action: \'getrandompassword\',
-            		generic: true
-				},
-				function(token) {
-					$("#PAYPAL_SECURITY_TOKEN").val(token);
-				});
-            });
-    });';
-    print '</script>';
-}
-
 // Test if php curl exist
 if (! function_exists('curl_version'))
 {
 	$langs->load("errors");
-	$mesg='<div class="error">'.$langs->trans("ErrorPhpCurlNotInstalled").'</div>';
+	setEventMessage($langs->trans("ErrorPhpCurlNotInstalled"), 'errors');
 }
 
-dol_htmloutput_mesg($mesg);
 
 print '<br>';
 print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
@@ -181,7 +157,7 @@ print "</tr>\n";
 $var=!$var;
 print '<tr '.$bc[$var].'><td class="fieldrequired">';
 print $langs->trans("PAYPAL_API_INTEGRAL_OR_PAYPALONLY").'</td><td>';
-print $form->selectarray("PAYPAL_API_INTEGRAL_OR_PAYPALONLY",array('integral'=>'Integral','paypalonly'=>'Paypal only'),$conf->global->PAYPAL_API_INTEGRAL_OR_PAYPALONLY);
+print $form->selectarray("PAYPAL_API_INTEGRAL_OR_PAYPALONLY",array('integral'=> $langs->trans('PaypalModeIntegral'),'paypalonly'=> $langs->trans('PaypalModeOnlyPaypal')),$conf->global->PAYPAL_API_INTEGRAL_OR_PAYPALONLY);
 print '</td></tr>';
 
 /*$var=!$var;
@@ -235,7 +211,8 @@ $var=!$var;
 print '<tr '.$bc[$var].'><td>';
 print $langs->trans("SecurityToken").'</td><td>';
 print '<input size="48" type="text" id="PAYPAL_SECURITY_TOKEN" name="PAYPAL_SECURITY_TOKEN" value="'.$conf->global->PAYPAL_SECURITY_TOKEN.'">';
-print '&nbsp;'.img_picto($langs->trans('Generate'), 'refresh', 'id="generate_token" class="linkobject"');
+if (! empty($conf->use_javascript_ajax))
+	print '&nbsp;'.img_picto($langs->trans('Generate'), 'refresh', 'id="generate_token" class="linkobject"');
 print '</td></tr>';
 
 $var=!$var;
@@ -256,7 +233,8 @@ print '<br><br>';
 
 // Help doc
 print '<u>'.$langs->trans("InformationToFindParameters","Paypal").'</u>:<br>';
-if ($conf->use_javascript_ajax) print '<a href="#" id="apidoca">'.$langs->trans("ClickHere").'...</a>';
+if (! empty($conf->use_javascript_ajax))
+	print '<a href="#" id="apidoca">'.$langs->trans("ClickHere").'...</a>';
 
 $realpaypalurl='www.paypal.com';
 $sandboxpaypalurl='developer.paypal.com';
@@ -374,7 +352,29 @@ if (! empty($conf->adherent->enabled))
 print "<br>";
 print info_admin($langs->trans("YouCanAddTagOnUrl"));
 
-llxFooter();
+if (! empty($conf->use_javascript_ajax))
+{
+	print "\n".'<script type="text/javascript">';
+	print '$(document).ready(function () {
+            $("#apidoc").hide();
+            $("#apidoca").click(function() {
+                $("#apidoca").hide();
+                $("#apidoc").show();
+            });
 
+            $("#generate_token").click(function() {
+            	$.get( "'.DOL_URL_ROOT.'/core/ajax/security.php", {
+            		action: \'getrandompassword\',
+            		generic: true
+				},
+				function(token) {
+					$("#PAYPAL_SECURITY_TOKEN").val(token);
+				});
+            });
+    });';
+	print '</script>';
+}
+
+llxFooter();
 $db->close();
 ?>

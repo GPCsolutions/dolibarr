@@ -4,7 +4,7 @@
  * Copyright (C) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Sebastien Di Cintio  <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2005 	   Simon Tosser         <simon@kornog-computing.com>
  * Copyright (C) 2006 	   Andre Cianfarani     <andre.cianfarani@acdeveloppement.net>
  * Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
@@ -12,7 +12,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -34,6 +34,7 @@
 require_once 'filefunc.inc.php';	// May have been already require by main.inc.php. But may not by scripts.
 
 
+
 /*
  * Create $conf object
  */
@@ -41,7 +42,8 @@ require_once 'filefunc.inc.php';	// May have been already require by main.inc.ph
 require_once DOL_DOCUMENT_ROOT.'/core/class/conf.class.php';
 
 $conf = new Conf();
-// Identifiant propres au serveur base de donnee
+
+// Set properties specific to database
 $conf->db->host							= $dolibarr_main_db_host;
 $conf->db->port							= $dolibarr_main_db_port;
 $conf->db->name							= $dolibarr_main_db_name;
@@ -53,38 +55,36 @@ $conf->db->character_set				= $dolibarr_main_db_character_set;
 $conf->db->dolibarr_main_db_collation	= $dolibarr_main_db_collation;
 $conf->db->dolibarr_main_db_encryption	= $dolibarr_main_db_encryption;
 $conf->db->dolibarr_main_db_cryptkey	= $dolibarr_main_db_cryptkey;
+if (defined('TEST_DB_FORCE_TYPE')) $conf->db->type=constant('TEST_DB_FORCE_TYPE');	// Force db type (for test purpose, by PHP unit for example)
+
+// Set properties specific to conf file
 $conf->file->main_limit_users			= $dolibarr_main_limit_users;
 $conf->file->mailing_limit_sendbyweb	= $dolibarr_mailing_limit_sendbyweb;
-// Identification mode
-$conf->file->main_authentication		= empty($dolibarr_main_authentication)?'':$dolibarr_main_authentication;
-// Force https
-$conf->file->main_force_https			= empty($dolibarr_main_force_https)?'':$dolibarr_main_force_https;
-// Cookie cryptkey
-$conf->file->cookie_cryptkey			= empty($dolibarr_main_cookie_cryptkey)?'':$dolibarr_main_cookie_cryptkey;
-// Define array of document root directories
-$conf->file->dol_document_root			= array('main' => DOL_DOCUMENT_ROOT);
+$conf->file->main_authentication		= empty($dolibarr_main_authentication)?'':$dolibarr_main_authentication;	// Identification mode
+$conf->file->main_force_https			= empty($dolibarr_main_force_https)?'':$dolibarr_main_force_https;			// Force https
+$conf->file->strict_mode 				= empty($dolibarr_strict_mode)?'':$dolibarr_strict_mode;					// Force php strict mode (for debug)
+$conf->file->cookie_cryptkey			= empty($dolibarr_main_cookie_cryptkey)?'':$dolibarr_main_cookie_cryptkey;	// Cookie cryptkey
+$conf->file->dol_document_root			= array('main' => DOL_DOCUMENT_ROOT);										// Define array of document root directories
 if (! empty($dolibarr_main_document_root_alt))
 {
-	// dolibarr_main_document_root_alt contains several directories
+	// dolibarr_main_document_root_alt can contains several directories
 	$values=preg_split('/[;,]/',$dolibarr_main_document_root_alt);
 	foreach($values as $value)
 	{
 		$conf->file->dol_document_root['alt']=$value;
 	}
 }
-// Force db type (for test purpose)
-if (defined('TEST_DB_FORCE_TYPE')) $conf->db->type=constant('TEST_DB_FORCE_TYPE');
-// Force php strict mode (for debug)
-$conf->file->strict_mode = empty($dolibarr_strict_mode)?'':$dolibarr_strict_mode;
-// Force Multi-Company transverse mode
-$conf->multicompany->transverse_mode = empty($multicompany_transverse_mode)?'':$multicompany_transverse_mode;
-// Force entity in login page
-$conf->multicompany->force_entity = empty($multicompany_force_entity)?'':(int) $multicompany_force_entity;
+
+// Set properties specific to multicompany
+// TODO Multicompany Remove this. Useless. Var should be read when required.
+$conf->multicompany->transverse_mode = empty($multicompany_transverse_mode)?'':$multicompany_transverse_mode;		// Force Multi-Company transverse mode
+$conf->multicompany->force_entity = empty($multicompany_force_entity)?'':(int) $multicompany_force_entity;			// Force entity in login page
 
 // Chargement des includes principaux de librairies communes
 if (! defined('NOREQUIREUSER')) require_once DOL_DOCUMENT_ROOT .'/user/class/user.class.php';		// Need 500ko memory
 if (! defined('NOREQUIRETRAN')) require_once DOL_DOCUMENT_ROOT .'/core/class/translate.class.php';
 if (! defined('NOREQUIRESOC'))  require_once DOL_DOCUMENT_ROOT .'/societe/class/societe.class.php';
+
 
 /*
  * Creation objet $langs (must be before all other code)
@@ -143,6 +143,10 @@ if (! defined('NOREQUIREDB'))
 	{
 		$conf->entity = DOLENTITY;
 	}
+	else if (!empty($_COOKIE['DOLENTITY']))							// For other application with MultiCompany module
+	{
+		$conf->entity = $_COOKIE['DOLENTITY'];
+	}
 	else if (! empty($conf->multicompany->force_entity) && is_int($conf->multicompany->force_entity)) // To force entity in login page
 	{
 		$conf->entity = $conf->multicompany->force_entity;
@@ -188,93 +192,38 @@ if (! empty($conf->global->MAIN_ONLY_LOGIN_ALLOWED))
 	}
 }
 
-/*
- * Create object $mysoc (A thirdparty object that contains properties of companies managed by Dolibarr.
- */
+// Create object $mysoc (A thirdparty object that contains properties of companies managed by Dolibarr.
 if (! defined('NOREQUIREDB') && ! defined('NOREQUIRESOC'))
 {
 	require_once DOL_DOCUMENT_ROOT .'/societe/class/societe.class.php';
+
 	$mysoc=new Societe($db);
-
-	$mysoc->id=0;
-	$mysoc->name=(! empty($conf->global->MAIN_INFO_SOCIETE_NOM))?$conf->global->MAIN_INFO_SOCIETE_NOM:'';
-	$mysoc->nom=$mysoc->name; 									// deprecated
-	$mysoc->address=(! empty($conf->global->MAIN_INFO_SOCIETE_ADRESSE))?$conf->global->MAIN_INFO_SOCIETE_ADRESSE:'';
-	$mysoc->adresse=$mysoc->address; 							// deprecated
-	$mysoc->zip=(! empty($conf->global->MAIN_INFO_SOCIETE_CP))?$conf->global->MAIN_INFO_SOCIETE_CP:'';
-	$mysoc->cp=$mysoc->zip;										// deprecated
-	$mysoc->town=(! empty($conf->global->MAIN_INFO_SOCIETE_VILLE))?$conf->global->MAIN_INFO_SOCIETE_VILLE:'';
-	$mysoc->ville=$mysoc->town;									// deprecated
-	$mysoc->state_id=$conf->global->MAIN_INFO_SOCIETE_DEPARTEMENT;
-	$mysoc->note=empty($conf->global->MAIN_INFO_SOCIETE_NOTE)?'':$conf->global->MAIN_INFO_SOCIETE_NOTE;
-
-    // We define country_id, country_code and country
-	$country_id=$country_code=$country_label='';
-    if (! empty($conf->global->MAIN_INFO_SOCIETE_PAYS))
-    {
-        $tmp=explode(':',$conf->global->MAIN_INFO_SOCIETE_PAYS);
-        $country_id=$tmp[0];
-        if (! empty($tmp[1]))   // If $conf->global->MAIN_INFO_SOCIETE_PAYS is "id:code:label"
-        {
-            $country_code=$tmp[1];
-            $country_label=$tmp[2];
-        }
-        else                    // For backward compatibility
-        {
-            dol_syslog("Your country setup use an old syntax. Reedit it using setup area.", LOG_WARNING);
-            include_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
-            $country_code=getCountry($country_id,2,$db);  // This need a SQL request, but it's the old feature
-            $country_label=getCountry($country_id,0,$db);  // This need a SQL request, but it's the old feature
-        }
-    }
-    $mysoc->pays_id=$country_id;		// TODO deprecated
-    $mysoc->country_id=$country_id;
-    $mysoc->pays_code=$country_code;	// TODO deprecated
-    $mysoc->country_code=$country_code;
-    $mysoc->country=$country_label;
-    if (is_object($langs)) $mysoc->country=($langs->trans('Country'.$country_code)!='Country'.$country_code)?$langs->trans('Country'.$country_code):$country_label;
-    $mysoc->pays=$mysoc->country;    	// TODO deprecated
-
-	$mysoc->tel=empty($conf->global->MAIN_INFO_SOCIETE_TEL)?'':$conf->global->MAIN_INFO_SOCIETE_TEL;   // TODO deprecated
-    $mysoc->phone=empty($conf->global->MAIN_INFO_SOCIETE_TEL)?'':$conf->global->MAIN_INFO_SOCIETE_TEL;
-	$mysoc->fax=empty($conf->global->MAIN_INFO_SOCIETE_FAX)?'':$conf->global->MAIN_INFO_SOCIETE_FAX;
-	$mysoc->url=empty($conf->global->MAIN_INFO_SOCIETE_WEB)?'':$conf->global->MAIN_INFO_SOCIETE_WEB;
-	// Id prof generiques
-	$mysoc->idprof1=empty($conf->global->MAIN_INFO_SIREN)?'':$conf->global->MAIN_INFO_SIREN;
-	$mysoc->idprof2=empty($conf->global->MAIN_INFO_SIRET)?'':$conf->global->MAIN_INFO_SIRET;
-	$mysoc->idprof3=empty($conf->global->MAIN_INFO_APE)?'':$conf->global->MAIN_INFO_APE;
-	$mysoc->idprof4=empty($conf->global->MAIN_INFO_RCS)?'':$conf->global->MAIN_INFO_RCS;
-	$mysoc->idprof5=empty($conf->global->MAIN_INFO_PROFID5)?'':$conf->global->MAIN_INFO_PROFID5;
-	$mysoc->idprof6=empty($conf->global->MAIN_INFO_PROFID6)?'':$conf->global->MAIN_INFO_PROFID6;
-	$mysoc->tva_intra=(! empty($conf->global->MAIN_INFO_TVAINTRA))?$conf->global->MAIN_INFO_TVAINTRA:'';	// VAT number, not necessarly INTRA.
-	$mysoc->capital=(! empty($conf->global->MAIN_INFO_CAPITAL))?$conf->global->MAIN_INFO_CAPITAL:'';
-	$mysoc->forme_juridique_code=$conf->global->MAIN_INFO_SOCIETE_FORME_JURIDIQUE;
-	$mysoc->email=(! empty($conf->global->MAIN_INFO_SOCIETE_MAIL))?$conf->global->MAIN_INFO_SOCIETE_MAIL:'';
-	$mysoc->logo=(! empty($conf->global->MAIN_INFO_SOCIETE_LOGO))?$conf->global->MAIN_INFO_SOCIETE_LOGO:'';
-	$mysoc->logo_small=(! empty($conf->global->MAIN_INFO_SOCIETE_LOGO_SMALL))?$conf->global->MAIN_INFO_SOCIETE_LOGO_SMALL:'';
-	$mysoc->logo_mini=(! empty($conf->global->MAIN_INFO_SOCIETE_LOGO_MINI))?$conf->global->MAIN_INFO_SOCIETE_LOGO_MINI:'';
-
-	// Define if company use vat or not (Do not use conf->global->FACTURE_TVAOPTION anymore)
-	$mysoc->tva_assuj=((isset($conf->global->FACTURE_TVAOPTION) && $conf->global->FACTURE_TVAOPTION=='franchise')?0:1);
-
-	// Define if company use local taxes
-	$mysoc->localtax1_assuj=((isset($conf->global->FACTURE_LOCAL_TAX1_OPTION) && $conf->global->FACTURE_LOCAL_TAX1_OPTION=='localtax1on')?1:0);
-	$mysoc->localtax2_assuj=((isset($conf->global->FACTURE_LOCAL_TAX2_OPTION) && $conf->global->FACTURE_LOCAL_TAX2_OPTION=='localtax2on')?1:0);
+	$mysoc->setMysoc($conf);
 
 	// For some countries, we need to invert our address with customer address
 	if ($mysoc->country_code == 'DE' && ! isset($conf->global->MAIN_INVERT_SENDER_RECIPIENT)) $conf->global->MAIN_INVERT_SENDER_RECIPIENT=1;
 }
 
 
-// Set default language (must be after the setValues of $conf)
+// Set default language (must be after the setValues setting global $conf->global->MAIN_LANG_DEFAULT. Page main.inc.php will overwrite langs->defaultlang with user value later)
 if (! defined('NOREQUIRETRAN'))
 {
-	$langs->setDefaultLang((! empty($conf->global->MAIN_LANG_DEFAULT)?$conf->global->MAIN_LANG_DEFAULT:''));
+    $langcode=(GETPOST('lang')?GETPOST('lang','alpha',1):(empty($conf->global->MAIN_LANG_DEFAULT)?'auto':$conf->global->MAIN_LANG_DEFAULT));
+	$langs->setDefaultLang($langcode);
 }
+
+
+// Create the global $hookmanager object
+include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+$hookmanager=new HookManager($db);
+
 
 if (! defined('MAIN_LABEL_MENTION_NPR') ) define('MAIN_LABEL_MENTION_NPR','NPR');
 
 // We force feature to help debug
-$conf->global->MAIN_JS_ON_PAYMENT=0;	// We set to zero to unifrmize way of working between customer and supplier payments
+//$conf->global->MAIN_JS_ON_PAYMENT=0;
+
+// We force FPDF
+if (! empty($dolibarr_pdf_force_fpdf)) $conf->global->MAIN_USE_FPDF=$dolibarr_pdf_force_fpdf;
 
 ?>

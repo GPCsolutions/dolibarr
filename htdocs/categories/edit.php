@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2005      Matthieu Valleton    <mv@seeschloss.org>
  * Copyright (C) 2006-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2007      Patrick Raguin	  	<patrick.raguin@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -27,6 +27,7 @@
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 
+$langs->load("categories");
 
 $id=GETPOST('id','int');
 $ref=GETPOST('ref');
@@ -38,7 +39,7 @@ $socid=GETPOST('socid','int');
 $nom=GETPOST('nom');
 $description=GETPOST('description');
 $visible=GETPOST('visible');
-$catMere=GETPOST('catMere');
+$parent=GETPOST('parent');
 
 if ($id == "")
 {
@@ -62,24 +63,24 @@ if ($action == 'update' && $user->rights->categorie->creer)
 	$result=$categorie->fetch($id);
 
 	$categorie->label          = $nom;
-	$categorie->description    = $description;
+	$categorie->description    = dol_htmlcleanlastbr($description);
 	$categorie->socid          = ($socid ? $socid : 'null');
 	$categorie->visible        = $visible;
 
-	if ($catMere != "-1")
-		$categorie->id_mere = $catMere;
+	if ($parent != "-1")
+		$categorie->fk_parent = $parent;
 	else
-		$categorie->id_mere = "";
+		$categorie->fk_parent = "";
 
 
-	if (! $categorie->label)
+	if (empty($categorie->label))
 	{
-		$_GET["action"] = 'create';
+		$action = 'create';
 		$mesg = $langs->trans("ErrorFieldRequired",$langs->transnoentities("Label"));
 	}
-	if (! $categorie->description)
+	if (empty($categorie->description))
 	{
-		$_GET["action"] = 'create';
+		$action = 'create';
 		$mesg = $langs->trans("ErrorFieldRequired",$langs->transnoentities("Description"));
 	}
 	if (empty($categorie->error))
@@ -149,7 +150,7 @@ print '</td></tr>';
 
 // Parent category
 print '<tr><td>'.$langs->trans("In").'</td><td>';
-print $form->select_all_categories($type,$object->id_mere,'catMere',64,$object->id);
+print $form->select_all_categories($type,$object->fk_parent,'parent',64,$object->id);
 print '</td></tr>';
 
 print '</table>';

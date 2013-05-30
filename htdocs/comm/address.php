@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2001-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2006 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -70,7 +70,7 @@ if ($action == 'add' || $action == 'update')
     $object->phone		= $_POST["phone"];
     $object->fax		= $_POST["fax"];
     $object->note		= $_POST["note"];
-    
+
     // Add new address
     if ($action == 'add')
     {
@@ -110,7 +110,7 @@ if ($action == 'add' || $action == 'update')
             $action='create';
         }
     }
-    
+
     // Update address
     else if ($action == 'update')
     {
@@ -205,7 +205,7 @@ if ($action == 'create')
             $object->note		=	$_POST["note"];
         }
 
-        // On positionne pays_id, pays_code et libelle du pays choisi
+        // On positionne country_id, country_code and label of the chosen country
         $object->country_id = (GETPOST('country_id','int') ? GETPOST('country_id','int') : $mysoc->country_id);
         if ($object->country_id)
         {
@@ -213,7 +213,7 @@ if ($action == 'create')
             $object->country_code	= $tmparray['code'];
             $object->country		= $tmparray['label'];
         }
-        
+
         print_fiche_titre($langs->trans("AddAddress"));
 
         print "<br>\n";
@@ -333,7 +333,7 @@ elseif ($action == 'edit')
             $object->fax		=	$_POST["fax"];
             $object->note		=	$_POST["note"];
 
-            // On positionne country_id, pays_code et libelle du pays choisi
+            // On positionne country_id, country_code and label of the chosen country
             if ($object->country_id)
             {
 	        	$tmparray=getCountry($object->country_id,'all');
@@ -381,15 +381,15 @@ elseif ($action == 'edit')
         print '<tr><td>'.$langs->trans('Note').'</td><td colspan="3"><textarea name="note" cols="40" rows="6" wrap="soft">';
         print $object->note;
         print '</textarea></td></tr>';
-        
+
         print '</table><br>';
-        
+
         print '<center>';
         print '<input type="submit" class="button" name="save" value="'.$langs->trans("Save").'">';
         print ' &nbsp; ';
         print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
         print '</center>';
-        
+
         print '</form>';
     }
 }
@@ -457,12 +457,12 @@ else
 
             if ($user->rights->societe->creer)
             {
-                print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?socid='.$object->socid.'&amp;id='.$object->lines[$i]->id.'&amp;action=edit">'.$langs->trans("Modify").'</a>';
+                print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?socid='.$object->socid.'&amp;id='.$object->lines[$i]->id.'&amp;action=edit">'.$langs->trans("Modify").'</a></div>';
             }
 
             if ($user->rights->societe->supprimer)
             {
-                print '<a class="butActionDelete" href="'.$_SERVER['PHP_SELF'].'?socid='.$object->socid.'&amp;id='.$object->lines[$i]->id.'&amp;action=delete">'.$langs->trans("Delete").'</a>';
+                print '<div class="inline-block divButAction"><a class="butActionDelete" href="'.$_SERVER['PHP_SELF'].'?socid='.$object->socid.'&amp;id='.$object->lines[$i]->id.'&amp;action=delete">'.$langs->trans("Delete").'</a></div>';
             }
 
 
@@ -487,7 +487,7 @@ else
 
         if ($user->rights->societe->creer)
         {
-            print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?socid='.$object->socid.'&amp;action=create">'.$langs->trans("Add").'</a>';
+            print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?socid='.$object->socid.'&amp;action=create">'.$langs->trans("Add").'</a></div>';
         }
         print '</div>';
     }

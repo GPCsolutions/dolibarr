@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -165,11 +165,11 @@ function create_script_table($list)
 	foreach($list as $script) { ?>
 	<tr <?php $var = ! $var; print $bc[$var]; ?>>
 		<td><?php print dol_trunc($script['file'],80,'left'); ?></td>
-		<td align="center" nowrap="nowrap"><?php print dol_print_date($script['mtime'],'dayhour'); ?></td>
-		<td align="right" nowrap="nowrap"><?php print number_format($script['size'] / 1024, 2); ?>
+		<td align="center" class="nowrap"><?php print dol_print_date($script['mtime'],'dayhour'); ?></td>
+		<td align="right" class="nowrap"><?php print number_format($script['size'] / 1024, 2); ?>
 		KB</td>
-		<td align="right" nowrap="nowrap"><?php print $script['reloads']; ?> (<?php print $script['usecount']; ?>)</td>
-		<td align="right" nowrap="nowrap"><?php print $script['hits']; ?></td>
+		<td align="right" class="nowrap"><?php print $script['reloads']; ?> (<?php print $script['usecount']; ?>)</td>
+		<td align="right" class="nowrap"><?php print $script['hits']; ?></td>
 	</tr>
 	<?php } ?>
 </table>
@@ -199,10 +199,10 @@ function create_key_table($list)
 		?>
 	<tr <?php $var = ! $var; print $bc[$var]; ?>>
 		<td><?php print dol_trunc($key['name'],80,'left'); ?></td>
-		<td align="center" nowrap="nowrap"><?php dol_print_date($key['created'],'dayhour'); ?></td>
-		<td align="right" nowrap="nowrap"><?php print number_format($key['size']/1024, 3); ?>
+		<td align="center" class="nowrap"><?php dol_print_date($key['created'],'dayhour'); ?></td>
+		<td align="right" class="nowrap"><?php print number_format($key['size']/1024, 3); ?>
 		KB</td>
-		<td align="right" nowrap="nowrap"><?php
+		<td align="right" class="nowrap"><?php
 		if ($key['ttl'] == -1) {
 			print 'expired';
 		} elseif ($key['ttl'] == 0) {

@@ -2,11 +2,11 @@
 /* Copyright (C) 2003      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2003      Eric Seigne          <erics@rycks.com>
  * Copyright (C) 2004-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2011 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -35,14 +35,15 @@ class box_external_rss extends ModeleBoxes
 {
     var $boxcode="lastrssinfos";
     var $boximg="object_rss";
-    var $boxlabel;
+    var $boxlabel="BoxLastRssInfos";
     var $depends = array("externalrss");
 
 	var $db;
-	var $param;
+	var $paramdef;	// Params of box definition (not user params)
 
     var $info_box_head = array();
     var $info_box_contents = array();
+
 
     /**
      *  Constructor
@@ -52,13 +53,8 @@ class box_external_rss extends ModeleBoxes
      */
     function __construct($db,$param)
     {
-        global $langs;
-        $langs->load("boxes");
-
 		$this->db=$db;
-		$this->param=$param;
-
-        $this->boxlabel=$langs->transnoentitiesnoconv("BoxLastRssInfos");
+		$this->paramdef=$param;
     }
 
     /**
@@ -76,7 +72,7 @@ class box_external_rss extends ModeleBoxes
 		$this->max=$max;
 
 		// On recupere numero de param de la boite
-		preg_match('/^([0-9]+) /',$this->param,$reg);
+		preg_match('/^([0-9]+) /',$this->paramdef,$reg);
 		$site=$reg[1];
 
 		// Create dir nor required

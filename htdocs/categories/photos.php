@@ -2,11 +2,11 @@
 /* Copyright (C) 2001-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005      Eric Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -184,23 +184,23 @@ if ($object->id)
 	/*                                                                            */
 	/* ************************************************************************** */
 
-	print "\n<div class=\"tabsAction\">\n";
+	print '<div class="tabsAction">'."\n";
 
 	if ($action != 'ajout_photo' && $user->rights->categorie->creer)
 	{
 		if (! empty($conf->global->MAIN_UPLOAD_DOC))
 		{
-			print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=ajout_photo&amp;id='.$object->id.'&amp;type='.$type.'">';
+			print '<a class="butAction hideonsmartphone" href="'.$_SERVER['PHP_SELF'].'?action=ajout_photo&amp;id='.$object->id.'&amp;type='.$type.'">';
 			print $langs->trans("AddPhoto").'</a>';
 		}
 		else
 		{
-			print '<a class="butActionRefused" href="#">';
+			print '<a class="butActionRefused hideonsmartphone" href="#">';
 			print $langs->trans("AddPhoto").'</a>';
 		}
 	}
 
-	print "\n</div>\n";
+	print '</div>'."\n";
 
 	/*
 	 * Ajouter une photo

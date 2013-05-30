@@ -3,7 +3,7 @@
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 2 of the License, or
+-- the Free Software Foundation; either version 3 of the License, or
 -- (at your option) any later version.
 --
 -- This program is distributed in the hope that it will be useful,
@@ -17,11 +17,11 @@
 -- ===================================================================
 
 CREATE TABLE llx_osc_product (
-  rowid int(11) NOT NULL default '0',
+  rowid integer NOT NULL default '0',
   datem datetime default NULL,
-  fk_product int(11) NOT NULL default '0',
+  fk_product integer NOT NULL default '0',
   PRIMARY KEY  (rowid),
   UNIQUE KEY fk_product (fk_product)
-) ENGINE=InnoDB COMMENT='Table transition produit OSC - produit Dolibarr';
+) ENGINE=InnoDB;
 
 

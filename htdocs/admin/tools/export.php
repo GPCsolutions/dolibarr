@@ -4,7 +4,7 @@
  *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2 of the License, or
+* the Free Software Foundation; either version 3 of the License, or
 * (at your option) any later version.
 *
 * This program is distributed in the hope that it will be useful,
@@ -35,7 +35,7 @@ $file=GETPOST('filename_template','alpha');
 
 $sortfield = GETPOST('sortfield','alpha');
 $sortorder = GETPOST('sortorder','alpha');
-$page = GETPOST("page");
+$page = GETPOST("page",'int');
 if (! $sortorder) $sortorder="DESC";
 if (! $sortfield) $sortfield="date";
 if ($page < 0) { $page = 0; }

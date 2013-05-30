@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2006-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2010-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2010-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -78,14 +78,15 @@ function user_prepare_head($object)
 	    $head[$h][2] = 'clicktodial';
         $h++;
     }
-
+    
     // Show more tabs from modules
     // Entries must be declared in modules descriptor with line
-    // $this->tabs = array('entity:+tabname:Title:@mymodule:conditiontoshow:/mymodule/mypage.php?id=__ID__');   to add new tab
-    // $this->tabs = array('entity:-tabname:Title:@mymodule:conditiontoshow:/mymodule/mypage.php?id=__ID__');   to remove a tab
+    // $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
+    // $this->tabs = array('entity:-tabname);   												to remove a tab
     complete_head_from_modules($conf,$langs,$object,$head,$h,'user');
-
-    if (! empty($user->societe_id))
+	
+    //Info on users is visible only by internal user
+    if (empty($user->societe_id))
     {
     	$head[$h][0] = DOL_URL_ROOT.'/user/note.php?id='.$object->id;
     	$head[$h][1] = $langs->trans("Note");
@@ -97,6 +98,8 @@ function user_prepare_head($object)
     	$head[$h][2] = 'info';
     	$h++;
     }
+
+    complete_head_from_modules($conf,$langs,$object,$head,$h,'user','remove');
 
 	return $head;
 }
@@ -140,12 +143,74 @@ function group_prepare_head($object)
     // Show more tabs from modules
     // Entries must be declared in modules descriptor with line
     // $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
-    // $this->tabs = array('entity:-tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to remove a tab
+    // $this->tabs = array('entity:-tabname);   												to remove a tab
     complete_head_from_modules($conf,$langs,$object,$head,$h,'group');
+
+    complete_head_from_modules($conf,$langs,$object,$head,$h,'group','remove');
 
     return $head;
 }
 
+
+
+/**
+ * Prepare array with list of tabs
+ *
+ * @return  array				Array of tabs to shoc
+ */
+function user_admin_prepare_head()
+{
+	global $langs, $conf, $user;
+
+	$langs->load("users");
+	$h=0;
+	
+    $head[$h][0] = DOL_URL_ROOT.'/admin/user.php';
+    $head[$h][1] = $langs->trans("Parameters");
+    $head[$h][2] = 'card';
+    $h++;
+	
+    $head[$h][0] = DOL_URL_ROOT.'/user/admin/user_extrafields.php';
+    $head[$h][1] = $langs->trans("ExtraFields");
+    $head[$h][2] = 'attributes';
+    $h++;
+    
+	// Show more tabs from modules
+	// Entries must be declared in modules descriptor with line
+	// $this->tabs = array('entity:+tabname:Title:@mymodule:/mymodule/mypage.php?id=__ID__');   to add new tab
+	// $this->tabs = array('entity:-tabname);   												to remove a tab
+	complete_head_from_modules($conf,$langs,$object,$head,$h,'useradmin');
+
+	complete_head_from_modules($conf,$langs,$object,$head,$h,'useradmin','remove');
+
+	return $head;
+}
+
+
+
+/**
+ * Prepare array with list of tabs
+ *
+ * @param   Object	$object		Object related to tabs
+ * @param	array	$aEntities	Entities array
+ * @return  array				Array of tabs
+ */
+function entity_prepare_head($object, $aEntities)
+{
+	global $mc;
+
+	$head = array();
+
+	foreach($aEntities as $entity)
+	{
+		$mc->getInfo($entity);
+		$head[$entity][0] = $_SERVER['PHP_SELF'].'?id='.$object->id.'&amp;entity='.$entity;
+		$head[$entity][1] = $mc->label;
+		$head[$entity][2] = $entity;
+	}
+
+	return $head;
+}
 
 /**
  * 	Show list of themes. Show all thumbs of themes
@@ -159,14 +224,20 @@ function show_theme($fuser,$edit=0,$foruserprofile=false)
 {
     global $conf,$langs,$bc;
 
-    $forcethemedir=(! empty($conf->global->MAIN_FORCETHEMEDIR) ? $conf->global->MAIN_FORCETHEMEDIR : '');
-    $dirthemes=array($forcethemedir.'/theme');
-    if (! empty($conf->modules_parts['themes'])) {
-    	$dirthemes=array_merge(array($forcethemedir.'/theme'),(array) $conf->modules_parts['themes']);
+    //$conf->global->MAIN_FORCETHEMEDIR='';
+    $dirthemes=array(empty($conf->global->MAIN_FORCETHEMEDIR)?'/theme':$conf->global->MAIN_FORCETHEMEDIR.'/theme');
+    if (! empty($conf->modules_parts['theme']))		// Using this feature slow down application
+    {
+    	foreach($conf->modules_parts['theme'] as $reldir)
+    	{
+	    	$dirthemes=array_merge($dirthemes,(array) ($reldir.'theme'));
+    	}
     }
-
-    $selected_theme=$conf->global->MAIN_THEME;
-    if (! empty($fuser->conf->MAIN_THEME)) $selected_theme=$fuser->conf->MAIN_THEME;
+    $dirthemes=array_unique($dirthemes);
+    
+    $selected_theme='';
+    if (empty($foruserprofile)) $selected_theme=$conf->global->MAIN_THEME;
+    else $selected_theme=empty($fuser->conf->MAIN_THEME)?'':$fuser->conf->MAIN_THEME;
 
     $colspan=2;
     if ($foruserprofile) $colspan=4;
@@ -186,7 +257,7 @@ function show_theme($fuser,$edit=0,$foruserprofile=false)
 	    print '<tr '.$bc[$var].'>';
 	    print '<td>'.$langs->trans("DefaultSkin").'</td>';
 	    print '<td>'.$conf->global->MAIN_THEME.'</td>';
-	    print '<td align="left" nowrap="nowrap" width="20%"><input '.$bc[$var].' name="check_MAIN_THEME"'.($edit?'':' disabled').' type="checkbox" '.($selected_theme?" checked":"").'> '.$langs->trans("UsePersonalValue").'</td>';
+	    print '<td align="left" class="nowrap" width="20%"><input '.$bc[$var].' name="check_MAIN_THEME"'.($edit?'':' disabled').' type="checkbox" '.($selected_theme?" checked":"").'> '.$langs->trans("UsePersonalValue").'</td>';
 	    print '<td>&nbsp;</td>';
 	    print '</tr>';
     }

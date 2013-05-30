@@ -1,4 +1,4 @@
-# Dolibarr language file - en_US - users
+# Dolibarr language file - Source file is en_US - users
 CHARSET=UTF-8
 UserCard=User card
 ContactCard=Contact card
@@ -61,7 +61,7 @@ LastGroupsCreated=Last %s created groups
 LastUsersCreated=Last %s users created
 ShowGroup=Show group
 ShowUser=Show user
-NonAffectedUsers=Non affected users
+NonAffectedUsers=Non assigned users
 UserModified=User modified successfully
 GroupModified=Group modified successfully
 PhotoFile=Photo file
@@ -114,3 +114,6 @@ YourRole=Your roles
 YourQuotaOfUsersIsReached=Your quota of active users is reached !
 NbOfUsers=Nb of users
 DontDowngradeSuperAdmin=Only a superadmin can downgrade a superadmin
+HierarchicalResponsible=Hierarchical responsible
+HierarchicView=Hierarchical view
+UseTypeFieldToChange=Use field Type to change

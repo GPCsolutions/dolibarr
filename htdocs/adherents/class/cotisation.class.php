@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -26,8 +26,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 
 
 /**
- *	\class 		Cotisation
- *	\brief      Class to manage subscriptions of foundation members
+ *	Class to manage subscriptions of foundation members
  */
 class Cotisation extends CommonObject
 {
@@ -65,9 +64,9 @@ class Cotisation extends CommonObject
 	function create($userid)
 	{
 		global $langs;
-		
+
 		$now=dol_now();
-		
+
 		// Check parameters
 		if ($this->datef <= $this->dateh)
 		{
@@ -218,7 +217,7 @@ class Cotisation extends CommonObject
 				$result=$member->fetch($this->fk_adherent);
 				$result=$member->update_end_date($user);
 
-				if ($this->fk_bank)
+				if ($accountline->rowid > 0)	// If we found bank account line (this means this->fk_bank defined)
 				{
 					$result=$accountline->delete($user);		// Return false if refused because line is conciliated
 					if ($result > 0)

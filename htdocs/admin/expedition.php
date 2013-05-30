@@ -4,13 +4,13 @@
  * Copyright (C) 2004		Sebastien Di Cintio		<sdicintio@ressource-toi.org>
  * Copyright (C) 2004		Benoit Mortier			<benoit.mortier@opensides.be>
  * Copyright (C) 2004		Eric Seigne				<eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2012	Regis Houssin			<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2012	Juanjo Menent			<jmenent@2byte.es>
- * Copyright (C) 2011-2012	Philippe Grand			<philippe.grand@atoo-net.com>
+ * Copyright (C) 2011-2013	Philippe Grand			<philippe.grand@atoo-net.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -208,17 +208,16 @@ $h++;
 
 if (! empty($conf->global->MAIN_SUBMODULE_LIVRAISON))
 {
-	$head[$h][0] = DOL_URL_ROOT."/admin/livraison.php";
-	$head[$h][1] = $langs->trans("Receivings");
-	$h++;
+    $head[$h][0] = DOL_URL_ROOT."/admin/livraison.php";
+    $head[$h][1] = $langs->trans("Receivings");
+    $h++;
 }
 
 dol_fiche_head($head, $hselected, $langs->trans("ModuleSetup"));
 
 /*
- * Numbering module
- */
-//print "<br>";
+ * Expedition numbering model
+ */ 
 
 print_titre($langs->trans("SendingsNumberingModules"));
 
@@ -228,7 +227,7 @@ print '<td width="100">'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
 print '<td>'.$langs->trans("Example").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Status").'</td>';
-print '<td align="center" width="80">'.$langs->trans("Infos").'</td>';
+print '<td align="center" width="80">'.$langs->trans("ShortInfo").'</td>';
 print "</tr>\n";
 
 clearstatcache();
@@ -250,16 +249,16 @@ foreach ($dirmodels as $reldir)
 				{
 					$file = substr($file, 0, dol_strlen($file)-4);
 
-					require_once DOL_DOCUMENT_ROOT ."/core/modules/expedition/".$file.'.php';
+					require_once $dir.$file.'.php';
 
 					$module = new $file;
-
-					// Show modules according to features level
-					if ($module->version == 'development'  && $conf->global->MAIN_FEATURES_LEVEL < 2) continue;
-					if ($module->version == 'experimental' && $conf->global->MAIN_FEATURES_LEVEL < 1) continue;
-
+					
 					if ($module->isEnabled())
 					{
+						// Show modules according to features level
+						if ($module->version == 'development'  && $conf->global->MAIN_FEATURES_LEVEL < 2) continue;
+						if ($module->version == 'experimental' && $conf->global->MAIN_FEATURES_LEVEL < 1) continue;
+					
 						$var=!$var;
 						print '<tr '.$bc[$var].'><td>'.$module->nom."</td>\n";
 						print '<td>';
@@ -267,9 +266,11 @@ foreach ($dirmodels as $reldir)
 						print '</td>';
 
                         // Show example of numbering module
-                        print '<td nowrap="nowrap">';
+                        print '<td class="nowrap">';
                         $tmp=$module->getExample();
-                        if (preg_match('/^Error/',$tmp)) { $langs->load("errors"); print '<div class="error">'.$langs->trans($tmp).'</div>'; }
+                        if (preg_match('/^Error/',$tmp)) { 
+							$langs->load("errors"); print '<div class="error">'.$langs->trans($tmp).'</div>'; 
+						}
                         elseif ($tmp=='NotConfigured') print $langs->trans($tmp);
                         else print $tmp;
                         print '</td>'."\n";
@@ -324,7 +325,7 @@ print '</table><br>';
 
 
 /*
- *  Modeles de documents
+ *  Documents models for Sendings Receipt
  */
 print_titre($langs->trans("SendingsReceiptModel"));
 
@@ -360,7 +361,8 @@ print '<td width="140">'.$langs->trans("Name").'</td>';
 print '<td>'.$langs->trans("Description").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Status").'</td>';
 print '<td align="center" width="60">'.$langs->trans("Default").'</td>';
-print '<td align="center" width="80" nowrap="nowrap">'.$langs->trans("Infos").'</td>';
+print '<td align="center" width="80" class="nowrap">'.$langs->trans("ShortInfo").'</td>';
+print '<td align="center" width="80" class="nowrap">'.$langs->trans("Preview").'</td>';
 print "</tr>\n";
 
 clearstatcache();
@@ -427,8 +429,13 @@ foreach ($dirmodels as $reldir)
 	    			$htmltooltip.='<br><br><u>'.$langs->trans("FeaturesSupported").':</u>';
 	    			$htmltooltip.='<br>'.$langs->trans("Logo").': '.yn($module->option_logo,1,1);
 	    			print '<td align="center">';
+	    			print $form->textwithpicto('',$htmltooltip,-1,0);
+	    			print '</td>';
+
+	    			// Preview
 	    			$link='<a href="'.$_SERVER["PHP_SELF"].'?action=specimen&module='.$name.'&amp;scandir='.$module->scandir.'&amp;label='.urlencode($module->name).'">'.img_object($langs->trans("Preview"),'sending').'</a>';
-	    			print $form->textwithpicto(' &nbsp; &nbsp; '.$link,$htmltooltip,-1,0);
+	    			print '<td align="center">';
+	    			print $link;
 	    			print '</td>';
 
 	    			print '</tr>';

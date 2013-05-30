@@ -1,11 +1,11 @@
 -- ============================================================================
 -- Copyright (C) 2001-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
--- Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
--- Copyright (C) 2007-2011 Regis Houssin        <regis@dolibarr.fr>
+-- Copyright (C) 2006-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+-- Copyright (C) 2007-2013 Regis Houssin        <regis.houssin@capnetworks.com>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 2 of the License, or
+-- the Free Software Foundation; either version 3 of the License, or
 -- (at your option) any later version.
 --
 -- This program is distributed in the hope that it will be useful,
@@ -33,22 +33,26 @@ create table llx_user
   pass_crypted      varchar(128),
   pass_temp         varchar(32),			    -- temporary password when asked for forget password
   civilite          varchar(6),
-  name              varchar(50),
+  lastname          varchar(50),
   firstname         varchar(50),
+  address           varchar(255),                        		-- user personal address
+  zip               varchar(25),                         		-- zipcode
+  town              varchar(50),                         		-- town
+  fk_state          integer        DEFAULT 0,            		--
+  fk_country        integer        DEFAULT 0,            		--
+  job				varchar(128),
   office_phone      varchar(20),
   office_fax        varchar(20),
   user_mobile       varchar(20),
   email             varchar(255),
   signature         text DEFAULT NULL,
   admin             smallint DEFAULT 0,
-  webcal_login      varchar(25),			-- TODO move to an extra table (ex: llx_extra_fields)
-  phenix_login      varchar(25),			-- TODO move to an extra table (ex: llx_extra_fields)
-  phenix_pass       varchar(128),			-- TODO move to an extra table (ex: llx_extra_fields)
   module_comm       smallint DEFAULT 1,
   module_compta     smallint DEFAULT 1,
   fk_societe        integer,
   fk_socpeople      integer,
   fk_member         integer,
+  fk_user           integer,               -- Hierarchic parent
   note              text DEFAULT NULL,
   datelastlogin     datetime,
   datepreviouslogin datetime,
@@ -57,5 +61,6 @@ create table llx_user
   openid            varchar(255),
   statut            tinyint DEFAULT 1,
   photo             varchar(255),     -- filename or url of photo
-  lang              varchar(6)
+  lang              varchar(6),
+  color				varchar(6)
 )ENGINE=innodb;

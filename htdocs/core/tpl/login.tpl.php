@@ -1,10 +1,10 @@
 <?php
-/* Copyright (C) 2009-2010 Regis Houssin <regis@dolibarr.fr>
- * Copyright (C) 2011-2012 Laurent Destailleur <eldy@users.sourceforge.net>
+/* Copyright (C) 2009-2010 Regis Houssin <regis.houssin@capnetworks.com>
+ * Copyright (C) 2011-2013 Laurent Destailleur <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -14,66 +14,32 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 header('Cache-Control: Public, must-revalidate');
 header("Content-type: text/html; charset=".$conf->file->character_set_client);
 
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<!-- BEGIN PHP TEMPLATE -->
-<html>
+if (GETPOST('dol_hide_topmenu')) $conf->dol_hide_topmenu=1;
+if (GETPOST('dol_hide_leftmenu')) $conf->dol_hide_leftmenu=1;
+if (GETPOST('dol_optimize_smallscreen')) $conf->dol_optimize_smallscreen=1;
+if (GETPOST('dol_no_mouse_hover')) $conf->dol_no_mouse_hover=1;
+if (GETPOST('dol_use_jmobile')) $conf->dol_use_jmobile=1;
 
-<?php
-print '<head>
-<meta name="robots" content="noindex,nofollow" />
-<meta name="author" content="Dolibarr Development Team">
-<link rel="shortcut icon" type="image/x-icon" href="'.$favicon.'"/>
-<title>'.$langs->trans('Login').' '.$title.'</title>'."\n";
-print '<!-- Includes for JQuery (Ajax library) -->'."\n";
-if (constant('JS_JQUERY_UI')) print '<link rel="stylesheet" type="text/css" href="'.JS_JQUERY_UI.'css/'.$jquerytheme.'/jquery-ui.min.css" />'."\n";  // JQuery
-else print '<link rel="stylesheet" type="text/css" href="'.DOL_URL_ROOT.'/includes/jquery/css/'.$jquerytheme.'/jquery-ui-latest.custom.css" />'."\n";    // JQuery
-// CSS forced by modules (relative url starting with /)
-if (isset($conf->modules_parts['css']))
-{
-	$arraycss=(array) $conf->modules_parts['css'];
-	foreach($arraycss as $modcss => $filescss)
-	{
-		$filescss=(array) $filescss;	// To be sure filecss is an array
-		foreach($filescss as $cssfile)
-		{
-			// cssfile is a relative path
-			print '<link rel="stylesheet" type="text/css" title="default" href="'.dol_buildpath($cssfile,1);
-			// We add params only if page is not static, because some web server setup does not return content type text/css if url has parameters, so browser cache is not used.
-			if (!preg_match('/\.css$/i',$cssfile)) print $themeparam;
-			print '"><!-- Added by module '.$modcss. '-->'."\n";
-		}
-	}
-}
-// JQuery. Must be before other includes
-$ext='.js';
-if (isset($conf->global->MAIN_OPTIMIZE_SPEED) && ($conf->global->MAIN_OPTIMIZE_SPEED & 0x01)) $ext='.jgz';
-print '<!-- Includes JS for JQuery -->'."\n";
-if (constant('JS_JQUERY')) print '<script type="text/javascript" src="'.JS_JQUERY.'jquery.min.js"></script>'."\n";
-else print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/js/jquery-latest.min'.$ext.'"></script>'."\n";
-print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/core/js/dst.js"></script>'."\n";
-print '<link rel="stylesheet" type="text/css" href="'.dol_escape_htmltag($conf_css).'" />'."\n";
-if (! empty($conf->global->MAIN_HTML_HEADER)) print $conf->global->MAIN_HTML_HEADER;
-print '<!-- HTTP_USER_AGENT = '.$_SERVER['HTTP_USER_AGENT'].' -->
-</head>';
-
+$arrayofjs=array('/core/js/dst.js');	// Javascript code on logon page only to detect user tz, dst_observed, dst_first, dst_second
+print top_htmlhead('',$langs->trans('Login').' '.$title,0,0,$arrayofjs);
 ?>
+<!-- BEGIN PHP TEMPLATE LOGIN.TPL.PHP -->
 
 <body class="body">
 
-<!-- Javascript code on logon page only to detect user tz, dst_observed, dst_first, dst_second -->
 <script type="text/javascript">
 $(document).ready(function () {
 	// Set focus on correct field
 	<?php if ($focus_element) { ?>$('#<?php echo $focus_element; ?>').focus(); <?php } ?>		// Warning to use this only on visible element
 });
 </script>
+
+<center>
 
 <form id="login" name="login" method="post" action="<?php echo $php_self; ?>">
 <input type="hidden" name="token" value="<?php echo $_SESSION['newtoken']; ?>" />
@@ -86,33 +52,36 @@ $(document).ready(function () {
 <input type="hidden" name="dst_second" id="dst_second" value="" />
 <input type="hidden" name="screenwidth" id="screenwidth" value="" />
 <input type="hidden" name="screenheight" id="screenheight" value="" />
-<input type="hidden" name="dol_hide_topmenu" id="dol_hide_topmenu" value="" />
-<input type="hidden" name="dol_hide_leftmenu" id="dol_hide_leftmenu" value="" />
+<input type="hidden" name="dol_hide_topmenu" id="dol_hide_topmenu" value="<?php echo $dol_hide_topmenu; ?>" />
+<input type="hidden" name="dol_hide_leftmenu" id="dol_hide_leftmenu" value="<?php echo $dol_hide_leftmenu; ?>" />
+<input type="hidden" name="dol_optimize_smallscreen" id="dol_optimize_smallscreen" value="<?php echo $dol_optimize_smallscreen; ?>" />
+<input type="hidden" name="dol_no_mouse_hover" id="dol_no_mouse_hover" value="<?php echo $dol_no_mouse_hover; ?>" />
+<input type="hidden" name="dol_use_jmobile" id="dol_use_jmobile" value="<?php echo $dol_use_jmobile; ?>" />
 
 <table class="login_table_title" summary="<?php echo dol_escape_htmltag($title); ?>" cellpadding="0" cellspacing="0" border="0" align="center">
 <tr class="vmenu"><td align="center"><?php echo $title; ?></td></tr>
 </table>
 <br>
 
-<table class="login_table" summary="Login area" cellpadding="2" align="center">
+<div class="login_table">
 
-<tr><td colspan="2" valign="middle">
-<table class="none" summary="Login pass" cellpadding="2" align="center">
+<div id="login_line1">
 
+<div id="login_left">
+
+<table class="left" summary="Login pass" cellpadding="2">
 <!-- Login -->
 <tr>
-<td valign="bottom"> &nbsp; <strong><label for="username"><?php echo $langs->trans('Login'); ?></label></strong> &nbsp; </td>
-<td valign="bottom" nowrap="nowrap">
+<td valign="bottom" class="loginfield"><strong><label for="username"><?php echo $langs->trans('Login'); ?></label></strong></td>
+<td valign="bottom" class="nowrap">
 <input type="text" id="username" name="username" class="flat" size="15" maxlength="40" value="<?php echo dol_escape_htmltag($login); ?>" tabindex="1" />
 </td>
 </tr>
-
 <!-- Password -->
-<tr><td valign="top" nowrap="nowrap"> &nbsp; <strong><label for="password"><?php echo $langs->trans('Password'); ?></label></strong> &nbsp; </td>
-<td valign="top" nowrap="nowrap">
-<input id="password" name="password" class="flat" type="password" size="15" maxlength="30" value="<?php echo dol_escape_htmltag($password); ?>" tabindex="2" />
+<tr><td valign="top" class="loginfield nowrap"><strong><label for="password"><?php echo $langs->trans('Password'); ?></label></strong></td>
+<td valign="top" class="nowrap">
+<input id="password" name="password" class="flat" type="password" size="15" maxlength="30" value="<?php echo dol_escape_htmltag($password); ?>" tabindex="2" autocomplete="off" />
 </td></tr>
-
 <?php
 if (! empty($hookmanager->resArray['options'])) {
 	foreach ($hookmanager->resArray['options'] as $format => $option)
@@ -124,11 +93,10 @@ if (! empty($hookmanager->resArray['options'])) {
 	}
 }
 ?>
-
 <?php if ($captcha) { ?>
 	<!-- Captcha -->
-	<tr><td valign="middle" nowrap="nowrap"> &nbsp; <b><?php echo $langs->trans('SecurityCode'); ?></b></td>
-	<td valign="top" nowrap="nowrap" align="left" class="none">
+	<tr><td valign="middle" class="loginfield nowrap"><b><?php echo $langs->trans('SecurityCode'); ?></b></td>
+	<td valign="top" class="nowrap none" align="left">
 
 	<table class="login_table_securitycode" style="width: 100px;"><tr>
 	<td><input id="securitycode" class="flat" type="text" size="6" maxlength="5" name="code" tabindex="4" /></td>
@@ -138,47 +106,57 @@ if (! empty($hookmanager->resArray['options'])) {
 
 	</td></tr>
 <?php } ?>
-
 </table>
-</td>
 
-<td align="center" valign="middle">
+</div> <!-- end div left -->
+
+<div id="login_right">
+
 <img alt="Logo" title="" src="<?php echo $urllogo; ?>" id="img_logo" />
-</td>
 
-</tr>
+</div>
+</div>
+
+<div id="login_line2" style="clear: both">
 
 <!-- Button Connection -->
-<tr><td colspan="3" style="text-align:center;"><br>
-<input type="submit" class="button" value="&nbsp; <?php echo $langs->trans('Connection'); ?> &nbsp;" tabindex="5" />
-</td></tr>
+<br><input type="submit" class="button" value="&nbsp; <?php echo $langs->trans('Connection'); ?> &nbsp;" tabindex="5" />
 
 <?php
-if ($forgetpasslink || $helpcenterlink) {
-	echo '<tr><td colspan="3" align="center">';
+if ($forgetpasslink || $helpcenterlink)
+{
+	$moreparam='';
+	if ($dol_hide_topmenu)   $moreparam.=(strpos($moreparam,'?')===false?'?':'&').'dol_hide_topmenu='.$dol_hide_topmenu;
+	if ($dol_hide_leftmenu)  $moreparam.=(strpos($moreparam,'?')===false?'?':'&').'dol_hide_leftmenu='.$dol_hide_leftmenu;
+	if ($dol_no_mouse_hover) $moreparam.=(strpos($moreparam,'?')===false?'?':'&').'dol_no_mouse_hover='.$dol_no_mouse_hover;
+	if ($dol_use_jmobile)    $moreparam.=(strpos($moreparam,'?')===false?'?':'&').'dol_use_jmobile='.$dol_use_jmobile;
+
+	echo '<br>';
+	echo '<div align="center" style="margin-top: 4px;">';
 	if ($forgetpasslink) {
-		echo '<a style="color: #888888; font-size: 10px" href="'.DOL_URL_ROOT.'/user/passwordforgotten.php">(';
+		echo '<a class="alogin" href="'.DOL_URL_ROOT.'/user/passwordforgotten.php'.$moreparam.'">(';
 		echo $langs->trans('PasswordForgotten');
-		if (! $helpcenterlink) {
-			echo ')';
-		}
+		if (! $helpcenterlink) echo ')';
 		echo '</a>';
 	}
 
+	if ($forgetpasslink && $helpcenterlink) echo '&nbsp;-&nbsp;';
+
 	if ($helpcenterlink) {
-		echo '<a style="color: #888888; font-size: 10px" href="'.DOL_URL_ROOT.'/support/index.php" target="_blank">';
-		if ($forgetpasslink) {
-			echo '&nbsp;-&nbsp;';
-		} else {
-			echo '(';
-		}
-		echo $langs->trans('NeedHelpCenter').')</a>';
+		$url=DOL_URL_ROOT.'/support/index.php'.$moreparam;
+		if (! empty($conf->global->MAIN_HELPCENTER_LINKTOUSE)) $url=$conf->global->MAIN_HELPCENTER_LINKTOUSE;
+		echo '<a class="alogin" href="'.dol_escape_htmltag($url).'" target="_blank">';
+		if (! $forgetpasslink) echo '(';
+		echo $langs->trans('NeedHelpCenter');
+		echo ')</a>';
 	}
-	echo '</td></tr>';
+	echo '</div>';
 }
 ?>
 
-</table>
+</div>
+
+</div>
 
 </form>
 
@@ -188,9 +166,9 @@ if ($forgetpasslink || $helpcenterlink) {
 <?php if (! empty($_SESSION['dol_loginmesg']))
 {
 ?>
-	<center><table width="60%"><tr><td align="center"><div class="error">
+	<center><div align="center" style="max-width: 500px; margin-left: 10px; margin-right: 10px;"><div class="error">
 	<?php echo $_SESSION['dol_loginmesg']; ?>
-	</div></td></tr></table></center>
+	</div></div></center>
 <?php
 }
 ?>
@@ -198,10 +176,9 @@ if ($forgetpasslink || $helpcenterlink) {
 <?php if ($main_home)
 {
 ?>
-	<center><table summary="info" cellpadding="0" cellspacing="0" border="0" align="center" width="750">
-	<tr><td align="center">
+	<center><div align="center" class="login_main_home" style="max-width: 80%">
 	<?php echo $main_home; ?>
-	</td></tr></table></center><br>
+	</div></center><br>
 <?php
 }
 ?>
@@ -231,6 +208,8 @@ if (! empty($conf->global->MAIN_GOOGLE_AD_CLIENT) && ! empty($conf->global->MAIN
 <!-- urlfrom in this session = <?php echo $_SESSION["urlfrom"] ?> -->
 
 <?php if (! empty($conf->global->MAIN_HTML_FOOTER)) print $conf->global->MAIN_HTML_FOOTER; ?>
+
+</center>	<!-- end of center -->
 
 </body>
 </html>

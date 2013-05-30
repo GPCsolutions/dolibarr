@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2005      Laurent Destailleur <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin       <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin       <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -82,13 +82,15 @@ class mailing_fraise extends MailingTargets
 	}
 
 
-    /*
-     *		\brief		Return here number of distinct emails returned by your selector.
-     *					For example if this selector is used to extract 500 different
-     *					emails from a text file, this function must return 500.
-     *		\return		int
-     */
-    function getNbOfRecipients()
+    /**
+	 *	Return here number of distinct emails returned by your selector.
+	 *	For example if this selector is used to extract 500 different
+	 *	emails from a text file, this function must return 500.
+	 *
+	 *  @param	string	$sql		Requete sql de comptage
+	 *	@return		int			Nb of recipients
+	 */
+    function getNbOfRecipients($sql='')
     {
         $sql  = "SELECT count(distinct(a.email)) as nb";
         $sql .= " FROM ".MAIN_DB_PREFIX."adherent as a";
@@ -164,7 +166,7 @@ class mailing_fraise extends MailingTargets
 
         // La requete doit retourner: id, email, fk_contact, name, firstname
         $sql = "SELECT a.rowid as id, a.email as email, null as fk_contact, ";
-        $sql.= " a.nom as name, a.prenom as firstname,";
+        $sql.= " a.lastname, a.firstname,";
         $sql.= " a.datefin, a.civilite, a.login, a.societe";	// Other fields
         $sql.= " FROM ".MAIN_DB_PREFIX."adherent as a";
         $sql.= " WHERE a.email IS NOT NULL";
@@ -197,7 +199,7 @@ class mailing_fraise extends MailingTargets
                     $cibles[$j] = array(
                     			'email' => $obj->email,
                     			'fk_contact' => $obj->fk_contact,
-                    			'name' => $obj->name,
+                    			'lastname' => $obj->lastname,
                     			'firstname' => $obj->firstname,
                     			'other' =>
                                 ($langs->transnoentities("Login").'='.$obj->login).';'.

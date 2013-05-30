@@ -1,4 +1,4 @@
-# Dolibarr language file - es_ES - contracts
+# Dolibarr language file - Source file is en_US - contracts
 CHARSET=UTF-8
 ContractsArea=Área contratos
 ListOfContracts=Listado de contratos
@@ -33,7 +33,7 @@ SearchAContract=Buscar un contrato
 DeleteAContract=Eliminar un contrato
 CloseAContract=Cerrar un contrato
 ConfirmDeleteAContract=¿Está seguro de querer eliminar este contrato?
-ConfirmValidateContract=¿Está seguro de querer validar este contrato?
+ConfirmValidateContract=¿Está seguro de querer validar este contrato bajo la referencia <b>%s</b> ?
 ConfirmCloseContract=¿Está seguro de querer cerrar este contrato?
 ConfirmCloseService=¿Está seguro de querer cerrar este servicio?
 ValidateAContract=Validar un contrato
@@ -54,6 +54,7 @@ ListOfRunningContractsLines=Listado de líneas de contratos en servicio
 ListOfRunningServices=Listado de servicios activos
 NotActivatedServices=Servicios no activados (con los contratos validados)
 BoardNotActivatedServices=Servicios a activar con los contratos validados
+LastContracts=Los % últimos contratos
 LastActivatedServices=Los %s últimos servicios activados
 LastModifiedServices=Los %s últimos servicios modificados
 EditServiceLine=Edición línea del servicio
@@ -76,15 +77,19 @@ ServiceStatus=Estado del servicio
 DraftContracts=Contractos borrador
 CloseRefusedBecauseOneServiceActive=El contrato no puede ser cerrado ya que contiene al menos un servicio abierto.
 CloseAllContracts=Cerrar todos los servicios
-MoveToAnotherContract=Mover el servicio a otro contrato de este tercero.
 DeleteContractLine=Eliminar línea de contrato
 ConfirmDeleteContractLine=¿Está seguro de querer eliminar esta línea de contrato de servicio?
+MoveToAnotherContract=Mover el servicio a otro contrato de este tercero.
 ConfirmMoveToAnotherContract=He elegido el contrato y confirmo el cambio de servicio en el presente contrato.
 ConfirmMoveToAnotherContractQuestion=Elija cualquier otro contrato del mismo tercero, ¿desea mover este servicio?
 PaymentRenewContractId=Renovación servicio (número %s)
 ExpiredSince=Expirado desde el
 RelatedContracts=Contratos asociados
 NoExpiredServices=Sin servicios activos expirados
+ListOfServicesToExpireWithDuration=Listado de servicios activos a expirar en %s días
+ListOfServicesToExpire=Listado de servicios activos a expirar
+Service=Servicio
+
 ##### Types de contacts #####
 TypeContact_contrat_internal_SALESREPSIGN=Comercial firmante del contrato
 TypeContact_contrat_internal_SALESREPFOLL=Comercial seguimiento del contrato

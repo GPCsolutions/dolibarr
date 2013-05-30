@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2002-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -42,8 +42,8 @@ $date_endyear=GETPOST('date_endyear');
 // Security check
 $socid = GETPOST('socid','int');
 if ($user->societe_id > 0) $socid = $user->societe_id;
-if (! $user->rights->compta->resultat->lire && ! $user->rights->accounting->comptarapport->lire)
-	accessforbidden();
+if (! empty($conf->comptabilite->enabled)) $result=restrictedArea($user,'compta','','','resultat');
+if (! empty($conf->accounting->enabled)) $result=restrictedArea($user,'accounting','','','comptarapport');
 
 // Date range
 $year=GETPOST("year");

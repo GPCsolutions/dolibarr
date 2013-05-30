@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -47,9 +47,8 @@ print $langs->trans("FormatedImportDesc1").'<br>';
 print $langs->trans("FormatedImportDesc2").'<br>';
 print '<br>';
 
-print '<table class="notopnoleftnoright" width="100%">';
 
-print '<tr><td valign="top" width="70%" class="notopnoleft">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
 
 
 // List of import set
@@ -99,9 +98,10 @@ if (count($import->array_import_code))
 	//}
 }
 print '</center>';
+print '<br>';
 
 
-print '</td><td valign="top" width="30%" class="notopnoleftnoright">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
 
 
 // List of available import format
@@ -121,23 +121,21 @@ foreach($liste as $key)
 {
 	$var=!$var;
 	print '<tr '.$bc[$var].'>';
-	print '<td width="16">'.img_picto_common($model->getDriverLabel($key),$model->getPicto($key)).'</td>';
-	$text=$model->getDriverDesc($key);
-	print '<td>'.$form->textwithpicto($model->getDriverLabel($key),$text).'</td>';
-	print '<td>'.$model->getLibLabel($key).'</td>';
-	print '<td nowrap="nowrap" align="right">'.$model->getLibVersion($key).'</td>';
+	print '<td width="16">'.img_picto_common($model->getDriverLabelForKey($key),$model->getPictoForKey($key)).'</td>';
+	$text=$model->getDriverDescForKey($key);
+	print '<td>'.$form->textwithpicto($model->getDriverLabelForKey($key),$text).'</td>';
+	print '<td>'.$model->getLibLabelForKey($key).'</td>';
+	print '<td class="nowrap" align="right">'.$model->getLibVersionForKey($key).'</td>';
 	print '</tr>';
 }
 
 print '</table>';
 
 
-print '</td></tr>';
-print '</table>';
-
-$db->close();
+print '</div></div></div>';
 
 
 llxFooter();
 
+$db->close();
 ?>

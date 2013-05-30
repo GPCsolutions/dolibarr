@@ -1,11 +1,11 @@
 -- ===================================================================
 -- Copyright (C) 2001-2002 Rodolphe Quiedeville <rodolphe@quiedeville.org>
--- Copyright (C) 2009      Regis Houssin        <regis@dolibarr.fr>
+-- Copyright (C) 2009      Regis Houssin        <regis.houssin@capnetworks.com>
 -- Copyright (C) 2011      Laurent Destailleur  <eldy@users.sourceforge.net>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 2 of the License, or
+-- the Free Software Foundation; either version 3 of the License, or
 -- (at your option) any later version.
 --
 -- This program is distributed in the hope that it will be useful,
@@ -30,13 +30,13 @@ create table llx_don
   datedon         datetime,                     -- date du don/promesse
   amount          real DEFAULT 0,
   fk_paiement     integer,
-  prenom          varchar(50),
-  nom             varchar(50),
+  firstname       varchar(50),
+  lastname        varchar(50),
   societe         varchar(50),
-  adresse         text,
-  cp              varchar(30),
-  ville           varchar(50),
-  pays            varchar(50),
+  address         text,
+  zip             varchar(30),
+  town            varchar(50),
+  country         varchar(50),
   email           varchar(255),
   phone           varchar(24),
   phone_mobile    varchar(24),
@@ -44,7 +44,7 @@ create table llx_don
   fk_don_projet   integer NULL,                  -- projet auquel est fait le don
   fk_user_author  integer NOT NULL,
   fk_user_valid   integer NULL,
-  note            text,
+  note_private    text,
   note_public     text,
   model_pdf       varchar(255),
   import_key      varchar(14)

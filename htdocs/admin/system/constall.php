@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2003      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2009      Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2009      Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -185,7 +185,7 @@ foreach($configfileparameters as $key)
 			else if ($newkey == 'dolibarr_main_url_root' && preg_match('/__auto__/',${$newkey})) print ${$newkey}.' => '.constant('DOL_MAIN_URL_ROOT');
 			else if ($newkey == 'dolibarr_main_url_root_alt' && preg_match('/__auto__/',${$newkey})) print ${$newkey}.' => '.constant('DOL_MAIN_URL_ROOT_ALT');
 			else print ${$newkey};
-			if ($newkey == 'dolibarr_main_url_root' && $newkey != DOL_MAIN_URL_ROOT) print ' (currently used by autodetect: '.DOL_MAIN_URL_ROOT.')';
+			if ($newkey == 'dolibarr_main_url_root' && $newkey != DOL_MAIN_URL_ROOT) print ' (currently overwritten by autodetected value: '.DOL_MAIN_URL_ROOT.')';
 			print "</td>";
 		}
 		print "</tr>\n";

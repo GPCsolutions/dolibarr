@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -27,12 +27,13 @@
 //if (! defined('NOREQUIREDB'))    define('NOREQUIREDB','1');
 //if (! defined('NOREQUIRESOC'))   define('NOREQUIRESOC','1');
 //if (! defined('NOREQUIRETRAN'))  define('NOREQUIRETRAN','1');
-//if (! defined('NOCSRFCHECK'))    define('NOCSRFCHECK','1');
-//if (! defined('NOTOKENRENEWAL')) define('NOTOKENRENEWAL','1');
-//if (! defined('NOREQUIREMENU'))  define('NOREQUIREMENU','1');	// If there is no menu to show
-//if (! defined('NOREQUIREHTML'))  define('NOREQUIREHTML','1');	// If we don't need to load the html.form.class.php
+//if (! defined('NOCSRFCHECK'))    define('NOCSRFCHECK','1');			// Do not check anti CSRF attack test
+//if (! defined('NOSTYLECHECK'))   define('NOSTYLECHECK','1');			// Do not check style html tag into posted data
+//if (! defined('NOTOKENRENEWAL')) define('NOTOKENRENEWAL','1');		// Do not check anti POST attack test
+//if (! defined('NOREQUIREMENU'))  define('NOREQUIREMENU','1');			// If there is no need to load and show top and left menu
+//if (! defined('NOREQUIREHTML'))  define('NOREQUIREHTML','1');			// If we don't need to load the html.form.class.php
 //if (! defined('NOREQUIREAJAX'))  define('NOREQUIREAJAX','1');
-//if (! defined("NOLOGIN"))        define("NOLOGIN",'1');		// If this page is public (can be called outside logged session)
+//if (! defined("NOLOGIN"))        define("NOLOGIN",'1');				// If this page is public (can be called outside logged session)
 
 // Change this following line to use the correct relative path (../, ../../, etc)
 $res=0;
@@ -71,17 +72,17 @@ if ($user->societe_id > 0)
 
 if ($action == 'add')
 {
-	$myobject=new Skeleton_Class($db);
-	$myobject->prop1=$_POST["field1"];
-	$myobject->prop2=$_POST["field2"];
-	$result=$myobject->create($user);
+	$object=new Skeleton_Class($db);
+	$object->prop1=$_POST["field1"];
+	$object->prop2=$_POST["field2"];
+	$result=$object->create($user);
 	if ($result > 0)
 	{
 		// Creation OK
 	}
 	{
 		// Creation KO
-		$mesg=$myobject->error;
+		$mesg=$object->error;
 	}
 }
 
@@ -119,19 +120,22 @@ jQuery(document).ready(function() {
 
 
 // Example 2 : Adding links to objects
-$somethingshown=$myobject->showLinkedObjectBlock();
+// The class must extends CommonObject class to have this method available
+//$somethingshown=$object->showLinkedObjectBlock();
 
 
 // Example 3 : List of data
 if ($action == 'list')
 {
     $sql = "SELECT";
+    $sql.= " t.rowid,";
     $sql.= " t.field1,";
     $sql.= " t.field2";
-    $sql.= " FROM ".MAIN_DB_PREFIX."skeleton as t";
+    $sql.= " FROM ".MAIN_DB_PREFIX."mytable as t";
     $sql.= " WHERE field3 = 'xxx'";
     $sql.= " ORDER BY field1 ASC";
 
+    print '<table class="noborder">'."\n";
     print '<tr class="liste_titre">';
     print_liste_field_titre($langs->trans('field1'),$_SERVER['PHP_SELF'],'t.field1','',$param,'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans('field2'),$_SERVER['PHP_SELF'],'t.field2','',$param,'',$sortfield,$sortorder);
@@ -165,6 +169,8 @@ if ($action == 'list')
         $error++;
         dol_print_error($db);
     }
+
+    print '</table>'."\n";
 }
 
 

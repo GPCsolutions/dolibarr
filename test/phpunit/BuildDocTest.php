@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2010-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2012		Regis Houssin 		<regis@dolibarr.fr>
+ * Copyright (C) 2012		Regis Houssin 		<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -171,11 +171,58 @@ class BuildDocTest extends PHPUnit_Framework_TestCase
     	$localobject->createFromOrder($localobjectcom);
     	$localobject->date_lim_reglement = dol_now() + 3600 * 24 *30;
 
-    	// Crabe
+    	// Crabe (english)
     	$localobject->modelpdf='crabe';
     	$result=facture_pdf_create($db, $localobject, $localobject->modelpdf, $langs);
-
 		$this->assertLessThan($result, 0);
+    	print __METHOD__." result=".$result."\n";
+
+    	// Crabe (japanese)
+    	$newlangs1=new Translate("",$conf);
+    	$newlangs1->setDefaultLang('ja_JP');
+    	$localobject->modelpdf='crabe';
+    	$result=facture_pdf_create($db, $localobject, $localobject->modelpdf, $newlangs1);
+    	$this->assertLessThan($result, 0);
+    	print __METHOD__." result=".$result."\n";
+
+    	// Crabe (saudiarabia)
+    	$newlangs2a=new Translate("",$conf);
+    	$newlangs2a->setDefaultLang('sa_SA');
+    	$localobject->modelpdf='crabe';
+    	$result=facture_pdf_create($db, $localobject, $localobject->modelpdf, $newlangs2a);
+    	$this->assertLessThan($result, 0);
+    	print __METHOD__." result=".$result."\n";
+
+    	// Crabe (english_saudiarabia)
+    	$newlangs2b=new Translate("",$conf);
+    	$newlangs2b->setDefaultLang('en_SA');
+    	$localobject->modelpdf='crabe';
+    	$result=facture_pdf_create($db, $localobject, $localobject->modelpdf, $newlangs2b);
+    	$this->assertLessThan($result, 0);
+    	print __METHOD__." result=".$result."\n";
+
+    	// Crabe (greek)
+    	$newlangs3=new Translate("",$conf);
+    	$newlangs3->setDefaultLang('el_GR');
+    	$localobject->modelpdf='crabe';
+    	$result=facture_pdf_create($db, $localobject, $localobject->modelpdf, $newlangs3);
+    	$this->assertLessThan($result, 0);
+    	print __METHOD__." result=".$result."\n";
+
+    	// Crabe (chinese)
+    	$newlangs4=new Translate("",$conf);
+    	$newlangs4->setDefaultLang('zh_CN');
+    	$localobject->modelpdf='crabe';
+    	$result=facture_pdf_create($db, $localobject, $localobject->modelpdf, $newlangs4);
+    	$this->assertLessThan($result, 0);
+    	print __METHOD__." result=".$result."\n";
+
+    	// Crabe (russian)
+    	$newlangs5=new Translate("",$conf);
+    	$newlangs5->setDefaultLang('ru_RU');
+    	$localobject->modelpdf='crabe';
+    	$result=facture_pdf_create($db, $localobject, $localobject->modelpdf, $newlangs5);
+    	$this->assertLessThan($result, 0);
     	print __METHOD__." result=".$result."\n";
 
     	return 0;
@@ -329,7 +376,7 @@ class BuildDocTest extends PHPUnit_Framework_TestCase
         $langs=$this->savlangs;
         $db=$this->savdb;
 
-        $conf->fichinter->dir_output.='/temp';
+        $conf->ficheinter->dir_output.='/temp';
         $localobject=new Fichinter($this->savdb);
         $localobject->initAsSpecimen();
 

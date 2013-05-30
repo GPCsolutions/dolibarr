@@ -1,0 +1,35 @@
+README (English)
+##################################################
+OBS Package tools
+##################################################
+
+This directory contains files to explain how to publish
+a package onto OBS
+
+
+# Create a project onto OBS
+#----------------------------------
+https://build.opensuse.org
+
+
+Add attributes:
+OBS:Screenshots         URL of screenshot
+OBS:QualityCategory     Development|Testing|Stable|Private
+OBS:Maintained          1
+
+
+To submit a snapshot for building, we should have a service file with content
+<services>
+  <service name="download_src_package">
+    <param name="host">www.dolibarr.org</param>
+    <param name="protocol">http</param>
+    <param name="path">/files/stable/package_rpm_generic/dolibarr-3.3.2-3.src.rpm</param>
+  </service>
+</services>
+
+How to have such a service ?
+Try to make "Add file" and select Remote URL and enter http://www.dolibarr.org/files/stable/package_rpm_generic/dolibarr-3.3.2-3.src.rpm
+
+Then add into advanded - attributes
+OBS:Screenshots http://www.dolibarr.org/images/phocagallery/dolibarr_screenshot1.png
+OBS:QualityCategory Testing

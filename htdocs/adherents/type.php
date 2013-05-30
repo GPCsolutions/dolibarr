@@ -2,11 +2,12 @@
 /* Copyright (C) 2001-2002 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2003      Jean-Louis Bergamo   <jlb@j1b.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013	   Florian Henry        <florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -27,13 +28,14 @@
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
 require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent_type.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 
 $langs->load("members");
 
 $rowid		= GETPOST('rowid','int');
 $action		= GETPOST('action','alpha');
 
-$search_lastname	= GETPOST('search_nom','alpha');
+$search_lastname	= GETPOST('search_lastname','alpha');
 $search_login		= GETPOST('search_login','alpha');
 $search_email		= GETPOST('search_email','alpha');
 $type				= GETPOST('type','alpha');
@@ -47,10 +49,15 @@ $offset = $conf->liste_limit * $page ;
 $pageprev = $page - 1;
 $pagenext = $page + 1;
 if (! $sortorder) {  $sortorder="DESC"; }
-if (! $sortfield) {  $sortfield="d.nom"; }
+if (! $sortfield) {  $sortfield="d.lastname"; }
 
 // Security check
 $result=restrictedArea($user,'adherent',$rowid,'adherent_type');
+
+$extrafields = new ExtraFields($db);
+
+// fetch optionals attributes and labels
+$extralabels=$extrafields->fetch_name_optionals_label('adherent_type');
 
 if (GETPOST('button_removefilter'))
 {
@@ -62,6 +69,8 @@ if (GETPOST('button_removefilter'))
 }
 
 
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('membertypecard'));
 
 /*
  *	Actions
@@ -77,6 +86,9 @@ if ($action == 'add' && $user->rights->adherent->configurer)
 		$adht->note        = trim($_POST["comment"]);
 		$adht->mail_valid  = trim($_POST["mail_valid"]);
 		$adht->vote        = trim($_POST["vote"]);
+
+		// Fill array 'array_options' with data from add form
+		$ret = $extrafields->setOptionalsFromPost($extralabels,$adht);
 
 		if ($adht->libelle)
 		{
@@ -112,6 +124,9 @@ if ($action == 'update' && $user->rights->adherent->configurer)
 		$adht->mail_valid  = trim($_POST["mail_valid"]);
 		$adht->vote        = trim($_POST["vote"]);
 
+		// Fill array 'array_options' with data from add form
+		$ret = $extrafields->setOptionalsFromPost($extralabels,$adht);
+
 		$adht->update($user->id);
 
 		header("Location: ".$_SERVER["PHP_SELF"]."?rowid=".$_POST["rowid"]);
@@ -131,7 +146,7 @@ if ($action == 'commentaire' && $user->rights->adherent->configurer)
 {
 	$don = new Don($db);
 	$don->fetch($rowid);
-	$don->update_note($_POST["commentaire"]);
+	$don->update_note(dol_html_entity_decode(GETPOST('commentaire'), ENT_QUOTES));
 }
 
 
@@ -203,7 +218,7 @@ if (! $rowid && $action != 'create' && $action != 'edit')
 	// New type
 	if ($user->rights->adherent->configurer)
 	{
-		print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=create">'.$langs->trans("NewType").'</a>';
+		print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=create">'.$langs->trans("NewType").'</a></div>';
 	}
 
 	print "</div>";
@@ -219,6 +234,7 @@ if (! $rowid && $action != 'create' && $action != 'edit')
 if ($action == 'create')
 {
 	$form = new Form($db);
+	$adht = new AdherentType($db);
 
 	print_fiche_titre($langs->trans("NewMemberType"));
 
@@ -249,6 +265,13 @@ if ($action == 'create')
 	$doleditor->Create();
 	print '</td></tr>';
 
+	// Other attributes
+	$parameters=array();
+	$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$act,$action);    // Note that $action and $object may have been modified by hook
+	if (empty($reshook) && ! empty($extrafields->attribute_label))
+	{
+		print $adht->showOptionals($extrafields,'edit');
+	}
 	print "</table>\n";
 
 	print '<br>';
@@ -269,6 +292,7 @@ if ($rowid > 0)
 	{
 		$adht = new AdherentType($db);
 		$adht->fetch($rowid);
+		$adht->fetch_optionals($rowid,$extralabels);
 
 		$h=0;
 
@@ -307,8 +331,16 @@ if ($rowid > 0)
 		print '<tr><td valign="top">'.$langs->trans("WelcomeEMail").'</td><td>';
 		print nl2br($adht->mail_valid)."</td></tr>";
 
-		print '</table>';
+		// Other attributes
+		$parameters=array();
+		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$act,$action);    // Note that $action and $object may have been modified by hook
+		if (empty($reshook) && ! empty($extrafields->attribute_label))
+		{
+			// View extrafields
+			print $adht->showOptionals($extrafields);
+		}
 
+		print '</table>';
 		print '</div>';
 
 		/*
@@ -320,16 +352,16 @@ if ($rowid > 0)
 		// Edit
 		if ($user->rights->adherent->configurer)
 		{
-			print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=edit&amp;rowid='.$adht->id.'">'.$langs->trans("Modify").'</a>';
+			print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER['PHP_SELF'].'?action=edit&amp;rowid='.$adht->id.'">'.$langs->trans("Modify").'</a></div>';
 		}
 
 		// Add
-		print '<a class="butAction" href="fiche.php?action=create&typeid='.$adht->id.'">'.$langs->trans("AddMember").'</a>';
+		print '<div class="inline-block divButAction"><a class="butAction" href="fiche.php?action=create&typeid='.$adht->id.'">'.$langs->trans("AddMember").'</a></div>';
 
 		// Delete
 		if ($user->rights->adherent->configurer)
 		{
-			print '<a class="butActionDelete" href="'.$_SERVER['PHP_SELF'].'?action=delete&rowid='.$adht->id.'">'.$langs->trans("DeleteType").'</a>';
+			print '<div class="inline-block divButAction"><a class="butActionDelete" href="'.$_SERVER['PHP_SELF'].'?action=delete&rowid='.$adht->id.'">'.$langs->trans("DeleteType").'</a></div>';
 		}
 
 		print "</div>";
@@ -338,10 +370,10 @@ if ($rowid > 0)
 		// Show list of members (nearly same code than in page liste.php)
 
 		$membertypestatic=new AdherentType($db);
-		
+
 		$now=dol_now();
 
-		$sql = "SELECT d.rowid, d.login, d.prenom as firstname, d.nom as lastname, d.societe, ";
+		$sql = "SELECT d.rowid, d.login, d.firstname, d.lastname, d.societe, ";
 		$sql.= " d.datefin,";
 		$sql.= " d.email, d.fk_adherent_type as type_id, d.morphy, d.statut,";
 		$sql.= " t.libelle as type, t.cotisation";
@@ -351,9 +383,9 @@ if ($rowid > 0)
 		$sql.= " AND t.rowid = ".$adht->id;
 		if ($sall)
 		{
-		    $sql.= " AND (d.prenom LIKE '%".$sall."%' OR d.nom LIKE '%".$sall."%' OR d.societe LIKE '%".$sall."%'";
-		    $sql.= " OR d.email LIKE '%".$sall."%' OR d.login LIKE '%".$sall."%' OR d.adresse LIKE '%".$sall."%'";
-		    $sql.= " OR d.ville LIKE '%".$sall."%' OR d.note LIKE '%".$sall."%')";
+		    $sql.= " AND (d.firstname LIKE '%".$sall."%' OR d.lastname LIKE '%".$sall."%' OR d.societe LIKE '%".$sall."%'";
+		    $sql.= " OR d.email LIKE '%".$sall."%' OR d.login LIKE '%".$sall."%' OR d.address LIKE '%".$sall."%'";
+		    $sql.= " OR d.town LIKE '%".$sall."%' OR d.note LIKE '%".$sall."%')";
 		}
 		if ($status != '')
 		{
@@ -363,12 +395,12 @@ if ($rowid > 0)
 		{
 		  if (isset($_POST['search']) && $_POST['search'] != '')
 		  {
-		    $sql.= " AND (d.prenom LIKE '%".$_POST['search']."%' OR d.nom LIKE '%".$_POST['search']."%')";
+		    $sql.= " AND (d.firstname LIKE '%".$_POST['search']."%' OR d.lastname LIKE '%".$_POST['search']."%')";
 		  }
 		}
 		if (! empty($search_lastname))
 		{
-			$sql.= " AND (d.prenom LIKE '%".$search_lastname."%' OR d.nom LIKE '%".$search_lastname."%')";
+			$sql.= " AND (d.firstname LIKE '%".$search_lastname."%' OR d.lastname LIKE '%".$search_lastname."%')";
 		}
 		if (! empty($search_login))
 		{
@@ -428,8 +460,8 @@ if ($rowid > 0)
 
 		    $param="&rowid=".$rowid;
 		    if (! empty($status))			$param.="&status=".$status;
-		    if (! empty($search_lastname))	$param.="&search_nom=".$search_lastname;
-		    if (! empty($search_firstname))	$param.="&search_prenom=".$search_firstname;
+		    if (! empty($search_lastname))	$param.="&search_lastname=".$search_lastname;
+		    if (! empty($search_firstname))	$param.="&search_firstname=".$search_firstname;
 		    if (! empty($search_login))		$param.="&search_login=".$search_login;
 		    if (! empty($search_email))		$param.="&search_email=".$search_email;
 		    if (! empty($filter))			$param.="&filter=".$filter;
@@ -444,7 +476,7 @@ if ($rowid > 0)
 		    print '<table class="noborder" width="100%">';
 
 		    print '<tr class="liste_titre">';
-		    print_liste_field_titre($langs->trans("Name")." / ".$langs->trans("Company"),$_SERVER["PHP_SELF"],"d.nom",$param,"","",$sortfield,$sortorder);
+		    print_liste_field_titre($langs->trans("Name")." / ".$langs->trans("Company"),$_SERVER["PHP_SELF"],"d.lastname",$param,"","",$sortfield,$sortorder);
 		    print_liste_field_titre($langs->trans("Login"),$_SERVER["PHP_SELF"],"d.login",$param,"","",$sortfield,$sortorder);
 		    print_liste_field_titre($langs->trans("Person"),$_SERVER["PHP_SELF"],"d.morphy",$param,"","",$sortfield,$sortorder);
 		    print_liste_field_titre($langs->trans("EMail"),$_SERVER["PHP_SELF"],"d.email",$param,"","",$sortfield,$sortorder);
@@ -460,7 +492,7 @@ if ($rowid > 0)
 			print '<tr class="liste_titre">';
 
 			print '<td class="liste_titre" align="left">';
-			print '<input class="flat" type="text" name="search_nom" value="'.$search_lastname.'" size="12"></td>';
+			print '<input class="flat" type="text" name="search_lastname" value="'.$search_lastname.'" size="12"></td>';
 
 			print '<td class="liste_titre" align="left">';
 			print '<input class="flat" type="text" name="search_login" value="'.$search_login.'" size="7"></td>';
@@ -492,7 +524,7 @@ if ($rowid > 0)
 		        $adh->lastname=$objp->lastname;
 		        $adh->firstname=$objp->firstname;
 
-		        // Nom
+		        // Lastname
 		        $var=!$var;
 		        print '<tr '.$bc[$var].'>';
 		        if ($objp->societe != '')
@@ -508,7 +540,7 @@ if ($rowid > 0)
 		        print "<td>".$objp->login."</td>\n";
 
 		        // Type
-		        /*print '<td nowrap="nowrap">';
+		        /*print '<td class="nowrap">';
 		        $membertypestatic->id=$objp->type_id;
 		        $membertypestatic->libelle=$objp->type;
 		        print $membertypestatic->getNomUrl(1,12);
@@ -522,14 +554,14 @@ if ($rowid > 0)
 		        print "<td>".dol_print_email($objp->email,0,0,1)."</td>\n";
 
 		        // Statut
-		        print '<td nowrap="nowrap">';
+		        print '<td class="nowrap">';
 		        print $adh->LibStatut($objp->statut,$objp->cotisation,$datefin,2);
 		        print "</td>";
 
 		        // Date fin cotisation
 		        if ($datefin)
 		        {
-			        print '<td align="center" nowrap="nowrap">';
+			        print '<td align="center" class="nowrap">';
 		            if ($datefin < time() && $objp->statut > 0)
 		            {
 		                print dol_print_date($datefin,'day')." ".img_warning($langs->trans("SubscriptionLate"));
@@ -542,7 +574,7 @@ if ($rowid > 0)
 		        }
 		        else
 		        {
-			        print '<td align="left" nowrap="nowrap">';
+			        print '<td align="left" class="nowrap">';
 			        if ($objp->cotisation == 'yes')
 			        {
 		                print $langs->trans("SubscriptionNotReceived");
@@ -593,7 +625,7 @@ if ($rowid > 0)
 		$adht = new AdherentType($db);
 		$adht->id = $rowid;
 		$adht->fetch($rowid);
-
+		$adht->fetch_optionals($rowid,$extralabels);
 
 		$h=0;
 
@@ -631,7 +663,25 @@ if ($rowid > 0)
 		$doleditor->Create();
 		print "</td></tr>";
 
+		// Other attributes
+		$parameters=array();
+		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$act,$action);    // Note that $action and $object may have been modified by hook
+
 		print '</table>';
+
+		//Extra field
+		if (empty($reshook) && ! empty($extrafields->attribute_label))
+		{
+			print '<br><br><table class="border" width="100%">';
+			foreach($extrafields->attribute_label as $key=>$label)
+			{
+				$value=(isset($_POST["options_".$key])?$_POST["options_".$key]:(isset($adht->array_options['options_'.$key])?$adht->array_options['options_'.$key]:''));
+				print '<tr><td width="30%">'.$label.'</td><td>';
+				print $extrafields->showInputField($key,$value);
+				print "</td></tr>\n";
+			}
+			print '</table><br><br>';
+		}
 
 		print '<center><input type="submit" class="button" value="'.$langs->trans("Save").'"> &nbsp; &nbsp;';
 		print '<input type="submit" name="button" class="button" value="'.$langs->trans("Cancel").'"></center>';

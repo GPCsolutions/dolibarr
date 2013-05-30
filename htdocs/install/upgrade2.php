@@ -1,12 +1,12 @@
 <?php
 /* Copyright (C) 2005      Marc Barilley / Ocebo <marc@ocebo.com>
  * Copyright (C) 2005-2012 Laurent Destailleur   <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2011 Regis Houssin         <regis@dolibarr.fr>
+ * Copyright (C) 2005-2011 Regis Houssin         <regis.houssin@capnetworks.com>
  * Copyright (C) 2010      Juanjo Menent         <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -106,6 +106,10 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
     $conf->db->pass = $dolibarr_main_db_pass;
 
     $db=getDoliDBInstance($conf->db->type,$conf->db->host,$conf->db->user,$conf->db->pass,$conf->db->name,$conf->db->port);
+
+    // Create the global $hookmanager object
+    include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
+    $hookmanager=new HookManager($db);
 
     if ($db->connected != 1)
     {
@@ -319,6 +323,24 @@ if (! GETPOST("action") || preg_match('/upgrade/i',GETPOST('action')))
             migrate_reload_menu($db,$langs,$conf,$versionto);
         }
 
+        // Script for VX (X<3.3) -> V3.3
+        $afterversionarray=explode('.','3.2.9');
+        $beforeversionarray=explode('.','3.3.9');
+        if (versioncompare($versiontoarray,$afterversionarray) >= 0 && versioncompare($versiontoarray,$beforeversionarray) <= 0)
+        {
+        	migrate_categorie_association($db,$langs,$conf);
+        }
+
+        $afterversionarray=explode('.','3.3.9');
+        $beforeversionarray=explode('.','3.4.9');
+        if (versioncompare($versiontoarray,$afterversionarray) >= 0 && versioncompare($versiontoarray,$beforeversionarray) <= 0)
+        {
+        	// Reload modules (this must be always and only into last targeted version)
+        	migrate_reload_modules($db,$langs,$conf);
+
+        	// Reload menus (this must be always and only into last targeted version)
+        	migrate_reload_menu($db,$langs,$conf,$versionto);
+        }
 
         print '<tr><td colspan="4"><br>'.$langs->trans("MigrationFinished").'</td></tr>';
 
@@ -1142,7 +1164,7 @@ function migrate_paiementfourn_facturefourn($db,$langs,$conf)
 
                         if ($nb == 0)
                         {
-                            print '<tr><td colspan="4" nowrap="nowrap"><b>'.$langs->trans('SuppliersInvoices').'</b></td></tr>';
+                            print '<tr><td colspan="4" class="nowrap"><b>'.$langs->trans('SuppliersInvoices').'</b></td></tr>';
                             print '<tr><td>fk_paiementfourn</td><td>fk_facturefourn</td><td>'.$langs->trans('Amount').'</td><td>&nbsp;</td></tr>';
                         }
 
@@ -1255,7 +1277,7 @@ function migrate_price_facture($db,$langs,$conf)
                 $facligne= new FactureLigne($db);
                 $facligne->fetch($rowid);
 
-                $result=calcul_price_total($qty,$pu,$remise_percent,$txtva, 0, 0,$remise_percent_global,'HT',$info_bits);
+                $result=calcul_price_total($qty,$pu,$remise_percent,$txtva, 0, 0,$remise_percent_global,'HT',$info_bits,0);
                 $total_ht  = $result[0];
                 $total_tva = $result[1];
                 $total_ttc = $result[2];
@@ -1367,7 +1389,7 @@ function migrate_price_propal($db,$langs,$conf)
                 $propalligne= new PropaleLigne($db);
                 $propalligne->fetch($rowid);
 
-                $result=calcul_price_total($qty,$pu,$remise_percent,$txtva,0,0,$remise_percent_global,'HT',$info_bits);
+                $result=calcul_price_total($qty,$pu,$remise_percent,$txtva,0,0,$remise_percent_global,'HT',$info_bits,0);
                 $total_ht  = $result[0];
                 $total_tva = $result[1];
                 $total_ttc = $result[2];
@@ -1472,7 +1494,7 @@ function migrate_price_contrat($db,$langs,$conf)
                 //$contratligne->fetch($rowid); Non requis car le update_total ne met a jour que chp redefinis
                 $contratligne->rowid=$rowid;
 
-                $result=calcul_price_total($qty,$pu,$remise_percent,$txtva,0,0,0,'HT',$info_bits);
+                $result=calcul_price_total($qty,$pu,$remise_percent,$txtva,0,0,0,'HT',$info_bits,0);
                 $total_ht  = $result[0];
                 $total_tva = $result[1];
                 $total_ttc = $result[2];
@@ -1557,7 +1579,7 @@ function migrate_price_commande($db,$langs,$conf)
                 $commandeligne= new OrderLine($db);
                 $commandeligne->fetch($rowid);
 
-                $result=calcul_price_total($qty,$pu,$remise_percent,$txtva,0,0,$remise_percent_global,'HT',$info_bits);
+                $result=calcul_price_total($qty,$pu,$remise_percent,$txtva,0,0,$remise_percent_global,'HT',$info_bits,0);
                 $total_ht  = $result[0];
                 $total_tva = $result[1];
                 $total_ttc = $result[2];
@@ -1671,7 +1693,7 @@ function migrate_price_commande_fournisseur($db,$langs,$conf)
                 $commandeligne= new CommandeFournisseurLigne($db);
                 $commandeligne->fetch($rowid);
 
-                $result=calcul_price_total($qty,$pu,$remise_percent,$txtva,0,0,$remise_percent_global,'HT',$info_bits);
+                $result=calcul_price_total($qty,$pu,$remise_percent,$txtva,0,0,$remise_percent_global,'HT',$info_bits,0);
                 $total_ht  = $result[0];
                 $total_tva = $result[1];
                 $total_ttc = $result[2];
@@ -3304,15 +3326,21 @@ function migrate_mode_reglement($db,$langs,$conf)
 
 				$db->begin();
 
+				$sqla = "UPDATE ".MAIN_DB_PREFIX."paiement SET ";
+				$sqla.= "fk_paiement = ".$elements['new_id'][$key];
+				$sqla.= " WHERE fk_paiement = ".$old_id;
+				$sqla.= " AND fk_paiement IN (SELECT id FROM ".MAIN_DB_PREFIX."c_paiement WHERE id = ".$old_id." AND code = '".$elements['code'][$key]."')";
+				$resqla = $db->query($sqla);
+
 				$sql = "UPDATE ".MAIN_DB_PREFIX."c_paiement SET ";
 				$sql.= "id = ".$elements['new_id'][$key];
 				$sql.= " WHERE id = ".$old_id;
 				$sql.= " AND code = '".$elements['code'][$key]."'";
-
 				$resql = $db->query($sql);
-				if ($resql)
+
+				if ($resqla && $resql)
 				{
-					foreach($elements['tables'] as $table)
+					foreach($elements['tables'] as $table)		// FIXME We must not update tables if oldid is not renamed
 					{
 						$sql = "UPDATE ".MAIN_DB_PREFIX.$table." SET ";
 						$sql.= "fk_mode_reglement = ".$elements['new_id'][$key];
@@ -3352,6 +3380,98 @@ function migrate_mode_reglement($db,$langs,$conf)
 	print '</td></tr>';
 }
 
+/**
+ * Migrate categorie association
+ *
+ * @param	DoliDB		$db				Database handler
+ * @param	Translate	$langs			Object langs
+ * @param	Conf		$conf			Object conf
+ * @return	void
+ */
+function migrate_categorie_association($db,$langs,$conf)
+{
+	print '<tr><td colspan="4">';
+
+	print '<br>';
+	print '<b>'.$langs->trans('MigrationCategorieAssociation')."</b><br>\n";
+
+	$error = 0;
+
+	if ($db->DDLInfoTable(MAIN_DB_PREFIX."categorie_association"))
+	{
+		dolibarr_install_syslog("upgrade2::migrate_categorie_association");
+
+		$db->begin();
+
+		$sqlSelect = "SELECT fk_categorie_mere, fk_categorie_fille";
+		$sqlSelect.= " FROM ".MAIN_DB_PREFIX."categorie_association";
+
+		$resql = $db->query($sqlSelect);
+		if ($resql)
+		{
+			$i = 0;
+			$num = $db->num_rows($resql);
+
+			if ($num)
+			{
+				while ($i < $num)
+				{
+					$obj = $db->fetch_object($resql);
+
+					$sqlUpdate = "UPDATE ".MAIN_DB_PREFIX."categorie SET ";
+					$sqlUpdate.= "fk_parent = ".$obj->fk_categorie_mere;
+					$sqlUpdate.= " WHERE rowid = ".$obj->fk_categorie_fille;
+
+					$result=$db->query($sqlUpdate);
+					if (! $result)
+					{
+						$error++;
+						dol_print_error($db);
+					}
+					print ". ";
+					$i++;
+				}
+			}
+			else
+			{
+				print $langs->trans('AlreadyDone')."<br>\n";
+			}
+
+			if (! $error)
+			{
+				// TODO DROP table in the next release
+				/*
+				$sqlDrop = "DROP TABLE ".MAIN_DB_PREFIX."categorie_association";
+				if ($db->query($sqlDrop))
+				{
+					$db->commit();
+				}
+				else
+				{
+					$db->rollback();
+				}
+				*/
+
+				$db->commit();
+			}
+			else
+			{
+				$db->rollback();
+			}
+		}
+		else
+		{
+			dol_print_error($db);
+			$db->rollback();
+		}
+	}
+	else
+	{
+		print $langs->trans('AlreadyDone')."<br>\n";
+	}
+
+	print '</td></tr>';
+}
 
 /**
  * Migration directory
@@ -3406,6 +3526,10 @@ function migrate_delete_old_files($db,$langs,$conf)
     DOL_DOCUMENT_ROOT.'/core/menus/smartphone/iphone.lib.php',
     DOL_DOCUMENT_ROOT.'/core/menus/smartphone/iphone_backoffice.php',
     DOL_DOCUMENT_ROOT.'/core/menus/smartphone/iphone_frontoffice.php',
+    DOL_DOCUMENT_ROOT.'/core/menus/standard/auguria_backoffice.php',
+    DOL_DOCUMENT_ROOT.'/core/menus/standard/auguria_frontoffice.php',
+    DOL_DOCUMENT_ROOT.'/core/menus/standard/eldy_backoffice.php',
+    DOL_DOCUMENT_ROOT.'/core/menus/standard/eldy_frontoffice.php',
     DOL_DOCUMENT_ROOT.'/core/modules/mailings/dolibarr_services_expired.modules.php',
     DOL_DOCUMENT_ROOT.'/core/modules/mailings/peche.modules.php',
     DOL_DOCUMENT_ROOT.'/core/modules/mailings/poire.modules.php',

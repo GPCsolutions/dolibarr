@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -131,9 +131,8 @@ print "</tr>\n";
 $var=!$var;
 print '<tr '.$bc[$var].'>';
 print '<td>'.$langs->trans("ConnectionTimeout").'</td><td align="right">';
-//print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_USE_CONNECT_TIMEOUT" type="text" size="4" value="'.(isset($_POST["MAIN_USE_CONNECT_TIMEOUT"])?GETPOST("MAIN_USE_CONNECT_TIMEOUT"):$conf->global->MAIN_USE_CONNECT_TIMEOUT).'">';
 print ' '.strtolower($langs->trans("Seconds"));
 print '</td>';
@@ -142,9 +141,8 @@ print '</tr>';
 $var=!$var;
 print '<tr '.$bc[$var].'>';
 print '<td>'.$langs->trans("ResponseTimeout").'</td><td align="right">';
-//print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_USE_RESPONSE_TIMEOUT" type="text" size="4" value="'.$conf->global->MAIN_USE_RESPONSE_TIMEOUT.'">';
 print ' '.strtolower($langs->trans("Seconds"));
 print '</td>';
@@ -153,9 +151,8 @@ print '</tr>';
 $var=!$var;
 print '<tr '.$bc[$var].'>';
 print '<td>'.$langs->trans("MAIN_PROXY_USE").'</td><td align="right">';
-//print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print $form->selectyesno('MAIN_PROXY_USE',$conf->global->MAIN_PROXY_USE,1);
 print '</td>';
 print '</tr>';
@@ -163,9 +160,8 @@ print '</tr>';
 $var=!$var;
 print '<tr '.$bcdd[$var].'>';
 print '<td>'.$langs->trans("MAIN_PROXY_HOST").'</td><td align="right">';
-//print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_PROXY_HOST" type="text" size="16" value="'.$conf->global->MAIN_PROXY_HOST.'">';
 print '</td>';
 print '</tr>';
@@ -173,9 +169,8 @@ print '</tr>';
 $var=!$var;
 print '<tr '.$bcdd[$var].'>';
 print '<td>'.$langs->trans("MAIN_PROXY_PORT").'</td><td align="right">';
-//print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_PROXY_PORT" type="text" size="4" value="'.$conf->global->MAIN_PROXY_PORT.'">';
 print '</td>';
 print '</tr>';
@@ -183,9 +178,8 @@ print '</tr>';
 $var=!$var;
 print '<tr '.$bcdd[$var].'>';
 print '<td>'.$langs->trans("MAIN_PROXY_USER").'</td><td align="right">';
-//print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_PROXY_USER" type="text" size="16" value="'.$conf->global->MAIN_PROXY_USER.'">';
 print '</td>';
 print '</tr>';
@@ -193,9 +187,8 @@ print '</tr>';
 $var=!$var;
 print '<tr '.$bcdd[$var].'>';
 print '<td>'.$langs->trans("MAIN_PROXY_PASS").'</td><td align="right">';
-//print $form->textwithpicto('',$langs->trans("SessionExplanation",ini_get("session.gc_probability"),ini_get("session.gc_divisor")));
 print '</td>';
-print '<td nowrap="nowrap">';
+print '<td class="nowrap">';
 print '<input class="flat" name="MAIN_PROXY_PASS" type="text" size="16" value="'.$conf->global->MAIN_PROXY_PASS.'">';
 print '</td>';
 print '</tr>';

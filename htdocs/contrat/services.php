@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2001-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -35,7 +35,7 @@ $langs->load("companies");
 $mode = GETPOST("mode");
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
-$page = GETPOST("page");
+$page = GETPOST("page",'int');
 if ($page == -1) { $page = 0 ; }
 $limit = $conf->liste_limit;
 $offset = $limit * $page ;
@@ -213,7 +213,7 @@ if ($resql)
 			$productstatic->ref=$obj->pref;
 			print $productstatic->getNomUrl(1,'',20);
             print $obj->label?' - '.dol_trunc($obj->label,16):'';
-            if (! empty($obj->description) && ! empty($conf->global->PRODUIT_DESC_IN_LIST)) print '<br>'.dol_nl2br($obj->description);
+            if (! empty($obj->description) && ! empty($conf->global->PRODUCT_DESC_IN_LIST)) print '<br>'.dol_nl2br($obj->description);
 		}
 		else
 		{
@@ -247,7 +247,7 @@ if ($resql)
 		if ($obj->date_fin_validite && $db->jdate($obj->date_fin_validite) < ($now - $conf->contrat->services->expires->warning_delay) && $obj->statut < 5) print img_warning($langs->trans("Late"));
 		else print '&nbsp;&nbsp;&nbsp;&nbsp;';
 		print '</td>';
-		print '<td align="right" nowrap="nowrap">';
+		print '<td align="right" class="nowrap">';
 		if ($obj->cstatut == 0)	// If contract is draft, we say line is also draft
 		{
 			print $contractstatic->LibStatut(0,5,($obj->date_fin_validite && $db->jdate($obj->date_fin_validite) < $now));

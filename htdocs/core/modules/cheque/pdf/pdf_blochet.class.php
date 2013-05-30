@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -60,14 +60,14 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 		$this->page_largeur = $formatarray['width'];
 		$this->page_hauteur = $formatarray['height'];
 		$this->format = array($this->page_largeur,$this->page_hauteur);
-		$this->marge_gauche=10;
-		$this->marge_droite=20;
-		$this->marge_haute=10;
-		$this->marge_basse=10;
+		$this->marge_gauche=isset($conf->global->MAIN_PDF_MARGIN_LEFT)?$conf->global->MAIN_PDF_MARGIN_LEFT:10;
+		$this->marge_droite=isset($conf->global->MAIN_PDF_MARGIN_RIGHT)?$conf->global->MAIN_PDF_MARGIN_RIGHT:10;
+		$this->marge_haute =isset($conf->global->MAIN_PDF_MARGIN_TOP)?$conf->global->MAIN_PDF_MARGIN_TOP:10;
+		$this->marge_basse =isset($conf->global->MAIN_PDF_MARGIN_BOTTOM)?$conf->global->MAIN_PDF_MARGIN_BOTTOM:10;
 
         // Recupere emmetteur
         $this->emetteur=$mysoc;
-        if (! $this->emetteur->pays_code) $this->emetteur->pays_code=substr($langs->defaultlang,-2);    // Par defaut, si n'�tait pas d�fini
+        if (! $this->emetteur->country_code) $this->emetteur->country_code=substr($langs->defaultlang,-2);    // By default if not defined
 
         // Defini position des colonnes
         $this->line_height = 5;
@@ -116,7 +116,8 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 		// Create PDF instance
         $pdf=pdf_getInstance($this->format);
         $heightforinfotot = 50;	// Height reserved to output the info and total part
-        $heightforfooter = 25;	// Height reserved to output the footer (value include bottom margin)
+        $heightforfreetext= (isset($conf->global->MAIN_PDF_FREETEXT_HEIGHT)?$conf->global->MAIN_PDF_FREETEXT_HEIGHT:5);	// Height reserved to output the free text on last page
+        $heightforfooter = $this->marge_basse + 8;	// Height reserved to output the footer (value include bottom margin)
         $pdf->SetAutoPageBreak(1,0);
 
         if (class_exists('TCPDF'))
@@ -343,9 +344,10 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 	 *   	@param	PDF			&$pdf     			PDF
 	 * 		@param	Object		$object				Object to show
 	 *      @param	Translate	$outputlangs		Object lang for output
+	 *      @param	int			$hidefreetext		1=Hide free text
 	 *      @return	void
 	 */
-	function _pagefoot(&$pdf,$object,$outputlangs)
+	function _pagefoot(&$pdf,$object,$outputlangs,$hidefreetext=0)
 	{
 		global $conf;
 		$default_font_size = pdf_getPDFFontSize($outputlangs);

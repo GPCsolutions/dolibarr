@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2005      Christophe
- * Copyright (C) 2005-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -33,11 +33,12 @@ class box_comptes extends ModeleBoxes
 {
 	var $boxcode="currentaccounts";
 	var $boximg="object_bill";
-	var $boxlabel;
+	var $boxlabel="BoxCurrentAccounts";
 	var $depends = array("banque");     // Box active if module banque active
 
 	var $db;
 	var $param;
+	var $enabled = 1;
 
 	var $info_box_head = array();
 	var $info_box_contents = array();
@@ -45,13 +46,19 @@ class box_comptes extends ModeleBoxes
 
 	/**
 	 *  Constructor
+	 *
+	 *  @param  DoliDB	$db      	Database handler
+     *  @param	string	$param		More parameters
 	 */
-	function __construct()
+	function __construct($db,$param='')
 	{
-		global $langs;
-		$langs->load("boxes");
+		global $conf, $user;
 
-		$this->boxlabel=$langs->transnoentitiesnoconv('BoxCurrentAccounts');
+		$this->db = $db;
+
+		// disable module for such cases
+		$listofmodulesforexternal=explode(',',$conf->global->MAIN_MODULES_FOR_EXTERNAL);
+		if (! in_array('banque',$listofmodulesforexternal) && ! empty($user->societe_id)) $this->enabled=0;	// disabled for external users
 	}
 
 	/**
@@ -72,7 +79,7 @@ class box_comptes extends ModeleBoxes
 		{
 			$sql = "SELECT rowid, ref, label, bank, number, courant, clos, rappro, url,";
 			$sql.= " code_banque, code_guichet, cle_rib, bic, iban_prefix,";
-			$sql.= " domiciliation, proprio, adresse_proprio,";
+			$sql.= " domiciliation, proprio, owner_address,";
 			$sql.= " account_number, currency_code,";
 			$sql.= " min_allowed, min_desired, comment";
 			$sql.= " FROM ".MAIN_DB_PREFIX."bank_account";

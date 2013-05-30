@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -132,6 +132,7 @@ class PdfDocTest extends PHPUnit_Framework_TestCase
 		$localobject=new Facture($this->savdb);
 		$localobject->initAsSpecimen();
 		$localobject->lines=array();
+		$localobject->lines[0]=new FactureLigne($this->savdb);
 		$localobject->lines[0]->fk_product=1;
 		$localobject->lines[0]->label='Label 1';
 		$localobject->lines[0]->desc="This is a description with a é accent\n(Country of origin: France)";

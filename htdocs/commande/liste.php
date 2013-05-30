@@ -2,11 +2,13 @@
 /* Copyright (C) 2001-2005 Rodolphe Quiedeville   <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2012 Laurent Destailleur    <eldy@users.sourceforge.net>
  * Copyright (C) 2005      Marc Barilley / Ocebo  <marc@ocebo.com>
- * Copyright (C) 2005-2012 Regis Houssin          <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin          <regis.houssin@capnetworks.com>
+ * Copyright (C) 2012      Juanjo Menent          <jmenent@2byte.es>
+ * Copyright (C) 2013      Christophe Battarel    <christophe.battarel@altairis.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -65,9 +67,15 @@ $limit = $conf->liste_limit;
 $viewstatut=GETPOST('viewstatut');
 
 
+// Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
+$hookmanager->initHooks(array('orderlist'));
+
 /*
  * Actions
  */
+
+$parameters=array('socid'=>$socid);
+$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hook
 
 // Do we click on purge search criteria ?
 if (GETPOST("button_removefilter_x"))
@@ -126,9 +134,10 @@ if ($sall)
 }
 if ($viewstatut <> '')
 {
-	if ($viewstatut < 4 && $viewstatut > -2)
+	if ($viewstatut < 4 && $viewstatut > -3)
 	{
-		$sql.= ' AND c.fk_statut ='.$viewstatut; // brouillon, validee, en cours, annulee
+		if ($viewstatut == 1 && empty($conf->expedition->enabled)) $sql.= ' AND c.fk_statut IN (1,2)';	// If module expedition disabled, we include order with status 'sending in process' into 'validated'
+		else $sql.= ' AND c.fk_statut = '.$viewstatut; // brouillon, validee, en cours, annulee
 		if ($viewstatut == 3)
 		{
 			$sql.= ' AND c.facture = 0'; // need to create invoice
@@ -142,6 +151,11 @@ if ($viewstatut <> '')
 	{
 		//$sql.= ' AND c.fk_statut IN (1,2,3) AND c.facture = 0';
 		$sql.= " AND ((c.fk_statut IN (1,2)) OR (c.fk_statut = 3 AND c.facture = 0))";    // If status is 2 and facture=1, it must be selected
+	}
+	if ($viewstatut == -3)	// To bill
+	{
+		$sql.= ' AND c.fk_statut in (1,2,3)';
+		$sql.= ' AND c.facture = 0'; // invoice not created
 	}
 }
 if ($ordermonth > 0)
@@ -215,6 +229,8 @@ if ($resql)
 	$title.=' - '.$langs->trans('StatusOrderCanceledShort');
 	if ($viewstatut == -2)
 	$title.=' - '.$langs->trans('StatusOrderToProcessShort');
+	if ($viewstatut == -3)
+	$title.=' - '.$langs->trans('StatusOrderValidated').', '.(empty($conf->expedition->enabled)?'':$langs->trans("StatusOrderSent").', ').$langs->trans('StatusOrderToBill');
 
 	$param='&socid='.$socid.'&viewstatut='.$viewstatut;
 	if ($ordermonth)      $param.='&ordermonth='.$ordermonth;
@@ -233,6 +249,7 @@ if ($resql)
 
 	// Lignes des champs de filtre
 	print '<form method="GET" action="'.$_SERVER["PHP_SELF"].'">';
+	print '<input type="hidden" name="viewstatut" value="'.$viewstatut.'">';
 
 	print '<table class="noborder" width="100%">';
 
@@ -241,7 +258,8 @@ if ($resql)
  	// If the user can view prospects other than his'
  	if ($user->rights->societe->client->voir || $socid)
  	{
-	 	$moreforfilter.=$langs->trans('ThirdPartiesOfSaleRepresentative'). ': ';
+ 		$langs->load("commercial");
+ 		$moreforfilter.=$langs->trans('ThirdPartiesOfSaleRepresentative'). ': ';
 		$moreforfilter.=$formother->select_salesrepresentatives($search_sale,'search_sale',$user);
 	 	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
  	}
@@ -265,6 +283,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans('RefCustomerOrder'),$_SERVER["PHP_SELF"],'c.ref_client','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('OrderDate'),$_SERVER["PHP_SELF"],'c.date_commande','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('DeliveryDate'),$_SERVER["PHP_SELF"],'c.date_livraison','',$param, 'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans('AmountHT'),$_SERVER["PHP_SELF"],'c.total_ht','',$param, 'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('Status'),$_SERVER["PHP_SELF"],'c.fk_statut','',$param,'align="right"',$sortfield,$sortorder);
 	print '</tr>';
 	print '<tr class="liste_titre">';
@@ -274,6 +293,7 @@ if ($resql)
 	print '<input class="flat" type="text" name="snom" value="'.$snom.'">';
 	print '</td><td class="liste_titre" align="left">';
 	print '<input class="flat" type="text" size="10" name="sref_client" value="'.$sref_client.'">';
+	print '</td><td class="liste_titre">&nbsp;';
 	print '</td><td class="liste_titre">&nbsp;';
 	print '</td><td class="liste_titre">&nbsp;';
 	print '</td><td align="right" class="liste_titre">';
@@ -290,26 +310,27 @@ if ($resql)
 		$objp = $db->fetch_object($resql);
 		$var=!$var;
 		print '<tr '.$bc[$var].'>';
-		print '<td nowrap="nowrap">';
+		print '<td class="nowrap">';
 
 		$generic_commande->id=$objp->rowid;
 		$generic_commande->ref=$objp->ref;
 
 		print '<table class="nobordernopadding"><tr class="nocellnopadd">';
-		print '<td class="nobordernopadding" nowrap="nowrap">';
-		print $generic_commande->getNomUrl(1,$objp->fk_statut);
+		print '<td class="nobordernopadding nowrap">';
+		print $generic_commande->getNomUrl(1,($viewstatut != 2?0:$objp->fk_statut));
 		print '</td>';
 
-		print '<td width="20" class="nobordernopadding" nowrap="nowrap">';
+		print '<td width="20" class="nobordernopadding nowrap">';
 		if (($objp->fk_statut > 0) && ($objp->fk_statut < 3) && $db->jdate($objp->date_valid) < ($now - $conf->commande->client->warning_delay)) print img_picto($langs->trans("Late"),"warning");
 		print '</td>';
 
-		print '<td width="16" align="right" class="nobordernopadding">';
+		print '<td width="16" align="right" class="nobordernopadding hideonsmartphone">';
 		$filename=dol_sanitizeFileName($objp->ref);
 		$filedir=$conf->commande->dir_output . '/' . dol_sanitizeFileName($objp->ref);
 		$urlsource=$_SERVER['PHP_SELF'].'?id='.$objp->rowid;
 		print $formfile->getDocumentsLink($generic_commande->element, $filename, $filedir);
-		print '</td></tr></table>';
+		print '</td>';
+		print '</tr></table>';
 
 		print '</td>';
 
@@ -319,6 +340,19 @@ if ($resql)
 		$companystatic->client=$objp->client;
 		print '<td>';
 		print $companystatic->getNomUrl(1,'customer');
+
+		// If module invoices enabled and user with invoice creation permissions
+		if (! empty($conf->facture->enabled) && ! empty($conf->global->ORDER_BILLING_ALL_CUSTOMER))
+		{
+			if ($user->rights->facture->creer)
+			{
+				if (($objp->fk_statut > 0 && $objp->fk_statut < 3) || ($objp->fk_statut == 3 && $objp->facturee == 0))
+				{
+					print '&nbsp;<a href="'.DOL_URL_ROOT.'/commande/orderstoinvoice.php?socid='.$companystatic->id.'">';
+					print img_picto($langs->trans("CreateInvoiceForThisCustomer").' : '.$companystatic->nom, 'object_bill', 'hideonsmrtphone').'</a>';
+				}
+			}
+		}
 		print '</td>';
 
 		print '<td>'.$objp->ref_client.'</td>';
@@ -345,8 +379,11 @@ if ($resql)
 		print ' <a href="'.$_SERVER['PHP_SELF'].'?deliveryyear='.$y.'">'.$y.'</a>';
 		print '</td>';
 
+		// Amount HT
+		print '<td align="right" class="nowrap">'.price($objp->total_ht).'</td>';
+
 		// Statut
-		print '<td align="right" nowrap="nowrap">'.$generic_commande->LibStatut($objp->fk_statut,$objp->facturee,5).'</td>';
+		print '<td align="right" class="nowrap">'.$generic_commande->LibStatut($objp->fk_statut,$objp->facturee,5).'</td>';
 
 		print '</tr>';
 
@@ -354,6 +391,18 @@ if ($resql)
 		$subtotal+=$objp->total_ht;
 		$i++;
 	}
+
+	if (! empty($conf->global->MAIN_SHOW_TOTAL_FOR_LIMITED_LIST))
+	{
+		$var=!$var;
+		print '<tr '.$bc[$var].'>';
+		print '<td class="nowrap" colspan="5">'.$langs->trans('TotalHT').'</td>';
+		// Total HT
+		print '<td align="right" class="nowrap">'.price($total).'</td>';
+		print '<td class="nowrap">&nbsp;</td>';
+		print '</tr>';
+	}
+
 	print '</table>';
 
 	print '</form>';

@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2002      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2008 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2009      Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2009      Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -28,12 +28,12 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
 
 
 /**
- *	\class      AdherentType
- *	\brief      Class to manage members type
+ *	Class to manage members type
  */
 class AdherentType extends CommonObject
 {
     public $table_element = 'adherent_type';
+    public $element = 'adherent_type';
 
     var $id;
     var $libelle;
@@ -42,7 +42,6 @@ class AdherentType extends CommonObject
     var $vote;		  // droit de vote
     var $note; 		  // commentaire
     var $mail_valid;  //mail envoye lors de la validation
-
 
 
     /**
@@ -100,6 +99,8 @@ class AdherentType extends CommonObject
      */
     function update($user)
     {
+    	global $hookmanager;
+    	
         $this->libelle=trim($this->libelle);
 
         $sql = "UPDATE ".MAIN_DB_PREFIX."adherent_type ";
@@ -115,6 +116,24 @@ class AdherentType extends CommonObject
         $result = $this->db->query($sql);
         if ($result)
         {
+        	// Actions on extra fields (by external module or standard code)
+        	$hookmanager->initHooks(array('membertypedao'));
+        	$parameters=array('membertype'=>$this->id);
+        	$reshook=$hookmanager->executeHooks('insertExtraFields',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
+        	if (empty($reshook))
+        	{
+        		if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
+        		{
+        			$result=$this->insertExtraFields();
+        			if ($result < 0)
+        			{
+        				$error++;
+        			}
+        		}
+        	}
+        	else if ($reshook < 0) $error++;
+        	
+        	
             return 1;
         }
         else

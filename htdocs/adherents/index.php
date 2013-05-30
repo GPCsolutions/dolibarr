@@ -2,11 +2,11 @@
 /* Copyright (C) 2001-2002	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2003		Jean-Louis Bergamo		<jlb@j1b.org>
  * Copyright (C) 2004-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin			<regis@dolibarr.fr>
+ * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -28,9 +28,11 @@ require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
 require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent_type.class.php';
 
-
 $langs->load("companies");
 $langs->load("members");
+
+// Security check
+$result=restrictedArea($user,'adherent');
 
 
 /*
@@ -45,7 +47,6 @@ $subscriptionstatic=new Cotisation($db);
 
 print_fiche_titre($langs->trans("MembersArea"));
 
-print '<table border="0" width="100%" class="notopnoleftnoright">';
 
 $var=True;
 
@@ -120,7 +121,8 @@ if ($result)
 }
 
 
-print '<tr><td width="30%" class="notopnoleft" valign="top">';
+//print '<tr><td width="30%" class="notopnoleft" valign="top">';
+print '<div class="fichecenter"><div class="fichethirdleft">';
 
 
 // Formulaire recherche adherent
@@ -138,7 +140,7 @@ print $langs->trans("Ref").':</td><td><input type="text" name="search_ref" class
 print '</td><td rowspan="3"><input class="button" type="submit" value="'.$langs->trans("Search").'"></td></tr>';
 print "<tr $bc[$var]>";
 print '<td>';
-print $langs->trans("Name").':</td><td><input type="text" name="search_nom" class="flat" size="16">';
+print $langs->trans("Name").':</td><td><input type="text" name="search_lastname" class="flat" size="16">';
 print '</td></tr>';
 print "<tr $bc[$var]>";
 print '<td>';
@@ -169,11 +171,11 @@ if ($conf->use_javascript_ajax)
     {
         $datalabels[]=array($i,$adhtype->getNomUrl(0,dol_size(16)));
         $dataval['draft'][]=array($i,isset($MemberToValidate[$key])?$MemberToValidate[$key]:0);
-        $dataval['notuptodate'][]=array($i,isset($MembersValidated[$key])?$MembersValidated[$key]-$MemberUpToDate[$key]:0);
+        $dataval['notuptodate'][]=array($i,isset($MembersValidated[$key])?$MembersValidated[$key]-(isset($MemberUpToDate[$key])?$MemberUpToDate[$key]:0):0);
         $dataval['uptodate'][]=array($i,isset($MemberUpToDate[$key])?$MemberUpToDate[$key]:0);
         $dataval['resiliated'][]=array($i,isset($MembersResiliated[$key])?$MembersResiliated[$key]:0);
         $SommeA+=isset($MemberToValidate[$key])?$MemberToValidate[$key]:0;
-        $SommeB+=isset($MembersValidated[$key])?$MembersValidated[$key]-$MemberUpToDate[$key]:0;
+        $SommeB+=isset($MembersValidated[$key])?$MembersValidated[$key]-(isset($MemberUpToDate[$key])?$MemberUpToDate[$key]:0):0;
         $SommeC+=isset($MemberUpToDate[$key])?$MemberUpToDate[$key]:0;
         $SommeD+=isset($MembersResiliated[$key])?$MembersResiliated[$key]:0;
         $i++;
@@ -193,7 +195,9 @@ if ($conf->use_javascript_ajax)
     print '</table>';
 }
 
-print '</td><td class="notopnoleftnoright" valign="top">';
+
+//print '</td><td class="notopnoleftnoright" valign="top">';
+print '</div><div class="fichetwothirdright"><div class="ficheaddleft">';
 
 
 $var=true;
@@ -203,7 +207,7 @@ $var=true;
  */
 $max=5;
 
-$sql = "SELECT a.rowid, a.statut, a.nom as lastname, a.prenom as firstname, a.societe as company, a.fk_soc,";
+$sql = "SELECT a.rowid, a.statut, a.lastname, a.firstname, a.societe as company, a.fk_soc,";
 $sql.= " a.tms as datem, datefin as date_end_subscription,";
 $sql.= " ta.rowid as typeid, ta.libelle, ta.cotisation";
 $sql.= " FROM ".MAIN_DB_PREFIX."adherent as a, ".MAIN_DB_PREFIX."adherent_type as ta";
@@ -263,7 +267,7 @@ else
  */
 $max=5;
 
-$sql = "SELECT a.rowid, a.statut, a.nom as lastname, a.prenom as firstname, a.societe as company, a.fk_soc,";
+$sql = "SELECT a.rowid, a.statut, a.lastname, a.firstname, a.societe as company, a.fk_soc,";
 $sql.= " datefin as date_end_subscription,";
 $sql.= " c.rowid as cid, c.tms as datem, c.datec as datec, c.dateadh as date_start, c.datef as date_end, c.cotisation";
 $sql.= " FROM ".MAIN_DB_PREFIX."adherent as a, ".MAIN_DB_PREFIX."cotisation as c";
@@ -336,7 +340,7 @@ foreach ($AdherentType as $key => $adhtype)
 	print "<tr $bc[$var]>";
 	print '<td>'.$adhtype->getNomUrl(1, dol_size(32)).'</td>';
 	print '<td align="right">'.(isset($MemberToValidate[$key]) && $MemberToValidate[$key] > 0?$MemberToValidate[$key]:'').' '.$staticmember->LibStatut(-1,$adhtype->cotisation,0,3).'</td>';
-	print '<td align="right">'.(isset($MembersValidated[$key]) && ($MembersValidated[$key]-$MemberUpToDate[$key] > 0) ? $MembersValidated[$key]-$MemberUpToDate[$key]:'').' '.$staticmember->LibStatut(1,$adhtype->cotisation,0,3).'</td>';
+	print '<td align="right">'.(isset($MembersValidated[$key]) && ($MembersValidated[$key]-(isset($MemberUpToDate[$key])?$MemberUpToDate[$key]:0) > 0) ? $MembersValidated[$key]-(isset($MemberUpToDate[$key])?$MemberUpToDate[$key]:0):'').' '.$staticmember->LibStatut(1,$adhtype->cotisation,0,3).'</td>';
 	print '<td align="right">'.(isset($MemberUpToDate[$key]) && $MemberUpToDate[$key] > 0 ? $MemberUpToDate[$key]:'').' '.$staticmember->LibStatut(1,$adhtype->cotisation,$now,3).'</td>';
 	print '<td align="right">'.(isset($MembersResiliated[$key]) && $MembersResiliated[$key]> 0 ?$MembersResiliated[$key]:'').' '.$staticmember->LibStatut(0,$adhtype->cotisation,0,3).'</td>';
 	print "</tr>\n";
@@ -414,8 +418,8 @@ print "<td align=\"right\">".price(price2num($numb>0?($tot/$numb):0,'MT'))."</td
 print "</tr>\n";
 print "</table><br>\n";
 
-print '</td></tr>';
-print '</table>';
+//print '</td></tr></table>';
+print '</div></div></div>';
 
 
 llxFooter();

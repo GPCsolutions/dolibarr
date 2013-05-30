@@ -5,7 +5,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -54,7 +54,7 @@ $pageprev = $page - 1;
 $pagenext = $page + 1;
 $limit = $conf->liste_limit;
 
-$sql = "SELECT f.facnumber, f.rowid as facid, l.fk_product, l.description, l.price, l.rowid, l.fk_code_ventilation,";
+$sql = "SELECT f.facnumber, f.rowid as facid, l.fk_product, l.description, f.total as price, l.rowid, l.fk_code_ventilation,";
 $sql.= " p.rowid as product_id, p.ref as product_ref, p.label as product_label, p.fk_product_type as type";
 $sql.= " FROM ".MAIN_DB_PREFIX."facture as f";
 $sql.= " , ".MAIN_DB_PREFIX."facturedet as l";

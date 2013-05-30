@@ -2,11 +2,12 @@
 
 /* Copyright (C) 2002-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2010 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013	   Florian Henry        <florian.henry@open-concept.pro>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -35,6 +36,7 @@ class Project extends CommonObject
     public $table_element = 'projet';  //!< Name of table without prefix where object is stored
     public $table_element_line = 'projet_task';
     public $fk_element = 'fk_projet';
+    protected $ismultientitymanaged = 1;  // 0=No test on entity, 1=Test with field entity, 2=Test with link by societe
 
     var $id;
     var $ref;
@@ -51,6 +53,7 @@ class Project extends CommonObject
     var $statuts_short;
     var $statuts;
     var $oldcopy;
+    
 
     /**
      *  Constructor
@@ -144,6 +147,18 @@ class Project extends CommonObject
             dol_syslog(get_class($this)."::create error -2 " . $this->error, LOG_ERR);
             $error++;
         }
+        
+        //Update extrafield
+        if (!$error) {
+        	if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
+        	{
+        		$result=$this->insertExtraFields();
+        		if ($result < 0)
+        		{
+        			$error++;
+        		}
+        	}
+        }
 
         if (!$error && !empty($conf->global->MAIN_DISABLEDRAFTSTATUS))
         {
@@ -210,6 +225,18 @@ class Project extends CommonObject
                     }
                     // End call triggers
                 }
+                
+                //Update extrafield
+                if (!$error) {
+                	if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
+                	{
+                		$result=$this->insertExtraFields();
+                		if ($result < 0)
+                		{
+                			$error++;
+                		}
+                	}
+                }
 
                 if (! $error && (is_object($this->oldcopy) && $this->oldcopy->ref != $this->ref))
                 {
@@ -260,7 +287,7 @@ class Project extends CommonObject
         if (empty($id) && empty($ref)) return -1;
 
         $sql = "SELECT rowid, ref, title, description, public, datec";
-        $sql.= ", tms, dateo, datee, fk_soc, fk_user_creat, fk_statut, note_private, note_public";
+        $sql.= ", tms, dateo, datee, fk_soc, fk_user_creat, fk_statut, note_private, note_public,model_pdf";
         $sql.= " FROM " . MAIN_DB_PREFIX . "projet";
         if (! empty($id))
         {
@@ -298,6 +325,7 @@ class Project extends CommonObject
                 $this->user_author_id = $obj->fk_user_creat;
                 $this->public = $obj->public;
                 $this->statut = $obj->fk_statut;
+                $this->modelpdf	= $obj->model_pdf;
 
                 $this->db->free($resql);
 
@@ -448,6 +476,12 @@ class Project extends CommonObject
             }
         }
 
+        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "projet_task_extrafields";
+        $sql.= " WHERE fk_object IN (SELECT rowid FROM " . MAIN_DB_PREFIX . "projet_task WHERE fk_projet=" . $this->id . ")";
+        
+        dol_syslog(get_class($this) . "::delete sql=" . $sql, LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        
         $sql = "DELETE FROM " . MAIN_DB_PREFIX . "projet_task";
         $sql.= " WHERE fk_projet=" . $this->id;
 
@@ -459,6 +493,13 @@ class Project extends CommonObject
 
         dol_syslog(get_class($this) . "::delete sql=" . $sql, LOG_DEBUG);
         $resql = $this->db->query($sql);
+        
+        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "projet_extrafields";
+        $sql.= " WHERE fk_object=" . $this->id;
+        
+        dol_syslog(get_class($this) . "::delete sql=" . $sql, LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        
         if ($resql)
         {
             // We remove directory
@@ -794,11 +835,11 @@ class Project extends CommonObject
     {
         // To verify role of users
         $userAccess = 0;
-        if (($mode == 'read' && $user->rights->projet->all->lire) || ($mode == 'write' && $user->rights->projet->all->creer) || ($mode == 'delete' && $user->rights->projet->all->supprimer))
+        if (($mode == 'read' && ! empty($user->rights->projet->all->lire)) || ($mode == 'write' && ! empty($user->rights->projet->all->creer)) || ($mode == 'delete' && ! empty($user->rights->projet->all->supprimer)))
         {
             $userAccess = 1;
         }
-        else if ($this->public && (($mode == 'read' && $user->rights->projet->lire) || ($mode == 'write' && $user->rights->projet->creer) || ($mode == 'delete' && $user->rights->projet->supprimer)))
+        else if ($this->public && (($mode == 'read' && ! empty($user->rights->projet->lire)) || ($mode == 'write' && ! empty($user->rights->projet->creer)) || ($mode == 'delete' && ! empty($user->rights->projet->supprimer))))
         {
             $userAccess = 1;
         }
@@ -847,7 +888,7 @@ class Project extends CommonObject
      * @param 	int		$mode			0=All project I have permission on, 1=Projects affected to me only, 2=Will return list of all projects with no test on contacts
      * @param 	int		$list			0=Return array,1=Return string list
      * @param	int		$socid			0=No filter on third party, id of third party
-     * @return 	array 					Array of projects
+     * @return 	array or string			Array of projects id, or string with projects id separated with ","
      */
     function getProjectsAuthorizedForUser($user, $mode=0, $list=0, $socid=0)
     {
@@ -910,7 +951,7 @@ class Project extends CommonObject
 
             if ($list)
             {
-                if (empty($temp)) return 0;
+                if (empty($temp)) return '0';
                 $result = implode(',', $temp);
                 return $result;
             }
@@ -1009,7 +1050,7 @@ class Project extends CommonObject
         	else
         	{
         		$this->db->begin();
-				$res=$clone_project->update_note_public(dol_html_entity_decode($clone_project->note_public, ENT_QUOTES));
+				$res=$clone_project->update_note(dol_html_entity_decode($clone_project->note_public, ENT_QUOTES),'_public');
 				if ($res < 0)
 				{
 					$this->error.=$clone_project->error;
@@ -1022,7 +1063,7 @@ class Project extends CommonObject
 				}
 
 				$this->db->begin();
-				$res=$clone_project->update_note(dol_html_entity_decode($clone_project->note_private, ENT_QUOTES));
+				$res=$clone_project->update_note(dol_html_entity_decode($clone_project->note_private, ENT_QUOTES), '_private');
 				if ($res < 0)
 				{
 					$this->error.=$clone_project->error;
@@ -1236,7 +1277,90 @@ class Project extends CommonObject
 	    }
 	    return $result;
 	}
+	
+	 /**
+	  *    Build Select List of element associable to a project
+	  *
+	  *    @param	TableName		Table of the element to update
+	  *    @return	string			The HTML select list of element
+	  */
+	function select_element($Tablename)
+	{
+		global $db;
 
+		$projectkey="fk_projet";
+		switch ($Tablename)
+		{
+			case "facture":
+				$sql = "SELECT rowid, facnumber as ref";
+				break;
+			case "facture_fourn":
+				$sql = "SELECT rowid, ref";
+				break;
+			case "facture_rec":
+				$sql = "SELECT rowid, titre as ref";
+				break;
+			case "actioncomm":
+				$sql = "SELECT id as rowid, label as ref";
+				$projectkey="fk_project";
+				break;
+			default:
+				$sql = "SELECT rowid, ref";
+				break;
+		}
+
+		$sql.= " FROM ".MAIN_DB_PREFIX.$Tablename;
+		$sql.= " WHERE ".$projectkey." is null";
+		if (!empty($this->societe->id)) {
+			$sql.= " AND fk_soc=".$this->societe->id;
+		} 
+		$sql.= " ORDER BY ref DESC";
+
+		dol_syslog("Project.Lib::select_element sql=".$sql);
+
+		$resql=$db->query($sql);
+		if ($resql)
+		{
+			$num = $db->num_rows($resql);
+			$i = 0;
+			if ($num > 0)
+			{
+				$sellist = '<select class="flat" name="elementselect">';
+				while ($i < $num)
+				{
+					$obj = $db->fetch_object($resql);
+					$sellist .='<option value="'.$obj->rowid.'">'.$obj->ref.'</option>';
+					$i++;
+				}
+				$sellist .='</select>';
+			}
+			return $sellist ;
+		}
+	}
+	
+	 /**
+	  *    Associate element to a project
+	  *
+	  *    @param	TableName		Table of the element to update
+	  *    @param	ElementSelectId		Key-rowid of the line of the element to update
+	  *    @return	int				1 if OK or < 0 if KO
+	  */
+	function update_element($TableName, $ElementSelectId)
+	{
+		global $db;
+		$sql="update ".MAIN_DB_PREFIX.$TableName;
+		if ($TableName=="actioncomm")
+		{
+			$sql.= " SET fk_project=".$this->id;
+			$sql.= " WHERE id=".$ElementSelectId;
+		}
+		else
+		{
+			$sql.= " SET fk_projet=".$this->id;
+			$sql.= " WHERE rowid=".$ElementSelectId;
+		}
+		$resql=$db->query($sql);
+	}
 }
 
 ?>

@@ -1,7 +1,7 @@
-# Dolibarr language file - en_US - install
+# Dolibarr language file - Source file is en_US - install
 CHARSET=UTF-8
 InstallEasy=Just follow the instructions step by step.
-MiscellanousChecks=Prerequisites check
+MiscellaneousChecks=Prerequisites check
 DolibarrWelcome=Welcome to Dolibarr
 ConfFileExists=Configuration file <b>%s</b> exists.
 ConfFileDoesNotExists=Configuration file <b>%s</b> does not exist !
@@ -65,7 +65,7 @@ DatabaseSuperUserAccess=Database server - Superuser access
 CheckToCreateDatabase=Check box if database does not exist and must be created.<br>In this case, you must fill the login/password for superuser account at the bottom of this page.
 CheckToCreateUser=Check box if database owner does not exist and must be created.<br>In this case, you must choose its login and password and also fill the login/password for the superuser account at the bottom of this page. If this box is unchecked, owner database and its passwords must exists.
 Experimental=(experimental)
-DatabaseRootLoginDescription=Login of the user allowed to create new databases or new users, useless if your database and your database login already exists (like when you're hosted by a web hosting provider).
+DatabaseRootLoginDescription=Login of the user allowed to create new databases or new users, mandatory if your database or its owner does not already exists.
 KeepEmptyIfNoPassword=Leave empty if user has no password (avoid this)
 SaveConfigurationFile=Save values
 ConfigurationSaving=Saving configuration file
@@ -124,8 +124,8 @@ YouMustCreateItAndAllowServerToWrite=You must create this directory and allow fo
 CharsetChoice=Character set choice
 CharacterSetClient=Character set used for generated HTML web pages
 CharacterSetClientComment=Choose character set for web display.<br/> Default proposed character set is the one of your database.
-CollationConnection=Character sorting order
-CollationConnectionComment=Choose page code that defines character's sorting order used by database. This parameter is also called 'collation' by some databases.<br/>This parameter can't be defined if database already exists.
+DBSortingCollation=Character sorting order
+DBSortingCollationComment=Choose page code that defines character's sorting order used by database. This parameter is also called 'collation' by some databases.<br/>This parameter can't be defined if database already exists.
 CharacterSetDatabase=Character set for database
 CharacterSetDatabaseComment=Choose character set wanted for database creation.<br/>This parameter can't be defined if database already exists.
 YouAskDatabaseCreationSoDolibarrNeedToConnect=You ask to create database <b>%s</b>, but for this, Dolibarr need to connect to server <b>%s</b> with super user <b>%s</b> permissions.
@@ -155,6 +155,7 @@ MigrationShippingDelivery2=Upgrade storage of shipping 2
 MigrationFinished=Migration finished
 LastStepDesc=<strong>Last step</strong>: Define here login and password you plan to use to connect to software. Do not loose this as it is the account to administer all others.
 ActivateModule=Activate module %s
+ShowEditTechnicalParameters=Click here to show/edit advanced parameters (expert mode)
 
 #########
 # upgrade
@@ -168,73 +169,42 @@ MigrationContract=Data migration for contracts
 MigrationSuccessfullUpdate=Upgrade successful
 MigrationUpdateFailed=Failed upgrade process
 MigrationRelationshipTables=Data migration for relationship tables (%s)
-
-# Payments Update
 MigrationPaymentsUpdate=Payment data correction
 MigrationPaymentsNumberToUpdate=%s payment(s) to update
 MigrationProcessPaymentUpdate=Update payment(s) %s
 MigrationPaymentsNothingToUpdate=No more things to do
 MigrationPaymentsNothingUpdatable=No more payments that can be corrected
-
-# Contracts Update
 MigrationContractsUpdate=Contract data correction
 MigrationContractsNumberToUpdate=%s contract(s) to update
 MigrationContractsLineCreation=Create contract line for contract ref %s
 MigrationContractsNothingToUpdate=No more things to do
 MigrationContractsFieldDontExist=Field fk_facture does not exists anymore. Nothing to do.
-
-# Contracts Empty Dates Update
 MigrationContractsEmptyDatesUpdate=Contract empty date correction
 MigrationContractsEmptyDatesUpdateSuccess=Contract emtpy date correction done successfuly
 MigrationContractsEmptyDatesNothingToUpdate=No contract empty date to correct
 MigrationContractsEmptyCreationDatesNothingToUpdate=No contract creation date to correct
-
-# Contracts Invalid Dates Update
 MigrationContractsInvalidDatesUpdate=Bad value date contract correction
 MigrationContractsInvalidDateFix=Correct contract %s (Contract date=%s, Starting service date min=%s)
 MigrationContractsInvalidDatesNumber=%s contracts modified
 MigrationContractsInvalidDatesNothingToUpdate=No date with bad value to correct
-
-# Contracts Incoherent Dates Update
 MigrationContractsIncoherentCreationDateUpdate=Bad value contract creation date correction
 MigrationContractsIncoherentCreationDateUpdateSuccess=Bad value contract creation date correction done succesfuly
 MigrationContractsIncoherentCreationDateNothingToUpdate=No bad value for contract creation date to correct
-
-# Reopening Contracts
 MigrationReopeningContracts=Open contract closed by error
 MigrationReopenThisContract=Reopen contract %s
 MigrationReopenedContractsNumber=%s contracts modified
 MigrationReopeningContractsNothingToUpdate=No closed contract to open
-
-# Migration transfer
 MigrationBankTransfertsUpdate=Update links between bank transaction and a bank transfer
 MigrationBankTransfertsNothingToUpdate=All links are up to date
-
-# Migration delivery
 MigrationShipmentOrderMatching=Sendings receipt update
 MigrationDeliveryOrderMatching=Delivery receipt update
 MigrationDeliveryDetail=Delivery update
-
-# Migration stock
 MigrationStockDetail=Update stock value of products
-
-# Migration menus
 MigrationMenusDetail=Update dynamic menus tables
-
-# Migration delivery address
 MigrationDeliveryAddress=Update delivery address in shipments
-
-# Migration project task actors
 MigrationProjectTaskActors=Data migration for llx_projet_task_actors table
-
-# Migration project user resp
 MigrationProjectUserResp=Data migration field fk_user_resp of llx_projet to llx_element_contact
-
-# Migration project task time
 MigrationProjectTaskTime=Update time spent in seconds
-
-# Migration Acctioncom
 MigrationActioncommElement=Update data on actions
-
-# Migration payment mode
 MigrationPaymentMode=Data migration for payment mode
+MigrationCategorieAssociation=Migration of categories

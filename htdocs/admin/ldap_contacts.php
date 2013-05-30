@@ -2,13 +2,13 @@
 /* Copyright (C) 2004      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004      Sebastien Di Cintio  <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
- * Copyright (C) 2005      Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005      Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2011 	   Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -230,7 +230,7 @@ print '</td><td>'.$langs->trans("LDAPFieldAddressExample").'</td>';
 print '<td align="right"><input type="radio" name="key" value="LDAP_CONTACT_FIELD_ADDRESS"'.($conf->global->LDAP_KEY_CONTACTS && $conf->global->LDAP_KEY_CONTACTS==$conf->global->LDAP_CONTACT_FIELD_ADDRESS?' checked="checked"':'')."></td>";
 print '</tr>';
 
-// CP
+// ZIP
 $var=!$var;
 print '<tr '.$bc[$var].'><td>'.$langs->trans("LDAPFieldZip").'</td><td>';
 print '<input size="25" type="text" name="fieldzip" value="'.$conf->global->LDAP_CONTACT_FIELD_ZIP.'">';
@@ -238,7 +238,7 @@ print '</td><td>'.$langs->trans("LDAPFieldZipExample").'</td>';
 print '<td align="right"><input type="radio" name="key" value="LDAP_CONTACT_FIELD_ZIP"'.($conf->global->LDAP_KEY_CONTACTS && $conf->global->LDAP_KEY_CONTACTS==$conf->global->LDAP_CONTACT_FIELD_ZIP?' checked="checked"':'')."></td>";
 print '</tr>';
 
-// Ville
+// TOWN
 $var=!$var;
 print '<tr '.$bc[$var].'><td>'.$langs->trans("LDAPFieldTown").'</td><td>';
 print '<input size="25" type="text" name="fieldtown" value="'.$conf->global->LDAP_CONTACT_FIELD_TOWN.'">';
@@ -246,7 +246,7 @@ print '</td><td>'.$langs->trans("LDAPFieldTownExample").'</td>';
 print '<td align="right"><input type="radio" name="key" value="LDAP_CONTACT_FIELD_TOWN"'.($conf->global->LDAP_KEY_CONTACTS && $conf->global->LDAP_KEY_CONTACTS==$conf->global->LDAP_CONTACT_FIELD_TOWN?' checked="checked"':'')."></td>";
 print '</tr>';
 
-// Pays
+// COUNTRY
 $var=!$var;
 print '<tr '.$bc[$var].'><td>'.$langs->trans("LDAPFieldCountry").'</td><td>';
 print '<input size="25" type="text" name="fieldcountry" value="'.$conf->global->LDAP_CONTACT_FIELD_COUNTRY.'">';

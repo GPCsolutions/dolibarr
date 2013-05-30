@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2007-2011	Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2008-2012	Regis Houssin		<regis@dolibarr.fr>
+ * Copyright (C) 2008-2012	Regis Houssin		<regis.houssin@capnetworks.com>
  * Copyright (C) 2008-2011	Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -52,12 +52,14 @@ $passwordmd5	= GETPOST('passwordmd5');
 $conf->entity 	= (GETPOST('entity') ? GETPOST('entity') : 1);
 
 // Instantiate hooks of thirdparty module only if not already define
-if (! is_object($hookmanager))
-{
-	include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
-	$hookmanager=new HookManager($db);
-}
 $hookmanager->initHooks(array('passwordforgottenpage'));
+
+
+if (GETPOST('dol_hide_leftmenu') || ! empty($_SESSION['dol_hide_leftmenu']))               $conf->dol_hide_leftmenu=1;
+if (GETPOST('dol_hide_topmenu') || ! empty($_SESSION['dol_hide_topmenu']))                 $conf->dol_hide_topmenu=1;
+if (GETPOST('dol_optimize_smallscreen') || ! empty($_SESSION['dol_optimize_smallscreen'])) $conf->dol_optimize_smallscreen=1;
+if (GETPOST('dol_no_mouse_hover') || ! empty($_SESSION['dol_no_mouse_hover']))             $conf->dol_no_mouse_hover=1;
+if (GETPOST('dol_use_jmobile') || ! empty($_SESSION['dol_use_jmobile']))                   $conf->dol_use_jmobile=1;
 
 
 /**
@@ -84,7 +86,8 @@ if ($action == 'validatenewpassword' && $username && $passwordmd5)
         }
         else
         {
-            $message = '<div class="error">'.$langs->trans("ErrorFailedToValidatePassword").'</div>';
+        	$langs->load("errors");
+            $message = '<div class="error">'.$langs->trans("ErrorFailedToValidatePasswordReset").'</div>';
         }
     }
 }
@@ -157,24 +160,30 @@ $title='Dolibarr '.DOL_VERSION;
 if (! empty($conf->global->MAIN_APPLICATION_TITLE)) $title=$conf->global->MAIN_APPLICATION_TITLE;
 
 // Select templates
-if (preg_match('/^smartphone/',$conf->smart_menu) && ! empty($conf->browser->phone))
+if (file_exists(DOL_DOCUMENT_ROOT."/theme/".$conf->theme."/tpl/passwordforgotten.tpl.php"))
 {
-    $template_dir = DOL_DOCUMENT_ROOT.'/theme/phones/smartphone/tpl/';
+    $template_dir = DOL_DOCUMENT_ROOT."/theme/".$conf->theme."/tpl/";
 }
 else
 {
-    if (file_exists(DOL_DOCUMENT_ROOT."/theme/".$conf->theme."/tpl/passwordforgotten.tpl.php"))
-    {
-        $template_dir = DOL_DOCUMENT_ROOT."/theme/".$conf->theme."/tpl/";
-    }
-    else
-    {
-        $template_dir = DOL_DOCUMENT_ROOT."/core/tpl/";
-    }
+    $template_dir = DOL_DOCUMENT_ROOT."/core/tpl/";
 }
 
-$conf->css  = "/theme/".$conf->theme."/style.css.php?lang=".$langs->defaultlang;
-$conf_css = DOL_URL_ROOT.$conf->css;
+// Note: $conf->css looks like '/theme/eldy/style.css.php'
+$conf->css = "/theme/".(GETPOST('theme')?GETPOST('theme','alpha'):$conf->theme)."/style.css.php";
+$themepath=dol_buildpath((empty($conf->global->MAIN_FORCETHEMEDIR)?'':$conf->global->MAIN_FORCETHEMEDIR).$conf->css,1);
+if (! empty($conf->modules_parts['theme']))	// This slow down
+{
+	foreach($conf->modules_parts['theme'] as $reldir)
+	{
+		if (file_exists(dol_buildpath($reldir.$conf->css, 0)))
+		{
+			$themepath=dol_buildpath($reldir.$conf->css, 1);
+			break;
+		}
+	}
+}
+$conf_css = $themepath."?lang=".$langs->defaultlang;
 
 $jquerytheme = 'smoothness';
 if (! empty($conf->global->MAIN_USE_JQUERY_THEME)) $jquerytheme = $conf->global->MAIN_USE_JQUERY_THEME;

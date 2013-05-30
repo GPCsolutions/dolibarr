@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -179,6 +179,8 @@ class Mailing extends CommonObject
 	 */
 	function fetch($rowid)
 	{
+		global $conf;
+		
 		$sql = "SELECT m.rowid, m.titre, m.sujet, m.body, m.bgcolor, m.bgimage";
 		$sql.= ", m.email_from, m.email_replyto, m.email_errorsto";
 		$sql.= ", m.statut, m.nbemail";
@@ -203,8 +205,14 @@ class Mailing extends CommonObject
 				$this->statut			= $obj->statut;
 				$this->nbemail			= $obj->nbemail;
 				$this->titre			= $obj->titre;
-				$this->sujet			= $obj->sujet;
-				$this->body				= $obj->body;
+				
+				$this->sujet			= $obj->sujet;				
+				if (!empty($conf->global->FCKEDITOR_ENABLE_MAILING) && dol_textishtml(dol_html_entity_decode($obj->body, ENT_COMPAT | ENT_HTML401))) {
+					$this->body				= dol_html_entity_decode($obj->body, ENT_COMPAT | ENT_HTML401);
+				}else {
+					$this->body				= $obj->body;
+				}
+				
 				$this->bgcolor			= $obj->bgcolor;
 				$this->bgimage			= $obj->bgimage;
 

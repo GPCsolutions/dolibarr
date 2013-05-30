@@ -1,10 +1,10 @@
 <?php
 /* Copyright (C) 2007-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2009      Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2009      Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -154,14 +154,14 @@ print "<br>\n";
 dol_htmloutput_mesg($message);
 
 // List of sending methods
-$listofmethods=(is_array($conf->sms_engine_modules)?$conf->sms_engine_modules:array());
+$listofmethods=(is_array($conf->modules_parts['sms'])?$conf->modules_parts['sms']:array());
 asort($listofmethods);
 
 if ($action == 'edit')
 {
 	$form=new Form($db);
 
-	if (! count($listofmethods)) print '<div class="warning">'.$langs->trans("NoSmsEngine",'<a href="http://www.dolistore.com/search.php?orderby=position&orderway=desc&search_query=sms_manager">DoliStore</a>').'</div>';
+	if (! count($listofmethods)) print '<div class="warning">'.$langs->trans("NoSmsEngine",'<a href="http://www.dolistore.com/search.php?orderby=position&orderway=desc&search_query=smsmanager">DoliStore</a>').'</div>';
 
 	print '<form method="post" action="'.$_SERVER["PHP_SELF"].'">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
@@ -217,7 +217,7 @@ else
 {
 	$var=true;
 
-	if (! count($listofmethods)) print '<div class="warning">'.$langs->trans("NoSmsEngine",'<a href="http://www.dolistore.com/search.php?orderby=position&orderway=desc&search_query=sms_manager">DoliStore</a>').'</div>';
+	if (! count($listofmethods)) print '<div class="warning">'.$langs->trans("NoSmsEngine",'<a href="http://www.dolistore.com/search.php?orderby=position&orderway=desc&search_query=smsmanager">DoliStore</a>').'</div>';
 
 	print '<table class="noborder" width="100%">';
 	print '<tr class="liste_titre"><td>'.$langs->trans("Parameter").'</td><td>'.$langs->trans("Value").'</td></tr>';

@@ -2,13 +2,13 @@
 /* Copyright (C) 2003-2007 Rodolphe Quiedeville  <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2010 Laurent Destailleur   <eldy@users.sourceforge.net>
  * Copyright (C) 2005      Marc Barilley / Ocebo <marc@ocebo.com>
- * Copyright (C) 2005-2009 Regis Houssin         <regis@dolibarr.fr>
+ * Copyright (C) 2005-2009 Regis Houssin         <regis.houssin@capnetworks.com>
  * Copyright (C) 2005      Simon TOSSER          <simon@kornog-computing.com>
  * Copyright (C) 2011      Juanjo Menent         <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -79,7 +79,7 @@ if (GETPOST("sendit") && ! empty($conf->global->MAIN_UPLOAD_DOC))
 if ($action == 'delete')
 {
 	$file = $upload_dir . '/' . GETPOST("urlfile");	// Do not use urldecode here ($_GET and $_REQUEST are already decoded by PHP).
-	$ret=dol_delete_file($file);
+	$ret=dol_delete_file($file,0,0,0,$object);
 	if ($ret) setEventMessage($langs->trans("FileWasRemoved", GETPOST('urlfile')));
 	else setEventMessage($langs->trans("ErrorFailToDeleteFile", GETPOST('urlfile')), 'errors');
 }
@@ -172,7 +172,7 @@ if ($object->id)
 
     // Affiche formulaire upload
    	$formfile=new FormFile($db);
-   	$formfile->form_attach_new_file(DOL_URL_ROOT.'/compta/sociales/document.php?id='.$object->id,'',0,0,$user->rights->tax->charges->creer);
+   	$formfile->form_attach_new_file(DOL_URL_ROOT.'/compta/sociales/document.php?id='.$object->id,'',0,0,$user->rights->tax->charges->creer,50,$object);
 
 
    	// List of document

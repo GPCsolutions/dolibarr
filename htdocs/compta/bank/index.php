@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2001-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copytight (C) 2005-2009 Regis Houssin        <regis@dolibarr.fr>
+ * Copytight (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -23,10 +23,11 @@
  *       \brief      Home page of bank module
  */
 
-require 'pre.inc.php';
+require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/tva/class/tva.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/sociales/class/chargesociales.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
 $langs->load("banks");
 $langs->load("categories");
@@ -35,7 +36,7 @@ $langs->load("categories");
 if ($user->societe_id) $socid=$user->societe_id;
 $result=restrictedArea($user,'banque');
 
-$statut=isset($_GET["statut"])?$_GET["statut"]:'';
+$statut=GETPOST('statut');
 
 
 
@@ -232,20 +233,20 @@ if (! $found) print '<tr '.$bc[$var].'><td colspan="6">'.$langs->trans("None").'
 // Total
 print '<tr class="liste_total"><td colspan="5" class="liste_total">'.$langs->trans("Total").'</td><td align="right" class="liste_total">'.price($total).'</td></tr>';
 
-
-
 print "</table>";
+print "<br>";
 
 
 /*
  * Boutons d'actions
  */
-print "<br><div class=\"tabsAction\">\n";
-if ($user->rights->banque->configurer) {
+
+print '<div class="tabsAction">'."\n";
+if ($user->rights->banque->configurer) 
+{
 	print '<a class="butAction" href="fiche.php?action=create">'.$langs->trans("NewFinancialAccount").'</a>';
-	print '<a class="butAction" href="categ.php">'.$langs->trans("Rubriques").'</a>';
 }
-print "</div>";
+print '</div>';
 
 
 llxFooter();

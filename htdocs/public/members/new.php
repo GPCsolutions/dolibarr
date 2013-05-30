@@ -1,13 +1,13 @@
 <?php
 /* Copyright (C) 2001-2002	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2001-2002	Jean-Louis Bergamo		<jlb@j1b.org>
- * Copyright (C) 2006-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2012		Regis Houssin			<regis@dolibarr.fr>
- * Copyright (C) 2012		J. Fernando Lagrange 		<fernando@demo-tic.org>
+ * Copyright (C) 2006-2013	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2012		Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2012		J. Fernando Lagrange    <fernando@demo-tic.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -74,6 +74,8 @@ if (empty($conf->global->MEMBER_ENABLE_PUBLIC))
     print $langs->trans("Auto subscription form for public visitors has no been enabled");
     exit;
 }
+
+$extrafields = new ExtraFields($db);
 
 
 /**
@@ -182,12 +184,12 @@ if ($action == 'add')
         $error+=1;
         $errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv('Nature'))."<br>\n";
     }
-    if (empty($_POST["nom"]))
+    if (empty($_POST["lastname"]))
     {
         $error+=1;
         $errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Lastname"))."<br>\n";
     }
-    if (empty($_POST["prenom"]))
+    if (empty($_POST["firstname"]))
     {
         $error+=1;
         $errmsg .= $langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("Firstname"))."<br>\n";
@@ -223,8 +225,8 @@ if ($action == 'add')
         $adh = new Adherent($db);
         $adh->statut      = -1;
         $adh->public      = $_POST["public"];
-        $adh->prenom      = $_POST["prenom"];
-        $adh->nom         = $_POST["nom"];
+        $adh->firstname   = $_POST["firstname"];
+        $adh->lastname    = $_POST["lastname"];
         $adh->civilite_id = $_POST["civilite_id"];
         $adh->societe     = $_POST["societe"];
         $adh->address     = $_POST["address"];
@@ -243,13 +245,12 @@ if ($action == 'add')
         $adh->typeid      = $_POST["type"];
         $adh->note        = $_POST["comment"];
         $adh->morphy      = $_POST["morphy"];
-        $adh->naiss       = $birthday;
+        $adh->birth       = $birthday;
 
-        foreach($_POST as $key => $value){
-            if (preg_match("/^options_/",$key)){
-                $adh->array_options[$key]=$_POST[$key];
-            }
-        }
+        
+        // Fill array 'array_options' with data from add form
+        $extralabels=$extrafields->fetch_name_optionals_label($adh->table_element);
+        $ret = $extrafields->setOptionalsFromPost($extralabels,$adh);
 
         $result=$adh->create($user->id);
         if ($result > 0)
@@ -360,8 +361,7 @@ if ($action == 'added')
 $form = new Form($db);
 $formcompany = new FormCompany($db);
 $adht = new AdherentType($db);
-$extrafields = new ExtraFields($db);
-$extrafields->fetch_name_optionals_label('member');    // fetch optionals attributes and labels
+$extrafields->fetch_name_optionals_label('adherent');    // fetch optionals attributes and labels
 
 
 llxHeaderVierge($langs->trans("NewSubscription"));
@@ -448,9 +448,9 @@ else
 print '<tr><td>'.$langs->trans('UserTitle').'</td><td>';
 print $formcompany->select_civility(GETPOST('civilite_id'),'civilite_id').'</td></tr>'."\n";
 // Lastname
-print '<tr><td>'.$langs->trans("Lastname").' <FONT COLOR="red">*</FONT></td><td><input type="text" name="nom" size="40" value="'.dol_escape_htmltag(GETPOST('nom')).'"></td></tr>'."\n";
+print '<tr><td>'.$langs->trans("Lastname").' <FONT COLOR="red">*</FONT></td><td><input type="text" name="lastname" size="40" value="'.dol_escape_htmltag(GETPOST('lastname')).'"></td></tr>'."\n";
 // Firstname
-print '<tr><td>'.$langs->trans("Firstname").' <FONT COLOR="red">*</FONT></td><td><input type="text" name="prenom" size="40" value="'.dol_escape_htmltag(GETPOST('prenom')).'"></td></tr>'."\n";
+print '<tr><td>'.$langs->trans("Firstname").' <FONT COLOR="red">*</FONT></td><td><input type="text" name="firstname" size="40" value="'.dol_escape_htmltag(GETPOST('firstname')).'"></td></tr>'."\n";
 // Company
 print '<tr id="trcompany" class="trcompany"><td>'.$langs->trans("Company").'</td><td><input type="text" name="societe" size="40" value="'.dol_escape_htmltag(GETPOST('societe')).'"></td></tr>'."\n";
 // Address
@@ -498,7 +498,7 @@ if (empty($conf->global->ADHERENT_LOGIN_NOT_REQUIRED))
     print '<tr><td>'.$langs->trans("PasswordAgain").' <FONT COLOR="red">*</FONT></td><td><input type="password" name="pass2" size="20" value="'.GETPOST("pass2").'"></td></tr>'."\n";
 }
 // Birthday
-print '<tr><td>'.$langs->trans("DateToBirth").'</td><td>';
+print '<tr id="trbirth" class="trbirth"><td>'.$langs->trans("DateToBirth").'</td><td>';
 print $form->select_date($birthday,'birth',0,0,1,"newmember");
 print '</td></tr>'."\n";
 // Photo
@@ -551,8 +551,9 @@ if (! empty($conf->global->MEMBER_NEWFORM_DOLIBARRTURNOVER))
             }
             if (jQuery("#morphy").val()==\'mor\') {
                 jQuery(".amount").val(\'\');
-                jQuery("#trbudget").show();
                 jQuery("#trcompany").show();
+                jQuery("#trbirth").hide();
+                jQuery("#trbudget").show();
                 if (jQuery("#budget").val() > 0) { jQuery(".amount").val(jQuery("#budget").val()); }
                 else { jQuery("#budget").val(\'\'); }
             }
@@ -575,7 +576,7 @@ if (! empty($conf->global->MEMBER_NEWFORM_AMOUNT)
         $amount=GETPOST('amount')?GETPOST('amount'):$conf->global->MEMBER_NEWFORM_AMOUNT;
     }
     // $conf->global->MEMBER_NEWFORM_PAYONLINE is 'paypal' or 'paybox'
-    print '<tr><td>'.$langs->trans("Subscription").'</td><td nowrap="nowrap">';
+    print '<tr><td>'.$langs->trans("Subscription").'</td><td class="nowrap">';
     if (! empty($conf->global->MEMBER_NEWFORM_EDITAMOUNT))
     {
         print '<input type="text" name="amount" id="amount" class="flat amount" size="6" value="'.$amount.'">';

@@ -4,7 +4,7 @@
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
  * Copyright (C) 2004      Sebastien Di Cintio  <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Eric Seigne          <eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2012 Regis Houssin        <regis@dolibarr.fr>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
  * Copyright (C) 2006      Marc Barilley/Ocebo  <marc@ocebo.com>
  * Copyright (C) 2007      Franky Van Liedekerke <franky.van.liedekerker@telenet.be>
@@ -12,7 +12,7 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -153,10 +153,10 @@ class FormOther
 
 
     /**
-     *    Retourne la liste des ecotaxes avec tooltip sur le libelle
+     *    Return list of ecotaxes with label
      *
-     *    @param	string	$selected    code ecotaxes pre-selectionne
-     *    @param    string	$htmlname    nom de la liste deroulante
+     *    @param	string	$selected   Preselected ecotaxes
+     *    @param    string	$htmlname	Name of combo list
      *    @return	void
      */
     function select_ecotaxes($selected='',$htmlname='ecotaxe_id')
@@ -169,6 +169,7 @@ class FormOther
         $sql.= " WHERE e.active = 1 AND e.fk_pays = p.rowid";
         $sql.= " ORDER BY pays, e.organization ASC, e.code ASC";
 
+    	dol_syslog(get_class($this).'::select_ecotaxes sql='.$sql);
         $resql=$this->db->query($sql);
         if ($resql)
         {
@@ -205,6 +206,64 @@ class FormOther
             return 1;
         }
     }
+
+
+    /**
+     *    Return list of revenue stamp for country
+     *
+     *    @param	string	$selected   	Value of preselected revenue stamp
+     *    @param    string	$htmlname   	Name of combo list
+     *    @param    string	$country_code   Country Code
+     *    @return	string					HTML select list
+     */
+    function select_revenue_stamp($selected='',$htmlname='revenuestamp',$country_code='')
+    {
+    	global $langs;
+
+    	$out='';
+
+    	$sql = "SELECT r.taux";
+    	$sql.= " FROM ".MAIN_DB_PREFIX."c_revenuestamp as r,".MAIN_DB_PREFIX."c_pays as p";
+    	$sql.= " WHERE r.active = 1 AND r.fk_pays = p.rowid";
+    	$sql.= " AND p.code = '".$country_code."'";
+
+    	dol_syslog(get_class($this).'::select_revenue_stamp sql='.$sql);
+    	$resql=$this->db->query($sql);
+    	if ($resql)
+    	{
+    		$out.='<select class="flat" name="'.$htmlname.'">';
+    		$num = $this->db->num_rows($resql);
+    		$i = 0;
+    		$out.='<option value="0">&nbsp;</option>'."\n";
+    		if ($num)
+    		{
+    			while ($i < $num)
+    			{
+    				$obj = $this->db->fetch_object($resql);
+    				if (($selected && $selected == $obj->taux) || $num == 1)
+    				{
+    					$out.='<option value="'.$obj->taux.'" selected="selected">';
+    				}
+    				else
+    				{
+    					$out.='<option value="'.$obj->taux.'">';
+    					//print '<option onmouseover="showtip(\''.$obj->libelle.'\')" onMouseout="hidetip()" value="'.$obj->rowid.'">';
+    				}
+    				$out.=$obj->taux;
+    				$out.='</option>';
+    				$i++;
+    			}
+    		}
+    		$out.='</select>';
+    		return $out;
+    	}
+    	else
+    	{
+    		dol_print_error($this->db);
+    		return '';
+    	}
+    }
+
 
     /**
      *    Return a HTML select list to select a percent
@@ -299,7 +358,7 @@ class FormOther
         $moreforfilter.='<option value="">&nbsp;</option>';
 
         // Get list of users allowed to be viewed
-        $sql_usr = "SELECT u.rowid, u.name as name, u.firstname, u.login";
+        $sql_usr = "SELECT u.rowid, u.lastname as name, u.firstname, u.login";
         $sql_usr.= " FROM ".MAIN_DB_PREFIX."user as u";
         $sql_usr.= " WHERE u.entity IN (0,".$conf->entity.")";
         if (empty($user->rights->user->user->lire)) $sql_usr.=" AND u.fk_societe = ".($user->societe_id?$user->societe_id:0);
@@ -465,6 +524,7 @@ class FormOther
      * 		@param	int			$showcolorbox	1=Show color code and color box, 0=Show only color code
      * 		@param 	array		$arrayofcolors	Array of colors. Example: array('29527A','5229A3','A32929','7A367A','B1365F','0D7813')
      * 		@return	void
+     * 		@deprecated
      */
     function select_color($set_color='', $prefix='f_color', $form_name='objForm', $showcolorbox=1, $arrayofcolors='')
     {
@@ -479,73 +539,79 @@ class FormOther
      *		@param	string		$form_name		Name of form
      * 		@param	int			$showcolorbox	1=Show color code and color box, 0=Show only color code
      * 		@param 	array		$arrayofcolors	Array of colors. Example: array('29527A','5229A3','A32929','7A367A','B1365F','0D7813')
+     * 		@param	string		$morecss		Add css style into input field
      * 		@return	void
      */
-    function selectColor($set_color='', $prefix='f_color', $form_name='objForm', $showcolorbox=1, $arrayofcolors='')
+    function selectColor($set_color='', $prefix='f_color', $form_name='objForm', $showcolorbox=1, $arrayofcolors='', $morecss='')
     {
-        global $langs;
+        global $langs,$conf;
 
         $out='';
 
         if (! is_array($arrayofcolors) || count($arrayofcolors) < 1)
         {
             $langs->load("other");
-            $out.= '<link rel="stylesheet" media="screen" type="text/css" href="'.DOL_URL_ROOT.'/includes/jquery/plugins/jpicker/css/jPicker-1.1.6.css" />';
-            $out.= '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/plugins/jpicker/jpicker-1.1.6.js"></script>';
-            $out.= '<script type="text/javascript">
-             jQuery(document).ready(function(){
-                $(\'#colorpicker'.$prefix.'\').jPicker( {
-                window: {
-                  title: \''.dol_escape_js($langs->trans("SelectAColor")).'\', /* any title for the jPicker window itself - displays "Drag Markers To Pick A Color" if left null */
-                  effects:
-                    {
-                    type: \'show\', /* effect used to show/hide an expandable picker. Acceptable values "slide", "show", "fade" */
-                    speed:
-                    {
-                      show: \'fast\', /* duration of "show" effect. Acceptable values are "fast", "slow", or time in ms */
-                      hide: \'fast\' /* duration of "hide" effect. Acceptable values are "fast", "slow", or time in ms */
-                    }
-                    },
-                  position:
-                    {
-                    x: \'screenCenter\', /* acceptable values "left", "center", "right", "screenCenter", or relative px value */
-                    y: \'center\' /* acceptable values "top", "bottom", "center", or relative px value */
-                    },
-                },
-                images: {
-                    clientPath: \''.DOL_URL_ROOT.'/includes/jquery/plugins/jpicker/images/\',
-                    picker: { file: \'../../../../../theme/common/colorpicker.png\', width: 14, height: 14 }
-          		},
-                localization: // alter these to change the text presented by the picker (e.g. different language)
-                  {
-                    text:
-                    {
-                      title: \''.dol_escape_js($langs->trans("SelectAColor")).'\',
-                      newColor: \''.dol_escape_js($langs->trans("New")).'\',
-                      currentColor: \''.dol_escape_js($langs->trans("Current")).'\',
-                      ok: \''.dol_escape_js($langs->trans("Save")).'\',
-                      cancel: \''.dol_escape_js($langs->trans("Cancel")).'\'
-                    }
-                  }
-		        } ); });
-             </script>';
-            $out.= '<input id="colorpicker'.$prefix.'" name="'.$prefix.'" size="6" maxlength="7" class="flat" type="text" value="'.$set_color.'" />';
+            if (empty($conf->dol_use_jmobile))
+            {
+	            $out.= '<link rel="stylesheet" media="screen" type="text/css" href="'.DOL_URL_ROOT.'/includes/jquery/plugins/jpicker/css/jPicker-1.1.6.css" />';
+	            $out.= '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/plugins/jpicker/jpicker-1.1.6.js"></script>';
+	            $out.= '<script type="text/javascript">
+	             jQuery(document).ready(function(){
+	                $(\'#colorpicker'.$prefix.'\').jPicker( {
+	                window: {
+	                  title: \''.dol_escape_js($langs->trans("SelectAColor")).'\', /* any title for the jPicker window itself - displays "Drag Markers To Pick A Color" if left null */
+	                  effects:
+	                    {
+	                    type: \'show\', /* effect used to show/hide an expandable picker. Acceptable values "slide", "show", "fade" */
+	                    speed:
+	                    {
+	                      show: \'fast\', /* duration of "show" effect. Acceptable values are "fast", "slow", or time in ms */
+	                      hide: \'fast\' /* duration of "hide" effect. Acceptable values are "fast", "slow", or time in ms */
+	                    }
+	                    },
+	                  position:
+	                    {
+	                    x: \'screenCenter\', /* acceptable values "left", "center", "right", "screenCenter", or relative px value */
+	                    y: \'center\' /* acceptable values "top", "bottom", "center", or relative px value */
+	                    },
+	                },
+	                images: {
+	                    clientPath: \''.DOL_URL_ROOT.'/includes/jquery/plugins/jpicker/images/\',
+	                    picker: { file: \'../../../../../theme/common/colorpicker.png\', width: 14, height: 14 }
+	          		},
+	                localization: // alter these to change the text presented by the picker (e.g. different language)
+	                  {
+	                    text:
+	                    {
+	                      title: \''.dol_escape_js($langs->trans("SelectAColor")).'\',
+	                      newColor: \''.dol_escape_js($langs->trans("New")).'\',
+	                      currentColor: \''.dol_escape_js($langs->trans("Current")).'\',
+	                      ok: \''.dol_escape_js($langs->trans("Save")).'\',
+	                      cancel: \''.dol_escape_js($langs->trans("Cancel")).'\'
+	                    }
+	                  }
+			        } ); });
+	             </script>';
+            }
+            $out.= '<input id="colorpicker'.$prefix.'" name="'.$prefix.'" size="6" maxlength="7" class="flat'.($morecss?' '.$morecss:'').'" type="text" value="'.$set_color.'" />';
         }
         else  // In most cases, this is not used. We used instead function with no specific list of colors
         {
-            $out.= '<link rel="stylesheet" href="'.DOL_URL_ROOT.'/includes/jquery/plugins/colorpicker/jquery.colorpicker.css" type="text/css" media="screen" />';
-            $out.= '<script src="'.DOL_URL_ROOT.'/includes/jquery/plugins/colorpicker/jquery.colorpicker.js" type="text/javascript"></script>';
-            $out.= '<script type="text/javascript">
-             jQuery(document).ready(function(){
-                 jQuery(\'#colorpicker'.$prefix.'\').colorpicker({
-                     size: 14,
-                     label: \'\',
-                     hide: true
-                 });
-             });
-             </script>';
-
-            $out.= '<select id="colorpicker'.$prefix.'" class="flat" name="'.$prefix.'">';
+            if (empty($conf->dol_use_jmobile))
+            {
+	        	$out.= '<link rel="stylesheet" href="'.DOL_URL_ROOT.'/includes/jquery/plugins/colorpicker/jquery.colorpicker.css" type="text/css" media="screen" />';
+	            $out.= '<script src="'.DOL_URL_ROOT.'/includes/jquery/plugins/colorpicker/jquery.colorpicker.js" type="text/javascript"></script>';
+	            $out.= '<script type="text/javascript">
+	             jQuery(document).ready(function(){
+	                 jQuery(\'#colorpicker'.$prefix.'\').colorpicker({
+	                     size: 14,
+	                     label: \'\',
+	                     hide: true
+	                 });
+	             });
+	             </script>';
+            }
+            $out.= '<select id="colorpicker'.$prefix.'" class="flat'.($morecss?' '.$morecss:'').'" name="'.$prefix.'">';
             //print '<option value="-1">&nbsp;</option>';
             foreach ($arrayofcolors as $val)
             {
@@ -808,30 +874,60 @@ class FormOther
 
         include_once DOL_DOCUMENT_ROOT.'/core/class/infobox.class.php';
 
-        //$infobox=new InfoBox($db);
-        $boxactivated=InfoBox::listBoxes($db,'activated',$areacode,$user);
-        $arrayboxactivatedid=array();
-        foreach($boxactivated as $box) $arrayboxactivatedid[$box->id]=$box->id;
+        $confuserzone='MAIN_BOXES_'.$areacode;
+
+        $boxactivated=InfoBox::listBoxes($db,'activated',$areacode,(empty($user->conf->$confuserzone)?null:$user));	// Search boxes of common+user (or common only if user has no specific setup)
+        $boxidactivatedforuser=array();
+        foreach($boxactivated as $box)
+        {
+        	if (empty($user->conf->$confuserzone) || $box->fk_user == $user->id) $boxidactivatedforuser[$box->id]=$box->id;	// We keep only boxes to show for user
+        }
 
         $selectboxlist='';
-        if (! empty($conf->use_javascript_ajax))
+        $arrayboxtoactivatelabel=array();
+        if (! empty($user->conf->$confuserzone))
         {
-            $emptyuser=new User($db);
-            $boxavailable=InfoBox::listBoxes($db,'activated',$areacode,$emptyuser,$arrayboxactivatedid);    // Get list of box available for empty user (minus already activated for user)
+        	$langs->load("boxes");	// Load label of boxes
+        	foreach($boxactivated as $box)
+        	{
+        		if (! empty($boxidactivatedforuser[$box->id])) continue;	// Already visible for user
+        		$label=$langs->transnoentitiesnoconv($box->boxlabel);
+        		if (preg_match('/graph/',$box->class)) $label.=' ('.$langs->trans("Graph").')';
+        		$arrayboxtoactivatelabel[$box->id]=$label;			// We keep only boxes not shown for user, to show into combo list
+        	}
 
-            $arrayboxtoactivatelabel=array();
-            foreach($boxavailable as $box)
-            {
-                $arrayboxtoactivatelabel[$box->id]=$box->boxlabel;
-            }
-            $form=new Form($db);
-
+        	$form=new Form($db);
             $selectboxlist=$form->selectarray('boxcombo', $arrayboxtoactivatelabel,'',1);
         }
 
+        // Javascript code for dynamic actions
         if (! empty($conf->use_javascript_ajax))
         {
 	        print '<script type="text/javascript" language="javascript">
+
+	        // To update list of activated boxes
+	        function updateBoxOrder(closing) {
+	        	var left_list = cleanSerialize(jQuery("#left").sortable("serialize"));
+	        	var right_list = cleanSerialize(jQuery("#right").sortable("serialize"));
+	        	var boxorder = \'A:\' + left_list + \'-B:\' + right_list;
+	        	if (boxorder==\'A:A-B:B\' && closing == 1)	// There is no more boxes on screen, and we are after a delete of a box so we must hide title
+	        	{
+	        		jQuery.ajax({
+	        			url: \''.DOL_URL_ROOT.'/core/ajax/box.php?boxorder=\'+boxorder+\'&zone='.$areacode.'&userid=\'+'.$user->id.',
+	        			async: false
+	        		});
+	        		// We force reload to be sure to get all boxes into list
+	        		window.location.search=\'mainmenu='.GETPOST("mainmenu").'&leftmenu='.GETPOST('leftmenu').'&action=delbox\';
+	        	}
+	        	else
+	        	{
+	        		jQuery.ajax({
+	        			url: \''.DOL_URL_ROOT.'/core/ajax/box.php?boxorder=\'+boxorder+\'&zone='.$areacode.'&userid=\'+'.$user->id.',
+	        			async: true
+	        		});
+	        	}
+	        }
+
 	        jQuery(document).ready(function() {
 	        	jQuery("#boxcombo").change(function() {
 	        	var boxid=jQuery("#boxcombo").val();
@@ -846,18 +942,45 @@ class FormOther
 	        			window.location.search=\'mainmenu='.GETPOST("mainmenu").'&leftmenu='.GETPOST('leftmenu').'&action=addbox&boxid=\'+boxid;
 	                }
 	        	});';
-	        if (! count($arrayboxtoactivatelabel)) print 'jQuery("#boxcombo").hide();';
-	        print  '
-	    	});
-	        </script>';
+	        	if (! count($arrayboxtoactivatelabel)) print 'jQuery("#boxcombo").hide();';
+	        	print  '
+
+	        	jQuery("#left, #right").sortable({
+		        	/* placeholder: \'ui-state-highlight\', */
+	    	    	handle: \'.boxhandle\',
+	    	    	revert: \'invalid\',
+	       			items: \'.box\',
+	        		containment: \'.fiche\',
+	        		connectWith: \'.connectedSortable\',
+	        		stop: function(event, ui) {
+	        			updateBoxOrder(0);
+	        		}
+	    		});
+
+	        	jQuery(".boxclose").click(function() {
+	        		var self = this;	// because JQuery can modify this
+	        		var boxid=self.id.substring(8);
+	        		var label=jQuery(\'#boxlabelentry\'+boxid).val();
+	        		jQuery(\'#boxto_\'+boxid).remove();
+	        		if (boxid > 0) jQuery(\'#boxcombo\').append(new Option(label, boxid));
+	        		updateBoxOrder(1);
+	        	});
+
+        	});'."\n";
+
+	        print '</script>'."\n";
         }
 
-        $nbboxactivated=count($boxactivated);
+        $nbboxactivated=count($boxidactivatedforuser);
 
         print load_fiche_titre(($nbboxactivated?$langs->trans("OtherInformationsBoxes"):''),$selectboxlist,'','','otherboxes');
 
         if ($nbboxactivated)
         {
+        	$langs->load("boxes");
+
+        	$emptybox=new ModeleBoxes($db);
+
             print '<table width="100%" class="notopnoleftnoright">';
             print '<tr><td class="notopnoleftnoright">'."\n";
 
@@ -873,6 +996,7 @@ class FormOther
             $ii=0;
             foreach ($boxactivated as $key => $box)
             {
+            	if ((! empty($user->conf->$confuserzone) && $box->fk_user == 0) || (empty($user->conf->$confuserzone) && $box->fk_user != 0)) continue;
 				if (empty($box->box_order) && $ii < ($nbboxactivated / 2)) $box->box_order='A'.sprintf("%02d",($ii+1));	// When box_order was not yet set to Axx or Bxx and is still 0
             	if (preg_match('/^A/i',$box->box_order)) // column A
                 {
@@ -885,12 +1009,13 @@ class FormOther
                 }
             }
 
-            $emptybox=new ModeleBoxes($db);
-            $emptybox->box_id='A';
-            $emptybox->info_box_head=array();
-            $emptybox->info_box_contents=array();
-            $emptybox->showBox(array(),array());
-
+            if (empty($conf->browser->phone))
+            {
+            	$emptybox->box_id='A';
+            	$emptybox->info_box_head=array();
+            	$emptybox->info_box_contents=array();
+            	$emptybox->showBox(array(),array());
+            }
             print "</div>\n";
             print "<!-- End box container -->\n";
 
@@ -902,7 +1027,8 @@ class FormOther
             $ii=0;
             foreach ($boxactivated as $key => $box)
             {
-				if (empty($box->box_order) && $ii < ($nbboxactivated / 2)) $box->box_order='B'.sprintf("%02d",($ii+1));	// When box_order was not yet set to Axx or Bxx and is still 0
+            	if ((! empty($user->conf->$confuserzone) && $box->fk_user == 0) || (empty($user->conf->$confuserzone) && $box->fk_user != 0)) continue;
+            	if (empty($box->box_order) && $ii < ($nbboxactivated / 2)) $box->box_order='B'.sprintf("%02d",($ii+1));	// When box_order was not yet set to Axx or Bxx and is still 0
             	if (preg_match('/^B/i',$box->box_order)) // colonne B
                 {
                     $ii++;
@@ -914,12 +1040,13 @@ class FormOther
                 }
             }
 
-            $emptybox=new ModeleBoxes($db);
-            $emptybox->box_id='B';
-            $emptybox->info_box_head=array();
-            $emptybox->info_box_contents=array();
-            $emptybox->showBox(array(),array());
-
+            if (empty($conf->browser->phone))
+            {
+            	$emptybox->box_id='B';
+            	$emptybox->info_box_head=array();
+            	$emptybox->info_box_contents=array();
+            	$emptybox->showBox(array(),array());
+            }
             print "</div>\n";
             print "<!-- End box container -->\n";
 
@@ -928,59 +1055,6 @@ class FormOther
 
             print "</td></tr>";
             print "</table>";
-
-            if ($conf->use_javascript_ajax)
-            {
-                print "\n";
-                print '<script type="text/javascript" language="javascript">';
-                // For moving
-                print 'jQuery(function() {
-                            jQuery("#left, #right").sortable({
-                                /* placeholder: \'ui-state-highlight\', */
-                                handle: \'.boxhandle\',
-                                revert: \'invalid\',
-                                items: \'.box\',
-                                containment: \'.fiche\',
-                                connectWith: \'.connectedSortable\',
-                                stop: function(event, ui) {
-                                    updateBoxOrder(0);
-                                }
-                            });
-                        });
-                '."\n";
-                // To update list of activated boxes
-                print 'function updateBoxOrder(closing) {
-	                		var left_list = cleanSerialize(jQuery("#left").sortable("serialize"));
-	                		var right_list = cleanSerialize(jQuery("#right").sortable("serialize"));
-	                		var boxorder = \'A:\' + left_list + \'-B:\' + right_list;
-	    					if (boxorder==\'A:A-B:B\' && closing == 1)	// There is no more boxes on screen, and we are after a delete of a box so we must hide title
-	    					{
-		    					jQuery.ajax({
-		    						url: \''.DOL_URL_ROOT.'/core/ajax/box.php?boxorder=\'+boxorder+\'&zone='.$areacode.'&userid=\'+'.$user->id.',
-		    						async: false
-		    					});
-	    						// We force reload to be sure to get all boxes into list
-			        			window.location.search=\'mainmenu='.GETPOST("mainmenu").'&leftmenu='.GETPOST('leftmenu').'&action=delbox\';
-	    					}
-	    					else
-	    					{
-	    						jQuery.ajax({
-		    						url: \''.DOL_URL_ROOT.'/core/ajax/box.php?boxorder=\'+boxorder+\'&zone='.$areacode.'&userid=\'+'.$user->id.',
-		    						async: true
-		    					});
-	    					}
-                		}'."\n";
-                // For closing
-                print 'jQuery(document).ready(function() {
-                          	jQuery(".boxclose").click(function() {
-                          		var self = this;	// because JQuery can modify this
-                              	var boxid=self.id.substring(8);
-                                jQuery(\'#boxto_\'+boxid).remove();
-                                updateBoxOrder(1);
-                           	});
-                       });'."\n";
-                print '</script>'."\n";
-            }
         }
 
         return count($boxactivated);

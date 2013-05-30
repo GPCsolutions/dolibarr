@@ -1,10 +1,10 @@
 -- ===================================================================
 -- Copyright (C) 2002-2003 Rodolphe Quiedeville <rodolphe@quiedeville.org>
--- Copyright (C) 2005-2007 Regis Houssin        <regis@dolibarr.fr>
+-- Copyright (C) 2005-2007 Regis Houssin        <regis.houssin@capnetworks.com>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 2 of the License, or
+-- the Free Software Foundation; either version 3 of the License, or
 -- (at your option) any later version.
 --
 -- This program is distributed in the hope that it will be useful,
@@ -21,6 +21,7 @@ create table llx_fichinterdet
 (
   rowid             integer AUTO_INCREMENT PRIMARY KEY,
   fk_fichinter      integer,
+  fk_parent_line    integer NULL,
   date              datetime,          -- date de la ligne d'intervention
   description       text,              -- description de la ligne d'intervention
   duree             integer,           -- duree de la ligne d'intervention

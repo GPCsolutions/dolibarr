@@ -1,11 +1,11 @@
 <?php
 /* Copyright (C) 2008-2011	Laurent Destailleur			<eldy@users.sourceforge.net>
- * Copyright (C) 2008-2012	Regis Houssin				<regis@dolibarr.fr>
+ * Copyright (C) 2008-2012	Regis Houssin				<regis.houssin@capnetworks.com>
  * Copyright (C) 2008		Raphael Bertrand (Resultic)	<raphael.bertrand@resultic.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -105,14 +105,18 @@ function dolGetModulesDirs($subdir='')
 /**
  *  Try to guess default paper format according to language into $langs
  *
- *	@return		string		Defautl paper format code
+ *	@param		Translate	$outputlangs		Output lang to use to autodetect output format if setup not done
+ *	@return		string							Default paper format code
  */
-function dol_getDefaultFormat()
+function dol_getDefaultFormat($outputlangs='')
 {
     global $langs;
+
     $selected='EUA4';
-    if ($langs->defaultlang == 'ca_CA') $selected='CAP4';        // Canada
-    if ($langs->defaultlang == 'en_US') $selected='USLetter';    // US
+    if (empty($outputlangs) || ! is_object($outputlangs)) $outputlangs=$langs;
+
+    if ($outputlangs->defaultlang == 'ca_CA') $selected='CAP4';        // Canada
+    if ($outputlangs->defaultlang == 'en_US') $selected='USLetter';    // US
     return $selected;
 }
 
@@ -188,11 +192,11 @@ function dol_print_object_info($object)
     //print "x".$deltadateforserver." - ".$deltadateforclient." - ".$deltadateforuser;
 
     // Import key
-    if (isset($object->import_key))
+    if (! empty($object->import_key))
     print $langs->trans("ImportedWithSet").': '.$object->import_key.'<br>';
 
     // User creation
-    if (isset($object->user_creation))
+    if (! empty($object->user_creation))
     {
         print $langs->trans("CreatedBy").': ';
         if (is_object($object->user_creation))
@@ -209,7 +213,7 @@ function dol_print_object_info($object)
     }
 
     // Date creation
-    if (isset($object->date_creation))
+    if (! empty($object->date_creation))
     {
         print $langs->trans("DateCreation").': '.dol_print_date($object->date_creation, 'dayhour');
         if ($deltadateforuser) print ' '.$langs->trans("CurrentHour").' &nbsp; / &nbsp; '.dol_print_date($object->date_creation+($deltadateforuser*3600),"dayhour").' &nbsp;'.$langs->trans("ClientHour");
@@ -217,7 +221,7 @@ function dol_print_object_info($object)
     }
 
     // User change
-    if (isset($object->user_modification))
+    if (! empty($object->user_modification))
     {
         print $langs->trans("ModifiedBy").': ';
         if (is_object($object->user_modification))
@@ -234,7 +238,7 @@ function dol_print_object_info($object)
     }
 
     // Date change
-    if (isset($object->date_modification))
+    if (! empty($object->date_modification))
     {
         print $langs->trans("DateLastModification").': '.dol_print_date($object->date_modification, 'dayhour');
         if ($deltadateforuser) print ' '.$langs->trans("CurrentHour").' &nbsp; / &nbsp; '.dol_print_date($object->date_modification+($deltadateforuser*3600),"dayhour").' &nbsp;'.$langs->trans("ClientHour");
@@ -242,7 +246,7 @@ function dol_print_object_info($object)
     }
 
     // User validation
-    if (isset($object->user_validation))
+    if (! empty($object->user_validation))
     {
         print $langs->trans("ValidatedBy").': ';
         if (is_object($object->user_validation))
@@ -259,7 +263,7 @@ function dol_print_object_info($object)
     }
 
     // Date validation
-    if (isset($object->date_validation))
+    if (! empty($object->date_validation))
     {
         print $langs->trans("DateValidation").': '.dol_print_date($object->date_validation, 'dayhour');
         if ($deltadateforuser) print ' '.$langs->trans("CurrentHour").' &nbsp; / &nbsp; '.dol_print_date($object->date_validation+($deltadateforuser*3600),"dayhour").' &nbsp;'.$langs->trans("ClientHour");
@@ -267,7 +271,7 @@ function dol_print_object_info($object)
     }
 
     // User approve
-    if (isset($object->user_approve))
+    if (! empty($object->user_approve))
     {
         print $langs->trans("ApprovedBy").': ';
         if (is_object($object->user_approve))
@@ -284,7 +288,7 @@ function dol_print_object_info($object)
     }
 
     // Date approve
-    if (isset($object->date_approve))
+    if (! empty($object->date_approve))
     {
         print $langs->trans("DateApprove").': '.dol_print_date($object->date_approve, 'dayhour');
         if ($deltadateforuser) print ' '.$langs->trans("CurrentHour").' &nbsp; / &nbsp; '.dol_print_date($object->date_approve+($deltadateforuser*3600),"dayhour").' &nbsp;'.$langs->trans("ClientHour");
@@ -292,7 +296,7 @@ function dol_print_object_info($object)
     }
 
     // User close
-    if (isset($object->user_cloture))
+    if (! empty($object->user_cloture))
     {
         print $langs->trans("ClosedBy").': ';
         if (is_object($object->user_cloture))
@@ -309,7 +313,7 @@ function dol_print_object_info($object)
     }
 
     // Date close
-    if (isset($object->date_cloture))
+    if (! empty($object->date_cloture))
     {
         print $langs->trans("DateClosing").': '.dol_print_date($object->date_cloture, 'dayhour');
         if ($deltadateforuser) print ' '.$langs->trans("CurrentHour").' &nbsp; / &nbsp; '.dol_print_date($object->date_cloture+($deltadateforuser*3600),"dayhour").' &nbsp;'.$langs->trans("ClientHour");
@@ -317,7 +321,7 @@ function dol_print_object_info($object)
     }
 
     // User conciliate
-    if (isset($object->user_rappro))
+    if (! empty($object->user_rappro))
     {
         print $langs->trans("ConciliatedBy").': ';
         if (is_object($object->user_rappro))
@@ -334,7 +338,7 @@ function dol_print_object_info($object)
     }
 
     // Date conciliate
-    if (isset($object->date_rappro))
+    if (! empty($object->date_rappro))
     {
         print $langs->trans("DateConciliating").': '.dol_print_date($object->date_rappro, 'dayhour');
         if ($deltadateforuser) print ' '.$langs->trans("CurrentHour").' &nbsp; / &nbsp; '.dol_print_date($object->date_rappro+($deltadateforuser*3600),"dayhour").' &nbsp;'.$langs->trans("ClientHour");
@@ -342,7 +346,7 @@ function dol_print_object_info($object)
     }
 
     // Date send
-    if (isset($object->date_envoi))
+    if (! empty($object->date_envoi))
     {
         print $langs->trans("DateLastSend").': '.dol_print_date($object->date_envoi, 'dayhour');
         if ($deltadateforuser) print ' '.$langs->trans("CurrentHour").' &nbsp; / &nbsp; '.dol_print_date($object->date_envoi+($deltadateforuser*3600),"dayhour").' &nbsp;'.$langs->trans("ClientHour");
@@ -506,7 +510,7 @@ function array2table($data,$tableMarkup=1,$tableoptions='',$troptions='',$tdopti
 }
 
 /**
- * Return next value for a mask
+ * Return last or next value for a mask (according to area we should not reset)
  *
  * @param	DoliDB		$db				Database handler
  * @param   string		$mask			Mask to use
@@ -607,6 +611,10 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
 
     if ($maskraz > 0)    // A reset is required
     {
+    	if ($maskraz == 99) {
+			$maskraz = date('m');
+			$resetEveryMonth = true;
+		}
         if ($maskraz > 12) return 'ErrorBadMaskBadRazMonth';
 
         // Define posy, posm and reg
@@ -648,13 +656,13 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
         	else if ($date >= $newyeardate && $yearoffsettype == '-') $yearoffset=-1;
         }
         // For backward compatibility
-        else if (date("m",$date) < $maskraz) { $yearoffset=-1; }	// If current month lower that month of return to zero, year is previous year
+        else if (date("m",$date) < $maskraz && empty($resetEveryMonth)) { $yearoffset=-1; }	// If current month lower that month of return to zero, year is previous year
 
         $yearlen = dol_strlen($reg[$posy]);
         if ($yearlen == 4) $yearcomp=sprintf("%04d",date("Y",$date)+$yearoffset);
         elseif ($yearlen == 2) $yearcomp=sprintf("%02d",date("y",$date)+$yearoffset);
         elseif ($yearlen == 1) $yearcomp=substr(date("y",$date),2,1)+$yearoffset;
-        if ($monthcomp > 1)	// Test with month is useless if monthcomp = 0 or 1 (0 is same as 1) (regis: $monthcomp can't equal 0)
+        if ($monthcomp > 1 && empty($resetEveryMonth))	// Test with month is useless if monthcomp = 0 or 1 (0 is same as 1) (regis: $monthcomp can't equal 0)
         {
             if ($yearlen == 4) $yearcomp1=sprintf("%04d",date("Y",$date)+$yearoffset+1);
             elseif ($yearlen == 2) $yearcomp1=sprintf("%02d",date("y",$date)+$yearoffset+1);
@@ -675,6 +683,17 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
             $sqlwhere.=" AND SUBSTRING(".$field.", ".$monthpos.", ".$monthlen.") < '".str_pad($monthcomp, $monthlen, '0', STR_PAD_LEFT)."') ";
             $sqlwhere.=')';
         }
+		else if($resetEveryMonth) {
+			$monthlen = dol_strlen($reg[$posm]);
+            $yearpos = (dol_strlen($reg[1])+1);
+            $monthpos = ($yearpos+$yearlen);
+            if ($posy == 3) {
+            	$monthpos = (dol_strlen($reg[1])+1);
+            	$yearpos = ($monthpos+$monthlen);
+            }
+			$sqlwhere.=" SUBSTRING(".$field.", ".$yearpos.", ".$yearlen.") = '".$yearcomp."'";
+            $sqlwhere.=" AND SUBSTRING(".$field.", ".$monthpos.", ".$monthlen.") = '".str_pad($monthcomp, $monthlen, '0', STR_PAD_LEFT)."' ";
+		}
         else   // reset is done on january
         {
             $sqlwhere.='(SUBSTRING('.$field.', '.(dol_strlen($reg[1])+1).', '.dol_strlen($reg[2]).") = '".$yearcomp."')";
@@ -687,7 +706,6 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     $posnumstart=strpos($maskwithnocode,$maskcounter);	// Pos of counter in final string (from 0 to ...)
     if ($posnumstart < 0) return 'ErrorBadMaskFailedToLocatePosOfSequence';
     $sqlstring='SUBSTRING('.$field.', '.($posnumstart+1).', '.dol_strlen($maskcounter).')';
-    //print "x".$sqlstring;
 
     // Define $maskLike
     $maskLike = dol_string_nospecial($mask);
@@ -700,7 +718,6 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     $maskLike = preg_replace('/\{dd\}/i','__',$maskLike);
     $maskLike = str_replace(dol_string_nospecial('{'.$masktri.'}'),str_pad("",dol_strlen($maskcounter),"_"),$maskLike);
     if ($maskrefclient) $maskLike = str_replace(dol_string_nospecial('{'.$maskrefclient.'}'),str_pad("",dol_strlen($maskrefclient),"_"),$maskLike);
-    //if ($masktype) $maskLike = str_replace(dol_string_nospecial('{'.$masktype.'}'),str_pad("",dol_strlen($masktype),"_"),$maskLike);
     if ($masktype) $maskLike = str_replace(dol_string_nospecial('{'.$masktype.'}'),$masktype_value,$maskLike);
 
     // Get counter in database
@@ -714,7 +731,7 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     if ($sqlwhere) $sql.=' AND '.$sqlwhere;
 
     //print $sql.'<br>';
-    dol_syslog("functions2::get_next_value sql=".$sql, LOG_DEBUG);
+    dol_syslog("functions2::get_next_value mode=".$mode." sql=".$sql, LOG_DEBUG);
     $resql=$db->query($sql);
     if ($resql)
     {
@@ -724,7 +741,7 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     else dol_print_error($db);
     if (empty($counter) || preg_match('/[^0-9]/i',$counter)) $counter=$maskoffset;
 
-    if ($mode == 'last')
+    if ($mode == 'last')	// We found value for counter = last counter value. Now need to get corresponding ref of invoice.
     {
         $counterpadded=str_pad($counter,dol_strlen($maskcounter),"0",STR_PAD_LEFT);
 
@@ -739,14 +756,16 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
         $maskLike = preg_replace('/\{dd\}/i','__',$maskLike);
         $maskLike = str_replace(dol_string_nospecial('{'.$masktri.'}'),$counterpadded,$maskLike);
         if ($maskrefclient) $maskLike = str_replace(dol_string_nospecial('{'.$maskrefclient.'}'),str_pad("",dol_strlen($maskrefclient),"_"),$maskLike);
-        //if ($masktype) $maskLike = str_replace(dol_string_nospecial('{'.$masktype.'}'),str_pad("",dol_strlen($masktype),"_"),$maskLike);
         if ($masktype) $maskLike = str_replace(dol_string_nospecial('{'.$masktype.'}'),$masktype_value,$maskLike);
 
         $ref='';
-        $sql = "SELECT facnumber as ref";
-        $sql.= " FROM ".MAIN_DB_PREFIX."facture";
-        $sql.= " WHERE facnumber LIKE '".$maskLike."'";
+        $sql = "SELECT ".$field." as ref";
+        $sql.= " FROM ".MAIN_DB_PREFIX.$table;
+        $sql.= " WHERE ".$field." LIKE '".$maskLike."'";
+    	$sql.= " AND ".$field." NOT LIKE '%PROV%'";
         $sql.= " AND entity IN (".getEntity($table, 1).")";
+        if ($where) $sql.=$where;
+        if ($sqlwhere) $sql.=' AND '.$sqlwhere;
 
         dol_syslog("functions2::get_next_value sql=".$sql);
         $resql=$db->query($sql);
@@ -1249,7 +1268,7 @@ function getListOfModels($db,$type,$maxfilenamelength=0)
     $sql = "SELECT nom as id, nom as lib, libelle as label, description as description";
     $sql.= " FROM ".MAIN_DB_PREFIX."document_model";
     $sql.= " WHERE type = '".$type."'";
-    $sql.= " AND entity = ".$conf->entity;
+    $sql.= " AND entity IN (0,".(! empty($conf->multicompany->enabled) && ! empty($conf->multicompany->transverse_mode)?"1,":"").$conf->entity.")";
 
     $resql = $db->query($sql);
     if ($resql)
@@ -1282,7 +1301,7 @@ function getListOfModels($db,$type,$maxfilenamelength=0)
                     if (! $tmpdir) { unset($listofdir[$key]); continue; }
                     if (is_dir($tmpdir))
                     {
-                        $tmpfiles=dol_dir_list($tmpdir,'files',0,'\.odt','','name',SORT_ASC,0,true); // Disable hook for the moment
+                        $tmpfiles=dol_dir_list($tmpdir,'files',0,'\.od(s|t)$','','name',SORT_ASC,0,true); // Disable hook for the moment
                         if (count($tmpfiles)) $listoffiles=array_merge($listoffiles,$tmpfiles);
                     }
                 }
