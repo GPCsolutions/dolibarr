@@ -160,3 +160,4 @@ NoOrdersToInvoice=Pas de commandes facturables
 CloseProcessedOrdersAutomatically=Classer automatiquement à "Traitées" les commandes sélectionnées.
 MenuOrdersToBill2=Commandes à facturer
 OrderCreation=Date de création
+Ordered=Commandé
