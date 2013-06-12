@@ -2629,7 +2629,6 @@ function price($amount, $form=0, $outlangs='', $trunc=1, $rounding=-1, $forcerou
 	if (empty($amount)) $amount=0;	// To have a numeric value if amount not defined or = ''
 	$amount = (is_numeric($amount)?$amount:0); // Check if amount is numeric, for example, an error occured when amount value = o (letter) instead 0 (number)
 	if ($rounding < 0) $rounding=min($conf->global->MAIN_MAX_DECIMALS_UNIT,$conf->global->MAIN_MAX_DECIMALS_TOT);
-
 	$nbdecimal=$rounding;
 
 	// Output separators by default (french)
@@ -2641,7 +2640,7 @@ function price($amount, $form=0, $outlangs='', $trunc=1, $rounding=-1, $forcerou
 	if ($outlangs->transnoentitiesnoconv("SeparatorDecimal") != "SeparatorDecimal")  $dec=$outlangs->transnoentitiesnoconv("SeparatorDecimal");
 	if ($outlangs->transnoentitiesnoconv("SeparatorThousand")!= "SeparatorThousand") $thousand=$outlangs->transnoentitiesnoconv("SeparatorThousand");
 	if ($thousand == 'None') $thousand='';
-	//print "amount=".$amount." html=".$form." trunc=".$trunc." nbdecimal=".$nbdecimal." dec='".$dec."' thousand='".$thousand."'<br>";
+	//print "outlangs=".$outlangs->defaultlang." amount=".$amount." html=".$form." trunc=".$trunc." nbdecimal=".$nbdecimal." dec='".$dec."' thousand='".$thousand."'<br>";
 
 	//print "amount=".$amount."-";
 	$amount = str_replace(',','.',$amount);	// should be useless
@@ -2793,7 +2792,7 @@ function get_localtax($tva, $local, $thirdparty_buyer="", $thirdparty_seller="")
 
 	if (empty($thirdparty_seller) || ! is_object($thirdparty_seller)) $thirdparty_seller=$mysoc;
 
-	dol_syslog("get_localtax tva=".$tva." local=".$local." thirdparty_buyer id=".(is_object($thirdparty_buyer)?$thirdparty_buyer->id:'')." thirdparty_seller id=".$thirdparty_seller->id);
+	dol_syslog("get_localtax tva=".$tva." local=".$local." thirdparty_buyer id=".(is_object($thirdparty_buyer)?$thirdparty_buyer->id:'')."/country_code=".(is_object($thirdparty_buyer)?$thirdparty_buyer->country_code:'')." thirdparty_seller id=".$thirdparty_seller->id."/country_code=".$thirdparty_seller->country_code." thirdparty_seller localtax1_assuj=".$thirdparty_seller->localtax1_assuj."  thirdparty_seller localtax2_assuj=".$thirdparty_seller->localtax2_assuj);
 
 	// Some test to guess with no need to make database access
 	if ($mysoc->country_code == 'ES') // For spain localtaxes 1 and 2, tax is qualified if buyer use local taxe
@@ -2819,16 +2818,18 @@ function get_localtax($tva, $local, $thirdparty_buyer="", $thirdparty_seller="")
 	}
 	//if ($local == 0 && ! $thirdparty_seller->localtax1_assuj && ! $thirdparty_seller->localtax2_assuj) return array('localtax1'=>0,'localtax2'=>0);
 
-	$code_country=$thirdparty_seller->country_code;
+	// Do not enabled this. We want localtax that match the vat rate.
+	// If we forced a vat, we must also force local tax
+	/*
 	if (is_object($thirdparty_buyer))
 	{
-		if ($code_country != $thirdparty_buyer->country_code) return 0;
-	}
+		if ($thirdparty_seller->country_code != $thirdparty_buyer->country_code) return 0;
+	}*/
 
 	// Search local taxes
 	$sql  = "SELECT t.localtax1, t.localtax2, t.localtax1_type, t.localtax2_type";
 	$sql .= " FROM ".MAIN_DB_PREFIX."c_tva as t, ".MAIN_DB_PREFIX."c_pays as p";
-	$sql .= " WHERE t.fk_pays = p.rowid AND p.code = '".$code_country."'";
+	$sql .= " WHERE t.fk_pays = p.rowid AND p.code = '".$thirdparty_seller->country_code."'";
 	$sql .= " AND t.taux = ".$tva." AND t.active = 1";
 
 	dol_syslog("get_localtax sql=".$sql);
@@ -2836,8 +2837,8 @@ function get_localtax($tva, $local, $thirdparty_buyer="", $thirdparty_seller="")
 	if ($resql)
 	{
 		$obj = $db->fetch_object($resql);
-		if ($local==1 && $obj->localtax1_type != '7') return $obj->localtax1;
-		elseif ($local==2 && $obj->localtax2_type != '7') return $obj->localtax2;
+		if ($local==1) return $obj->localtax1;
+		elseif ($local==2) return $obj->localtax2;
 	}
 
 	return 0;
@@ -3030,7 +3031,7 @@ function get_product_localtax_for_country($idprod, $local, $thirdparty_seller)
  *	@param  int			$idprod					Id product
  *	@param	int			$idprodfournprice		Id product_fournisseur_price (for supplier order/invoice)
  *	@return float         				      	Taux de tva a appliquer, -1 si ne peut etre determine
- *  @see get_default_localtax
+ *  @see get_default_npr, get_default_localtax
  */
 function get_default_tva($thirdparty_seller, $thirdparty_buyer, $idprod=0, $idprodfournprice=0)
 {
@@ -3111,6 +3112,7 @@ function get_default_tva($thirdparty_seller, $thirdparty_buyer, $idprod=0, $idpr
  *  @param  int			$idprod                 Id product
  *  @param	int			$idprodfournprice		Id supplier price for product
  *	@return float       			        	0 or 1
+ *  @see get_default_tva, get_default_localtax
  */
 function get_default_npr($thirdparty_seller, $thirdparty_buyer, $idprod=0, $idprodfournprice=0)
 {
@@ -3147,7 +3149,7 @@ function get_default_npr($thirdparty_seller, $thirdparty_buyer, $idprod=0, $idpr
  *  @param	int			$local					Localtax to process (1 or 2)
  *	@param  int			$idprod					Id product
  *	@return float        				       	localtax, -1 si ne peut etre determine
- *  @see get_default_tva
+ *  @see get_default_tva, get_default_npr
  */
 function get_default_localtax($thirdparty_seller, $thirdparty_buyer, $local, $idprod=0)
 {
@@ -4319,7 +4321,7 @@ function printCommonFooter($zone='private')
 	}
 
 	// End of tuning
-	if (! empty($_SERVER['DOL_TUNING']))
+	if (! empty($_SERVER['DOL_TUNING']) || ! empty($conf->global->MAIN_SHOW_TUNING_INFO))
 	{
 		$micro_end_time=dol_microtime_float(true);
 		print "\n".'<script type="text/javascript">'."\n";

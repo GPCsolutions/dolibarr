@@ -33,7 +33,7 @@ $path=dirname(__FILE__).'/';
 $sapi_type = php_sapi_name();
 if (substr($sapi_type, 0, 3) == 'cgi') {
     echo "Error: You are using PHP for CGI. To execute ".$script_file." from command line, you must use PHP for CLI mode.\n";
-    exit;
+	exit(-1);
 }
 
 if (! isset($argv[2]) || ! $argv[2] || ! in_array($argv[1],array('test','confirm')) || ! in_array($argv[2],array('thirdparties','contacts')))
@@ -43,7 +43,7 @@ if (! isset($argv[2]) || ! $argv[2] || ! in_array($argv[1],array('test','confirm
 	print "Send an email to customers to remind all unpaid customer invoices.\n";
 	print "If you choose 'test' mode, no emails are sent.\n";
 	print "If you add a delay (nb of days), only invoice with due date < today + delay are included.\n";
-	exit;
+	exit(-1);
 }
 $mode=$argv[1];
 $targettype=$argv[2];
@@ -71,7 +71,7 @@ $now=dol_now('tzserver');
 $duration_value=isset($argv[3])?$argv[3]:'none';
 
 $error = 0;
-print $script_file." launched with mode ".$mode.(is_numeric($duration_value)?" delay=".$duration_value:"")."\n";
+print $script_file." launched with mode ".$mode." default lang=".$langs->defaultlang.(is_numeric($duration_value)?" delay=".$duration_value:"")."\n";
 
 if ($mode != 'confirm') $conf->global->MAIN_DISABLE_ALL_MAILS=1;
 
@@ -144,16 +144,24 @@ if ($resql)
                 //if (empty($newemail)) print "Warning: Customer ".$target." has no email. Notice disabled.\n";
             }
 
+            // Define line content
+            $outputlangs=new Translate('',$conf);
+            $outputlangs->setDefaultLang(empty($obj->default_lang)?$langs->defaultlang:$obj->default_lang);	// By default language of customer
+            $outputlangs->load("bills");
+            $outputlangs->load("main");
+
             if (dol_strlen($newemail))
             {
-            	$message .= $langs->trans("Invoice")." ".$obj->facnumber." : ".price($obj->total_ttc)."\n";
+            	$message .= $outputlangs->trans("Invoice")." ".$obj->facnumber." : ".price($obj->total_ttc,0,$outputlangs)."\n";
             	dol_syslog("email_unpaid_invoices_to_customers.php: ".$newemail." ".$message);
             	$foundtoprocess++;
             }
-            print "Unpaid invoice ".$obj->facnumber.", price ".price2num($obj->total_ttc).", due date ".dol_print_date($db->jdate($obj->due_date),'day')." customer id ".$obj->sid." ".$obj->name.", ".($obj->cid?"contact id ".$obj->cid." ".$obj->clastname." ".$obj->cfirstname.",":"")." email ".$newemail.": ";
+            print "Unpaid invoice ".$obj->facnumber.", price ".price2num($obj->total_ttc).", due date ".dol_print_date($db->jdate($obj->due_date),'day')." customer id ".$obj->sid." ".$obj->name.", ".($obj->cid?"contact id ".$obj->cid." ".$obj->clastname." ".$obj->cfirstname.",":"")." email ".$newemail." lang ".$outputlangs->defaultlang.": ";
             if (dol_strlen($newemail)) print "qualified.";
             else print "disqualified (no email).";
             print "\n";
+
+            unset($outputlangs);
 
             $total += $obj->total_ttc;
 
@@ -179,14 +187,18 @@ if ($resql)
         }
     }
     else
-    {
+	{
         print "No unpaid invoices found\n";
     }
+
+    exit(0);
 }
 else
 {
     dol_print_error($db);
     dol_syslog("email_unpaid_invoices_to_customers.php: Error");
+
+    exit(-1);
 }
 
 
@@ -212,23 +224,23 @@ function envoi_mail($mode,$oldemail,$message,$total,$userlang,$oldtarget)
     $newlangs->load("main");
     $newlangs->load("bills");
 
-    $subject = "[".(empty($conf->global->MAIN_APPLICATION_TITLE)?'Dolibarr':$conf->global->MAIN_APPLICATION_TITLE)."] ".$newlangs->trans("ListOfYourUnpaidInvoices");
+    $subject = (empty($conf->global->SCRIPT_EMAIL_UNPAID_INVOICES_CUSTOMERS_SUBJECT)?$newlangs->trans("ListOfYourUnpaidInvoices"):$conf->global->SCRIPT_EMAIL_UNPAID_INVOICES_CUSTOMERS_SUBJECT);
     $sendto = $oldemail;
     $from = $conf->global->MAIN_MAIL_EMAIL_FROM;
     $errorsto = $conf->global->MAIN_MAIL_ERRORS_TO;
-	$msgishtml = 0;
+	$msgishtml = -1;
 
-    print "- Send email for '".$oldtarget."' (".$oldemail."), total: ".$total."\n";
+    print "- Send email to '".$oldtarget."' (".$oldemail."), total: ".$total."\n";
     dol_syslog("email_unpaid_invoices_to_customers.php: send mail to ".$oldemail);
 
     $usehtml=0;
-    if (dol_textishtml($conf->global->SCRIPT_EMAIL_UNPAID_INVOICES_FOOTER)) $usehtml+=1;
-    if (dol_textishtml($conf->global->SCRIPT_EMAIL_UNPAID_INVOICES_HEADER)) $usehtml+=1;
+    if (dol_textishtml($conf->global->SCRIPT_EMAIL_UNPAID_INVOICES_CUSTOMERS_FOOTER)) $usehtml+=1;
+    if (dol_textishtml($conf->global->SCRIPT_EMAIL_UNPAID_INVOICES_CUSTOMERS_HEADER)) $usehtml+=1;
 
     $allmessage='';
-    if (! empty($conf->global->SCRIPT_EMAIL_UNPAID_INVOICES_HEADER))
+    if (! empty($conf->global->SCRIPT_EMAIL_UNPAID_INVOICES_CUSTOMERS_HEADER))
     {
-    	$allmessage.=$conf->global->SCRIPT_EMAIL_UNPAID_INVOICES_HEADER;
+    	$allmessage.=$conf->global->SCRIPT_EMAIL_UNPAID_INVOICES_CUSTOMERS_HEADER;
     }
     else
     {
@@ -278,6 +290,7 @@ function envoi_mail($mode,$oldemail,$message,$total,$userlang,$oldtarget)
     	$result=1;
     }
 
+    unset($newlangs);
     if ($result)
     {
         return 1;
@@ -287,6 +300,5 @@ function envoi_mail($mode,$oldemail,$message,$total,$userlang,$oldtarget)
         return -1;
     }
 }
-
 
 ?>

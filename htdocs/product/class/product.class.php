@@ -81,7 +81,8 @@ class Product extends CommonObject
 	var $pmp;
     //! Stock alert
 	var $seuil_stock_alerte;
-
+	//! Ask for replenishment when $desiredstock < $stock_reel
+	public $desiredstock;
 	//! Duree de validite du service
 	var $duration_value;
 	//! Unite de duree
@@ -163,6 +164,7 @@ class Product extends CommonObject
 		$this->nbphoto = 0;
 		$this->stock_reel = 0;
 		$this->seuil_stock_alerte = 0;
+		$this->desiredstock = 0;
 		$this->canvas = '';
 	}
 
@@ -336,19 +338,7 @@ class Product extends CommonObject
 						$result = $this->_log_price($user);
 						if ($result > 0)
 						{
-							if ($this->update($id, $user, true, 'add') > 0)
-							{
-								// FIXME: not use here
-								/*
-								if ($this->catid > 0)
-								{
-									require_once DOL_DOCUMENT_ROOT .'/categories/class/categorie.class.php';
-									$cat = new Categorie($this->db, $this->catid);
-									$cat->add_type($this,"product");
-								}
-								*/
-							}
-							else
+							if ($this->update($id, $user, true, 'add') <= 0)
 							{
 							    $error++;
 					            $this->error='ErrorFailedToUpdateRecord';
@@ -482,6 +472,7 @@ class Product extends CommonObject
 		$sql.= ",duration = '" . $this->duration_value . $this->duration_unit ."'";
 		$sql.= ",accountancy_code_buy = '" . $this->accountancy_code_buy."'";
 		$sql.= ",accountancy_code_sell= '" . $this->accountancy_code_sell."'";
+		$sql.= ", desiredstock = " . ((isset($this->desiredstock) && $this->desiredstock != '') ? $this->desiredstock : "null");
 		$sql.= " WHERE rowid = " . $id;
 
 		dol_syslog(get_class($this)."update sql=".$sql);
@@ -673,7 +664,7 @@ class Product extends CommonObject
                 		}
                 	}
                 }
-                
+
                 // Remove extrafields
                 if ((! $error) && (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED))) // For avoid conflicts if trigger used
                 {
@@ -1123,7 +1114,7 @@ class Product extends CommonObject
 		$sql.= " tobuy, fk_product_type, duration, seuil_stock_alerte, canvas,";
 		$sql.= " weight, weight_units, length, length_units, surface, surface_units, volume, volume_units, barcode, fk_barcode_type, finished,";
 		$sql.= " accountancy_code_buy, accountancy_code_sell, stock, pmp,";
-		$sql.= " datec, tms, import_key, entity";
+		$sql.= " datec, tms, import_key, entity, desiredstock";
 		$sql.= " FROM ".MAIN_DB_PREFIX."product";
 		if ($id) $sql.= " WHERE rowid = '".$id."'";
 		else
@@ -1187,6 +1178,7 @@ class Product extends CommonObject
 				$this->accountancy_code_sell	= $obj->accountancy_code_sell;
 
 				$this->seuil_stock_alerte		= $obj->seuil_stock_alerte;
+				$this->desiredstock             = $obj->desiredstock;
 				$this->stock_reel				= $obj->stock;
 				$this->pmp						= $obj->pmp;
 
@@ -2167,15 +2159,16 @@ class Product extends CommonObject
 					'stock'=>$this->stock_warehouse[1]->real,	// Stock
 					'stock_alert'=>$this->seuil_stock_alerte,	// Stock alert
 					'fullpath' => $compl_path.$label,			// Label
-					'type'=>$type				// Nb of units that compose parent product
+					'type'=>$type,				// Nb of units that compose parent product
+					'desiredstock' => $this->desiredstock
 				);
-			}
 
-			// Recursive call if child is an array
-			if (is_array($desc_pere['childs']))
-			{
-				//print 'YYY We go down for '.$desc_pere[3]." -> \n";
-				$this ->fetch_prod_arbo($desc_pere['childs'], $compl_path.$desc_pere[3]." -> ", $desc_pere[1]*$multiply, $level+1);
+				// Recursive call if child is an array
+				if (is_array($desc_pere['childs']))
+				{
+					//print 'YYY We go down for '.$desc_pere[3]." -> \n";
+					$this ->fetch_prod_arbo($desc_pere['childs'], $compl_path.$desc_pere[3]." -> ", $desc_pere[1]*$multiply, $level+1);
+				}
 			}
 		}
 	}

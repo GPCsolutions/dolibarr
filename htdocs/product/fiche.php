@@ -6,6 +6,7 @@
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
  * Copyright (C) 2006      Auguria SARL         <info@auguria.org>
  * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -186,6 +187,7 @@ if (empty($reshook))
             $object->duration_value     	= GETPOST('duration_value');
             $object->duration_unit      	= GETPOST('duration_unit');
             $object->seuil_stock_alerte 	= GETPOST('seuil_stock_alerte')?GETPOST('seuil_stock_alerte'):0;
+            $object->desiredstock           = GETPOST('desiredstock')?GETPOST('desiredstock'):0;
             $object->canvas             	= GETPOST('canvas');
             $object->weight             	= GETPOST('weight');
             $object->weight_units       	= GETPOST('weight_units');
@@ -255,6 +257,7 @@ if (empty($reshook))
                 $object->status             = GETPOST('statut');
                 $object->status_buy         = GETPOST('statut_buy');
                 $object->seuil_stock_alerte = GETPOST('seuil_stock_alerte');
+                $object->desiredstock       = GETPOST('desiredstock');
                 $object->duration_value     = GETPOST('duration_value');
                 $object->duration_unit      = GETPOST('duration_unit');
                 $object->canvas             = GETPOST('canvas');
@@ -713,12 +716,17 @@ else
             print '<tr><td>'.$langs->trans("StockLimit").'</td><td>';
             print '<input name="seuil_stock_alerte" size="4" value="'.GETPOST('seuil_stock_alerte').'">';
             print '</td></tr>';
+            // Stock desired level
+            print '<tr><td>'.$langs->trans("DesiredStock").'</td><td>';
+            print '<input name="desiredstock" size="4" value="'.GETPOST('desiredstock').'">';
+            print '</td></tr>';
         }
         else
         {
             print '<input name="seuil_stock_alerte" type="hidden" value="0">';
+            print '<input name="desiredstock" type="hidden" value="0">';
         }
-
+        
         // Description (used in invoice, propal...)
         print '<tr><td valign="top">'.$langs->trans("Description").'</td><td>';
 
@@ -924,10 +932,15 @@ else
                 print "<tr>".'<td>'.$langs->trans("StockLimit").'</td><td colspan="2">';
                 print '<input name="seuil_stock_alerte" size="4" value="'.$object->seuil_stock_alerte.'">';
                 print '</td></tr>';
+                
+                print "<tr>".'<td>'.$langs->trans("DesiredStock").'</td><td colspan="2">';
+                print '<input name="desiredstock" size="4" value="'.$object->desiredstock.'">';
+                print '</td></tr>';
             }
             else
             {
                 print '<input name="seuil_stock_alerte" type="hidden" value="'.$object->seuil_stock_alerte.'">';
+                print '<input name="desiredstock" type="hidden" value="'.$object->desiredstock.'">';
             }
 
             if ($object->isservice())
@@ -1315,7 +1328,8 @@ print "\n</div><br>\n";
 
 if ($object->id && ($action == '' || $action == 'view') && $object->status)
 {
-    print '<table width="100%" class="noborder">';
+    //Variable used to check if any text is going to be printed
+    $html = '';
 	//print '<div class="fichecenter"><div class="fichehalfleft">';
 
     // Propals
@@ -1325,42 +1339,42 @@ if ($object->id && ($action == '' || $action == 'view') && $object->status)
 
         $langs->load("propal");
 
-        print '<tr class="liste_titre">';
-        print '<td class="liste_titre">'.$langs->trans("AddToOtherProposals").'</td>';
-        print '</tr><tr>';
-        print '<td valign="top">';
+        $html .= '<tr class="liste_titre">';
+        $html .= '<td class="liste_titre">'.$langs->trans("AddToOtherProposals").'</td>';
+        $html .= '</tr><tr>';
+        $html .= '<td valign="top">';
 
         $var=true;
         $otherprop = $propal->liste_array(2,1,0);
-        print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'">';
-        print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-        print '<table class="nobordernopadding" width="100%">';
+        $html .= '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'">';
+        $html .= '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+        $html .= '<table class="nobordernopadding" width="100%">';
         if (is_array($otherprop) && count($otherprop))
         {
         	$var=!$var;
-        	print '<tr '.$bc[$var].'><td style="width: 200px;">';
-        	print '<input type="hidden" name="action" value="addinpropal">';
-        	print $langs->trans("Proposals").'</td><td colspan="2">';
-        	print $form->selectarray("propalid", $otherprop, 0, 1);
-        	print '</td></tr>';
-        	print '<tr '.$bc[$var].'><td class="nowrap">'.$langs->trans("Quantity").' ';
-        	print '<input type="text" class="flat" name="qty" size="1" value="1"></td><td class="nowrap">'.$langs->trans("ReductionShort").'(%) ';
-        	print '<input type="text" class="flat" name="remise_percent" size="1" value="0">';
-        	print '</td><td align="right">';
-        	print '<input type="submit" class="button" value="'.$langs->trans("Add").'">';
-        	print '</td></tr>';
+        	$html .= '<tr '.$bc[$var].'><td style="width: 200px;">';
+        	$html .= '<input type="hidden" name="action" value="addinpropal">';
+        	$html .= $langs->trans("Proposals").'</td><td colspan="2">';
+        	$html .= $form->selectarray("propalid", $otherprop, 0, 1);
+        	$html .= '</td></tr>';
+        	$html .= '<tr '.$bc[$var].'><td class="nowrap">'.$langs->trans("Quantity").' ';
+        	$html .= '<input type="text" class="flat" name="qty" size="1" value="1"></td><td class="nowrap">'.$langs->trans("ReductionShort").'(%) ';
+        	$html .= '<input type="text" class="flat" name="remise_percent" size="1" value="0">';
+        	$html .= '</td><td align="right">';
+        	$html .= '<input type="submit" class="button" value="'.$langs->trans("Add").'">';
+        	$html .= '</td></tr>';
         }
         else
         {
-        	print "<tr ".$bc[!$var]."><td>";
-        	print $langs->trans("NoOtherOpenedPropals");
-        	print '</td></tr>';
+        	$html .= "<tr ".$bc[!$var]."><td>";
+        	$html .= $langs->trans("NoOtherOpenedPropals");
+        	$html .= '</td></tr>';
         }
-        print '</table>';
-        print '</form>';
+        $html .= '</table>';
+        $html .= '</form>';
 
-        print '</td>';
-        print '</tr>';
+        $html .= '</td>';
+        $html .= '</tr>';
     }
 
     // Commande
@@ -1370,42 +1384,42 @@ if ($object->id && ($action == '' || $action == 'view') && $object->status)
 
         $langs->load("orders");
 
-        print '<tr class="liste_titre">';
-        print '<td class="liste_titre">'.$langs->trans("AddToOtherOrders").'</td>';
-        print '</tr><tr>';
-        print '<td valign="top">';
+        $html .= '<tr class="liste_titre">';
+        $html .= '<td class="liste_titre">'.$langs->trans("AddToOtherOrders").'</td>';
+        $html .= '</tr><tr>';
+        $html .= '<td valign="top">';
 
         $var=true;
         $othercom = $commande->liste_array(2, 1, null);
-        print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'">';
-        print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-        print '<table class="nobordernopadding" width="100%">';
+        $html .= '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'">';
+        $html .= '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+        $html .= '<table class="nobordernopadding" width="100%">';
         if (is_array($othercom) && count($othercom))
         {
         	$var=!$var;
-        	print '<tr '.$bc[$var].'><td style="width: 200px;">';
-        	print '<input type="hidden" name="action" value="addincommande">';
-        	print $langs->trans("Orders").'</td><td colspan="2">';
-        	print $form->selectarray("commandeid", $othercom, 0, 1);
-        	print '</td></tr>';
-        	print '<tr '.$bc[$var].'><td class="nowrap">'.$langs->trans("Quantity").' ';
-        	print '<input type="text" class="flat" name="qty" size="1" value="1"></td><td class="nowrap">'.$langs->trans("ReductionShort").'(%) ';
-        	print '<input type="text" class="flat" name="remise_percent" size="1" value="0">';
-        	print '</td><td align="right">';
-        	print '<input type="submit" class="button" value="'.$langs->trans("Add").'">';
-        	print '</td></tr>';
+        	$html .= '<tr '.$bc[$var].'><td style="width: 200px;">';
+        	$html .= '<input type="hidden" name="action" value="addincommande">';
+        	$html .= $langs->trans("Orders").'</td><td colspan="2">';
+        	$html .= $form->selectarray("commandeid", $othercom, 0, 1);
+        	$html .= '</td></tr>';
+        	$html .= '<tr '.$bc[$var].'><td class="nowrap">'.$langs->trans("Quantity").' ';
+        	$html .= '<input type="text" class="flat" name="qty" size="1" value="1"></td><td class="nowrap">'.$langs->trans("ReductionShort").'(%) ';
+        	$html .= '<input type="text" class="flat" name="remise_percent" size="1" value="0">';
+        	$html .= '</td><td align="right">';
+        	$html .= '<input type="submit" class="button" value="'.$langs->trans("Add").'">';
+        	$html .= '</td></tr>';
         }
         else
 		{
-        	print "<tr ".$bc[!$var]."><td>";
-        	print $langs->trans("NoOtherOpenedOrders");
-        	print '</td></tr>';
+        	$html .= "<tr ".$bc[!$var]."><td>";
+        	$html .= $langs->trans("NoOtherOpenedOrders");
+        	$html .= '</td></tr>';
         }
-        print '</table>';
-        print '</form>';
+        $html .= '</table>';
+        $html .= '</form>';
 
-        print '</td>';
-        print '</tr>';
+        $html .= '</td>';
+        $html .= '</tr>';
     }
 
     // Factures
@@ -1415,47 +1429,52 @@ if ($object->id && ($action == '' || $action == 'view') && $object->status)
 
     	$langs->load("bills");
 
-    	print '<tr class="liste_titre">';
-    	print '<td class="liste_titre">'.$langs->trans("AddToOtherOrders").'</td>';
-        print '</tr><tr>';
-    	print '<td valign="top">';
+    	$html .= '<tr class="liste_titre">';
+    	$html .= '<td class="liste_titre">'.$langs->trans("AddToOtherBills").'</td>';
+        $html .= '</tr><tr>';
+    	$html .= '<td valign="top">';
 
     	$var=true;
     	$otherinvoice = $invoice->liste_array(2, 1, null);
-    	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'">';
-    	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-    	print '<table class="nobordernopadding" width="100%">';
+    	$html .= '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'">';
+    	$html .= '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+    	$html .= '<table class="nobordernopadding" width="100%">';
     	if (is_array($otherinvoice) && count($otherinvoice))
     	{
     		$var=!$var;
-    		print '<tr '.$bc[$var].'><td style="width: 200px;">';
-    		print '<input type="hidden" name="action" value="addinfacture">';
-    		print $langs->trans("Invoice").'</td><td colspan="2">';
-    		print $form->selectarray("factureid", $otherinvoice, 0, 1);
-    		print '</td></tr>';
-    		print '<tr '.$bc[$var].'><td class="nowrap">'.$langs->trans("Quantity").' ';
-    		print '<input type="text" class="flat" name="qty" size="1" value="1"></td><td class="nowrap">'.$langs->trans("ReductionShort").'(%) ';
-    		print '<input type="text" class="flat" name="remise_percent" size="1" value="0">';
-    		print '</td><td align="right">';
-    		print '<input type="submit" class="button" value="'.$langs->trans("Add").'">';
-    		print '</td></tr>';
+    		$html .= '<tr '.$bc[$var].'><td style="width: 200px;">';
+    		$html .= '<input type="hidden" name="action" value="addinfacture">';
+    		$html .= $langs->trans("Invoice").'</td><td colspan="2">';
+    		$html .= $form->selectarray("factureid", $otherinvoice, 0, 1);
+    		$html .= '</td></tr>';
+    		$html .= '<tr '.$bc[$var].'><td class="nowrap">'.$langs->trans("Quantity").' ';
+    		$html .= '<input type="text" class="flat" name="qty" size="1" value="1"></td><td class="nowrap">'.$langs->trans("ReductionShort").'(%) ';
+    		$html .= '<input type="text" class="flat" name="remise_percent" size="1" value="0">';
+    		$html .= '</td><td align="right">';
+    		$html .= '<input type="submit" class="button" value="'.$langs->trans("Add").'">';
+    		$html .= '</td></tr>';
     	}
     	else
     	{
-    		print "<tr ".$bc[!$var]."><td>";
-    		print $langs->trans("NoOtherDraftBills");
-    		print '</td></tr>';
+    		$html .= "<tr ".$bc[!$var]."><td>";
+    		$html .= $langs->trans("NoOtherDraftBills");
+    		$html .= '</td></tr>';
     	}
-    	print '</table>';
-    	print '</form>';
+    	$html .= '</table>';
+    	$html .= '</form>';
 
-    	print '</td>';
-    	print '</tr>';
+    	$html .= '</td>';
+    	$html .= '</tr>';
     }
 
-    print '</table>';
-
-    print '<br>';
+    //If any text is going to be printed, then we show the table
+    if (!empty($html))
+    {
+        print '<table width="100%" class="noborder">';
+        print $html;
+        print '</table>';
+        print '<br>';
+    }
 }
 
 
