@@ -1776,7 +1776,7 @@ class Form
      *  @param      string	$htmlname        Name of HTML field
      *  @return		void
      */
-    function select_product_fourn_price($productid,$htmlname='productfournpriceid')
+    function select_product_fourn_price($productid,$htmlname='productfournpriceid', $showempty=0)
     {
         global $langs,$conf;
 
@@ -1809,7 +1809,7 @@ class Form
             }
             else
             {
-                $form.= '<option value="0">&nbsp;</option>';
+                if($showempty && $num > 1) $form.= '<option value="0">&nbsp;</option>';
 
                 $i = 0;
                 while ($i < $num)

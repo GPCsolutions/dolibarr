@@ -6,6 +6,8 @@
  * Copyright (C) 2006      Andre Cianfarani     <acianfa@free.fr>
  * Copyright (C) 2006      Auguria SARL         <info@auguria.org>
  * Copyright (C) 2010-2011 Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2013      Marcos García        <marcosgdf@gmail.com>
+ * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -186,6 +188,7 @@ if (empty($reshook))
             $object->duration_value     	= GETPOST('duration_value');
             $object->duration_unit      	= GETPOST('duration_unit');
             $object->seuil_stock_alerte 	= GETPOST('seuil_stock_alerte')?GETPOST('seuil_stock_alerte'):0;
+            $object->desiredstock           = GETPOST('desiredstock')?GETPOST('desiredstock'):0;
             $object->canvas             	= GETPOST('canvas');
             $object->weight             	= GETPOST('weight');
             $object->weight_units       	= GETPOST('weight_units');
@@ -255,6 +258,7 @@ if (empty($reshook))
                 $object->status             = GETPOST('statut');
                 $object->status_buy         = GETPOST('statut_buy');
                 $object->seuil_stock_alerte = GETPOST('seuil_stock_alerte');
+                $object->desiredstock       = GETPOST('desiredstock');
                 $object->duration_value     = GETPOST('duration_value');
                 $object->duration_unit      = GETPOST('duration_unit');
                 $object->canvas             = GETPOST('canvas');
@@ -319,6 +323,19 @@ if (empty($reshook))
                     $id = $object->create($user);
                     if ($id > 0)
                     {
+                        if (GETPOST('clone_composition'))
+                        {
+                            $result = $object->clone_associations($originalId, $id);
+
+                            if ($result < 1)
+                            {
+                                $db->rollback();
+                                setEventMessage($langs->trans('ErrorProductClone'), 'errors');
+                                header("Location: ".$_SERVER["PHP_SELF"]."?id=".$originalId);
+                                exit;
+                            }
+                        }
+
                         // $object->clone_fournisseurs($originalId, $id);
 
                         $db->commit();
@@ -712,12 +729,17 @@ else
             print '<tr><td>'.$langs->trans("StockLimit").'</td><td>';
             print '<input name="seuil_stock_alerte" size="4" value="'.GETPOST('seuil_stock_alerte').'">';
             print '</td></tr>';
+            // Stock desired level
+            print '<tr><td>'.$langs->trans("DesiredStock").'</td><td>';
+            print '<input name="desiredstock" size="4" value="'.GETPOST('desiredstock').'">';
+            print '</td></tr>';
         }
         else
         {
             print '<input name="seuil_stock_alerte" type="hidden" value="0">';
+            print '<input name="desiredstock" type="hidden" value="0">';
         }
-
+        
         // Description (used in invoice, propal...)
         print '<tr><td valign="top">'.$langs->trans("Description").'</td><td>';
 
@@ -923,10 +945,15 @@ else
                 print "<tr>".'<td>'.$langs->trans("StockLimit").'</td><td colspan="2">';
                 print '<input name="seuil_stock_alerte" size="4" value="'.$object->seuil_stock_alerte.'">';
                 print '</td></tr>';
+                
+                print "<tr>".'<td>'.$langs->trans("DesiredStock").'</td><td colspan="2">';
+                print '<input name="desiredstock" size="4" value="'.$object->desiredstock.'">';
+                print '</td></tr>';
             }
             else
             {
                 print '<input name="seuil_stock_alerte" type="hidden" value="'.$object->seuil_stock_alerte.'">';
+                print '<input name="desiredstock" type="hidden" value="'.$object->desiredstock.'">';
             }
 
             if ($object->isservice())
@@ -1233,7 +1260,8 @@ $formquestionclone=array(
 	'text' => $langs->trans("ConfirmClone"),
     array('type' => 'text', 'name' => 'clone_ref','label' => $langs->trans("NewRefForClone"), 'value' => $langs->trans("CopyOf").' '.$object->ref, 'size'=>24),
     array('type' => 'checkbox', 'name' => 'clone_content','label' => $langs->trans("CloneContentProduct"), 'value' => 1),
-    array('type' => 'checkbox', 'name' => 'clone_prices', 'label' => $langs->trans("ClonePricesProduct").' ('.$langs->trans("FeatureNotYetAvailable").')', 'value' => 0, 'disabled' => true)
+    array('type' => 'checkbox', 'name' => 'clone_prices', 'label' => $langs->trans("ClonePricesProduct").' ('.$langs->trans("FeatureNotYetAvailable").')', 'value' => 0, 'disabled' => true),
+    array('type' => 'checkbox', 'name' => 'clone_composition', 'label' => $langs->trans('CloneCompositionProduct'), 'value' => 1)
 );
 
 // Confirm delete product
@@ -1245,7 +1273,7 @@ if ($action == 'delete' && empty($conf->use_javascript_ajax))
 // Clone confirmation
 if ($action == 'clone' && empty($conf->use_javascript_ajax))
 {
-    print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id,$langs->trans('CloneProduct'),$langs->trans('ConfirmCloneProduct',$object->ref),'confirm_clone',$formquestionclone,'yes','action-clone',230,600);
+    print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id,$langs->trans('CloneProduct'),$langs->trans('ConfirmCloneProduct',$object->ref),'confirm_clone',$formquestionclone,'yes','action-clone',250,600);
 }
 
 
@@ -1269,7 +1297,7 @@ if ($action == '' || $action == 'view')
             if (! empty($conf->use_javascript_ajax))
             {
                 print '<div class="inline-block divButAction"><span id="action-clone" class="butAction">'.$langs->trans('ToClone').'</span></div>'."\n";
-                print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id,$langs->trans('CloneProduct'),$langs->trans('ConfirmCloneProduct',$object->ref),'confirm_clone',$formquestionclone,'yes','action-clone',230,600);
+                print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id,$langs->trans('CloneProduct'),$langs->trans('ConfirmCloneProduct',$object->ref),'confirm_clone',$formquestionclone,'yes','action-clone',250,600);
             }
             else
             {
