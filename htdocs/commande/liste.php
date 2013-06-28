@@ -530,7 +530,7 @@ if ($resql)
 	}
 
 	if (! empty($conf->global->MAIN_SHOW_TOTAL_FOR_LIMITED_LIST))
-	{	
+	{
 		print '<tr class="liste_total">';
 		print '<td class="liste_total" colspan="5">';
 		print $langs->trans('SubTotal');

@@ -351,7 +351,7 @@ if (count($amount)) {
         }
         print "<td>".$linkname."</td>\n";
 
-        // Amount
+        // Amount w/o VAT
         print '<td align="right">';
         if ($modecompta != 'CREANCES-DETTES')
         {
