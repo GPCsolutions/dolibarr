@@ -489,14 +489,14 @@ if ($resql)
 		print '<td align="right">';
 		print price($objp->total_ht);
 		print '&nbsp;';
-		print getCurrencySymbol($conf->currency);
+		print $langs->getCurrencySymbol($conf->currency);
 		print '</td>';
 
 		//Amount including VAT
 		print '<td align="right">';
 		print price($objp->total_ttc);
 		print '&nbsp;';
-		print getCurrencySymbol($conf ->currency);
+		print $langs->getCurrencySymbol($conf ->currency);
 		print '</td>';
 
 		// Statut
@@ -538,12 +538,12 @@ if ($resql)
 		print '<td align="right">';
 		print price($subtotal);
 		print '&nbsp;';
-		print getCurrencySymbol($conf->currency);
+		print $langs->getCurrencySymbol($conf->currency);
 		print '</td>';
 		print '<td align="right">';
 		print price($subtotal_ttc);
 		print '&nbsp;';
-		print getCurrencySymbol($conf->currency);
+		print $langs->getCurrencySymbol($conf->currency);
 		print '</td>';
 		print '<td>';
 		print '&nbsp;';
