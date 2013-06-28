@@ -37,12 +37,12 @@ abstract class CommonObject
     public $errors;
     public $canvas;                // Contains canvas name if it is
 
+    public $name;
     public $lastname;
     public $firstname;
-    public $name;
-    public $nom;
     public $civility_id;
-
+    public $import_key;
+    
     public $array_options=array();
 
     public $linkedObjectsIds;
@@ -50,6 +50,16 @@ abstract class CommonObject
 
     // No constructor as it is an abstract class
 
+
+    /**
+     * Method to output saved errors
+     * 
+     * @return	string		String with errors
+     */
+    function errorsToString()
+    {
+    	return $this->error.(is_array($this->errors)?(($this->error!=''?' ':'').join(',',$this->errors)):'');
+    }
 
     /**
      *	Return full name (civility+' '+name+' '+lastname)
@@ -64,6 +74,7 @@ abstract class CommonObject
     {
         global $conf;
 
+        //print "lastname=".$this->lastname." name=".$this->name." nom=".$this->nom."<br>\n";
         $lastname=$this->lastname;
         $firstname=$this->firstname;
         if (empty($lastname))  $lastname=($this->lastname?$this->lastname:($this->name?$this->name:$this->nom));
@@ -909,7 +920,6 @@ abstract class CommonObject
     		if ($this->db->query($sql))
     		{
     			$this->mode_reglement_id = $id;
-    			$this->mode_reglement = $id;	// for compatibility
     			return 1;
     		}
     		else
@@ -2462,87 +2472,6 @@ abstract class CommonObject
     // TODO: All functions here must be redesigned and moved as they are not business functions but output functions
     // --------------------
 
-
-    /**
-     * List urls of element
-     *
-     * @param 	int		$objectid		Id of record
-     * @param 	string	$objecttype		Type of object
-     * @param 	int		$withpicto		Picto to show
-     * @param 	string	$option			More options
-     * @return	void
-     */
-    function getElementUrl($objectid,$objecttype,$withpicto=0,$option='')
-    {
-        global $conf;
-
-        // Parse element/subelement (ex: project_task)
-        $module = $element = $subelement = $objecttype;
-        if (preg_match('/^([^_]+)_([^_]+)/i',$objecttype,$regs))
-        {
-            $module = $element = $regs[1];
-            $subelement = $regs[2];
-        }
-
-        $classpath = $element.'/class';
-
-        // To work with non standard path
-        if ($objecttype == 'facture' || $objecttype == 'invoice') {
-            $classpath = 'compta/facture/class'; $module='facture'; $subelement='facture';
-        }
-        if ($objecttype == 'commande' || $objecttype == 'order') {
-            $classpath = 'commande/class'; $module='commande'; $subelement='commande';
-        }
-        if ($objecttype == 'propal')  {
-            $classpath = 'comm/propal/class';
-        }
-        if ($objecttype == 'shipping') {
-            $classpath = 'expedition/class'; $subelement = 'expedition'; $module = 'expedition_bon';
-        }
-        if ($objecttype == 'delivery') {
-            $classpath = 'livraison/class'; $subelement = 'livraison'; $module = 'livraison_bon';
-        }
-        if ($objecttype == 'invoice_supplier') {
-            $classpath = 'fourn/class';
-        }
-        if ($objecttype == 'order_supplier')   {
-            $classpath = 'fourn/class';
-        }
-        if ($objecttype == 'contract') {
-            $classpath = 'contrat/class'; $module='contrat'; $subelement='contrat';
-        }
-        if ($objecttype == 'member') {
-            $classpath = 'adherents/class'; $module='adherent'; $subelement='adherent';
-        }
-        if ($objecttype == 'cabinetmed_cons') {
-            $classpath = 'cabinetmed/class'; $module='cabinetmed'; $subelement='cabinetmedcons';
-        }
-        if ($objecttype == 'fichinter') {
-        	$classpath = 'fichinter/class'; $module='ficheinter'; $subelement='fichinter';
-        }
-
-        //print "objecttype=".$objecttype." module=".$module." subelement=".$subelement;
-
-        $classfile = strtolower($subelement); $classname = ucfirst($subelement);
-        if ($objecttype == 'invoice_supplier') {
-            $classfile = 'fournisseur.facture'; $classname='FactureFournisseur';
-        }
-        if ($objecttype == 'order_supplier')   {
-            $classfile = 'fournisseur.commande'; $classname='CommandeFournisseur';
-        }
-
-        if (! empty($conf->$module->enabled))
-        {
-            $res=dol_include_once('/'.$classpath.'/'.$classfile.'.class.php');
-            if ($res)
-            {
-                $object = new $classname($this->db);
-                $ret=$object->fetch($objectid);
-                if ($ret > 0) return $object->getNomUrl($withpicto,$option);
-            }
-        }
-    }
-
     /* This is to show linked object block */
 
     /**
@@ -2664,7 +2593,7 @@ abstract class CommonObject
     	//Line extrafield
     	require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
     	$extrafieldsline = new ExtraFields($this->db);
-    	$extralabelslines=$extrafieldsline->fetch_name_optionals_label($this->table_element_line); 	 
+    	$extralabelslines=$extrafieldsline->fetch_name_optionals_label($this->table_element_line);
 
     	// Use global variables + $dateSelector + $seller and $buyer
     	include(DOL_DOCUMENT_ROOT.'/core/tpl/freeproductline_create.tpl.php');
@@ -2781,7 +2710,7 @@ abstract class CommonObject
 		require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 		$extrafieldsline = new ExtraFields($this->db);
 		$extralabelslines=$extrafieldsline->fetch_name_optionals_label($this->table_element_line);
-		
+
 		foreach ($this->lines as $line)
 		{
 			//Line extrafield

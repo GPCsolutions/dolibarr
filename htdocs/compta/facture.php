@@ -1,28 +1,28 @@
 <?php
 /* Copyright (C) 2002-2006 Rodolphe Quiedeville  <rodolphe@quiedeville.org>
  * Copyright (C) 2004      Eric Seigne           <eric.seigne@ryxeo.com>
-* Copyright (C) 2004-2013 Laurent Destailleur   <eldy@users.sourceforge.net>
-* Copyright (C) 2005      Marc Barilley / Ocebo <marc@ocebo.com>
-* Copyright (C) 2005-2012 Regis Houssin         <regis.houssin@capnetworks.com>
-* Copyright (C) 2006      Andre Cianfarani      <acianfa@free.fr>
-* Copyright (C) 2010-2013 Juanjo Menent         <jmenent@2byte.es>
-* Copyright (C) 2012      Christophe Battarel   <christophe.battarel@altairis.fr>
-* Copyright (C) 2013      Jean-Francois FERRY   <jfefe@aternatik.fr>
-* Copyright (C) 2013      Florian Henry		 <florian.henry@open-concept.pro>
-*
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2004-2013 Laurent Destailleur   <eldy@users.sourceforge.net>
+ * Copyright (C) 2005      Marc Barilley / Ocebo <marc@ocebo.com>
+ * Copyright (C) 2005-2012 Regis Houssin         <regis.houssin@capnetworks.com>
+ * Copyright (C) 2006      Andre Cianfarani      <acianfa@free.fr>
+ * Copyright (C) 2010-2013 Juanjo Menent         <jmenent@2byte.es>
+ * Copyright (C) 2012      Christophe Battarel   <christophe.battarel@altairis.fr>
+ * Copyright (C) 2013      Jean-Francois FERRY   <jfefe@aternatik.fr>
+ * Copyright (C) 2013      Florian Henry		 <florian.henry@open-concept.pro>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 /**
  *	\file       htdocs/compta/facture.php
@@ -42,8 +42,10 @@ require_once DOL_DOCUMENT_ROOT . '/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
 if (! empty($conf->commande->enabled)) require_once DOL_DOCUMENT_ROOT . '/commande/class/commande.class.php';
-if (! empty($conf->projet->enabled))   require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
-if (! empty($conf->projet->enabled))   require_once DOL_DOCUMENT_ROOT . '/core/lib/project.lib.php';
+if (! empty($conf->projet->enabled))   {
+	require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
+	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
+}
 require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 
 $langs->load('bills');
@@ -1006,12 +1008,12 @@ else if ($action == 'add' && $user->rights->facture->creer)
 										$fk_parent_line = 0;
 									}
 
-								//Extrafields
-								if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
-								{
-									$lines[$i]->fetch_optionals($lines[$i]->rowid);
-									$array_option=$lines[$i]->array_options;
-								}
+									//Extrafields
+									if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED) && method_exists($lines[$i],'fetch_optionals'))
+									{
+										$lines[$i]->fetch_optionals($lines[$i]->rowid);
+										$array_option=$lines[$i]->array_options;
+									}
 
 									$result = $object->addline(
 										$id,
@@ -1125,7 +1127,7 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
 	$product_desc = (GETPOST('product_desc')?GETPOST('product_desc'):(GETPOST('np_desc')?GETPOST('np_desc'):(GETPOST('dp_desc')?GETPOST('dp_desc'):'')));
 	$price_ht = GETPOST('price_ht');
 	$tva_tx=(GETPOST('tva_tx')?GETPOST('tva_tx'):0);
-	
+
 	//Extrafields
 	$extrafieldsline = new ExtraFields($db);
 	$extralabelsline =$extrafieldsline->fetch_name_optionals_label($object->table_element_line);
@@ -1302,7 +1304,7 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
 
 		if (! empty($price_min) && (price2num($pu_ht)*(1-price2num(GETPOST('remise_percent'))/100) < price2num($price_min)))
 		{
-			$mesg = $langs->trans("CantBeLessThanMinPrice",price2num($price_min,'MU').$langs->getCurrencySymbol($conf->currency));
+			$mesg = $langs->trans("CantBeLessThanMinPrice",price(price2num($price_min,'MU'),0,$langs,0,0,-1,$conf->currency));
 			setEventMessage($mesg, 'errors');
 		}
 		else
@@ -1422,7 +1424,7 @@ else if ($action == 'updateligne' && $user->rights->facture->creer && $_POST['sa
 			unset($_POST["options_".$key]);
 		}
 	}
-	
+
 
 	// Check minimum price
 	$productid = GETPOST('productid', 'int');
@@ -1441,7 +1443,7 @@ else if ($action == 'updateligne' && $user->rights->facture->creer && $_POST['sa
 
 		if ($price_min && (price2num($pu_ht)*(1-price2num(GETPOST('remise_percent'))/100) < price2num($price_min)))
 		{
-			setEventMessage($langs->trans("CantBeLessThanMinPrice", price2num($price_min,'MU')).$langs->getCurrencySymbol($conf->currency), 'errors');
+			setEventMessage($langs->trans("CantBeLessThanMinPrice", price(price2num($price_min,'MU'),0,$langs,0,0,-1,$conf->currency)), 'errors');
 			$error++;
 		}
 	}
@@ -1836,7 +1838,7 @@ else if ($action == 'print_file' AND $user->rights->printipp->read)
 {
 	require_once DOL_DOCUMENT_ROOT.'/core/class/dolprintipp.class.php';
 	$printer = new dolPrintIPP($db,$conf->global->PRINTIPP_HOST,$conf->global->PRINTIPP_PORT,$user->login,$conf->global->PRINTIPP_USER,$conf->global->PRINTIPP_PASSWORD);
-	$printer->print_file(GETPOST('file',alpha),GETPOST('printer',alpha));
+	$printer->print_file(GETPOST('file','alpha'),GETPOST('printer','alpha'));
     setEventMessage($langs->trans("FileWasSentToPrinter", GETPOST('file')));
     $action='';
 }
@@ -2236,7 +2238,7 @@ if ($action == 'create')
 	{
 		// Discounts for third party
 		print '<tr><td>'.$langs->trans('Discounts').'</td><td colspan="2">';
-		if ($soc->remise_client) print $langs->trans("CompanyHasRelativeDiscount",'<a href="'.DOL_URL_ROOT.'/comm/remise.php?id='.$soc->id.'&backtopage='.urlencode($_SERVER["PHP_SELF"].'?socid='.$soc->id.'&action='.$action.'&origin='.GETPOST('origin').'&originid='.GETPOST('originid')).'">'.$soc->remise_client.'</a>');
+		if ($soc->remise_percent) print $langs->trans("CompanyHasRelativeDiscount",'<a href="'.DOL_URL_ROOT.'/comm/remise.php?id='.$soc->id.'&backtopage='.urlencode($_SERVER["PHP_SELF"].'?socid='.$soc->id.'&action='.$action.'&origin='.GETPOST('origin').'&originid='.GETPOST('originid')).'">'.$soc->remise_percent.'</a>');
 		else print $langs->trans("CompanyHasNoRelativeDiscount");
 		print ' <a href="'.DOL_URL_ROOT.'/comm/remise.php?id='.$soc->id.'&backtopage='.urlencode($_SERVER["PHP_SELF"].'?socid='.$soc->id.'&action='.$action.'&origin='.GETPOST('origin').'&originid='.GETPOST('originid')).'">('.$langs->trans("EditRelativeDiscount").')</a>';
 		print '. ';
@@ -2266,9 +2268,11 @@ if ($action == 'create')
 	// Project
 	if (! empty($conf->projet->enabled) && $socid>0)
 	{
+		$formproject=new FormProjets($db);
+
 		$langs->load('projects');
 		print '<tr><td>'.$langs->trans('Project').'</td><td colspan="2">';
-		select_projects($soc->id, $projectid, 'projectid');
+		$formproject->select_projects($soc->id, $projectid, 'projectid');
 		print '</td></tr>';
 	}
 
@@ -2386,7 +2390,7 @@ if ($action == 'create')
 					$form->select_produits('','idprod'.$i,'',$conf->product->limit_size);
 				print '</td>';
 				print '<td><input type="text" size="2" name="qty'.$i.'" value="1"></td>';
-				print '<td class="nowrap"><input type="text" size="1" name="remise_percent'.$i.'" value="'.$soc->remise_client.'">%</td>';
+				print '<td class="nowrap"><input type="text" size="1" name="remise_percent'.$i.'" value="'.$soc->remise_percent.'">%</td>';
 				print '<td>&nbsp;</td>';
 				// Si le module service est actif, on propose des dates de debut et fin a la ligne
 				if (! empty($conf->service->enabled))
@@ -2851,7 +2855,7 @@ else if ($id > 0 || ! empty($ref))
 
 		print '<tr><td>'.$langs->trans('Discounts');
 		print '</td><td colspan="5">';
-		if ($soc->remise_client) print $langs->trans("CompanyHasRelativeDiscount",$soc->remise_client);
+		if ($soc->remise_percent) print $langs->trans("CompanyHasRelativeDiscount",$soc->remise_percent);
 		else print $langs->trans("CompanyHasNoRelativeDiscount");
 		//print ' ('.$addrelativediscount.')';
 

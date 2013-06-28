@@ -96,6 +96,8 @@ class User extends CommonObject
 
 	var $users;						// To store all tree of users hierarchy
 	var $parentof;					// To store an array of all parents for all ids.
+	
+	var $accountancy_code;				// Accountancy code in prevision of the complete accountancy module
 
 
 	/**
@@ -149,6 +151,7 @@ class User extends CommonObject
 		$sql.= " u.datepreviouslogin as datep,";
 		$sql.= " u.photo as photo,";
 		$sql.= " u.openid as openid,";
+		$sql.= " u.accountancy_code,";
 		$sql.= " u.ref_int, u.ref_ext";
 		$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
 
@@ -209,6 +212,7 @@ class User extends CommonObject
 				$this->openid		= $obj->openid;
 				$this->lang			= $obj->lang;
 				$this->entity		= $obj->entity;
+				$this->accountancy_code		= $obj->accountancy_code;
 
 				$this->datec				= $this->db->jdate($obj->datec);
 				$this->datem				= $this->db->jdate($obj->datem);
@@ -219,15 +223,13 @@ class User extends CommonObject
 				$this->contact_id           = $obj->fk_socpeople;
 				$this->fk_member            = $obj->fk_member;
 				$this->fk_user        		= $obj->fk_user;
-				
+
 				// Retreive all extrafield for thirdparty
 				// fetch optionals attributes and labels
 				require_once(DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php');
 				$extrafields=new ExtraFields($this->db);
 				$extralabels=$extrafields->fetch_name_optionals_label($this->table_element,true);
-				if (count($extralabels)>0) {
-					$this->fetch_optionals($this->id,$extralabels);
-				}
+				$this->fetch_optionals($this->id,$extralabels);
 
 				$this->db->free($result);
 			}
@@ -1116,7 +1118,8 @@ class User extends CommonObject
 		$this->address		= empty($this->address)?'':$this->address;
 		$this->zip			= empty($this->zip)?'':$this->zip;
 		$this->town			= empty($this->town)?'':$this->town;
-		
+		$this->accountancy_code = trim($this->accountancy_code);
+
 		// Check parameters
 		if (! empty($conf->global->USER_MAIL_REQUIRED) && ! isValidEMail($this->email))
 		{
@@ -1144,6 +1147,7 @@ class User extends CommonObject
 		$sql.= ", email = '".$this->db->escape($this->email)."'";
 		$sql.= ", job = '".$this->db->escape($this->job)."'";
 		$sql.= ", signature = '".$this->db->escape($this->signature)."'";
+		$sql.= ", accountancy_code = '".$this->db->escape($this->accountancy_code)."'";
 		$sql.= ", note = '".$this->db->escape($this->note)."'";
 		$sql.= ", photo = ".($this->photo?"'".$this->db->escape($this->photo)."'":"null");
 		$sql.= ", openid = ".($this->openid?"'".$this->db->escape($this->openid)."'":"null");
@@ -1947,7 +1951,7 @@ class User extends CommonObject
 		global $user,$langs;
 
 		$now=dol_now();
-		
+
 		// Initialise parametres
 		$this->id=0;
 		$this->ref = 'SPECIMEN';

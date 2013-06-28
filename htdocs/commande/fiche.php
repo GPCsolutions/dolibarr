@@ -43,7 +43,7 @@ if (! empty($conf->propal->enabled))
 	require DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
 if (! empty($conf->projet->enabled)) {
 	require DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
-	require DOL_DOCUMENT_ROOT.'/core/lib/project.lib.php';
+	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 }
 require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 
@@ -315,12 +315,12 @@ else if ($action == 'add' && $user->rights->commande->creer)
 						}
 
 						//Extrafields
-						if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
+						if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)  && method_exists($lines[$i],'fetch_optionals') ) // For avoid conflicts if trigger used
 						{
 							$lines[$i]->fetch_optionals($lines[$i]->rowid);
 							$array_option=$lines[$i]->array_options;
 						}
-						
+
 						$result = $object->addline(
 							$object_id,
 							$desc,
@@ -732,7 +732,7 @@ else if ($action == 'addline' && $user->rights->commande->creer)
 
 		if (! empty($price_min) && (price2num($pu_ht)*(1-price2num(GETPOST('remise_percent'))/100) < price2num($price_min)))
 		{
-			$mesg = $langs->trans("CantBeLessThanMinPrice",price2num($price_min,'MU').$langs->getCurrencySymbol($conf->currency));
+			$mesg = $langs->trans("CantBeLessThanMinPrice",price(price2num($price_min,'MU'),0,$langs,0,0,-1,$conf->currency));
 			setEventMessage($mesg, 'errors');
 		}
 		else
@@ -865,7 +865,7 @@ else if ($action == 'updateligne' && $user->rights->commande->creer && GETPOST('
 
 		if ($price_min && (price2num($pu_ht)*(1-price2num(GETPOST('remise_percent'))/100) < price2num($price_min)))
 		{
-			setEventMessage($langs->trans("CantBeLessThanMinPrice", price2num($price_min,'MU')).$langs->getCurrencySymbol($conf->currency), 'errors');
+			setEventMessage($langs->trans("CantBeLessThanMinPrice", price(price2num($price_min,'MU'),0,$langs,0,0,-1,$conf->currency)), 'errors');
 			$error++;
 		}
 	}
@@ -1535,7 +1535,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 	print '<input type="hidden" name="action" value="add">';
 	print '<input type="hidden" name="socid" value="'.$soc->id.'">' ."\n";
-	print '<input type="hidden" name="remise_percent" value="'.$soc->remise_client.'">';
+	print '<input type="hidden" name="remise_percent" value="'.$soc->remise_percent.'">';
 	print '<input type="hidden" name="origin" value="'.$origin.'">';
 	print '<input type="hidden" name="originid" value="'.$originid.'">';
 
@@ -1579,7 +1579,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 
 		// Ligne info remises tiers
 		print '<tr><td>'.$langs->trans('Discounts').'</td><td colspan="2">';
-		if ($soc->remise_client) print $langs->trans("CompanyHasRelativeDiscount",$soc->remise_client);
+		if ($soc->remise_percent) print $langs->trans("CompanyHasRelativeDiscount",$soc->remise_percent);
 		else print $langs->trans("CompanyHasNoRelativeDiscount");
 		print '. ';
 		$absolute_discount=$soc->getAvailableDiscounts();
@@ -1626,8 +1626,10 @@ if ($action == 'create' && $user->rights->commande->creer)
 	// Project
 	if (! empty($conf->projet->enabled) && $socid>0)
 	{
+		$formproject=new FormProjets($db);
+
 		print '<tr><td>'.$langs->trans('Project').'</td><td colspan="2">';
-		$numprojet=select_projects($soc->id,$projectid);
+		$numprojet=$formproject->select_projects($soc->id,$projectid);
 		if ($numprojet==0)
 		{
 			print ' &nbsp; <a href="'.DOL_URL_ROOT.'/projet/fiche.php?socid='.$soc->id.'&action=create">'.$langs->trans("AddProject").'</a>';
@@ -1737,7 +1739,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 					print $form->select_produits('','idprod'.$i,'',$conf->product->limit_size);
 				print '</td>';
 				print '<td><input type="text" size="3" name="qty'.$i.'" value="1"></td>';
-				print '<td><input type="text" size="3" name="remise_percent'.$i.'" value="'.$soc->remise_client.'">%</td></tr>';
+				print '<td><input type="text" size="3" name="remise_percent'.$i.'" value="'.$soc->remise_percent.'">%</td></tr>';
 			}
 
 			print '</table>';
@@ -1991,7 +1993,7 @@ else
 		$addcreditnote='<a href="'.DOL_URL_ROOT.'/compta/facture.php?action=create&socid='.$soc->id.'&type=2&backtopage='.urlencode($_SERVER["PHP_SELF"]).'?facid='.$object->id.'">'.$langs->trans("AddCreditNote").'</a>';
 
 		print '<tr><td>'.$langs->trans('Discounts').'</td><td colspan="3">';
-		if ($soc->remise_client) print $langs->trans("CompanyHasRelativeDiscount",$soc->remise_client);
+		if ($soc->remise_percent) print $langs->trans("CompanyHasRelativeDiscount",$soc->remise_percent);
 		else print $langs->trans("CompanyHasNoRelativeDiscount");
 		print '. ';
 		$absolute_discount=$soc->getAvailableDiscounts('','fk_facture_source IS NULL');

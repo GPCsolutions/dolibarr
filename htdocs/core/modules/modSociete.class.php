@@ -263,37 +263,37 @@ class modSociete extends DolibarrModules
 		$this->export_TypeFields_array[$r]=array('s.nom'=>"Text",'s.status'=>"Number",'s.client'=>"Boolean",'s.fournisseur'=>"Boolean",'s.datec'=>"Date",'s.tms'=>"Date",'s.code_client'=>"Text",'s.code_fournisseur'=>"Text",'s.code_compta'=>"Text",'s.code_compta_fournisseur'=>"Text",'s.address'=>"Text",'s.zip'=>"Text",'s.town'=>"Text",'p.libelle'=>"List:c_pays:libelle:rowid",'p.code'=>"Text",'s.phone'=>"Text",'s.fax'=>"Text",'s.url'=>"Text",'s.email'=>"Text",'s.default_lang'=>"Text",'s.siret'=>"Text",'s.siren'=>"Text",'s.ape'=>"Text",'s.idprof4'=>"Text",'s.idprof5'=>"Text",'s.idprof6'=>"Text",'s.tva_intra'=>"Text",'s.capital'=>"Number",'s.note_private'=>"Text",'s.note_public'=>"Text",'t.libelle'=>"Text",'ce.code'=>"List:c_effectif:libelle:code","cfj.libelle"=>"Text",'s.fk_prospectlevel'=>'List:c_prospectlevel:label:code','s.fk_stcomm'=>'List:c_stcomm:libelle:code','d.nom'=>'Text');
 		$this->export_entities_array[$r]=array();	// We define here only fields that use another picto
         // Add extra fields
-        $sql="SELECT name, label, type FROM ".MAIN_DB_PREFIX."extrafields WHERE elementtype = 'company'";
+        $sql="SELECT name, label, type FROM ".MAIN_DB_PREFIX."extrafields WHERE elementtype = 'societe'";
         $resql=$this->db->query($sql);
         if ($resql)    // This can fail when class is used on old database (during migration for example)
         {
-            while ($obj=$this->db->fetch_object($resql))
-            {
-                $fieldname='extra.'.$obj->name;
-                $fieldlabel=ucfirst($obj->label);
-		$typeFilter="Text";
-		switch($obj->type)
-		{
-			case 'int':
-			case 'double':
-			case 'price':
-				$typeFilter="Numeric";
-				break;
-			case 'date':
-			case 'datetime':
-				$typeFilter="Date";
-				break;
-			case 'boolean':
-				$typeFilter="Boolean";
-				break;
-			case 'sellist':
-				$typeFilter="List:".$obj->param;
-				break;
-		}
-                $this->export_fields_array[$r][$fieldname]=$fieldlabel;
-		$this->export_TypeFields_array[$r][$fieldname]=$typeFilter;
-                $this->export_entities_array[$r][$fieldname]='company';
-            }
+        	while ($obj=$this->db->fetch_object($resql))
+        	{
+        		$fieldname='extra.'.$obj->name;
+        		$fieldlabel=ucfirst($obj->label);
+        		$typeFilter="Text";
+        		switch($obj->type)
+        		{
+        			case 'int':
+        			case 'double':
+        			case 'price':
+        				$typeFilter="Numeric";
+        				break;
+        			case 'date':
+        			case 'datetime':
+        				$typeFilter="Date";
+        				break;
+        			case 'boolean':
+        				$typeFilter="Boolean";
+        				break;
+        			case 'sellist':
+        				$typeFilter="List:".$obj->param;
+        				break;
+        		}
+        		$this->export_fields_array[$r][$fieldname]=$fieldlabel;
+        		$this->export_TypeFields_array[$r][$fieldname]=$typeFilter;
+        		$this->export_entities_array[$r][$fieldname]='company';
+        	}
         }
         // End add axtra fields
 		$this->export_sql_start[$r]='SELECT DISTINCT ';
