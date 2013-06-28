@@ -181,7 +181,7 @@ if ($modecompta != 'CREANCES-DETTES')
 
 print '<table width="100%" class="noborder">';
 print '<tr class="liste_titre">';
-print '<td colspan ="4">&nbsp;</td>';
+print '<td>&nbsp;</td>';
 
 for ($annee = $year_start ; $annee <= $year_end ; $annee++)
 {
@@ -198,7 +198,6 @@ print '</tr>';
 
 print '<tr class="liste_titre">';
 print '<td>'.$langs->trans("Month").'</td>';
-print '<td colspan="3">&nbsp</td>';
 for ($annee = $year_start ; $annee <= $year_end ; $annee++)
 {
 	print '<td align="right">'.$langs->trans("AmountHT").'</td>';
@@ -300,8 +299,6 @@ for ($mois = 1+$nb_mois_decalage ; $mois <= 12+$nb_mois_decalage ; $mois++)
 
 	// Total TO (with & w/o VAT)
 	$total[$annee]+=$cum[$case];
-	if ($annee_decalage != $year_end) print '<td width="15">&nbsp;</td>';
-
 	$total_ht[$annee]+=$cum_ht[$case];
 	if ($annee_decalage != $year_end) print '<td width="15">&nbsp;</td>';
 	}
@@ -376,7 +373,7 @@ for ($mois = 1+$nb_mois_decalage ; $mois <= 12+$nb_mois_decalage ; $mois++)
 
 // Affiche total
 print '<tr class="liste_total">';
-print '<td colspan = "4">'.$langs->trans("Total").'</td>';
+print '<td>'.$langs->trans("Total").'</td>';
 for ($annee = $year_start ; $annee <= $year_end ; $annee++)
 {
 	// Total Amount w/o VAT

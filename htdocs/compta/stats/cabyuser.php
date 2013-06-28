@@ -242,8 +242,8 @@ if ($modecompta != 'CREANCES-DETTES') {
         $i=0;
         while ($i < $num) {
             $obj = $db->fetch_object($result);
-	    $amount[$obj->rowidx] = $obj->amount_ttc;
-	    $name[$obj->rowidx] = $obj->name.' '.$obj->firstname;
+			$amount[$obj->rowidx] = $obj->amount_ttc;
+			$name[$obj->rowidx] = $obj->name.' '.$obj->firstname;
             $catotal+=$obj->amount_ttc;
             $i++;
         }
@@ -351,7 +351,7 @@ if (count($amount)) {
         }
         print "<td>".$linkname."</td>\n";
 
-        // Amount w/o VAT
+		// Amount w/o VAT
         print '<td align="right">';
         if ($modecompta != 'CREANCES-DETTES')
         {
