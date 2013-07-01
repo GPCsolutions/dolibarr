@@ -183,6 +183,7 @@ AlwaysUseNewPrice=Toujours utiliser le prix du jour
 AlwaysUseFixedPrice=Utiliser le prix fixé
 PriceByQuantity=Prix par quantité
 PriceByQuantityRange=Grille de quantités
+ByProductsAndServices=Par produits et services
 ProductsDashboard=Synthèse produits/services
 ### composition fabrication
 Building=Fabrication
