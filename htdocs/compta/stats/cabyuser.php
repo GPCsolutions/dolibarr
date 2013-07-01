@@ -156,6 +156,8 @@ if ($modecompta=="CREANCES-DETTES") {
     //$exportlink=$langs->trans("NotYetAvailable");
 }
 
+if (! empty($modecompta)) $tableparams['modecompta']=$modecompta;
+ 
 report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,$tableparams);
 
 

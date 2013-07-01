@@ -30,7 +30,6 @@
 
 include_once DOL_DOCUMENT_ROOT.'/core/class/commoninvoice.class.php';
 
-global $conf;
 
 /**
  *	Class to manage suppliers invoices

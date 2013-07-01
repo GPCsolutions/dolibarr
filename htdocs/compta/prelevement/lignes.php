@@ -35,8 +35,6 @@ require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 $langs->load("banks");
 $langs->load("categories");
 
-global $conf;
-
 // Security check
 if ($user->societe_id > 0) accessforbidden();
 

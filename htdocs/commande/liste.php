@@ -362,7 +362,10 @@ if ($resql)
 
 	if (! empty($moreforfilter))
 	{
+	    print '<tr class="liste_titre">';
+	    print '<td class="liste_titre" colspan="9">';
 	    print $moreforfilter;
+	    print '</td></tr>'
 	}
 
 	print $langs->trans('ReportPeriod'). ' : ';
