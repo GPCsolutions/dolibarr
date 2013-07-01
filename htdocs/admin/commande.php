@@ -209,6 +209,37 @@ else if ($action=='setModuleOptions') {
 	}
 }
 
+if ($action == 'set_COMMANDE_APPROVAL_COMMENT')
+{
+    $draft = GETPOST('COMMANDE_APPROVAL_COMMENT','alpha');
+
+    $res = dolibarr_set_const($db, "COMMANDE_APPROVAL_COMMENT",trim($draft),'chaine',0,'',$conf->entity);
+    if (! $res > 0) $error++;
+
+    if (! $error)
+    {
+        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+    }
+    else
+    {
+        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+    }
+}
+
+if ($action == 'set_COMMANDE_APPROVAL')
+{
+    $res = dolibarr_set_const($db, "COMMANDE_APPROVAL",$value,'chaine',0,'',$conf->entity);
+    if (! $res > 0) $error++;
+
+    if (! $error)
+    {
+        $mesg = "<font class=\"ok\">".$langs->trans("SetupSaved")."</font>";
+    }
+    else
+    {
+        $mesg = "<font class=\"error\">".$langs->trans("Error")."</font>";
+    }
+}
 
 /*
  * View
@@ -530,6 +561,31 @@ print "<input type=\"hidden\" name=\"action\" value=\"set_COMMANDE_DRAFT_WATERMA
 print '<tr '.$bc[$var].'><td colspan="2">';
 print $langs->trans("WatermarkOnDraftOrders").'<br>';
 print '<input size="50" class="flat" type="text" name="COMMANDE_DRAFT_WATERMARK" value="'.$conf->global->COMMANDE_DRAFT_WATERMARK.'">';
+print '</td><td align="right">';
+print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+print "</td></tr>\n";
+print '</form>';
+
+$var=!$var;
+print "<form method=\"post\" action=\"".$_SERVER["PHP_SELF"]."\">";
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print "<input type=\"hidden\" name=\"action\" value=\"set_COMMANDE_APPROVAL\">";
+print "<tr ".$bc[$var].">";
+print '<td>'.$langs->trans("ApprovalOnCustomerOrder").'</td>';
+print '<td width="60" align="center">';
+print $form->selectyesno('value',$conf->global->COMMANDE_APPROVAL,1);
+print "</td>";
+print '<td align="right"><input type="submit" class="button" value="'.$langs->trans("Modify").'"></td>';
+print '</tr>';
+print '</form>';
+
+$var=!$var;
+print "<form method=\"post\" action=\"".$_SERVER["PHP_SELF"]."\">";
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+print "<input type=\"hidden\" name=\"action\" value=\"set_COMMANDE_APPROVAL_COMMENT\">";
+print '<tr '.$bc[$var].'><td colspan="2">';
+print $langs->trans("ApprovalCommentOnCustomerOrder").'<br>';
+print '<input size="50" class="flat" type="text" name="COMMANDE_APPROVAL_COMMENT" value="'.$conf->global->COMMANDE_APPROVAL_COMMENT.'">';
 print '</td><td align="right">';
 print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 print "</td></tr>\n";
