@@ -4,6 +4,7 @@
  * Copyright (C) 2008      Raphael Bertrand     <raphael.bertrand@resultic.fr>
  * Copyright (C) 2010-2012 Juanjo Menent	    <jmenent@2byte.es>
  * Copyright (C) 2012      Christophe Battarel   <christophe.battarel@altairis.fr>
+ * Copyright (C) 2011      Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -466,6 +467,12 @@ class pdf_azur extends ModelePDFPropales
 				}
 				*/
 
+                                // Displays approval form
+                                if ($conf->global->PROPALE_APPROVAL)
+                                {
+                                    $posy=$this->_approval($pdf, $object, $posy, $outputlangs);
+                                }
+
 				// Pied de page
 				$this->_pagefoot($pdf,$object,$outputlangs);
 				$pdf->AliasNbPages();
@@ -499,6 +506,50 @@ class pdf_azur extends ModelePDFPropales
 
 		$this->error=$langs->trans("ErrorUnknown");
 		return 0;   // Erreur par defaut
+	}
+
+ 	/*
+	 *   \brief      Displays the approval form
+	 *   \param      pdf     	PDF object
+	 *   \param      object		Propale object
+	 */
+	function _approval(&$pdf, $object, $posy, $outputlangs)
+	{
+            global $conf;
+            
+            $tabapp_posx = 120;
+            $tabapp_posy = $posy + 2;
+            $tabapp_width = 80;
+            $tabapp_height = 40;
+
+            $default_font_size = pdf_getPDFFontSize($outputlangs);
+
+            // Show approval frame
+            $pdf->rect($tabapp_posx, $tabapp_posy, $tabapp_width, $tabapp_height);
+
+            // Show approval date
+            $pdf->SetXY($tabapp_posx + 1, $tabapp_posy + 2);
+            $pdf->SetTextColor(0, 0, 0);
+            $pdf->SetFont('', 'B', $default_font_size);
+            $pdf->MultiCell(78, 4, "« Bon pour accord », le       /      /               ", 0, 'L'); // TODO : translation
+            
+            // Show approval name
+            $pdf->SetXY($tabapp_posx + 1, $tabapp_posy + 7);
+            $pdf->SetTextColor(0, 0, 0);
+            $pdf->SetFont('', '', $default_font_size);
+            $pdf->MultiCell(78, 4, "Nom et qualité :", 0, 'L'); // TODO : translation
+
+            // Show approval informations
+            $pdf->SetXY($tabapp_posx + 1, $tabapp_posy + $tabapp_height / 2);
+            $pdf->SetTextColor(224, 224, 224);
+            $pdf->SetFont('', '', $default_font_size - 1);
+            $pdf->MultiCell(78, 4, "Signature et cachet commercial", 0, 'C'); // TODO : translation
+                        
+            // Show optional comment
+            $pdf->setXY($tabapp_posx + 1, $tabapp_posy + $tabapp_height -2);
+            $pdf->SetTextColor(0, 0, 0);
+            $pdf->SetFont('', 'I', $default_font_size - 6);
+            $pdf->MultiCell(78, 4, $conf->global->PROPALE_APPROVAL_COMMENT, 0, 'C'); // TODO : setting
 	}
 
 	/**
