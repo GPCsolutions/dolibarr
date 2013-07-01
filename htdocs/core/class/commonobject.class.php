@@ -1068,7 +1068,13 @@ abstract class CommonObject
 			// We frist search all lines that are parent lines (for multilevel details lines)
 			$sql = 'SELECT rowid FROM '.MAIN_DB_PREFIX.$this->table_element_line;
 			$sql.= ' WHERE '.$this->fk_element.' = '.$this->id;
-			$sql.= ' AND fk_parent_line IS NULL';
+
+			//This test is to fix  	Fix [ bug #911 ] Reorder intervention do not work in 3.3
+			//Do not merge in 3.4 'table column fk_parent_line already added into 3.4
+			if ($this->table_element_line != 'fichinterdet') {
+				$sql.= ' AND fk_parent_line IS NULL';
+			}
+
 			$sql.= ' ORDER BY rang ASC, rowid '.$rowidorder;
 
 			dol_syslog(get_class($this)."::line_order search all parent lines sql=".$sql, LOG_DEBUG);
@@ -2632,7 +2638,7 @@ abstract class CommonObject
 	 */
 	function printObjectLines($action, $seller, $buyer, $selected=0, $dateSelector=0, $hookmanager=false)
 	{
-		global $conf,$langs;
+		global $conf,$langs,$user;
 
 		print '<tr class="liste_titre nodrag nodrop">';
 		if (! empty($conf->global->MAIN_VIEW_LINE_NUMBER))
@@ -2646,7 +2652,7 @@ abstract class CommonObject
 			print '<td align="right" width="80">&nbsp;</td>';
 		print '<td align="right" width="50">'.$langs->trans('Qty').'</td>';
 		print '<td align="right" width="50">'.$langs->trans('ReductionShort').'</td>';
-		if (! empty($conf->margin->enabled)) {
+		if (! empty($conf->margin->enabled) && empty($user->societe_id)) {
 			if ($conf->global->MARGIN_TYPE == "1")
 				print '<td align="right" width="80">'.$langs->trans('BuyingPrice').'</td>';
 			else
@@ -3044,7 +3050,8 @@ abstract class CommonObject
   }
 
   function displayMarginInfos($force_price=false) {
-    global $langs, $conf;
+    global $langs, $conf,$user;
+    if (! empty($user->societe_id)) return;
     $marginInfo = $this->getMarginInfos($force_price);
     print '<table class="noborder" width="100%">';
     print '<tr class="liste_titre">';

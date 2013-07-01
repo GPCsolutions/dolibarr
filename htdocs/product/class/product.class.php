@@ -431,7 +431,7 @@ class Product extends CommonObject
 		$this->ref = dol_string_nospecial(trim($this->ref));
 		$this->libelle = trim($this->libelle);
 		$this->description = trim($this->description);
-		$this->note = trim($this->note);
+		$this->note = (isset($this->note)? trim($this->note):"null");
 		$this->weight = price2num($this->weight);
 		$this->weight_units = trim($this->weight_units);
 		$this->length = price2num($this->length);
@@ -2157,13 +2157,13 @@ class Product extends CommonObject
 					'fullpath' => $compl_path.$label,			// Label
 					'type'=>$type				// Nb of units that compose parent product
 				);
-			}
 
-			// Recursive call if child is an array
-			if (is_array($desc_pere['childs']))
-			{
-				//print 'YYY We go down for '.$desc_pere[3]." -> \n";
-				$this ->fetch_prod_arbo($desc_pere['childs'], $compl_path.$desc_pere[3]." -> ", $desc_pere[1]*$multiply, $level+1);
+				// Recursive call if child is an array
+				if (is_array($desc_pere['childs']))
+				{
+					//print 'YYY We go down for '.$desc_pere[3]." -> \n";
+					$this ->fetch_prod_arbo($desc_pere['childs'], $compl_path.$desc_pere[3]." -> ", $desc_pere[1]*$multiply, $level+1);
+				}
 			}
 		}
 	}

@@ -34,6 +34,7 @@ global $conf;
 
 $langs->load("categories");
 $langs->load('withdrawals');
+$langs->load('bills');
 
 // Securite acces client
 if ($user->societe_id > 0) accessforbidden();
