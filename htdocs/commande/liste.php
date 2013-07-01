@@ -345,7 +345,7 @@ if ($resql)
  	if ($user->rights->societe->client->voir || $socid)
  	{
  		$langs->load("commercial");
- 		$moreforfilter.=$langs->trans('ThirdPartiesOfSaleRepresentative'). ' : ';
+		$moreforfilter.=$langs->trans('ThirdPartiesOfSaleRepresentative'). ' : ';
 		$moreforfilter.=$formother->select_salesrepresentatives($search_sale,'search_sale',$user);
 	 	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
  	}
@@ -359,7 +359,7 @@ if ($resql)
 
 	print '<tr class="liste_titre">';
 	print '<td class="liste_titre" colspan="7">';
-    
+
 	if (! empty($moreforfilter))
 	{
 	    print $moreforfilter;

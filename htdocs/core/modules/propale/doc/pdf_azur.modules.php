@@ -542,7 +542,7 @@ class pdf_azur extends ModelePDFPropales
 
             // Show approval informations
             $pdf->SetXY($tabapp_posx + 1, $tabapp_posy + $tabapp_height / 2);
-            $pdf->SetTextColor(224, 224, 224);
+            $pdf->SetTextColor(128, 128, 128);
             $pdf->SetFont('', '', $default_font_size - 1);
             $pdf->MultiCell(78, 4, "Signature et cachet commercial", 0, 'C'); // TODO : translation
                         
