@@ -22,15 +22,14 @@
  *      \ingroup    prelevement
  *      \brief      Fiche apercu du bon de prelevement
  */
-
 require('../../main.inc.php');
 require_once DOL_DOCUMENT_ROOT.'/core/lib/prelevement.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/bonprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
+
 $langs->load("banks");
-$langs->load("categories");
 $langs->load("bills");
 $langs->load("categories");
 
@@ -63,7 +62,9 @@ if ($id > 0 || ! empty($ref))
 
 		$relativepath = 'bon/'.$object->ref;
 
-		print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$object->ref.'</a>';
+		print '<a data-ajax="false"';
+        if (!empty($conf->global->MAIN_DISABLE_FORCE_SAVEAS)) print ' target="blank"';
+        print ' href="'.DOL_URL_ROOT.'/document.php?type=text/plain&amp;modulepart=prelevement&amp;file='.urlencode($relativepath).'">'.$object->ref.'</a>';
 
 		print '</td></tr>';
 		print '</table><br>';

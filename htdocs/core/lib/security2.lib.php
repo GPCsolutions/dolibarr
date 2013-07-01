@@ -148,7 +148,7 @@ function dol_loginfunction($langs,$conf,$mysoc)
 	if (! preg_match('/mainmenu=/',$php_self)) $php_self.=(preg_match('/\?/',$php_self)?'&':'?').'mainmenu=home';
 
 	// Title
-	$title='Dolibarr '.DOL_VERSION;
+	$title='Dolibarr';
 	if (! empty($conf->global->MAIN_APPLICATION_TITLE)) $title=$conf->global->MAIN_APPLICATION_TITLE;
 
 	// Note: $conf->css looks like '/theme/eldy/style.css.php'

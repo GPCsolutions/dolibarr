@@ -569,7 +569,9 @@ if ($step == 3 && $datatoimport)
 			print '<tr '.$bc[$var].'>';
 			print '<td width="16">'.img_mime($file).'</td>';
 			print '<td>';
-    		print '<a data-ajax="false" href="'.DOL_URL_ROOT.'/document.php?modulepart='.$modulepart.'&file='.urlencode($relativepath).'&step=3'.$param.'" target="_blank">';
+    		print '<a data-ajax="false"';
+            if (!empty($conf->global->MAIN_DISABLE_FORCE_SAVEAS)) print ' target="blank"';
+            print ' href="'.DOL_URL_ROOT.'/document.php?modulepart='.$modulepart.'&file='.urlencode($relativepath).'&step=3'.$param.'" target="_blank">';
     		print $file;
     		print '</a>';
 			print '</td>';

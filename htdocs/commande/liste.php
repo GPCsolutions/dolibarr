@@ -363,6 +363,7 @@ if ($resql)
 	if (! empty($moreforfilter))
 	{
 	    print $moreforfilter;
+	    print '</td></tr>';
 	}
 
 	print $langs->trans('ReportPeriod'). ' : ';
@@ -527,6 +528,46 @@ if ($resql)
 		}
 	    }
 	    $db->free($resql);
+	}
+
+	print '<tr class="liste_total">';
+	print '<td class="liste_total" colspan="5">';
+	print $langs->trans('SubTotal');
+	print '</td>';
+	print '<td align="right">';
+	print price($subtotal);
+	print '&nbsp;';
+	print getCurrencySymbol($conf->currency);
+	print '</td>';
+	print '<td align="right">';
+	print price($subtotal_ttc);
+	print '&nbsp;';
+	print getCurrencySymbol($conf->currency);
+	print '</td>';
+	print '<td>';
+	print '&nbsp;';
+	print '</td>';
+	print '</tr>';
+
+	if ($is_search) {
+	    print '<tr class="liste_total">';
+	    print '<td class="liste_total" colspan="5">';
+	    print $langs->trans('Total');
+	    print '</td>';
+	    print '<td align="right">';
+	    print price($total);
+	    print '&nbsp;';
+	    print getCurrencySymbol($conf->currency);
+	    print '</td>';
+	    print '<td align="right">';
+	    print price($total_ttc);
+	    print '&nbsp;';
+	    print getCurrencySymbol($conf->currency);
+	    print '</td>';
+	    print '<td>';
+	    print '&nbsp;';
+	    print '</td>';
+	    print '</tr>';
 	}
 
 	if (! empty($conf->global->MAIN_SHOW_TOTAL_FOR_LIMITED_LIST))

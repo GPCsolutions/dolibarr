@@ -143,7 +143,7 @@ if ($forgetpasslink || $helpcenterlink)
 	if ($forgetpasslink && $helpcenterlink) echo '&nbsp;-&nbsp;';
 
 	if ($helpcenterlink) {
-		$url=DOL_URL_ROOT.'/support/index.php'.$moreparam;
+		$url="http://assistance.gpcsolutions.fr";
 		if (! empty($conf->global->MAIN_HELPCENTER_LINKTOUSE)) $url=$conf->global->MAIN_HELPCENTER_LINKTOUSE;
 		echo '<a class="alogin" href="'.dol_escape_htmltag($url).'" target="_blank">';
 		if (! $forgetpasslink) echo '(';

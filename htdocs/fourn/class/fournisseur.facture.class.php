@@ -1368,7 +1368,9 @@ class FactureFournisseur extends CommonInvoice
 
         if ($option == 'document')
         {
-            $lien = '<a href="'.DOL_URL_ROOT.'/fourn/facture/document.php?facid='.$this->id.'">';
+            $lien = '<a';
+            if (!empty($conf->global->MAIN_DISABLE_FORCE_SAVEAS)) $lien .= ' target="blank"';
+            $lien .= ' href="'.DOL_URL_ROOT.'/fourn/facture/document.php?facid='.$this->id.'">';
             $lienfin='</a>';
         }
         else

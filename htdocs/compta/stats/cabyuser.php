@@ -154,10 +154,10 @@ if ($modecompta=="CREANCES-DETTES") {
     $builddate=time();
     //$exportlink=$langs->trans("NotYetAvailable");
 }
-$moreparam=array();
-if (! empty($modecompta)) $moreparam['modecompta']=$modecompta;
 
-report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,$moreparam);
+if (! empty($modecompta)) $tableparams['modecompta']=$modecompta;
+ 
+report_header($nom,$nomlink,$period,$periodlink,$description,$builddate,$exportlink,$tableparams);
 
 
 // Show array

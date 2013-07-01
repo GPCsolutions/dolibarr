@@ -1408,7 +1408,7 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
 
 	    // Link info
 	    $logouttext='';
-	    $logouthtmltext=$appli.' '.DOL_VERSION.'<br>';
+	    $logouthtmltext=$appli.'<br>';
 	    $logouthtmltext.=$langs->trans("Logout").'<br>';
 	    //$logouthtmltext.="<br>";
 	    if ($_SESSION["dol_authmode"] != 'forceuser'
@@ -1596,38 +1596,16 @@ function left_menu($menu_array_before, $helppagename='', $moresearchform='', $me
 	    if ($doliurl) print '</a>';
 	    print '</div>';
 
-	    // Link to Dolibarr wiki pages
-	    if ($helppagename && empty($conf->global->MAIN_HELP_DISABLELINK))
-	    {
-	        $langs->load("help");
-
-	        $helpbaseurl='';
-	        $helppage='';
-	        $mode='';
-
-	        // Get helpbaseurl, helppage and mode from helppagename and langs
-	        $arrayres=getHelpParamFor($helppagename,$langs);
-	        $helpbaseurl=$arrayres['helpbaseurl'];
-	        $helppage=$arrayres['helppage'];
-	        $mode=$arrayres['mode'];
-
-	        // Link to help pages
-	        if ($helpbaseurl && $helppage)
-	        {
-	            print '<div id="blockvmenuhelp" class="blockvmenuhelp">';
-	            print '<a class="help" target="_blank" title="'.$langs->trans($mode == 'wiki' ? 'GoToWikiHelpPage': 'GoToHelpPage');
-	            if ($mode == 'wiki') print ' - '.$langs->trans("PageWiki").' &quot;'.dol_escape_htmltag(strtr($helppage,'_',' ')).'&quot;';
-	            print '" href="';
-	            if ($mode == 'wiki') print sprintf($helpbaseurl,urlencode(html_entity_decode($helppage)));
-	            else print sprintf($helpbaseurl,$helppage);
-	            print '">';
-	            print img_picto('', 'helpdoc').' ';
-	            print $langs->trans($mode == 'wiki' ? 'OnlineHelp': 'Help');
-	            //if ($mode == 'wiki') print ' ('.dol_trunc(strtr($helppage,'_',' '),8).')';
-	            print '</a>';
-	            print '</div>';
-	        }
-	    }
+  // Link to GPC helpdesk
+  if (empty($conf->global->MAIN_HELP_DISABLELINK))
+  {
+    // Link to help pages
+    print '<div id="blockvmenuhelp" class="blockvmenuhelp">';
+    print '<a class="help" target="_blank" title="Assistance" href="http://assistance.gpcsolutions.fr">';
+    print 'Assistance';
+    print '</a>';
+    print '</div>';
+  }
 
 	    // Link to bugtrack
 	    if (! empty($conf->global->MAIN_BUGTRACK_ENABLELINK))
