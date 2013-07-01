@@ -54,9 +54,9 @@ if (empty($date_startyear) && empty($date_startmonth) && empty($date_startday)) 
     $date_start = -1; // Empty
 } else {
     $date_start = dol_mktime(
-	    23,
-	    59,
-	    59,
+	    0,
+	    0,
+	    0,
 	    $date_startmonth,
 	    $date_startday,
 	    $date_startyear
