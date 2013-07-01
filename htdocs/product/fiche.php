@@ -739,7 +739,7 @@ else
             print '<input name="seuil_stock_alerte" type="hidden" value="0">';
             print '<input name="desiredstock" type="hidden" value="0">';
         }
-
+        
         // Description (used in invoice, propal...)
         print '<tr><td valign="top">'.$langs->trans("Description").'</td><td>';
 

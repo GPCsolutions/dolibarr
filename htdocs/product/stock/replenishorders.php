@@ -53,16 +53,16 @@ dol_fiche_head($head,
                0,
                'stock');
 $commandestatic = new CommandeFournisseur($db);
-$sref = GETPOST('search_ref');
-$snom = GETPOST('search_nom');
-$suser = GETPOST('search_user');
-$sttc = GETPOST('search_ttc');
-$sall = GETPOST('search_all');
-$sdate = GETPOST('search_date');
+$sref = GETPOST('search_ref', 'alpha');
+$snom = GETPOST('search_nom', 'alpha');
+$suser = GETPOST('search_user', 'alpha');
+$sttc = GETPOST('search_ttc', 'int');
+$sall = GETPOST('search_all', 'alpha');
+$sdate = GETPOST('search_date', 'alpha');
 $page = GETPOST('page', 'int');
 
-$sortorder = GETPOST('sortorder');
-$sortfield = GETPOST('sortfield');
+$sortorder = GETPOST('sortorder', 'alpha');
+$sortfield = GETPOST('sortfield', 'alpha');
 
 if (!$sortorder) {
     $sortorder = 'DESC';
@@ -108,11 +108,35 @@ if ($sttc) {
     $sql .= ' AND cf.total_ttc = ' . price2num($sttc);
 }
 if ($sdate) {
-    $elts = explode('/', $sdate);
-    $date = date('Y-m-d',
-                 mktime(0, 0, 0, $elts[1], $elts[0], $elts[2])
-                );
-    $sql .= ' AND cf.date_creation LIKE "' . $date . '%"';
+    if(GETPOST('search_datemonth', 'int') && GETPOST('search_dateday', 'int')
+       && GETPOST('search_dateyear', 'int')) {
+           $date = date('Y-m-d',
+                        dol_mktime(0,
+                                   0,
+                                   0,
+                                   GETPOST('search_datemonth', 'int'),
+                                   GETPOST('search_dateday', 'int'),
+                                   GETPOST('search_dateyear', 'int')
+                                  )
+                       );
+    } else {
+        $elts = explode('/', $sdate);
+        $datearray = array();
+        if($elts[2])
+        {
+            $datearray[0] = $elts[2];
+        }
+        if($elts[1])
+        {
+            $datearray[1] = $elts[1];
+        }
+        if($elts[0])
+        {
+            $datearray[2] = $elts[0];
+        }
+        $date = implode('-', $datearray);
+    }
+    $sql .= ' AND cf.date_creation LIKE "%' . $date . '%"';
 }
 if ($sall) {
     $sql .= ' AND (cf.ref LIKE "%' . $db->escape($sall) . '%" ';
@@ -122,8 +146,8 @@ if ($socid) {
     $sql .= ' AND s.rowid = ' . $socid;
 }
 
-if (GETPOST('statut')) {
-    $sql .= ' AND fk_statut = ' . GETPOST('statut');
+if (GETPOST('statut', 'int')) {
+    $sql .= ' AND fk_statut = ' . GETPOST('statut', 'int');
 }
 
 $sql .= ' ORDER BY ' . $sortfield . ' ' . $sortorder  . ' ';
@@ -143,9 +167,9 @@ if ($resql) {
                       '',
                       $num
                       );
-    print '<form action="replenishorders.php" method="GET">';
-    print '<table class="noborder" width="100%">';
-    print '<tr class="liste_titre">';
+    echo '<form action="replenishorders.php" method="GET">',
+         '<table class="noborder" width="100%">',
+         '<tr class="liste_titre">';
     print_liste_field_titre($langs->trans('Ref'),
                             $_SERVER['PHP_SELF'],
                             'cf.ref',
@@ -200,30 +224,30 @@ if ($resql) {
                             $sortfield,
                             $sortorder
                             );
-    print '</tr>';
-
-    print '<tr class="liste_titre">';
-    print '<td class="liste_titre">';
-    print '<input type="text" class="flat" name="search_ref" value="' . $sref . '">';
-    print '</td>';
-    print '<td class="liste_titre">';
-    print '<input type="text" class="flat" name="search_nom" value="' . $snom . '">';
-    print '</td>';
-    print '<td class="liste_titre">';
-    print '<input type="text" class="flat" name="search_user" value="' . $suser . '">';
-    print '</td>';
-    print '<td class="liste_titre">';
-    print '<input type="text" class="flat" name="search_ttc" value="' . $sttc . '">';
-    print '</td>';
-    print '<td class="liste_titre">';
-    print '<input type="text" class="flat" name="search_date" value="' . $sdate . '">';
-    print '</td>';
-    print '<td class="liste_titre" align="right">';
+    $form = new Form($db);
+    echo '</tr>',
+         '<tr class="liste_titre">',
+         '<td class="liste_titre">',
+         '<input type="text" class="flat" name="search_ref" value="' . $sref . '">',
+         '</td>',
+         '<td class="liste_titre">',
+         '<input type="text" class="flat" name="search_nom" value="' . $snom . '">',
+         '</td>',
+         '<td class="liste_titre">',
+         '<input type="text" class="flat" name="search_user" value="' . $suser . '">',
+         '</td>',
+         '<td class="liste_titre">',
+         '<input type="text" class="flat" name="search_ttc" value="' . $sttc . '">',
+         '</td>',
+         '<td class="liste_titre">',
+         $form->select_date('', 'search_date', 0, 0, 1, "", 1, 0, 1, 0, ''),
+         '</td>',
+         '<td class="liste_titre" align="right">';
     $src = DOL_URL_ROOT . '/theme/' . $conf->theme . '/img/search.png';
     $value = dol_escape_htmltag($langs->trans('Search'));
-    print '<input type="image" class="liste_titre" name="button_search" src="' . $src . '" value="' . $value . '" title="' . $value . '">';
-    print '</td>';
-    print '</tr>';
+    echo '<input type="image" class="liste_titre" name="button_search" src="' . $src . '" value="' . $value . '" title="' . $value . '">',
+         '</td>',
+         '</tr>';
 
     $var = true;
     $userstatic = new User($db);
@@ -232,54 +256,54 @@ if ($resql) {
         $obj = $db->fetch_object($resql);
         $var = !$var;
 
-        print "<tr $bc[$var]>";
-        // Ref
-        print '<td>';
         $href = DOL_URL_ROOT . '/fourn/commande/fiche.php?id=' . $obj->rowid;
-        print '<a href="' . $href . '">';
-        print img_object($langs->trans('ShowOrder'), 'order') . ' ' . $obj->ref;
-        print '</a></td>';
+        echo '<tr ' . $bc[$var] . '>',
+        // Ref
+             '<td>',
+             '<a href="' . $href . '">',
+             img_object($langs->trans('ShowOrder'), 'order') . ' ' . $obj->ref,
+             '</a></td>';
 
         // Company
-        print '<td>';
         $href = DOL_URL_ROOT . '/fourn/fiche.php?socid=' . $obj->socid;
-        print '<a href="' . $href .'">';
-        print img_object($langs->trans('ShowCompany'), 'company') . ' ';
-        print $obj->nom . '</a></td>';
+        echo '<td>',
+             '<a href="' . $href .'">',
+             img_object($langs->trans('ShowCompany'), 'company'), ' ',
+             $obj->nom . '</a></td>';
 
         // Author
         $userstatic->id = $obj->fk_user_author;
         $userstatic->login = $obj->login;
-        print '<td>';
-
         if ($userstatic->id) {
-            print $userstatic->getLoginUrl(1);
+            $txt = $userstatic->getLoginUrl(1);
         } else {
-            print '&nbsp;';
+            $txt =  '&nbsp;';
         }
-
-        print '</td>';
+        echo '<td>',
+             $txt,
+             '</td>',
         // Amount
-        print '<td>';
-        print price($obj->total_ttc);
-        print '</td>';
+             '<td>',
+             price($obj->total_ttc),
+             '</td>';
         // Date
-        print '<td>';
         if ($obj->dc) {
-            print dol_print_date($db->jdate($obj->dc), 'day');
+            $date =  dol_print_date($db->jdate($obj->dc), 'day');
         } else {
-            print '-';
+            $date =  '-';
         }
-        print '</td>';
+        echo '<td>',
+             $date,
+             '</td>',
         // Statut
-        print '<td align="right">';
-        print $commandestatic->LibStatut($obj->fk_statut, 5);
-        print '</td>';
-        print '</tr>';
+             '<td align="right">',
+             $commandestatic->LibStatut($obj->fk_statut, 5),
+             '</td>',
+             '</tr>';
         $i++;
     }
-    print '</table>';
-    print '</form>';
+    echo '</table>',
+         '</form>';
 
     $db->free($resql);
 }
