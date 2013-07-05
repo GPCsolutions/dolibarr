@@ -71,12 +71,14 @@ $offset = $limit * $page ;
 //could go in the lib
 if ($action == 'order') {
     $linecount = GETPOST('linecount', 'int');
+    $box = 0;
     unset($_POST['linecount']);
     if ($linecount > 0) {
         $suppliers = array();
         for ($i = 0; $i < $linecount; $i++) {
             if(GETPOST($i, 'alpha') === 'on'
               && GETPOST('fourn' . $i, 'int') > 0) { //one line
+                $box = $i;
                 $supplierpriceid = GETPOST('fourn'.$i, 'int');
                 //get all the parameters needed to create a line
                 $qty = GETPOST('tobuy'.$i, 'int');
@@ -135,13 +137,16 @@ if ($action == 'order') {
             header('Location: replenishorders.php');
             exit;
         }
+    } 
+    if ($box == 0){
+        setEventMessage($langs->trans('SelectProduct'), 'warnings');
     }
 }
 
 /*
  * View
  */
-$title = $langs->trans('Replenishment');
+$title = $langs->trans('Status');
 
 $sql = 'SELECT p.rowid, p.ref, p.label, p.price';
 $sql .= ', p.price_ttc, p.price_base_type,p.fk_product_type';
@@ -212,7 +217,7 @@ if ($resql) {
     $head[1][0] = DOL_URL_ROOT.'/product/stock/replenishorders.php';
     $head[1][1] = $langs->trans("ReplenishmentOrders");
     $head[1][2] = 'replenishorders';
-    dol_fiche_head($head, 'replenish', $title, 0, 'stock');
+    dol_fiche_head($head, 'replenish', $langs->trans('Replenishment'), 0, 'stock');
     if ($sref || $snom || $sall || GETPOST('search', 'alpha')) {
         $filters = '&sref=' . $sref . '&snom=' . $snom;
         $filters .= '&amp;sall=' . $sall;
