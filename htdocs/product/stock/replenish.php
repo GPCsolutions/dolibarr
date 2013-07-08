@@ -422,13 +422,16 @@ if ($resql) {
             //virtual stock to compute the stock to buy value
             $stocktobuy = max($objp->desiredstock - $stock - $ordered, 0);
             $disabled = '';
-            if ($ordered > 0) {
-                $picto = img_picto('','tick');
-                if ($ordered + $stock >= $objp->desiredstock) {
+            if($ordered > 0) {
+                if($ordered + $stock >= $objp->desiredstock) {
+                    $picto = img_picto('', './img/yes', '', 1);
                     $disabled = 'disabled="disabled"';
                 }
+                else {
+                    $picto = img_picto('', './img/no', '', 1);
+                }
             } else {
-                $picto = img_picto('', 'stcomm-1');
+                $picto = img_picto('', './img/no', '', 1);
             }
             echo '<tr ' . $bc[$var] . '>',
                  '<td><input type="checkbox" class="check" name="' . $i . '"' . $disabled . '></td>',
@@ -455,13 +458,15 @@ if ($resql) {
 
             echo '<td align="right">' . $objp->desiredstock . '</td>',
                  '<td align="right">',
-                 $stock,
+                 $warning, $stock,
                  '</td>',
                  '<td align="right">',
-                 $ordered, ' ', $picto,
+                 '<a href="replenishorders.php?sproduct=' , $prod->id, '">',
+                 $ordered, '</a> ', $picto,
                  '</td>',
-                 '<td align="right">', $warning,
-                 '<input type="text" name="tobuy' . $i . '" value="' . $stocktobuy . '" ' . $disabled . '>',
+                 '<td align="right">',
+                 '<input type="text" name="tobuy' . $i .
+                 '" value="' . $stocktobuy . '" ' . $disabled . '>',
                  '</td>',
                  '<td align="right">',
                  $form->select_product_fourn_price($prod->id,
