@@ -973,10 +973,10 @@ function top_htmlhead($head, $title='', $disablejs=0, $disablehead=0, $arrayofjs
             else print '<link rel="stylesheet" type="text/css" href="'.DOL_URL_ROOT.'/includes/jquery/css/'.$jquerytheme.'/jquery-ui-latest.custom.css" />'."\n";    // JQuery
             print '<link rel="stylesheet" type="text/css" href="'.DOL_URL_ROOT.'/includes/jquery/plugins/tiptip/tipTip.css" />'."\n";                           // Tooltip
             print '<link rel="stylesheet" type="text/css" href="'.DOL_URL_ROOT.'/includes/jquery/plugins/jnotify/jquery.jnotify-alt.min.css" />'."\n";          // JNotify
-            if (! empty($conf->global->MAIN_USE_JQUERY_FILEUPLOAD) || (defined('REQUIRE_JQUERY_FILEUPLOAD') && constant('REQUIRE_JQUERY_FILEUPLOAD')))     // jQuery fileupload
+            /*if (! empty($conf->global->MAIN_USE_JQUERY_FILEUPLOAD) || (defined('REQUIRE_JQUERY_FILEUPLOAD') && constant('REQUIRE_JQUERY_FILEUPLOAD')))     // jQuery fileupload
             {
                 print '<link rel="stylesheet" type="text/css" href="'.DOL_URL_ROOT.'/includes/jquery/plugins/fileupload/css/jquery.fileupload-ui.css" />'."\n";
-            }
+            }*/
             if (! empty($conf->global->MAIN_USE_JQUERY_DATATABLES) || (defined('REQUIRE_JQUERY_DATATABLES') && constant('REQUIRE_JQUERY_DATATABLES')))     // jQuery datatables
             {
                 //print '<link rel="stylesheet" type="text/css" href="'.DOL_URL_ROOT.'/includes/jquery/plugins/datatables/css/jquery.dataTables.css" />'."\n";
@@ -1038,7 +1038,7 @@ function top_htmlhead($head, $title='', $disablejs=0, $disablehead=0, $arrayofjs
         		$filescss=(array) $filescss;	// To be sure filecss is an array
         		foreach($filescss as $cssfile)
         		{
-	        		// cssfile is a relative path
+        			// cssfile is a relative path
 	        		print '<!-- Includes CSS added by module '.$modcss. ' -->'."\n".'<link rel="stylesheet" type="text/css" title="default" href="'.dol_buildpath($cssfile,1);
 	        		// We add params only if page is not static, because some web server setup does not return content type text/css if url has parameters, so browser cache is not used.
 	        		if (!preg_match('/\.css$/i',$cssfile)) print $themeparam;
@@ -1139,8 +1139,7 @@ function top_htmlhead($head, $title='', $disablejs=0, $disablehead=0, $arrayofjs
                 print '<script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/plugins/fileupload/js/jquery.fileupload-jui.js"></script>'."\n";
                 print '<!-- The XDomainRequest Transport is included for cross-domain file deletion for IE8+ -->'."\n";
                 print '<!--[if gte IE 8]><script type="text/javascript" src="'.DOL_URL_ROOT.'/includes/jquery/plugins/fileupload/js/cors/jquery.xdr-transport.js"></script><![endif]-->'."\n";
-            }
-            */
+            }*/
             // jQuery DataTables
             if (! empty($conf->global->MAIN_USE_JQUERY_DATATABLES) || (defined('REQUIRE_JQUERY_DATATABLES') && constant('REQUIRE_JQUERY_DATATABLES')))
             {
@@ -1370,15 +1369,15 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
 
     if (empty($conf->dol_hide_topmenu))
     {
-	    print '<div id="tmenu_tooltip" class="tmenu">'."\n";
-
-	    // Show menu
+	    // Show menu entries
+    	print '<div id="tmenu_tooltip" class="tmenu">'."\n";
 	    $menumanager->atarget=$target;
 	    $menumanager->showmenu('top');      // This contains a \n
-
 	    print "</div>\n";
 
-	    // Link to login card
+	    $form=new Form($db);
+
+	    // Define link to login card
 	    $loginhtmltext=''; $logintext='';
 	    if ($user->societe_id)
 	    {
@@ -1421,33 +1420,40 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
 	    $logouthtmltext=$appli.' '.DOL_VERSION.'<br>';
 	    $logouthtmltext.=$langs->trans("Logout").'<br>';
 	    //$logouthtmltext.="<br>";
-	    if ($_SESSION["dol_authmode"] != 'forceuser'
-	    && $_SESSION["dol_authmode"] != 'http')
+	    if ($_SESSION["dol_authmode"] != 'forceuser' && $_SESSION["dol_authmode"] != 'http')
 	    {
 	        $logouttext .='<a href="'.DOL_URL_ROOT.'/user/logout.php"';
 	        //$logouttext .=empty($atarget?(' target="'.$atarget.'"'):'';
 	        $logouttext .='>';
-	        $logouttext .= img_picto($langs->trans('Logout'), 'logout.png', 'class="login"');
+	        $logouttext .= img_picto($langs->trans('Logout'), 'logout.png', 'class="login"', 0, 0, 1);
 	        $logouttext .='</a>';
 	    }
 	    else
 	    {
-	        $logouttext .= img_picto($langs->trans('Logout'), 'logout.png', 'class="login"');
+	        $logouttext .= img_picto($langs->trans('Logout'), 'logout.png', 'class="login"', 0, 0, 1);
 	    }
 
 	    print '<div class="login_block">'."\n";
-	    print '<table class="nobordernopadding" summary=""><tr>';
+	    //print '<table class="nobordernopadding" summary=""><tr>';
 
-	    $form=new Form($db);
+	    $toprightmenu.='<div class="login_block_user">';
+	    // Add login user link
+	    $toprightmenu.=$form->textwithtooltip('',$loginhtmltext,2,1,$logintext,'login_block_elem2',2);	// This include div class="login"
+		$toprightmenu.='</div>';
 
-	    $toprightmenu.=$form->textwithtooltip('',$loginhtmltext,2,1,$logintext,'',1);
-
-	    // Execute hook printTopRightMenu (hooks should output string like '<td><div class="login"><a href="">mylink</a></div></td>')
+	    $toprightmenu.='<div class="login_block_other">';
+		// Execute hook printTopRightMenu (hooks should output string like '<div class="login"><a href="">mylink</a></div>')
 	    $parameters=array();
-	    $toprightmenu.=$hookmanager->executeHooks('printTopRightMenu',$parameters);    // Note that $action and $object may have been modified by some hooks
+	    $result=$hookmanager->executeHooks('printTopRightMenu',$parameters);    // Note that $action and $object may have been modified by some hooks
+		if (is_numeric($result))
+		{
+			if (empty($result)) $toprightmenu.=$hookmanager->resPrint;		// add
+			else  $toprightmenu=$hookmanager->resPrint;						// replace
+		}
+		else $toprightmenu.=$result;	// For backward compatibility
 
 	    // Logout link
-	    $toprightmenu.=$form->textwithtooltip('',$logouthtmltext,2,1,$logouttext,'',1);
+	    $toprightmenu.=$form->textwithtooltip('',$logouthtmltext,2,1,$logouttext,'login_block_elem',2);
 
 	    // Link to print main content area
 	    if (empty($conf->global->MAIN_PRINT_DISABLELINK) && empty($conf->browser->phone))
@@ -1456,17 +1462,20 @@ function top_menu($head, $title='', $target='', $disablejs=0, $disablehead=0, $a
 	        $text ='<a href="'.$_SERVER["PHP_SELF"].'?'.$qs.($qs?'&amp;':'').'optioncss=print" target="_blank">';
 	        $text.= img_picto('', 'printer.png', 'class="printer"');
 	        $text.='</a>';
-	        $toprightmenu.=$form->textwithtooltip('',$langs->trans("PrintContentArea"),2,1,$text,'',1);
+	        $toprightmenu.=$form->textwithtooltip('',$langs->trans("PrintContentArea"),2,1,$text,'login_block_elem',2);
 	    }
+		$toprightmenu.='</div>';
 
 	    print $toprightmenu;
 
-	    print '</tr></table>'."\n";
+	    //print '</tr></table>'."\n";
 	    print "</div>\n";
+
+	    unset($form);
     }
 
     if (! empty($conf->use_javascript_ajax) && ! empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT)) print "</div><!-- End top layout -->\n";
-
+	print '<div style="clear: both;"></div>';
     print "<!-- End top horizontal menu -->\n\n";
 
     if (empty($conf->dol_hide_leftmenu) && (empty($conf->use_javascript_ajax) || empty($conf->global->MAIN_MENU_USE_JQUERY_LAYOUT))) print '<div id="id-container">';

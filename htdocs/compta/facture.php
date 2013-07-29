@@ -661,7 +661,8 @@ else if ($action == 'add' && $user->rights->facture->creer)
 	// Fill array 'array_options' with data from add form
 	$extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
 	$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
-
+	if($ret < 0)
+		$error++;
 
 	// Replacement invoice
 	if ($_POST['type'] == 1)
@@ -758,7 +759,7 @@ else if ($action == 'add' && $user->rights->facture->creer)
 					$product->fetch($_POST['idprod'.$i]);
 					$startday=dol_mktime(12, 0, 0, $_POST['date_start'.$i.'month'], $_POST['date_start'.$i.'day'], $_POST['date_start'.$i.'year']);
 					$endday=dol_mktime(12, 0, 0, $_POST['date_end'.$i.'month'], $_POST['date_end'.$i.'day'], $_POST['date_end'.$i.'year']);
-					$result=$object->addline($id,$product->description,$product->price, $_POST['qty'.$i], $product->tva_tx, $product->localtax1_tx, $product->localtax2_tx, $_POST['idprod'.$i], $_POST['remise_percent'.$i], $startday, $endday, 0, 0, '', $product->price_base_type, $product->price_ttc, $product->type);
+					$result=$object->addline($product->description,$product->price, $_POST['qty'.$i], $product->tva_tx, $product->localtax1_tx, $product->localtax2_tx, $_POST['idprod'.$i], $_POST['remise_percent'.$i], $startday, $endday, 0, 0, '', $product->price_base_type, $product->price_ttc, $product->type);
 				}
 			}
 		}
@@ -913,7 +914,6 @@ else if ($action == 'add' && $user->rights->facture->creer)
 						}
 
 						$result = $object->addline(
-							$id,
 							$langs->trans('Deposit'),
 							$amountdeposit, //subprice
 							1, //quantity
@@ -1016,7 +1016,6 @@ else if ($action == 'add' && $user->rights->facture->creer)
 									}
 
 									$result = $object->addline(
-										$id,
 										$desc,
 										$lines[$i]->subprice,
 										$lines[$i]->qty,
@@ -1093,7 +1092,7 @@ else if ($action == 'add' && $user->rights->facture->creer)
 						$product->fetch($_POST['idprod'.$i]);
 						$startday=dol_mktime(12, 0, 0, $_POST['date_start'.$i.'month'], $_POST['date_start'.$i.'day'], $_POST['date_start'.$i.'year']);
 						$endday=dol_mktime(12, 0, 0, $_POST['date_end'.$i.'month'], $_POST['date_end'.$i.'day'], $_POST['date_end'.$i.'year']);
-						$result=$object->addline($id,$product->description,$product->price, $_POST['qty'.$i], $product->tva_tx, $product->localtax1_tx, $product->localtax2_tx, $_POST['idprod'.$i], $_POST['remise_percent'.$i], $startday, $endday, 0, 0, '', $product->price_base_type, $product->price_ttc, $product->type);
+						$result=$object->addline($product->description,$product->price, $_POST['qty'.$i], $product->tva_tx, $product->localtax1_tx, $product->localtax2_tx, $_POST['idprod'.$i], $_POST['remise_percent'.$i], $startday, $endday, 0, 0, '', $product->price_base_type, $product->price_ttc, $product->type);
 					}
 				}
 			}
@@ -1311,7 +1310,6 @@ else if (($action == 'addline' || $action == 'addline_predef') && $user->rights-
 		{
 			// Insert line
 			$result = $object->addline(
-				$id,
 				$desc,
 				$pu_ht,
 				GETPOST('qty'),
@@ -1909,24 +1907,32 @@ if ($action == 'update_extras')
 	// Fill array 'array_options' with data from add form
 	$extralabels=$extrafields->fetch_name_optionals_label($object->table_element);
 	$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
+	if($ret < 0)
+		$error++;
 
-	// Actions on extra fields (by external module or standard code)
-	// FIXME le hook fait double emploi avec le trigger !!
-	$hookmanager->initHooks(array('invoicedao'));
-	$parameters=array('id'=>$object->id);
-	$reshook=$hookmanager->executeHooks('insertExtraFields',$parameters,$object,$action); // Note that $action and $object may have been modified by some hooks
-	if (empty($reshook))
-	{
-		if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
+	if(!$error) {
+		// Actions on extra fields (by external module or standard code)
+		// FIXME le hook fait double emploi avec le trigger !!
+		$hookmanager->initHooks(array('invoicedao'));
+		$parameters=array('id'=>$object->id);
+		$reshook=$hookmanager->executeHooks('insertExtraFields',$parameters,$object,$action); // Note that $action and $object may have been modified by some hooks
+		if (empty($reshook))
 		{
-			$result=$object->insertExtraFields();
-			if ($result < 0)
+			if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
 			{
-				$error++;
+				$result=$object->insertExtraFields();
+				if ($result < 0)
+				{
+					$error++;
+				}
 			}
 		}
+		else if ($reshook < 0) $error++;
 	}
-	else if ($reshook < 0) $error++;
+	else
+	{
+		$action = 'edit_extras';
+	}
 
 }
 
@@ -2256,7 +2262,7 @@ if ($action == 'create')
 	print '</td></tr>';
 
 	// Payment term
-	print '<tr><td nowrap>'.$langs->trans('PaymentConditionsShort').'</td><td colspan="2">';
+	print '<tr><td class="nowrap">'.$langs->trans('PaymentConditionsShort').'</td><td colspan="2">';
 	$form->select_conditions_paiements(isset($_POST['cond_reglement_id'])?$_POST['cond_reglement_id']:$cond_reglement_id,'cond_reglement_id');
 	print '</td></tr>';
 
@@ -3766,7 +3772,14 @@ else if ($id > 0 || ! empty($ref))
 				$formmail->withto=GETPOST('sendto')?GETPOST('sendto'):$liste;
 				$formmail->withtocc=$liste;
 				$formmail->withtoccc=$conf->global->MAIN_EMAIL_USECCC;
-				$formmail->withtopic=$langs->transnoentities($topicmail,'__FACREF__');
+				if(empty($object->ref_client))
+				{
+					$formmail->withtopic=$langs->transnoentities($topicmail,'__FACREF__');
+				}
+				else if(!empty($object->ref_client))
+				{
+					$formmail->withtopic=$langs->transnoentities($topicmail,'__FACREF__(__REFCLIENT__)');
+				}
 				$formmail->withfile=2;
 				$formmail->withbody=1;
 				$formmail->withdeliveryreceipt=1;
@@ -3774,6 +3787,7 @@ else if ($id > 0 || ! empty($ref))
 				// Tableau des substitutions
 				$formmail->substit['__FACREF__']=$object->ref;
 				$formmail->substit['__SIGNATURE__']=$user->signature;
+				$formmail->substit['__REFCLIENT__']=$object->ref_client;
 				$formmail->substit['__PERSONALIZED__']='';
 				$formmail->substit['__CONTACTCIVNAME__']='';
 

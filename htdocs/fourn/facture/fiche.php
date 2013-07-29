@@ -48,6 +48,7 @@ if (!empty($conf->projet->enabled)) {
 $langs->load('bills');
 $langs->load('suppliers');
 $langs->load('companies');
+$langs->load('products');
 
 $mesg='';
 $errors=array();
@@ -141,7 +142,8 @@ elseif ($action == 'confirm_valid' && $confirm == 'yes' && $user->rights->fourni
         $result = $object->validate($user,'',$idwarehouse);
         if ($result < 0)
         {
-            $mesg='<div class="error">'.$object->error.'</div>';
+            setEventMessage($object->error,'errors');
+            setEventMessage($object->errors,'errors');
         }
     }
 }
@@ -1173,7 +1175,7 @@ if ($action == 'create')
 	if (! empty($conf->projet->enabled))
 	{
 		$formproject=new FormProjets($db);
-		
+
 		$langs->load('projects');
 		print '<tr><td>'.$langs->trans('Project').'</td><td colspan="2">';
 		$formproject->select_projects(-1, $projectid, 'projectid');
@@ -1402,7 +1404,7 @@ else
          */
         print '<table class="border" width="100%">';
 
-        $linkback = '<a href="'.DOL_URL_ROOT.'/fourn/facture/index.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
+        $linkback = '<a href="'.DOL_URL_ROOT.'/fourn/facture/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
         // Ref
         print '<tr><td class="nowrap" width="20%">'.$langs->trans("Ref").'</td><td colspan="4">';
@@ -1417,7 +1419,7 @@ else
 
         // Third party
         print '<tr><td>'.$langs->trans('Supplier').'</td><td colspan="4">'.$societe->getNomUrl(1);
-        print ' &nbsp; (<a href="'.DOL_URL_ROOT.'/fourn/facture/index.php?socid='.$object->socid.'">'.$langs->trans('OtherBills').'</a>)</td>';
+        print ' &nbsp; (<a href="'.DOL_URL_ROOT.'/fourn/facture/list.php?socid='.$object->socid.'">'.$langs->trans('OtherBills').'</a>)</td>';
         print '</tr>';
 
         // Type

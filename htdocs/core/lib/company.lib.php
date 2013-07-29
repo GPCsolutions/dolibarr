@@ -86,12 +86,6 @@ function societe_prepare_head($object)
 
     if ($user->societe_id == 0)
     {
-    	// Notes
-        $head[$h][0] = DOL_URL_ROOT.'/societe/note.php?id='.$object->id;
-        $head[$h][1] = $langs->trans("Note");
-        $head[$h][2] = 'note';
-        $h++;
-
         if (! empty($conf->commande->enabled) || ! empty($conf->propal->enabled) || ! empty($conf->facture->enabled) || ! empty($conf->fournisseur->enabled))
         {
 	        $head[$h][0] = DOL_URL_ROOT.'/societe/consumption.php?socid='.$object->id;
@@ -99,13 +93,7 @@ function societe_prepare_head($object)
 	        $head[$h][2] = 'consumption';
 	        $h++;
         }
-
-        // Attached files
-        $head[$h][0] = DOL_URL_ROOT.'/societe/document.php?socid='.$object->id;
-        $head[$h][1] = $langs->trans("Documents");
-        $head[$h][2] = 'document';
-        $h++;
-
+		
         // Notifications
         if (! empty($conf->notification->enabled))
         {
@@ -114,6 +102,26 @@ function societe_prepare_head($object)
         	$head[$h][2] = 'notify';
         	$h++;
         }
+		
+		// Notes
+        $nbNote = 0;
+        if(!empty($object->note_private)) $nbNote++;
+		if(!empty($object->note_public)) $nbNote++;
+        $head[$h][0] = DOL_URL_ROOT.'/societe/note.php?id='.$object->id;
+        $head[$h][1] = $langs->trans("Note");
+		if($nbNote > 0) $head[$h][1].= ' ('.$nbNote.')';
+        $head[$h][2] = 'note';
+        $h++;
+
+        // Attached files
+        require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+        $upload_dir = $conf->societe->dir_output . "/" . $object->id;
+        $nbFiles = count(dol_dir_list($upload_dir));
+        $head[$h][0] = DOL_URL_ROOT.'/societe/document.php?socid='.$object->id;
+        $head[$h][1] = $langs->trans("Documents");
+		if($nbFiles > 0) $head[$h][1].= ' ('.$nbFiles.')';
+        $head[$h][2] = 'document';
+        $h++;
     }
 
     // Log
@@ -528,7 +536,9 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
 
     print "\n".'<table class="noborder" width="100%">'."\n";
 
-    print '<tr class="liste_titre"><td>'.$langs->trans("Name").'</td>';
+    $colspan=6;
+    print '<tr class="liste_titre">';
+    print '<td>'.$langs->trans("Name").'</td>';
     print '<td>'.$langs->trans("Poste").'</td>';
     print '<td>'.$langs->trans("PhonePro").'</td>';
     print '<td>'.$langs->trans("PhoneMobile").'</td>';
@@ -537,6 +547,7 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
     print "<td>&nbsp;</td>";
     if (! empty($conf->agenda->enabled) && $user->rights->agenda->myactions->create)
     {
+    	$colspan++;
         print '<td>&nbsp;</td>';
     }
     print "</tr>";
@@ -614,9 +625,9 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
     }
     else
     {
-        //print "<tr ".$bc[$var].">";
-        //print '<td>'.$langs->trans("NoContactsYetDefined").'</td>';
-        //print "</tr>\n";
+        print "<tr ".$bc[$var].">";
+        print '<td colspan="'.$colspan.'">'.$langs->trans("None").'</td>';
+        print "</tr>\n";
     }
     print "\n</table>\n";
 

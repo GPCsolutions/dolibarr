@@ -313,6 +313,11 @@ foreach ($dirmodels as $reldir)
                         $filebis = $file."/".$file.".modules.php";
                         $classname = "mod_facture_".$file;
                     }
+                    // Check if there is a filter on country
+                    preg_match('/\-(.*)_(.*)$/',$classname,$reg);
+                    if (! empty($reg[2]) && $reg[2] != strtoupper($mysoc->country_code)) continue;
+                    
+                    $classname = preg_replace('/\-.*$/','',$classname);
                     if (! class_exists($classname) && is_readable($dir.$filebis) && (preg_match('/mod_/',$filebis) || preg_match('/mod_/',$classname)) && substr($filebis, dol_strlen($filebis)-3, 3) == 'php')
                     {
                         // Chargement de la classe de numerotation
@@ -328,7 +333,7 @@ foreach ($dirmodels as $reldir)
                         {
                             $var = !$var;
                             print '<tr '.$bc[$var].'><td width="100">';
-                            echo preg_replace('/mod_facture_/','',preg_replace('/\.php$/','',$file));
+                            echo preg_replace('/\-.*$/','',preg_replace('/mod_facture_/','',preg_replace('/\.php$/','',$file)));
                             print "</td><td>\n";
 
                             print $module->info();
@@ -604,7 +609,7 @@ if (! empty($conf->banque->enabled))
     $sql.= " FROM ".MAIN_DB_PREFIX."bank_account";
     $sql.= " WHERE clos = 0";
     $sql.= " AND courant = 1";
-    $sql.= " AND entity = ".$conf->entity;
+    $sql.= " AND entity IN (".getEntity('bank_account', 1).")";
     $resql=$db->query($sql);
     if ($resql)
     {

@@ -16,7 +16,7 @@
  */
 
 /**
- *	\file       htdocs/core/boxes/box_order_permonth.php
+ *	\file       htdocs/core/boxes/box_graph_orders_permonth.php
  *	\ingroup    commandes
  *	\brief      Box to show graph of orders per month
  */
@@ -29,7 +29,7 @@ include_once DOL_DOCUMENT_ROOT.'/core/boxes/modules_boxes.php';
 class box_graph_orders_permonth extends ModeleBoxes
 {
 	var $boxcode="orderspermonth";
-	var $boximg="object_bill";
+	var $boximg="object_order";
 	var $boxlabel="BoxCustomersOrdersPerMonth";
 	var $depends = array("commande");
 
@@ -74,10 +74,10 @@ class box_graph_orders_permonth extends ModeleBoxes
 				'text' => $text,
 				'limit'=> dol_strlen($text),
 				'graph'=> 1,
-				'sublink'=>$_SERVER["PHP_SELF"].'?action='.$refreshaction,
-				'subtext'=>$langs->trans("Refresh"),
-				'subpicto'=>'refresh.png',
-				'target'=>'none'
+				'sublink'=>'',
+				'subtext'=>$langs->trans("Filter"),
+				'subpicto'=>'filter.png',
+				'target'=>'none'	// Set '' to get target="_blank"
 		);
 
 		if ($user->rights->commande->lire)
@@ -88,11 +88,11 @@ class box_graph_orders_permonth extends ModeleBoxes
 			$shownb=(! empty($conf->global->COMMANDE_BOX_GRAPH_SHOW_NB));
 			$showtot=(! isset($conf->global->COMMANDE_BOX_GRAPH_SHOW_TOT) || ! empty($conf->global->COMMANDE_BOX_GRAPH_SHOW_TOT));
 			$nowarray=dol_getdate(dol_now(),true);
-			$endyear=$nowarray['year'];
+			$endyear=(GETPOST('param'.$this->boxcode.'year')?GETPOST('param'.$this->boxcode.'year','int'):$nowarray['year']);
 			$startyear=$endyear-1;
 			$mode='customer';
 			$userid=0;
-			$WIDTH='256';
+			$WIDTH=($shownb && $showtot)?'256':'320';
 			$HEIGHT='192';
 
 			$stats = new CommandeStats($this->db, 0, $mode, ($userid>0?$userid:0));
@@ -175,9 +175,23 @@ class box_graph_orders_permonth extends ModeleBoxes
 
 			if (! $mesg)
 			{
+				$stringtoshow='';
+				$stringtoshow.='<script type="text/javascript" language="javascript">
+					jQuery(document).ready(function() {
+						jQuery("#idsubimg'.$this->boxcode.'").click(function() {
+							jQuery("#idfilter'.$this->boxcode.'").toggle();
+						});
+					});
+					</script>';
+				$stringtoshow.='<div class="center hideobject" id="idfilter'.$this->boxcode.'">';
+				$stringtoshow.=$langs->trans("Year").' <input class="flat" size="4" type="text" value="'.$endyear.'">';
+				$stringtoshow.='<a href="'.$_SERVER["PHP_SELF"].'?action='.$refreshaction.'">';
+				$stringtoshow.=img_picto($langs->trans("Refresh"),'refresh.png');
+				$stringtoshow.='</a>';
+				$stringtoshow.='</div>';
 				if ($shownb && $showtot)
 				{
-					$stringtoshow ='<div class="fichecenter">';
+					$stringtoshow.='<div class="fichecenter">';
 					$stringtoshow.='<div class="fichehalfleft">';
 				}
 				if ($shownb) $stringtoshow.=$px1->show();
@@ -192,11 +206,11 @@ class box_graph_orders_permonth extends ModeleBoxes
 					$stringtoshow.='</div>';
 					$stringtoshow.='</div>';
 				}
-				$this->info_box_contents[0][0] = array('td' => 'align="center"','textnoformat'=>$stringtoshow);
+				$this->info_box_contents[0][0] = array('td' => 'align="center" class="nohover"','textnoformat'=>$stringtoshow);
 			}
 			else
 			{
-				$this->info_box_contents[0][0] = array(	'td' => 'align="left"',
+				$this->info_box_contents[0][0] = array(	'td' => 'align="left" class="nohover"',
     	        										'maxlength'=>500,
 	            										'text' => $mesg);
 			}

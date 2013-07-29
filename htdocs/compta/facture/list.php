@@ -64,6 +64,7 @@ $search_ref=GETPOST('sf_ref')?GETPOST('sf_ref','alpha'):GETPOST('search_ref','al
 $search_societe=GETPOST('search_societe','alpha');
 $search_montant_ht=GETPOST('search_montant_ht','alpha');
 $search_montant_ttc=GETPOST('search_montant_ttc','alpha');
+$search_status=GETPOST('search_status','alpha');
 
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
@@ -91,9 +92,6 @@ $fieldid = (! empty($ref)?'facnumber':'rowid');
 if (! empty($user->societe_id)) $socid=$user->societe_id;
 $result = restrictedArea($user, 'facture', $id,'','','fk_soc',$fieldid);
 
-// FIXME $usehm not used ?
-$usehm=(! empty($conf->global->MAIN_USE_HOURMIN_IN_DATE_RANGE)?$conf->global->MAIN_USE_HOURMIN_IN_DATE_RANGE:false);
-
 $object=new Facture($db);
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
@@ -119,6 +117,8 @@ if (GETPOST("button_removefilter_x"))
     $search_refcustomer='';
     $search_societe='';
     $search_montant_ht='';
+    $search_montant_ttc='';
+    $search_status='';
     $year='';
     $month='';
 }
@@ -187,6 +187,10 @@ if ($search_montant_ht)
 if ($search_montant_ttc)
 {
     $sql.= ' AND f.total_ttc = \''.$db->escape(price2num(trim($search_montant_ttc))).'\'';
+}
+if ($search_status != '')
+{
+	$sql.= " AND f.fk_statut = '".$db->escape($search_status)."'";
 }
 if ($month > 0)
 {

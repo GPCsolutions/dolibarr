@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2003		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
- * Copyright (c) 2008-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (c) 2008-2013	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2012		Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2012       Marcos García           <marcosgdf@gmail.com>
  *
@@ -31,7 +31,7 @@ abstract class Stats
 {
 	protected $db;
 	var $_lastfetchdate=array();	// Dates of cache file read by methods
-
+	var $cachefilesuffix='';		// Suffix to add to name of cache file (to avoid file name conflicts) 
 
 	/**
 	 * Return nb of elements by month for several years
@@ -56,7 +56,7 @@ abstract class Stats
 	    	include_once DOL_DOCUMENT_ROOT.'/core/lib/json.lib.php';
 	    }
 
-		$newpathofdestfile=$conf->user->dir_temp.'/'.get_class($this).'_'.__FUNCTION__.'_'.$langs->defaultlang.'_user'.$user->id.'.cache';
+		$newpathofdestfile=$conf->user->dir_temp.'/'.get_class($this).'_'.__FUNCTION__.'_'.(empty($this->cachefilesuffix)?'':$this->cachefilesuffix.'_').$langs->defaultlang.'_user'.$user->id.'.cache';
 		$newmask='0644';
 
 		$nowgmt = dol_now();
@@ -76,7 +76,7 @@ abstract class Stats
 				dol_syslog(get_class($this).'_'.__FUNCTION__." cache file ".$newpathofdestfile." is not found or older than now - cachedelay (".$nowgmt." - ".$cachedelay.") so we can't use it.");
 			}
 		}
-
+		
 		// Load file into $data
 		if ($foundintocache)    // Cache file found and is not too old
 		{
@@ -147,7 +147,7 @@ abstract class Stats
         	include_once DOL_DOCUMENT_ROOT.'/core/lib/json.lib.php';
         }
 
-        $newpathofdestfile=$conf->user->dir_temp.'/'.get_class($this).'_'.__FUNCTION__.'_'.$langs->defaultlang.'_user'.$user->id.'.cache';
+        $newpathofdestfile=$conf->user->dir_temp.'/'.get_class($this).'_'.__FUNCTION__.'_'.(empty($this->cachefilesuffix)?'':$this->cachefilesuffix.'_').$langs->defaultlang.'_user'.$user->id.'.cache';
         $newmask='0644';
 
         $nowgmt = dol_now();
@@ -184,14 +184,14 @@ abstract class Stats
 			}
 
 			$data = array();
-
+			// $data = array('xval'=>array(0=>xlabel,1=>yval1,2=>yval2...),...)
 			for ($i = 0 ; $i < 12 ; $i++)
 			{
-				$data[$i][]=$datay[$endyear][$i][0];
+				$data[$i][]=$datay[$endyear][$i][0];	// set label
 				$year=$startyear;
 				while($year <= $endyear)
 				{
-					$data[$i][]=$datay[$year][$i][1];
+					$data[$i][]=$datay[$year][$i][1];	// set yval for x=i
 					$year++;
 				}
 			}
@@ -417,8 +417,7 @@ abstract class Stats
 	 *	   Renvoie le montant moyen par mois pour une annee donnee
 	 *
      *     @param	int		$year       Year
-     *     @param  string	$sql        SQL
-     *     @param	int		$format		0=Label of absiss is a translated text, 1=Label of absiss is a number
+     *     @param  	string	$sql        SQL
      *     @return	array
 	 */
 	function _getAverageByMonth($year, $sql)

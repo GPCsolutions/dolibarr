@@ -33,6 +33,10 @@ $sref=GETPOST('search_ref');
 $snom=GETPOST('search_nom');
 $suser=GETPOST('search_user');
 $sttc=GETPOST('search_ttc');
+$search_ref=GETPOST('search_ref');
+$search_nom=GETPOST('search_nom');
+$search_user=GETPOST('search_user');
+$search_ttc=GETPOST('search_ttc');
 $sall=GETPOST('search_all');
 
 $page  = GETPOST('page','int');
@@ -119,17 +123,21 @@ if ($resql)
 	$num = $db->num_rows($resql);
 	$i = 0;
 
-
-	print_barre_liste($title, $page, "liste.php", "", $sortfield, $sortorder, '', $num);
-	print '<form action="liste.php" method="GET">';
+	$param="";
+	if ($search_ref)   $param.="&search_ref=".$search_ref;
+	if ($search_nom)   $param.="&search_nom=".$search_nom;
+	if ($search_user)  $param.="&search_user=".$search_user;
+	if ($search_ttc)   $param.="&search_ttc=".$search_ttc;
+	print_barre_liste($title, $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, '', $num);
+	print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 	print '<table class="noborder" width="100%">';
 	print '<tr class="liste_titre">';
-	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"cf.ref","","",'',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","","",'',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Author"),$_SERVER["PHP_SELF"],"u.login","","",'',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("AmountTTC"),$_SERVER["PHP_SELF"],"total_ttc","","",'',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("OrderDate"),$_SERVER["PHP_SELF"],"dc","","",'align="center"',$sortfield,$sortorder);
-	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"cf.fk_statut","","",'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"cf.ref","",$param,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","",$param,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Author"),$_SERVER["PHP_SELF"],"u.login","",$param,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("AmountTTC"),$_SERVER["PHP_SELF"],"total_ttc","",$param,$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("OrderDate"),$_SERVER["PHP_SELF"],"dc","",$param,'align="center"',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"cf.fk_statut","",$param,'align="right"',$sortfield,$sortorder);
 	print "</tr>\n";
 
 	print '<tr class="liste_titre">';

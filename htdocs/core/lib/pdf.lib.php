@@ -199,8 +199,8 @@ function pdf_getInstance($format='',$metric='mm',$pagetype='P')
 			{
 				$this->SetXY($x,$y);
 				$val=str_replace('<br>',"\n",$html);
-				$val=dol_string_nohtmltag($val,false,'ISO-8859-1');
-				//print 'eee'.$val;exit;
+				//$val=dol_string_nohtmltag($val,false,'ISO-8859-1');
+				$val=dol_string_nohtmltag($val,false,'UTF-8');
 				$this->MultiCell($w,$h,$val,$border,$align,$fill);
 			}
 		}
@@ -261,13 +261,14 @@ function pdf_getPDFFontSize($outputlangs)
  * Return height to use for Logo onot PDF
  *
  * @param	string		$logo		Full path to logo file to use
+ * @param	bool		$url		Image with url (true or false)
  * @return	number
  */
-function pdf_getHeightForLogo($logo)
+function pdf_getHeightForLogo($logo, $url = false)
 {
 	$height=22; $maxwidth=130;
 	include_once DOL_DOCUMENT_ROOT.'/core/lib/images.lib.php';
-	$tmp=dol_getImageSize($logo);
+	$tmp=dol_getImageSize($logo, $url);
 	if ($tmp['height'])
 	{
 		$width=round($height*$tmp['width']/$tmp['height']);
@@ -457,19 +458,24 @@ function pdf_watermark(&$pdf, $outputlangs, $h, $w, $unit, $text)
 	elseif ($unit=='cm') $k=72/2.54;
 	elseif ($unit=='in') $k=72;
 
-	$watermark_angle=atan($h/$w);
-	$watermark_x=5;
-	$watermark_y=$h-50; // We must be sure to not print into margins
-	$watermark_width=$h;
-	$pdf->SetFont('','B',50);
+	$savx=$pdf->getX(); $savy=$pdf->getY();
+	
+	$watermark_angle=atan($h/$w)/2;
+	$watermark_x_pos=0;
+	$watermark_y_pos=$h/3;
+	$watermark_x=$w/2;
+	$watermark_y=$h/3;
+	$pdf->SetFont('','B',40);
 	$pdf->SetTextColor(255,192,203);
 	//rotate
 	$pdf->_out(sprintf('q %.5F %.5F %.5F %.5F %.2F %.2F cm 1 0 0 1 %.2F %.2F cm',cos($watermark_angle),sin($watermark_angle),-sin($watermark_angle),cos($watermark_angle),$watermark_x*$k,($h-$watermark_y)*$k,-$watermark_x*$k,-($h-$watermark_y)*$k));
 	//print watermark
-	$pdf->SetXY($watermark_x,$watermark_y);
-	$pdf->Cell($watermark_width,25,$outputlangs->convToOutputCharset($text),0,2,"C",0);
+	$pdf->SetXY($watermark_x_pos,$watermark_y_pos);
+	$pdf->Cell($w-20,25,$outputlangs->convToOutputCharset($text),"",2,"C",0);
 	//antirotate
 	$pdf->_out('Q');
+
+	$pdf->SetXY($savx,$savy);
 }
 
 
@@ -1550,6 +1556,37 @@ function pdf_getLinkedObjects($object,$outputlangs)
 	}
 
 	return $linkedobjects;
+}
+
+/**
+ * Return dimensions to use for images onto PDF checking that width and height are not higher than
+ * maximum (16x32 by default).
+ *
+ * @param	string		$realpath		Full path to photo file to use
+ * @return	array						Height and width to use to output image (in pdf user unit, so mm)
+ */
+function pdf_getSizeForImage($realpath)
+{
+	global $conf;
+
+	$maxwidth=(empty($conf->global->MAIN_DOCUMENTS_WITH_PICTURE_WIDTH)?16:$conf->global->MAIN_DOCUMENTS_WITH_PICTURE_WIDTH);
+	$maxheight=(empty($conf->global->MAIN_DOCUMENTS_WITH_PICTURE_HEIGHT)?32:$conf->global->MAIN_DOCUMENTS_WITH_PICTURE_HEIGHT);
+	include_once DOL_DOCUMENT_ROOT.'/core/lib/images.lib.php';
+	$tmp=dol_getImageSize($realpath);
+	if ($tmp['height'])
+	{
+		$width=(int) round($maxheight*$tmp['width']/$tmp['height']);	// I try to use maxheight
+		if ($width > $maxwidth)	// Pb with maxheight, so i use maxwidth
+		{
+			$width=$maxwidth;
+			$height=(int) round($maxwidth*$tmp['height']/$tmp['width']);
+		}
+		else	// No pb with maxheight
+		{
+			$height=$maxheight;
+		}
+	}
+	return array('width'=>$width,'height'=>$height);
 }
 
 ?>

@@ -120,7 +120,8 @@ class FactureFournisseur extends CommonInvoice
 		$error=0;
         $now=dol_now();
 
-        // Clear parameters
+        // Clean parameters
+        if (isset($this->ref_supplier)) $this->ref_supplier=trim($this->ref_supplier);
         if (empty($this->date)) $this->date=$now;
 
         $socid = $this->socid;
@@ -616,6 +617,13 @@ class FactureFournisseur extends CommonInvoice
         else {
         	$error++;
         }
+		
+		if (! $error)
+		{
+			// Delete linked object
+			$res = $this->deleteObjectLinked();
+			if ($res < 0) $error++;
+		}
 
         if (! $error)
         {
@@ -1422,11 +1430,10 @@ class FactureFournisseur extends CommonInvoice
         }
 
         $obj = new $classname();
-
         $numref = "";
         $numref = $obj->getNumRef($soc,$this,$mode);
 
-        if ( $numref != "")
+        if ($numref != "")
         {
         	return $numref;
         }

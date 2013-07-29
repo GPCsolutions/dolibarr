@@ -971,7 +971,7 @@ class Form
 
             if ($conf->use_javascript_ajax && $conf->global->CONTACT_USE_SEARCH_TO_SELECT && ! $forcecombo && ! $options_only)
             {
-            	$out.= ajax_combobox($htmlname, $event);
+            	$out.= ajax_combobox($htmlname, $event, $conf->global->CONTACT_USE_SEARCH_TO_SELECT);
             }
 
             if ($htmlname != 'none' || $options_only) $out.= '<select class="flat'.($moreclass?' '.$moreclass:'').'" id="'.$htmlname.'" name="'.$htmlname.'">';
@@ -1061,6 +1061,7 @@ class Form
      * 	@param	int		$enableonly		Array list of users id to be enabled. All other must be disabled
      *  @param	int		$force_entity	0 or Id of environment to force
      * 	@return	void
+     *  @deprecated
      */
     function select_users($selected='',$htmlname='userid',$show_empty=0,$exclude='',$disabled=0,$include='',$enableonly='',$force_entity=0)
     {
@@ -1079,9 +1080,10 @@ class Form
      * 	@param	array	$enableonly		Array list of users id to be enabled. All other must be disabled
      *  @param	int		$force_entity	0 or Id of environment to force
      *  @param	int		$maxlength		Maximum length of string into list (0=no limit)
+     *  @param	int		$showstatus		0=show user status only if status is disabled, 1=always show user status into label, -1=never show user status
      * 	@return	string					HTML select string
      */
-    function select_dolusers($selected='', $htmlname='userid', $show_empty=0, $exclude='', $disabled=0, $include='', $enableonly='', $force_entity=0, $maxlength=0)
+    function select_dolusers($selected='', $htmlname='userid', $show_empty=0, $exclude='', $disabled=0, $include='', $enableonly='', $force_entity=0, $maxlength=0, $showstatus=0)
     {
         global $conf,$user,$langs;
 
@@ -1096,7 +1098,7 @@ class Form
         $out='';
 
         // On recherche les utilisateurs
-        $sql = "SELECT DISTINCT u.rowid, u.lastname as lastname, u.firstname, u.login, u.admin, u.entity";
+        $sql = "SELECT DISTINCT u.rowid, u.lastname as lastname, u.firstname, u.statut, u.login, u.admin, u.entity";
         if (! empty($conf->multicompany->enabled) && $conf->entity == 1 && $user->admin && ! $user->entity)
         {
             $sql.= ", e.label";
@@ -1164,16 +1166,42 @@ class Form
                     }
 
                     $out.= $userstatic->getFullName($langs, 0, 0, $maxlength);
-
+                    // Complete name with more info
+                    $moreinfo=0;
+                    if (! empty($conf->global->MAIN_SHOW_LOGIN))
+                    {
+                    	$out.= ($moreinfo?' - ':' (').$obj->login;
+                    	$moreinfo++;
+                    }
+                    if ($showstatus >= 0)
+                    {
+                    	if ($obj->statut == 1 && $showstatus == 1)
+                    	{
+                    		$out.=($moreinfo?' - ':' (').$langs->trans('Enabled');
+                    		$moreinfo++;
+                    	}
+						if ($obj->statut == 0)
+						{
+							$out.=($moreinfo?' - ':' (').$langs->trans('Disabled');
+							$moreinfo++;
+						}
+					}
                     if (! empty($conf->multicompany->enabled) && empty($conf->multicompany->transverse_mode) && $conf->entity == 1 && $user->admin && ! $user->entity)
                     {
-                        if ($obj->admin && ! $obj->entity) $out.=" (".$langs->trans("AllEntities").")";
-                        else $out.=" (".$obj->label.")";
+                        if ($obj->admin && ! $obj->entity)
+                        {
+                        	$out.=($moreinfo?' - ':' (').$langs->trans("AllEntities");
+                        	$moreinfo++;
+                        }
+                        else
+                     {
+                        	$out.=($moreinfo?' - ':' (').$obj->label;
+                        	$moreinfo++;
+                     	}
                     }
-
-                    //if ($obj->admin) $out.= ' *';
-                    if (! empty($conf->global->MAIN_SHOW_LOGIN)) $out.= ' ('.$obj->login.')';
+					$out.=($moreinfo?')':'');
                     $out.= '</option>';
+
                     $i++;
                 }
             }
@@ -1411,16 +1439,16 @@ class Form
     }
 
     /**
-     * _construct_product_list_option
+     * constructProductListOption
      *
-     * @param 	resultset		&$objp			Resultset of fetch
-     * @param 	string		$opt			Option
-     * @param 	string		$optJson		Option
+     * @param 	resultset	&$objp			Resultset of fetch
+     * @param 	string		&$opt			Option
+     * @param 	string		&$optJson		Option
      * @param 	int			$price_level	Price level
      * @param 	string		$selected		Preselected value
-     * @return
+     * @return	void
      */
-	private function _construct_product_list_option(&$objp, &$opt, &$optJson, $price_level, $selected)
+	private function constructProductListOption(&$objp, &$opt, &$optJson, $price_level, $selected)
 	{
 		global $langs,$conf,$user,$db;
 
@@ -1475,7 +1503,7 @@ class Form
             $sql.= " ORDER BY date_price";
             $sql.= " DESC LIMIT 1";
 
-            dol_syslog(get_class($this)."::_construct_product_list_option search price for level '.$price_level.' sql=".$sql);
+            dol_syslog(get_class($this)."::constructProductListOption search price for level '.$price_level.' sql=".$sql);
             $result2 = $this->db->query($sql);
             if ($result2)
             {
@@ -2326,7 +2354,7 @@ class Form
         $sql = "SELECT rowid, label, bank";
         $sql.= " FROM ".MAIN_DB_PREFIX."bank_account";
         $sql.= " WHERE clos = '".$statut."'";
-        $sql.= " AND entity = ".$conf->entity;
+        $sql.= " AND entity IN (".getEntity('bank_account', 1).")";
         if ($filtre) $sql.=" AND ".$filtre;
         $sql.= " ORDER BY label";
 
@@ -2590,6 +2618,7 @@ class Form
                          		$.each(inputok, function(i, inputname) {
                          			var more = "";
                          			if ($("#" + inputname).attr("type") == "checkbox") { more = ":checked"; }
+                         		    if ($("#" + inputname).attr("type") == "radio") { more = ":checked"; }
                          			var inputvalue = $("#" + inputname + more).val();
                          			if (typeof inputvalue == "undefined") { inputvalue=""; }
                          			options += "&" + inputname + "=" + inputvalue;

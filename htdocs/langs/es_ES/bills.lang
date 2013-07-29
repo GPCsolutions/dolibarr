@@ -389,6 +389,8 @@ AllCompletelyPayedInvoiceWillBeClosed=Todas las facturas con un resto a pagar 0 
 ToMakePayment=Pagar
 ToMakePaymentBack=Reembolsar
 ListOfYourUnpaidInvoices=Listado de facturas impagadas
+NoteListOfYourUnpaidInvoices=Nota: Este listado incluye solamente los terceros de los que usted es comercial.
+RevenueStamp=Timbre fiscal
 ##### Types de contacts #####
 TypeContact_facture_internal_SALESREPFOLL=Responsable seguimiento factura a cliente
 TypeContact_facture_external_BILLING=Contacto cliente facturación
@@ -404,3 +406,4 @@ PDFCrabeDescription=Modelo de factura completo (modelo recomendado por defecto)
 PDFOursinDescription=Modelo de factura completo (modelo alternativo)
 # NumRef Modules
 TerreNumRefModelDesc1=Devuelve el número bajo el formato %syymm-nnnn para las facturas y %syymm-nnnn para los abonos donde yy es el año, mm. el mes y nnnn un contador secuencial sin ruptura y sin permanencia a 0
+MarsNumRefModelDesc1=Devuelve el número bajo el formato %syymm-nnnn para las facturas, %syymm-nnnn para las facturas rectificativas, %syymm-nnnn para las facturas proforma y %syymm-nnnn para los abonos donde yy es el año, mm. el mes y nnnn un contador secuencial sin ruptura y sin permanencia a 0

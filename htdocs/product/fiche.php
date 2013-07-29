@@ -453,7 +453,6 @@ if (empty($reshook))
         }
 
         $result = $propal->addline(
-            $propal->id,
             $desc,
             $pu_ht,
             GETPOST('qty'),
@@ -527,7 +526,6 @@ if (empty($reshook))
         }
 
         $result =  $commande->addline(
-            $commande->id,
             $desc,
             $pu_ht,
             GETPOST('qty'),
@@ -601,7 +599,6 @@ if (empty($reshook))
         }
 
         $result = $facture->addline(
-            $facture->id,
             $desc,
             $pu_ht,
             GETPOST('qty'),
@@ -1086,8 +1083,8 @@ else
             if ($showbarcode)
             {
                 // Barcode type
-                print '<tr><td nowrap>';
-                print '<table width="100%" class="nobordernopadding"><tr><td nowrap>';
+                print '<tr><td class="nowrap">';
+                print '<table width="100%" class="nobordernopadding"><tr><td class="nowrap">';
                 print $langs->trans("BarcodeType");
                 print '<td>';
                 if (($action != 'editbarcodetype') && $user->rights->barcode->creer) print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editbarcodetype&amp;id='.$object->id.'">'.img_edit($langs->trans('Edit'),1).'</a></td>';
@@ -1107,8 +1104,8 @@ else
                 print '</td></tr>'."\n";
 
                 // Barcode value
-                print '<tr><td nowrap>';
-                print '<table width="100%" class="nobordernopadding"><tr><td nowrap>';
+                print '<tr><td class="nowrap">';
+                print '<table width="100%" class="nobordernopadding"><tr><td class="nowrap">';
                 print $langs->trans("BarcodeValue");
                 print '<td>';
                 if (($action != 'editbarcode') && $user->rights->barcode->creer) print '<td align="right"><a href="'.$_SERVER["PHP_SELF"].'?action=editbarcode&amp;id='.$object->id.'">'.img_edit($langs->trans('Edit'),1).'</a></td>';
@@ -1354,7 +1351,7 @@ if ($object->id && ($action == '' || $action == 'view') && $object->status)
         $langs->load("propal");
 
         $html .= '<tr class="liste_titre">';
-        $html .= '<td class="liste_titre">'.$langs->trans("AddToOtherProposals").'</td>';
+        $html .= '<td class="liste_titre">'.$langs->trans("AddToDraftProposals").'</td>';
         $html .= '</tr><tr>';
         $html .= '<td valign="top">';
 
@@ -1381,7 +1378,7 @@ if ($object->id && ($action == '' || $action == 'view') && $object->status)
         else
         {
         	$html .= "<tr ".$bc[!$var]."><td>";
-        	$html .= $langs->trans("NoOtherOpenedPropals");
+        	$html .= $langs->trans("NoDraftProposals");
         	$html .= '</td></tr>';
         }
         $html .= '</table>';
@@ -1399,7 +1396,7 @@ if ($object->id && ($action == '' || $action == 'view') && $object->status)
         $langs->load("orders");
 
         $html .= '<tr class="liste_titre">';
-        $html .= '<td class="liste_titre">'.$langs->trans("AddToOtherOrders").'</td>';
+        $html .= '<td class="liste_titre">'.$langs->trans("AddToDraftOrders").'</td>';
         $html .= '</tr><tr>';
         $html .= '<td valign="top">';
 
@@ -1426,7 +1423,7 @@ if ($object->id && ($action == '' || $action == 'view') && $object->status)
         else
 		{
         	$html .= "<tr ".$bc[!$var]."><td>";
-        	$html .= $langs->trans("NoOtherOpenedOrders");
+        	$html .= $langs->trans("NoDraftOrders");
         	$html .= '</td></tr>';
         }
         $html .= '</table>';
@@ -1444,7 +1441,7 @@ if ($object->id && ($action == '' || $action == 'view') && $object->status)
     	$langs->load("bills");
 
     	$html .= '<tr class="liste_titre">';
-    	$html .= '<td class="liste_titre">'.$langs->trans("AddToOtherBills").'</td>';
+    	$html .= '<td class="liste_titre">'.$langs->trans("AddToDraftInvoices").'</td>';
         $html .= '</tr><tr>';
     	$html .= '<td valign="top">';
 
@@ -1471,7 +1468,7 @@ if ($object->id && ($action == '' || $action == 'view') && $object->status)
     	else
     	{
     		$html .= "<tr ".$bc[!$var]."><td>";
-    		$html .= $langs->trans("NoOtherDraftBills");
+    		$html .= $langs->trans("NoDraftInvoices");
     		$html .= '</td></tr>';
     	}
     	$html .= '</table>';

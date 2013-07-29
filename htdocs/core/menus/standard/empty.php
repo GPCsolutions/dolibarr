@@ -91,6 +91,9 @@ class MenuManager
 			if (empty($noout)) print_end_menu_entry_empty($showmode);
 			$this->menu->add(dol_buildpath('/index.php',1), $langs->trans("Home"), 0, $showmode, $this->atarget, 'home', '');
 
+			if (empty($noout)) print_start_menu_entry('','class="tmenuend"',$showmode);
+			if (empty($noout)) print_end_menu_entry($showmode);
+
 			if (empty($noout)) print_end_menu_array_empty();
 
 			if ($mode == 'jmobile')
@@ -311,7 +314,7 @@ function print_text_menu_entry_empty($text, $showmode, $url, $id, $idsel, $class
 	}
 	if ($showmode == 2)
 	{
-		print '<div class="'.$id.' '.$idsel.'"><span class="'.$id.'" id="mainmenuspan_'.$idsel.'"></span></div>';
+		print '<div class="'.$id.' '.$idsel.' tmenudisabled"><span class="'.$id.'" id="mainmenuspan_'.$idsel.'"></span></div>';
 		print '<a class="tmenudisabled" id="mainmenua_'.$idsel.'" href="#" title="'.dol_escape_htmltag($langs->trans("NotAllowed")).'">';
 	}
 }
