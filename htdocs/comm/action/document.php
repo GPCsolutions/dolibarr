@@ -41,8 +41,9 @@ $langs->load("commercial");
 $langs->load("other");
 $langs->load("bills");
 
-$objectid = GETPOST('id','int');
-$action=GETPOST('action','alpha');
+$objectid = GETPOST('id', 'int');
+$action=GETPOST('action', 'alpha');
+$confirm = GETPOST('confirm', 'alpha');
 
 // Security check
 if ($user->societe_id > 0)
@@ -252,15 +253,10 @@ if ($object->id > 0)
 
 	print '</div>';
 
-
-	// Affiche formulaire upload
-	$formfile=new FormFile($db);
-	$formfile->form_attach_new_file(DOL_URL_ROOT.'/comm/action/document.php?id='.$object->id,'',0,0,($user->rights->agenda->myactions->create||$user->rights->agenda->allactions->create),50,$object);
-
-
-	// List of document
-	$param='&id='.$object->id;
-	$formfile->list_of_documents($filearray,$object,'actions',$param,0,'',$user->rights->agenda->myactions->create);
+	$modulepart = 'actions';
+	$permission = $user->rights->agenda->myactions->create||$user->rights->agenda->allactions->create;
+	$param = '&id=' . $object->id;
+	include_once DOL_DOCUMENT_ROOT . '/core/tpl/doc2.tpl.php';
 }
 else
 {
