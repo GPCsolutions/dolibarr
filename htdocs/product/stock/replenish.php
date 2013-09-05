@@ -105,7 +105,7 @@ if ($action == 'order') {
                 } else {
                     $error=$db->lasterror();
                     dol_print_error($db);
-                    dol_syslog('replenish.php: '.$error, LOG_ERROR);
+                    dol_syslog('replenish.php: '.$error, LOG_ERR);
                 }
                 $db->free($resql);
                 unset($_POST['fourn' . $i]);
