@@ -96,15 +96,6 @@ if ($object->id > 0)
 		$totalsize+=$file['size'];
 	}
 
-	/*
-	 * Confirm delete file
-	 */
-	if ($action == 'delete')
-	{
-		print $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id.'&urlfile='.urlencode($_GET["urlfile"]), $langs->trans('DeleteFile'), $langs->trans('ConfirmDeleteFile'), 'confirm_deletefile', '', 0, 1);
-		
-	}
-
 	print '<table class="border" width="100%">';
 
 	$linkback = '<a href="'.DOL_URL_ROOT.'/fourn/facture/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
@@ -177,16 +168,10 @@ if ($object->id > 0)
 	print '</table>';
 	print '</div>';
 
-	// Affiche formulaire upload
-	$formfile=new FormFile($db);
-	$formfile->form_attach_new_file($_SERVER['PHP_SELF'].'?facid='.$object->id,'',0,0,$user->rights->fournisseur->facture->creer, 50, $object);
-
-
-	// List of document
-	$param='&facid='.$object->id;
-	$ref=dol_sanitizeFileName($object->ref);
-	$formfile->list_of_documents($filearray,$object,'facture_fournisseur',$param,0,get_exdir($object->id,2,0).$ref.'/');
-
+	$modulepart = 'facture_fournisseur';
+	$permission = $user->rights->fournisseur->facture->creer;
+	$param = '&facid=' . $object->id;
+	include_once DOL_DOCUMENT_ROOT . '/core/tpl/doc2.tpl.php';
 }
 else
 {
