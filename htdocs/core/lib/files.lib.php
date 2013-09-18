@@ -994,6 +994,7 @@ function dol_init_file_process($pathtoscan='')
  * @param	int		$allowoverwrite			1=Allow overwrite existing file
  * @param	int		$donotupdatesession		1=Do no edit _SESSION variable
  * @param	string	$varfiles				_FILES var name
+ * @param	string	$link					Link to add
  * @return	void
  */
 function dol_add_file_process($upload_dir,$allowoverwrite=0,$donotupdatesession=0,$varfiles='addedfile', $link=null)
