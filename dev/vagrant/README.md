@@ -34,7 +34,7 @@ Example syntax:
 
     192.168.42.101  dev.dolibarr.org
 
-Once this is done, you will be able to access your VM's service at <http://dolibarr.dev>
+Once done you will be able to access your VM's service at <http://dev.dolibarr.org>
 
 Available boxes
 ---------------
