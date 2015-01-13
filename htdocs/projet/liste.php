@@ -61,7 +61,7 @@ $mine = $_REQUEST['mode']=='mine' ? 1 : 0;
 $search_ref=GETPOST("search_ref");
 $search_label=GETPOST("search_label");
 $search_societe=GETPOST("search_societe");
-
+$view_status = GETPOST('viewstatut', 'int');
 
 /*
  * View
@@ -96,6 +96,9 @@ if ($search_label)
 if ($search_societe)
 {
 	$sql .= natural_search('s.nom', $search_societe);
+}
+if ($view_status !== "") {
+	$sql .= " AND fk_statut = ".$db->escape($view_status);
 }
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($conf->liste_limit+1, $offset);
