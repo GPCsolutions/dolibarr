@@ -1316,4 +1316,21 @@ class Task extends CommonObject
 		}
 	}
 
+    /**
+     * Is the task having a delay?
+     *
+     * @return bool
+     */
+    public function hasDelay()
+    {
+        global $conf;
+
+        $now = dol_now();
+
+        if ($this->date_end < ($now - $conf->project->tasks->warning_delay)) {
+            return true;
+        }
+
+        return false;
+    }
 }

@@ -1322,5 +1322,24 @@ class Project extends CommonObject
 		}
 
 	}
+
+    /**
+     * Is the project having a delay?
+     *
+     * @return bool
+     */
+    public function hasDelay()
+    {
+        global $conf;
+
+        $now = dol_now();
+
+        //Open status
+        if ($this->statut == 1 && ($this->date_end < ($now - $conf->project->warning_delay))) {
+            return true;
+        }
+
+        return false;
+    }
 }
 
