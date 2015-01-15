@@ -61,7 +61,6 @@ $mine = $_REQUEST['mode']=='mine' ? 1 : 0;
 $search_ref=GETPOST("search_ref");
 $search_label=GETPOST("search_label");
 $search_societe=GETPOST("search_societe");
-$search_user = GETPOST("search_user", 'int');
 $view_status = GETPOST('viewstatut', 'int');
 
 /*
@@ -80,16 +79,8 @@ $sql = "SELECT p.rowid as projectid, p.ref, p.title, p.fk_statut, p.public, p.fk
 $sql.= ", p.datec as date_create, p.dateo as date_start, p.datee as date_end";
 $sql.= ", s.nom, s.rowid as socid";
 $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
-
-if ($search_user > 0) {
-	$sql.=" LEFT JOIN llx_element_contact AS c
-    ON c.element_id = p.rowid
-  LEFT JOIN llx_c_type_contact AS tc
-    ON c.fk_c_type_contact = tc.rowid
-       AND tc.element = 'project' AND tc.source = 'internal'";
-}
-
-$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON p.fk_soc = s.rowid WHERE p.entity = ".$conf->entity;
+$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s on p.fk_soc = s.rowid";
+$sql.= " WHERE p.entity = ".$conf->entity;
 if ($mine || ! $user->rights->projet->all->lire) $sql.= " AND p.rowid IN (".$projectsListId.")";
 // No need to check company, as filtering of projects must be done by getProjectsAuthorizedForUser
 //if ($socid || ! $user->rights->societe->client->voir)	$sql.= "  AND (p.fk_soc IS NULL OR p.fk_soc = 0 OR p.fk_soc = ".$socid.")";
@@ -108,9 +99,6 @@ if ($search_societe)
 }
 if ($view_status !== "") {
 	$sql .= " AND fk_statut = ".$db->escape($view_status);
-}
-if ($search_user > 0) {
-	$sql .= "AND c.fk_socpeople = ".$db->escape($search_user);
 }
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($conf->liste_limit+1, $offset);
@@ -138,17 +126,6 @@ if ($resql)
 	print '<form method="get" action="'.$_SERVER["PHP_SELF"].'">';
 
 	print '<table class="noborder" width="100%">';
-
-	if (!$mine) {
-		$form = new Form($db);
-
-		print '<tr class="liste_titre">';
-		print '<td class="liste_titre" colspan="10">';
-		print $langs->trans('LinkedToSpecificUsers').': ';
-		print $form->select_dolusers($search_user, 'search_user', 1);
-		print '</td></tr>';
-	}
-
 	print '<tr class="liste_titre">';
 	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"p.ref","","","",$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Label"),$_SERVER["PHP_SELF"],"p.title","","","",$sortfield,$sortorder);
