@@ -602,6 +602,16 @@ class FormCompany
 												}
 											});
 											$("select#" + htmlname).html(response.value);
+											console.log(htmlname);
+										}
+										if (response.num) {
+
+											var selected = $("select#" + htmlname+ " option:first");
+
+											$("#inputautocomplete"+htmlname).val(selected.html());
+											$("#"+htmlname+" option[value=\"+selected.val()+\"]").attr("selected", "selected");
+										} else {
+											$("#inputautocomplete"+htmlname).val("");
 										}
 									});
 							};
