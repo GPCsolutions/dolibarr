@@ -1115,7 +1115,7 @@ function print_left_eldy_menu($db,$menu_array_before,$menu_array_after,&$tabMenu
 				$newmenu->add("/projet/tasks/index.php?leftmenu=tasks", $langs->trans("List"), 1, $user->rights->projet->lire);
 
 				if (empty($leftmenu) || $leftmenu == 'tasks') {
-					$newmenu->add("/projet/tasks/current.php?leftmenu=tasks&mode=mine", $langs->trans("Current"), 2, $user->rights->projet->lire);
+					$newmenu->add("/projet/tasks/current.php?leftmenu=tasks", $langs->trans("Current"), 2, $user->rights->projet->lire);
 				}
 
 				$newmenu->add("/projet/activity/list.php?leftmenu=tasks", $langs->trans("NewTimeSpent"), 1, $user->rights->projet->creer);
