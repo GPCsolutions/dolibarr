@@ -50,7 +50,8 @@ $page = GETPOST("page");
 $page = is_numeric($page) ? $page : 0;
 $page = $page == -1 ? 0 : $page;
 
-$mine = $_REQUEST['mode']=='mine' ? 1 : 0;
+$mode = GETPOST('mode');
+$mine = $mode=='mine' ? 1 : 0;
 
 
 
@@ -97,7 +98,7 @@ if ($search_user !== '' && $user->rights->projet->all->lire) {
 
 // Get list of tasks in tasksarray and taskarrayfiltered
 // We need all tasks (even not limited to a user because a task to user can have a parent that is not affected to him).
-$tasksarray=$taskstatic->getTasksArray(0, 0, $projectstatic->id, $socid, 0, $search_project, $search_status);
+$tasksarray=$taskstatic->getTasksArray(0, 0, $projectstatic->id, $socid, 0, $search_project, $search_status, ($mode == 'late'));
 
 //If searching for user and with enough rights
 if ($search_user !== '' && $user->rights->projet->all->lire) {

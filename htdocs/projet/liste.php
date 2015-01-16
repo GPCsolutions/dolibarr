@@ -56,7 +56,8 @@ $offset = $conf->liste_limit * $page ;
 $pageprev = $page - 1;
 $pagenext = $page + 1;
 
-$mine = $_REQUEST['mode']=='mine' ? 1 : 0;
+$mode = GETPOST('mode');
+$mine = $mode=='mine' ? 1 : 0;
 
 $search_ref=GETPOST("search_ref");
 $search_label=GETPOST("search_label");
@@ -99,6 +100,11 @@ if ($search_societe)
 }
 if ($view_status !== "") {
 	$sql .= " AND fk_statut = ".$db->escape($view_status);
+}
+if ($mode == 'late') {
+	$horq = dol_now() - $conf->projet->warning_delay;
+
+	$sql .= " AND p.fk_statut >= 1 AND p.datee < '".$db->idate($horq)."'";
 }
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($conf->liste_limit+1, $offset);
