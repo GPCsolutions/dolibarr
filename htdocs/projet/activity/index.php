@@ -79,7 +79,7 @@ print '<td width="50%">'.$langs->trans('Today').'</td>';
 print '<td width="50%" align="right">'.$langs->trans("Time").'</td>';
 print "</tr>\n";
 
-$sql = "SELECT p.rowid, p.ref, p.title, SUM(tt.task_duration) as nb";
+$sql = "SELECT p.rowid, p.ref, p.title, SUM(tt.task_duration) as nb, p.datee as date_end, p.fk_statut";
 $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
 $sql.= ", ".MAIN_DB_PREFIX."projet_task as t";
 $sql.= ", ".MAIN_DB_PREFIX."projet_task_time as tt";
@@ -99,12 +99,21 @@ if ( $resql )
 
 	while ($row = $db->fetch_object($resql))
 	{
+		$projectstatic->id=$row->rowid;
+		$projectstatic->ref=$row->ref;
+		$projectstatic->statut = $row->fk_statut;
+		$projectstatic->date_end=$row->date_end;
+
 		$var=!$var;
 		print "<tr ".$bc[$var].">";
 		print '<td>';
-		$projectstatic->id=$row->rowid;
-		$projectstatic->ref=$row->ref;
+
 		print $projectstatic->getNomUrl(1);
+
+		if ($projectstatic->hasDelay()) {
+			print ' '.img_warning($langs->trans("Late"));
+		}
+
 		print '</td>';
 		print '<td align="right">'.convertSecondToTime($row->nb).'</td>';
 		print "</tr>\n";
@@ -134,7 +143,7 @@ print '<td>'.$langs->trans('Yesterday').'</td>';
 print '<td align="right">'.$langs->trans("Time").'</td>';
 print "</tr>\n";
 
-$sql = "SELECT p.rowid, p.ref, p.title, sum(tt.task_duration) as nb";
+$sql = "SELECT p.rowid, p.ref, p.title, sum(tt.task_duration) as nb, p.datee date_end, p.fk_statut";
 $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
 $sql.= ", ".MAIN_DB_PREFIX."projet_task as t";
 $sql.= ", ".MAIN_DB_PREFIX."projet_task_time as tt";
@@ -159,7 +168,14 @@ if ( $resql )
 		print '<td>';
 		$projectstatic->id=$row->rowid;
 		$projectstatic->ref=$row->ref;
+		$projectstatic->statut=$row->fk_statut;
+		$projectstatic->date_end=$row->date_end;
 		print $projectstatic->getNomUrl(1);
+
+		if ($projectstatic->hasDelay()) {
+			print ' '.img_warning($langs->trans("Late"));
+		}
+
 		print '</td>';
 		print '<td align="right">'.convertSecondToTime($row->nb).'</td>';
 		print "</tr>\n";
@@ -195,7 +211,7 @@ print '<td>'.$langs->trans("ActivityOnProjectThisWeek").'</td>';
 print '<td align="right">'.$langs->trans("Time").'</td>';
 print "</tr>\n";
 
-$sql = "SELECT p.rowid, p.ref, p.title, SUM(tt.task_duration) as nb";
+$sql = "SELECT p.rowid, p.ref, p.title, SUM(tt.task_duration) as nb, p.datee date_end, p.fk_statut";
 $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
 $sql.= " , ".MAIN_DB_PREFIX."projet_task as t";
 $sql.= " , ".MAIN_DB_PREFIX."projet_task_time as tt";
@@ -220,7 +236,14 @@ if ( $resql )
 		print '<td>';
 		$projectstatic->id=$row->rowid;
 		$projectstatic->ref=$row->ref;
+		$projectstatic->statut=$row->fk_statut;
+		$projectstatic->date_end=$row->date_end;
 		print $projectstatic->getNomUrl(1);
+
+		if ($projectstatic->hasDelay()) {
+			print ' '.img_warning($langs->trans("Late"));
+		}
+
 		print '</td>';
 		print '<td align="right">'.convertSecondToTime($row->nb).'</td>';
 		print "</tr>\n";
@@ -248,7 +271,7 @@ print '<td>'.$langs->trans("ActivityOnProjectThisMonth").': '.dol_print_date($no
 print '<td align="right">'.$langs->trans("Time").'</td>';
 print "</tr>\n";
 
-$sql = "SELECT p.rowid, p.ref, p.title, SUM(tt.task_duration) as nb";
+$sql = "SELECT p.rowid, p.ref, p.title, SUM(tt.task_duration) as nb, p.datee date_end, p.fk_statut";
 $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
 $sql.= ", ".MAIN_DB_PREFIX."projet_task as t";
 $sql.= ", ".MAIN_DB_PREFIX."projet_task_time as tt";
@@ -271,7 +294,14 @@ if ( $resql )
 		print '<td>';
 		$projectstatic->id=$row->rowid;
 		$projectstatic->ref=$row->ref;
+		$projectstatic->statut=$row->fk_statut;
+		$projectstatic->date_end=$row->date_end;
 		print $projectstatic->getNomUrl(1);
+
+		if ($projectstatic->hasDelay()) {
+			print ' '.img_warning($langs->trans("Late"));
+		}
+
 		print '</td>';
 		print '<td align="right">'.convertSecondToTime($row->nb).'</td>';
 		print "</tr>\n";
@@ -296,7 +326,7 @@ print '<td>'.$langs->trans("ActivityOnProjectThisYear").': '.strftime("%Y", $now
 print '<td align="right">'.$langs->trans("Time").'</td>';
 print "</tr>\n";
 
-$sql = "SELECT p.rowid, p.ref, p.title, SUM(tt.task_duration) as nb";
+$sql = "SELECT p.rowid, p.ref, p.title, SUM(tt.task_duration) as nb, p.fk_statut, p.datee as date_end";
 $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
 $sql.= ", ".MAIN_DB_PREFIX."projet_task as t";
 $sql.= ", ".MAIN_DB_PREFIX."projet_task_time as tt";
@@ -318,7 +348,14 @@ if ( $resql )
 		print '<td>';
 		$projectstatic->id=$row->rowid;
 		$projectstatic->ref=$row->ref;
+		$projectstatic->statut=$row->fk_statut;
+		$projectstatic->date_end=$row->date_end;
 		print $projectstatic->getNomUrl(1);
+
+		if ($projectstatic->hasDelay()) {
+			print ' '.img_warning($langs->trans("Late"));
+		}
+
 		print '</td>';
 		print '<td align="right">'.convertSecondToTime($row->nb).'</td>';
 		print "</tr>\n";

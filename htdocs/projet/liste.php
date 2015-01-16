@@ -164,9 +164,18 @@ if ($resql)
 			print "<tr ".$bc[$var].">";
 
 			// Project url
-			print "<td>";
 			$projectstatic->ref = $objp->ref;
+			$projectstatic->date_end = $objp->date_end;
+			$projectstatic->statut = $objp->fk_statut;
+
+			print "<td>";
+
 			print $projectstatic->getNomUrl(1);
+
+			if ($projectstatic->hasDelay()) {
+				print ' '.img_warning($langs->trans("Late"));
+			}
+
 			print "</td>";
 
 			// Title
