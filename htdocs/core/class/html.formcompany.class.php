@@ -1,6 +1,7 @@
 <?php
 /* Copyright (C) 2008-2012	Laurent Destailleur	<eldy@users.sourceforge.net>
  * Copyright (C) 2008-2012	Regis Houssin		<regis.houssin@capnetworks.com>
+ * Copyright (C) 2015       Marcos García       <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -591,9 +592,10 @@ class FormCompany
 									function(response) {
 										if (response != null)
 										{
+											var num = response.num;
+
 											$.each(obj.params, function(key,action) {
 												if (key.length) {
-													var num = response.num;
 													if (num > 0) {
 														$("#" + key).removeAttr(action);
 													} else {
@@ -602,6 +604,18 @@ class FormCompany
 												}
 											});
 											$("select#" + htmlname).html(response.value);
+										} else {
+											var num = 0;
+										}
+
+										if (num) {
+
+											var selected = $("select#" + htmlname+ " option:first");
+
+											$("#inputautocomplete"+htmlname).val(selected.html());
+											$("#"+htmlname+" option[value=\"+selected.val()+\"]").attr("selected", "selected");
+										} else {
+											$("#inputautocomplete"+htmlname).val("");
 										}
 									});
 							};

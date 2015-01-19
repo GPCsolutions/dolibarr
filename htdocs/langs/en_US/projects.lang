@@ -126,3 +126,6 @@ DocumentModelBaleine=A complete project's report model (logo...)
 PlannedWorkload = Planned workload
 WorkloadOccupation= Workload affectation
 ProjectReferers=Refering objects
+
+ProjectsToClose=Projects to close
+TasksToClose=Tasks to close

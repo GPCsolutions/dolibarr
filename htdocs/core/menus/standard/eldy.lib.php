@@ -3,6 +3,7 @@
  * Copyright (C) 2010      Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2012-2013 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
+ * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1071,26 +1072,54 @@ function print_left_eldy_menu($db,$menu_array_before,$menu_array_after,&$tabMenu
 				$langs->load("projects");
 
 				// Project affected to user
-				$newmenu->add("/projet/index.php?leftmenu=projects&mode=mine", $langs->trans("MyProjects"), 0, $user->rights->projet->lire, '', $mainmenu, 'projects');
-				$newmenu->add("/projet/fiche.php?leftmenu=projects&action=create&mode=mine", $langs->trans("NewProject"), 1, $user->rights->projet->creer);
-				$newmenu->add("/projet/liste.php?leftmenu=projects&mode=mine", $langs->trans("List"), 1, $user->rights->projet->lire);
+				$newmenu->add("/projet/index.php?leftmenu=myprojects&mode=mine", $langs->trans("MyProjects"), 0, $user->rights->projet->lire, '', $mainmenu, 'myprojects');
+				$newmenu->add("/projet/fiche.php?leftmenu=myprojects&action=create&mode=mine", $langs->trans("NewProject"), 1, $user->rights->projet->creer);
+				$newmenu->add("/projet/liste.php?leftmenu=myprojects&mode=mine", $langs->trans("List"), 1, $user->rights->projet->lire);
+				if (empty($leftmenu) || $leftmenu=="myprojects") {
+					$newmenu->add("/projet/liste.php?leftmenu=myprojects&mode=mine&viewstatut=0", $langs->trans("Draft"), 2, $user->rights->projet->lire);
+				}
+				if (empty($leftmenu) || $leftmenu=="myprojects") {
+					$newmenu->add("/projet/liste.php?leftmenu=myprojects&mode=mine&viewstatut=1", $langs->trans("Opened"), 2, $user->rights->projet->lire);
+				}
+				if (empty($leftmenu) || $leftmenu=="myprojects") {
+					$newmenu->add("/projet/liste.php?leftmenu=myprojects&mode=mine&viewstatut=2", $langs->trans("Closed"), 2, $user->rights->projet->lire);
+				}
 
 				// All project i have permission on
-				$newmenu->add("/projet/index.php?leftmenu=projects", $langs->trans("Projects"), 0, $user->rights->projet->lire && $user->rights->projet->lire);
+				$newmenu->add("/projet/index.php?leftmenu=projects", $langs->trans("Projects"), 0, $user->rights->projet->lire, '', $mainmenu, 'projects');
 				$newmenu->add("/projet/fiche.php?leftmenu=projects&action=create", $langs->trans("NewProject"), 1, $user->rights->projet->creer && $user->rights->projet->creer);
 				$newmenu->add("/projet/liste.php?leftmenu=projects", $langs->trans("List"), 1, $user->rights->projet->lire && $user->rights->projet->lire);
+				if (empty($leftmenu) || $leftmenu=="projects") {
+					$newmenu->add("/projet/liste.php?leftmenu=projects&viewstatut=0", $langs->trans("Draft"), 2, $user->rights->projet->lire);
+				}
+				if (empty($leftmenu) || $leftmenu=="projects") {
+					$newmenu->add("/projet/liste.php?leftmenu=projects&viewstatut=1", $langs->trans("Opened"), 2, $user->rights->projet->lire);
+				}
+				if (empty($leftmenu) || $leftmenu=="projects") {
+					$newmenu->add("/projet/liste.php?leftmenu=projects&viewstatut=2", $langs->trans("Closed"), 2, $user->rights->projet->lire);
+				}
 
 				// Project affected to user
-				$newmenu->add("/projet/activity/index.php?mode=mine", $langs->trans("MyActivities"), 0, $user->rights->projet->lire);
-				$newmenu->add("/projet/tasks.php?action=create&mode=mine", $langs->trans("NewTask"), 1, $user->rights->projet->creer);
-				$newmenu->add("/projet/tasks/index.php?mode=mine", $langs->trans("List"), 1, $user->rights->projet->lire);
-				$newmenu->add("/projet/activity/list.php?mode=mine", $langs->trans("NewTimeSpent"), 1, $user->rights->projet->creer);
+				$newmenu->add("/projet/activity/index.php?mode=mine&leftmenu=mytasks", $langs->trans("MyActivities"), 0, $user->rights->projet->lire, '', $mainmenu, 'mytasks');
+				$newmenu->add("/projet/tasks.php?action=create&mode=mine&leftmenu=mytasks", $langs->trans("NewTask"), 1, $user->rights->projet->creer);
+				$newmenu->add("/projet/tasks/index.php?mode=mine&leftmenu=mytasks", $langs->trans("List"), 1, $user->rights->projet->lire);
+
+				if (empty($leftmenu) || $leftmenu == 'mytasks') {
+					$newmenu->add("/projet/tasks/current.php?leftmenu=mytasks&mode=mine", $langs->trans("Current"), 2, $user->rights->projet->lire);
+				}
+
+				$newmenu->add("/projet/activity/list.php?mode=mine&leftmenu=mytasks", $langs->trans("NewTimeSpent"), 1, $user->rights->projet->creer);
 
 				// All project i have permission on
-				$newmenu->add("/projet/activity/index.php", $langs->trans("Activities"), 0, $user->rights->projet->lire && $user->rights->projet->lire);
-				$newmenu->add("/projet/tasks.php?action=create", $langs->trans("NewTask"), 1, $user->rights->projet->creer && $user->rights->projet->creer);
-				$newmenu->add("/projet/tasks/index.php", $langs->trans("List"), 1, $user->rights->projet->lire && $user->rights->projet->lire);
-				$newmenu->add("/projet/activity/list.php", $langs->trans("NewTimeSpent"), 1, $user->rights->projet->creer && $user->rights->projet->creer);
+				$newmenu->add("/projet/activity/index.php?leftmenu=tasks", $langs->trans("Activities"), 0, $user->rights->projet->lire, '', $mainmenu, 'tasks');
+				$newmenu->add("/projet/tasks.php?action=create&leftmenu=tasks", $langs->trans("NewTask"), 1, $user->rights->projet->creer);
+				$newmenu->add("/projet/tasks/index.php?leftmenu=tasks", $langs->trans("List"), 1, $user->rights->projet->lire);
+
+				if (empty($leftmenu) || $leftmenu == 'tasks') {
+					$newmenu->add("/projet/tasks/current.php?leftmenu=tasks", $langs->trans("Current"), 2, $user->rights->projet->lire);
+				}
+
+				$newmenu->add("/projet/activity/list.php?leftmenu=tasks", $langs->trans("NewTimeSpent"), 1, $user->rights->projet->creer);
 			}
 		}
 

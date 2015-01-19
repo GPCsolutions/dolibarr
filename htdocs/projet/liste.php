@@ -4,6 +4,7 @@
  * Copyright (C) 2005      Marc Bariley / Ocebo <marc@ocebo.com>
  * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
+ * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,12 +57,13 @@ $offset = $conf->liste_limit * $page ;
 $pageprev = $page - 1;
 $pagenext = $page + 1;
 
-$mine = $_REQUEST['mode']=='mine' ? 1 : 0;
+$mode = GETPOST('mode');
+$mine = $mode=='mine' ? 1 : 0;
 
 $search_ref=GETPOST("search_ref");
 $search_label=GETPOST("search_label");
 $search_societe=GETPOST("search_societe");
-
+$view_status = GETPOST('viewstatut', 'int');
 
 /*
  * View
@@ -96,6 +98,14 @@ if ($search_label)
 if ($search_societe)
 {
 	$sql .= natural_search('s.nom', $search_societe);
+}
+if ($view_status !== "") {
+	$sql .= " AND fk_statut = ".$db->escape($view_status);
+}
+if ($mode == 'late') {
+	$horq = dol_now() - $conf->projet->warning_delay;
+
+	$sql .= " AND p.fk_statut >= 1 AND p.datee < '".$db->idate($horq)."'";
 }
 $sql.= $db->order($sortfield,$sortorder);
 $sql.= $db->plimit($conf->liste_limit+1, $offset);
@@ -161,9 +171,18 @@ if ($resql)
 			print "<tr ".$bc[$var].">";
 
 			// Project url
-			print "<td>";
 			$projectstatic->ref = $objp->ref;
+			$projectstatic->date_end = $objp->date_end;
+			$projectstatic->statut = $objp->fk_statut;
+
+			print "<td>";
+
 			print $projectstatic->getNomUrl(1);
+
+			if ($projectstatic->hasDelay()) {
+				print ' '.img_warning($langs->trans("Late"));
+			}
+
 			print "</td>";
 
 			// Title
