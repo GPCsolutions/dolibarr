@@ -603,7 +603,6 @@ class FormCompany
 												}
 											});
 											$("select#" + htmlname).html(response.value);
-											console.log(htmlname);
 										}
 										if (response.num) {
 
