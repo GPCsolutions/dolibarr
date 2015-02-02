@@ -1333,7 +1333,6 @@ class Task extends CommonObject
 	/**
 	 * Is the task having a delay?
 	 * Requires: $this->date_end to be defined.
-	 * Also it requires $conf->projet->tasks->warning_delay to be set
 	 *
 	 * @return bool
 	 */
@@ -1341,7 +1340,7 @@ class Task extends CommonObject
 	{
 		global $conf;
 
-		if (!$this->date_end || !$conf->projet->warning_delay) {
+		if (!$this->date_end) {
 			return false;
 		}
 
