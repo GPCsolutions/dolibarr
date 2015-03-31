@@ -122,7 +122,7 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 				$sendtocc[] = $thirdparty->email;
 			} else {
 				// Id du contact
-				$sendtocc[] = $thirdparty->contact_get_property((int)$selectcc, 'email');
+				$sendtocc[] = $thirdparty->contact_get_property((int) $selectcc, 'email');
 			}
 		}
 

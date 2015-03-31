@@ -293,7 +293,7 @@ class FormMail
 		        $return = '';
 
 		        if ($cond_free) {
-			        $return = '<input size="'.($email ? "60" : "30").'" id="'.$inputid.'" name="'.$inputid.'[]" value="'.(string)$email.'" />';
+			        $return = '<input size="'.($email ? "60" : "30").'" id="'.$inputid.'" name="'.$inputid.'[]" value="'.(string) $email.'" />';
 		        }
 
 		        if ($cond_socid && $cond_free) {
