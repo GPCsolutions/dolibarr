@@ -251,7 +251,7 @@ class RejetPrelevement
 
 			$message = $langs->trans("InfoRejectMessage",$facref,$socname, $amount, $userinfo);
 
-			$mailfile = new CMailFile($subject,$sendto,$from,$message,$arr_file,$arr_mime,$arr_name,'', '', 0, $msgishtml,$this->user->email);
+			$mailfile = new CMailFile($subject,$sendto,$from,$message,$arr_file,$arr_mime,$arr_name,array(), '', 0, $msgishtml,$this->user->email);
 
 			$result=$mailfile->sendfile();
 			if ($result)

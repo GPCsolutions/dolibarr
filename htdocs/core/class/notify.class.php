@@ -327,7 +327,7 @@ class Notify
 	                        array($file),
 	                        array($mimefile),
 	                        array($filename[count($filename)-1]),
-	                        '',
+	                        array(),
 	                        '',
 	                        0,
 	                        -1
@@ -492,7 +492,7 @@ class Notify
 		        		array($file),
 		        		array($mimefile),
 		        		array($filename[count($filename)-1]),
-		        		'',
+		        		array(),
 		        		'',
 		        		0,
 		        		-1

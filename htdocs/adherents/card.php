@@ -593,7 +593,7 @@ if (empty($reshook))
 			// Send confirmation Email (selon param du type adherent sinon generique)
 			if ($object->email && GETPOST("send_mail"))
 			{
-				$result=$object->send_an_email($adht->getMailOnValid(),$conf->global->ADHERENT_MAIL_VALID_SUBJECT,array(),array(),array(),"","",0,2);
+				$result=$object->send_an_email($adht->getMailOnValid(),$conf->global->ADHERENT_MAIL_VALID_SUBJECT,array(),array(),array(),array(),"",0,2);
 				if ($result < 0)
 				{
 					$error++;
@@ -637,7 +637,7 @@ if (empty($reshook))
 			{
 				if ($object->email && GETPOST("send_mail"))
 				{
-					$result=$object->send_an_email($adht->getMailOnResiliate(),$conf->global->ADHERENT_MAIL_RESIL_SUBJECT,array(),array(),array(),"","",0,-1);
+					$result=$object->send_an_email($adht->getMailOnResiliate(),$conf->global->ADHERENT_MAIL_RESIL_SUBJECT);
 				}
 				if ($result < 0)
 				{

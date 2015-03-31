@@ -137,14 +137,14 @@ class Adherent extends CommonObject
      *  @param 	array	$filename_list      Array of attached files
      *  @param 	array	$mimetype_list      Array of mime types of attached files
      *  @param 	array	$mimefilename_list  Array of public names of attached files
-     *  @param 	string	$addr_cc            Email cc
+     *  @param 	array	$addr_cc            Email cc
      *  @param 	string	$addr_bcc           Email bcc
      *  @param 	int		$deliveryreceipt	Ask a delivery receipt
      *  @param	int		$msgishtml			1=String IS already html, 0=String IS NOT html, -1=Unknown need autodetection
      *  @param	string	$errors_to			erros to
      *  @return	int							<0 if KO, >0 if OK
      */
-    function send_an_email($text, $subject, $filename_list=array(), $mimetype_list=array(), $mimefilename_list=array(), $addr_cc="", $addr_bcc="", $deliveryreceipt=0, $msgishtml=-1, $errors_to='')
+    function send_an_email($text, $subject, $filename_list=array(), $mimetype_list=array(), $mimefilename_list=array(), $addr_cc= array(), $addr_bcc="", $deliveryreceipt=0, $msgishtml=-1, $errors_to='')
     {
         global $conf,$langs;
 

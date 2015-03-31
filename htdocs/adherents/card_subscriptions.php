@@ -513,7 +513,7 @@ if ($user->rights->adherent->cotisation->creer && $action == 'cotisation' && ! $
                 $subjecttosend=$object->makeSubstitution($conf->global->ADHERENT_MAIL_COTIS_SUBJECT);
                 $texttosend=$object->makeSubstitution($adht->getMailOnSubscription());
 
-                $result=$object->send_an_email($texttosend,$subjecttosend,array(),array(),array(),"","",0,-1);
+                $result=$object->send_an_email($texttosend,$subjecttosend);
                 if ($result < 0) $errmsg=$object->error;
             }
 

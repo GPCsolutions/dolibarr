@@ -411,7 +411,7 @@ if ($action == "confirm_approve" && GETPOST("confirm") == "yes" && $id > 0 && $u
 			$emailTo = $destinataire->email;
 
 			// CC
-			$emailCC = $conf->global->NDF_CC_EMAILS;
+			$emailCC = array($conf->global->NDF_CC_EMAILS);
 
 			// FROM
 			$expediteur = new User($db);
