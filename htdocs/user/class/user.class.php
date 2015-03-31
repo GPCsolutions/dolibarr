@@ -1553,7 +1553,7 @@ class User extends CommonObject
             array(),
             array(),
             array(),
-            '',
+            array(),
             '',
             0,
             $msgishtml

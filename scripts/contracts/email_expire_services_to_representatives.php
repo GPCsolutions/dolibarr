@@ -248,7 +248,7 @@ function envoi_mail($mode,$oldemail,$message,$total,$userlang,$oldsalerepresenta
         array(),
         array(),
         array(),
-        '',
+        array(),
         '',
         0,
         $msgishtml

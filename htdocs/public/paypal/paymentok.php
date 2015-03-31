@@ -202,7 +202,7 @@ if ($PAYPALTOKEN)
 				$ishtml=dol_textishtml($content);	// May contain urls
 
 				require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-				$mailfile = new CMailFile($topic, $sendto, $from, $content, array(), array(), array(), '', '', 0, $ishtml);
+				$mailfile = new CMailFile($topic, $sendto, $from, $content, array(), array(), array(), array(), '', 0, $ishtml);
 
 				$result=$mailfile->sendfile();
 				if ($result)
@@ -253,7 +253,7 @@ if ($PAYPALTOKEN)
 				$ishtml=dol_textishtml($content);	// May contain urls
 
 				require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-				$mailfile = new CMailFile($topic, $sendto, $from, $content, array(), array(), array(), '', '', 0, $ishtml);
+				$mailfile = new CMailFile($topic, $sendto, $from, $content, array(), array(), array(), array(), '', 0, $ishtml);
 
 				$result=$mailfile->sendfile();
 				if ($result)

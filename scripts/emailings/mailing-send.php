@@ -181,7 +181,7 @@ if ($resql)
 						    array(),
 						    array(),
 						    array(),
-						    '',
+						    array(),
 						    '',
 						    0,
 						    $msgishtml,

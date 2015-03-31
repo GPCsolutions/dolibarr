@@ -260,7 +260,7 @@ if ($action == 'add')
             // Send email to say it has been created and will be validated soon...
             if (! empty($conf->global->ADHERENT_AUTOREGISTER_MAIL) && ! empty($conf->global->ADHERENT_AUTOREGISTER_MAIL_SUBJECT))
             {
-                $result=$adh->send_an_email($conf->global->ADHERENT_AUTOREGISTER_MAIL,$conf->global->ADHERENT_AUTOREGISTER_MAIL_SUBJECT,array(),array(),array(),"","",0,-1);
+                $result=$adh->send_an_email($conf->global->ADHERENT_AUTOREGISTER_MAIL,$conf->global->ADHERENT_AUTOREGISTER_MAIL_SUBJECT);
             }
 
             // Send email to the foundation to say a new member subscribed with autosubscribe form
@@ -277,7 +277,7 @@ if ($action == 'add')
 					array(),
 					array(),
 					array(),
-					"",
+					array(),
 					"",
 					0,
 					-1

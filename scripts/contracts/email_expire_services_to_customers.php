@@ -281,7 +281,7 @@ function envoi_mail($mode,$oldemail,$message,$total,$userlang,$oldtarget,$durati
         array(),
         array(),
         array(),
-        '',
+        array(),
         '',
         0,
         $msgishtml
