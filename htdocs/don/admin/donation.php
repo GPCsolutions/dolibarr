@@ -2,7 +2,7 @@
 /* Copyright (C) 2005-2010  Laurent Destailleur  	<eldy@users.sourceforge.net>
  * Copyright (C) 2012-2013	Juanjo Menent			<jmenent@2byte.es>
  * Copyright (C) 2013       Philippe Grand			<philippe.grand@atoo-net.com>
- * Copyright (C) 2014       Alexandre Spangaro		<alexandre.spangaro@gmail.com>
+ * Copyright (C) 2015       Alexandre Spangaro		<alexandre.spangaro@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,19 @@
  */
 
 /**
- *      \file       htdocs/admin/dons.php
- *		\ingroup    dons
- *		\brief      Page d'administration/configuration du module Dons
+ *      \file       htdocs/don/admin/dons.php
+ *		\ingroup    donations
+ *		\brief      Page to setup the donation module
  */
-require '../main.inc.php';
+require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
-require_once DOL_DOCUMENT_ROOT.'/compta/dons/class/don.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/donation.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/don/class/don.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 
 $langs->load("admin");
 $langs->load("donations");
+$langs->load("accountancy");
 $langs->load('other');
 
 if (!$user->admin) accessforbidden();
@@ -112,7 +115,25 @@ else if ($action == 'del')
 	}
 }
 
-// Option
+// Options
+if ($action == 'set_DONATION_ACCOUNTINGACCOUNT')
+{
+	$account = GETPOST('DONATION_ACCOUNTINGACCOUNT');	// No alpha here, we want exact string
+
+    $res = dolibarr_set_const($db, "DONATION_ACCOUNTINGACCOUNT",$account,'chaine',0,'',$conf->entity);
+
+	if (! $res > 0) $error++;
+
+ 	if (! $error)
+    {
+        setEventMessage($langs->trans("SetupSaved"));
+    }
+    else
+    {
+        setEventMessage($langs->trans("Error"),'errors');
+    }
+}
+
 if ($action == 'set_DONATION_MESSAGE')
 {
 	$freemessage = GETPOST('DONATION_MESSAGE');	// No alpha here, we want exact string
@@ -173,44 +194,65 @@ else if ($action == 'setart885') {
  * View
  */
 
-$dir = "../core/modules/dons/";
+$dir = "../../core/modules/dons/";
 $form=new Form($db);
 
 llxHeader('',$langs->trans("DonationsSetup"),'DonConfiguration');
-
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
 print_fiche_titre($langs->trans("DonationsSetup"),$linkback,'setup');
+
+$head = donation_admin_prepare_head();
+
+dol_fiche_head($head, 'general', $langs->trans("Donations"), 0, 'payment');
 
 /*
  *  Params
  */
 print_titre($langs->trans("Options"));
 
-print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'" />';
-print '<input type="hidden" name="action" value="set_DONATION_MESSAGE" />';
 print '<table class="noborder" width="100%">';
 print '<tr class="liste_titre">';
-print '<td>'.$langs->trans("Parameter").'</td>';
-print '<td width="80">&nbsp;</td>';
+print '<td colspan="3">'.$langs->trans("Parameters").'</td>';
+//print '<td width="80">&nbsp;</td>';
 print "</tr>\n";
 $var=true;
 
-$var=! $var;
+print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'" />';
+print '<input type="hidden" name="action" value="set_DONATION_ACCOUNTINGACCOUNT" />';
 
-print '<tr '.$bc[$var].'><td>';
+$var=! $var;
+print '<tr '.$bc[$var].'>';
+
+print '<td width="50%">';
+$label = $langs->trans(AccountAccounting);
+print '<label for="'.$langs->trans(AccountAccounting).'">' . $label . '</label></td>';
+print '<td>';
+print '<input type="text" size="10" id="DONATION_ACCOUNTINGACCOUNT" name="DONATION_ACCOUNTINGACCOUNT" value="' . $conf->global->DONATION_ACCOUNTINGACCOUNT . '">';
+print '</td><td align="right">';
+print '<input type="submit" class="button" value="'.$langs->trans("Modify").'" />';
+print "</td></tr>\n";
+print '</form>';
+
+print '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
+print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'" />';
+print '<input type="hidden" name="action" value="set_DONATION_MESSAGE" />';
+
+$var=! $var;
+print '<tr '.$bc[$var].'><td colspan="2">';
 print $langs->trans("FreeTextOnDonations").'<br>';
 print '<textarea name="DONATION_MESSAGE" class="flat" cols="120">'.$conf->global->DONATION_MESSAGE.'</textarea>';
 print '</td><td align="right">';
 print '<input type="submit" class="button" value="'.$langs->trans("Modify").'" />';
 print "</td></tr>\n";
+
 print "</table>\n";
 print '</form>';
 
 /*
  *  French params
  */
-if ($conf->global->MAIN_LANG_DEFAULT == "fr_FR")
+if (preg_match('/fr/i',$conf->global->MAIN_INFO_SOCIETE_COUNTRY))
 {
 	print '<br>';
 	print_titre($langs->trans("FrenchOptions"));

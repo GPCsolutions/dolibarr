@@ -241,7 +241,6 @@ class Societe extends CommonObject
 
     var $specimen;
 
-
     /**
      * 0=no customer, 1=customer, 2=prospect, 3=customer and prospect
      * @var int
@@ -1797,9 +1796,10 @@ class Societe extends CommonObject
 
         if (! empty($this->logo))
         {
-        	$label.= '</div><div style="padding: 10px">';
-        	//if (! is_object($form)) $form = new Form($db);
+            $label.= '</br><div class="photointooltip">';
+            //if (! is_object($form)) $form = new Form($db);
             $label.= Form::showphoto('societe', $this, 80);
+            $label.= '</div><div style="clear: both;"></div>';
         }
         $label.= '</div>';
 
