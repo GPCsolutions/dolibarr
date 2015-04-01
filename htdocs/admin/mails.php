@@ -34,12 +34,14 @@ $langs->load("other");
 $langs->load("errors");
 
 $action=GETPOST('action','alpha');
+//HTML test or not
+$html = GETPOST('html','int');
 
 if (! $user->admin) accessforbidden();
 
 $usersignature=$user->signature;
 // For action = test or send, we ensure that content is not html, even for signature, because this we want a test with NO html.
-if ($action == 'test' || $action == 'send')
+if ($action == 'presend' || $action == 'send')
 {
 	$usersignature=dol_string_nohtmltag($usersignature);
 }
@@ -82,145 +84,11 @@ if ($action == 'update' && empty($_POST["cancel"]))
 
 
 /*
- * Add file in email form
- */
-if (GETPOST('addfile') || GETPOST('addfilehtml'))
-{
-	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-
-	// Set tmp user directory
-	$vardir=$conf->user->dir_output."/".$user->id;
-	$upload_dir = $vardir.'/temp';
-	dol_add_file_process($upload_dir,0,0);
-
-	if ($_POST['addfile'])     $action='test';
-	if ($_POST['addfilehtml']) $action='testhtml';
-}
-
-/*
- * Remove file in email form
- */
-if (! empty($_POST['removedfile']) || ! empty($_POST['removedfilehtml']))
-{
-	// Set tmp user directory
-	$vardir=$conf->user->dir_output."/".$user->id;
-	$upload_dir = $vardir.'/temp';
-
-	$keytodelete=isset($_POST['removedfile'])?$_POST['removedfile']:$_POST['removedfilehtml'];
-	$keytodelete--;
-
-	$listofpaths=array();
-	$listofnames=array();
-	$listofmimes=array();
-	if (! empty($_SESSION["listofpaths"])) $listofpaths=explode(';',$_SESSION["listofpaths"]);
-	if (! empty($_SESSION["listofnames"])) $listofnames=explode(';',$_SESSION["listofnames"]);
-	if (! empty($_SESSION["listofmimes"])) $listofmimes=explode(';',$_SESSION["listofmimes"]);
-
-	if ($keytodelete >= 0)
-	{
-		$pathtodelete=$listofpaths[$keytodelete];
-		$filetodelete=$listofnames[$keytodelete];
-		$result = dol_delete_file($pathtodelete,1);
-		if ($result >= 0)
-		{
-			setEventMessage($langs->trans("FileWasRemoved"), $filetodelete);
-
-			include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
-			$formmail = new FormMail($db);
-			$formmail->remove_attached_files($keytodelete);
-		}
-	}
-	if ($_POST['removedfile'] || $action='send')     $action='test';
-	if ($_POST['removedfilehtml'] || $action='sendhtml') $action='testhtml';
-}
-
-/*
  * Send mail
  */
-if (($action == 'send' || $action == 'sendhtml') && ! GETPOST('addfile') && ! GETPOST('addfilehtml') && ! GETPOST('removedfile') && ! GETPOST('cancel'))
-{
-	$error=0;
 
-	$email_from='';
-	if (! empty($_POST["fromname"])) $email_from=$_POST["fromname"].' ';
-	if (! empty($_POST["frommail"])) $email_from.='<'.$_POST["frommail"].'>';
-
-	$errors_to  = $_POST["errorstomail"];
-	$sendto     = $_POST["sendto"];
-	$sendtocc   = $_POST["sendtocc"];
-	$sendtoccc  = $_POST["sendtoccc"];
-	$subject    = $_POST['subject'];
-	$body       = $_POST['message'];
-	$deliveryreceipt= $_POST["deliveryreceipt"];
-
-	//Check if we have to decode HTML
-	if (!empty($conf->global->FCKEDITOR_ENABLE_MAILING) && dol_textishtml(dol_html_entity_decode($body, ENT_COMPAT | ENT_HTML401))) {
-		$body=dol_html_entity_decode($body, ENT_COMPAT | ENT_HTML401);
-	}
-
-	// Create form object
-	include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
-	$formmail = new FormMail($db);
-
-	$attachedfiles=$formmail->get_attached_files();
-	$filepath = $attachedfiles['paths'];
-	$filename = $attachedfiles['names'];
-	$mimetype = $attachedfiles['mimes'];
-
-	if (empty($_POST["frommail"]))
-	{
-		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("MailFrom")),'errors');
-		$action='test';
-		$error++;
-	}
-	if (empty($sendto))
-	{
-		setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("MailTo")),'errors');
-		$action='test';
-		$error++;
-	}
-	if (! $error)
-	{
-		// Le message est-il en html
-		$msgishtml=0;	// Message is not HTML
-		if ($action == 'sendhtml') $msgishtml=1;	// Force message to HTML
-
-		// Pratique les substitutions sur le sujet et message
-		$subject=make_substitutions($subject,$substitutionarrayfortest);
-		$body=make_substitutions($body,$substitutionarrayfortest);
-
-		require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-        $mailfile = new CMailFile(
-            $subject,
-            $sendto,
-            $email_from,
-            $body,
-            $filepath,
-            $mimetype,
-            $filename,
-            $sendtocc,
-            $sendtoccc,
-            $deliveryreceipt,
-            $msgishtml,
-            $errors_to
-        );
-
-		$result=$mailfile->sendfile();
-
-		if ($result)
-		{
-			setEventMessage($langs->trans("MailSuccessfulySent",$mailfile->getValidAddress($email_from,2),$mailfile->getValidAddress($sendto,2)));
-		}
-		else
-		{
-			setEventMessage($langs->trans("ResultKo").'<br>'.$mailfile->error.' '.$result,'errors');
-		}
-
-		$action='';
-	}
-}
-
-
+// Actions to send emails
+include DOL_DOCUMENT_ROOT.'/core/actions_sendmails.inc.php';
 
 /*
  * View
@@ -628,11 +496,11 @@ else
 		print '<a class="butActionRefused" href="#" title="'.$langs->trans("FeatureNotAvailableOnLinux").'">'.$langs->trans("DoTestServerAvailability").'</a>';
 	}
 
-	print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=test&amp;mode=init">'.$langs->trans("DoTestSend").'</a>';
+	print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=presend&amp;mode=init">'.$langs->trans("DoTestSend").'</a>';
 
 	if (! empty($conf->fckeditor->enabled))
 	{
-		print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=testhtml&amp;mode=init">'.$langs->trans("DoTestSendHTML").'</a>';
+		print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=presend&amp;mode=init&html=1">'.$langs->trans("DoTestSendHTML").'</a>';
 	}
 
 	print '</div>';
@@ -665,10 +533,19 @@ else
 	}
 
 	// Show email send test form
-	if ($action == 'test' || $action == 'testhtml')
+	if ($action == 'presend')
 	{
+		if ($html) {
+			$title = $langs->trans("DoTestSendHTML");
+			$template = $langs->transnoentities("PredefinedMailTestHtml");
+		} else {
+			$title = $langs->trans("DoTestSend");
+			$template = $langs->transnoentities("PredefinedMailTest");
+		}
+
+
 		print '<br>';
-		print_titre($action == 'testhtml'?$langs->trans("DoTestSendHTML"):$langs->trans("DoTestSend"));
+		print_titre($title);
 
 		// Cree l'objet formulaire mail
 		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
@@ -680,24 +557,23 @@ else
 		$formmail->withfrom=1;
 		$formmail->witherrorsto=1;
 		$formmail->withto=(! empty($_POST['sendto'])?$_POST['sendto']:($user->email?$user->email:1));
-		$formmail->withtocc=(! empty($_POST['sendtocc'])?$_POST['sendtocc']:1);       // ! empty to keep field if empty
-		$formmail->withtoccc=(! empty($_POST['sendtoccc'])?$_POST['sendtoccc']:1);    // ! empty to keep field if empty
 		$formmail->withtopic=(isset($_POST['subject'])?$_POST['subject']:$langs->trans("Test"));
 		$formmail->withtopicreadonly=0;
 		$formmail->withfile=2;
-		$formmail->withbody=(isset($_POST['message'])?$_POST['message']:($action == 'testhtml'?$langs->transnoentities("PredefinedMailTestHtml"):$langs->transnoentities("PredefinedMailTest")));
+		$formmail->withbody=(isset($_POST['message'])?$_POST['message']:$template);
 		$formmail->withbodyreadonly=0;
 		$formmail->withcancel=1;
 		$formmail->withdeliveryreceipt=1;
-		$formmail->withfckeditor=($action == 'testhtml'?1:0);
+		$formmail->withfckeditor=($html?1:0);
 		$formmail->ckeditortoolbar='dolibarr_mailings';
 		// Tableau des substitutions
 		$formmail->substit=$substitutionarrayfortest;
 		// Tableau des parametres complementaires du post
-		$formmail->param["action"]=($action == 'testhtml'?"sendhtml":"send");
+		$formmail->param["action"]="send";
+		$formmail->param["html"]=$html;
 		$formmail->param["models"]="body";
 		$formmail->param["mailid"]=0;
-		$formmail->param["returnurl"]=$_SERVER["PHP_SELF"];
+		$formmail->param["returnurl"]=$_SERVER["HTTP_REFERER"];
 
 		// Init list of files
         if (GETPOST("mode")=='init')
@@ -705,7 +581,7 @@ else
 			$formmail->clear_attached_files();
 		}
 
-		print $formmail->get_form(($action == 'testhtml'?'addfilehtml':'addfile'),($action == 'testhtml'?'removefilehtml':'removefile'));
+		print $formmail->get_form();
 
 		print '<br>';
 	}

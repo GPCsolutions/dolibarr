@@ -70,59 +70,67 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 
 	$subject='';$actionmsg='';$actionmsg2='';
 
-	$result=$object->fetch($id);
+	if (isset($object)) {
+		$result = $object->fetch($id);
 
-	$sendtosocid=0;
-	if (method_exists($object,"fetch_thirdparty") && $object->element != 'societe')
-	{
-		$result=$object->fetch_thirdparty();
-		$thirdparty=$object->thirdparty;
-		$sendtosocid=$thirdparty->id;
+		$sendtosocid = 0;
+		if (method_exists($object, "fetch_thirdparty") && $object->element != 'societe') {
+			$result = $object->fetch_thirdparty();
+			$thirdparty = $object->thirdparty;
+			$sendtosocid = $thirdparty->id;
+		} else {
+			if ($object->element == 'societe') {
+				$thirdparty = $object;
+				$sendtosocid = $thirdparty->id;
+			} else {
+				dol_print_error('', 'Use actions_sendmails.in.php for a type that is not supported');
+			}
+		}
+	} else {
+		$result = 1;
 	}
-	else if ($object->element == 'societe')
-	{
-		$thirdparty=$object;
-		$sendtosocid=$thirdparty->id;
-	}
-	else dol_print_error('','Use actions_sendmails.in.php for a type that is not supported');
 
 	if ($result > 0)
 	{
 		// Recipient provided into free text
 		$sendto = dol_array_clean(GETPOST('sendto', 'array'));
-		// Recipient provided from combo list
-		$sendtoid = dol_array_clean(GETPOST('receiver', 'array'));
 		// CC provided from free text
 		$sendtocc = dol_array_clean(GETPOST('sendtocc', 'array'));
-		//CC provided from combo list
-		$sendtoccid = dol_array_clean(GETPOST('receivercc', 'array'));
 
-		foreach ($sendtoid as $index => &$id) {
-			if ($id == '-1') {
-				continue;
+		if (isset($object)) {
+
+			// Recipient provided from combo list
+			$sendtoid = dol_array_clean(GETPOST('receiver', 'array'));
+			//CC provided from combo list
+			$sendtoccid = dol_array_clean(GETPOST('receivercc', 'array'));
+
+			foreach ($sendtoid as $index => &$s2id) {
+				if ($s2id == '-1') {
+					continue;
+				}
+
+				// Id of third party
+				if ($s2id == 'thirdparty') {
+					$sendto[] = $thirdparty->email;
+					$s2id = 0;
+				} else {
+					// Id of contact
+					$sendto[] = $thirdparty->contact_get_property((int)$_POST['receiver'], 'email');
+				}
 			}
 
-			// Id of third party
-			if ($id == 'thirdparty') {
-				$sendto[] = $thirdparty->email;
-				$id = 0;
-			} else {
-				// Id of contact
-				$sendto[] = $thirdparty->contact_get_property((int) $_POST['receiver'],'email');
-			}
-		}
+			foreach ($sendtoccid as $selectcc) {
+				if ($selectcc == '-1') {
+					continue;
+				}
 
-		foreach ($sendtoccid as $selectcc) {
-			if ($selectcc == '-1') {
-				continue;
-			}
-
-			// Id of third party
-			if ($selectcc == 'thirdparty') {
-				$sendtocc[] = $thirdparty->email;
-			} else {
-				// Id du contact
-				$sendtocc[] = $thirdparty->contact_get_property((int) $selectcc, 'email');
+				// Id of third party
+				if ($selectcc == 'thirdparty') {
+					$sendtocc[] = $thirdparty->email;
+				} else {
+					// Id du contact
+					$sendtocc[] = $thirdparty->contact_get_property((int)$selectcc, 'email');
+				}
 			}
 		}
 
@@ -176,23 +184,29 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 				{
 					$error=0;
 
-					// Initialisation donnees
-					$object->socid			= $sendtosocid;	// To link to a company
-					$object->sendtoid		= $sendtoid;	// To link to a contact/address
-					$object->actiontypecode	= $actiontypecode;
-					$object->actionmsg		= $actionmsg;  // Long text
-					$object->actionmsg2		= $actionmsg2; // Short text
-					$object->fk_element		= $object->id;
-					$object->elementtype	= $object->element;
-
-					// Appel des triggers
-					include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-					$interface=new Interfaces($db);
-					$result=$interface->run_triggers($trigger_name,$object,$user,$langs,$conf);
-					if ($result < 0) {
-						$error++; $this->errors=$interface->errors;
+					if (isset($object)) {
+						// Initialisation donnees
+						$object->socid = $sendtosocid;    // To link to a company
+						$object->sendtoid = $sendtoid;    // To link to a contact/address
+						$object->actiontypecode = $actiontypecode;
+						$object->actionmsg = $actionmsg;  // Long text
+						$object->actionmsg2 = $actionmsg2; // Short text
+						$object->fk_element = $object->id;
+						$object->elementtype = $object->element;
 					}
-					// Fin appel triggers
+
+					//Trigger is only fired if the name is set
+					if (isset($trigger_name)) {
+						// Appel des triggers
+						include_once DOL_DOCUMENT_ROOT.'/core/class/interfaces.class.php';
+						$interface = new Interfaces($db);
+						$result = $interface->run_triggers($trigger_name, $object, $user, $langs, $conf);
+						if ($result < 0) {
+							$error++;
+							$this->errors = $interface->errors;
+						}
+						// Fin appel triggers
+					}
 
 					if ($error)
 					{
@@ -204,7 +218,7 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 						// This avoid sending mail twice if going out and then back to page
 						$mesg=$langs->trans('MailSuccessfulySent',$mailfile->getValidAddress($from,2),$mailfile->getValidAddress($sendto,2));
 						setEventMessage($mesg);
-						header('Location: '.$_SERVER["PHP_SELF"].'?'.($paramname?$paramname:'id').'='.$object->id);
+						header('Location: '.$_SERVER["HTTP_REFERER"]);
 						exit;
 					}
 				}
