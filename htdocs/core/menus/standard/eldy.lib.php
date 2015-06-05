@@ -1,9 +1,10 @@
 <?php
-/* Copyright (C) 2010-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2010      Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2012-2015 Juanjo Menent        <jmenent@2byte.es>
- * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
- * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
+/* Copyright (C) 2010-2014  Laurent Destailleur <eldy@users.sourceforge.net>
+ * Copyright (C) 2010       Regis Houssin       <regis.houssin@capnetworks.com>
+ * Copyright (C) 2012-2015  Juanjo Menent       <jmenent@2byte.es>
+ * Copyright (C) 2013       Cédric Salvador     <csalvador@gpcsolutions.fr>
+ * Copyright (C) 2015       Marcos García       <marcosgdf@gmail.com>
+ * Copyright (C) 2015       Raphaël Doursenaud  <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +35,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/menubase.class.php';
  * @param 	string	$atarget		Target (Example: '' or '_top')
  * @param 	int		$type_user     	0=Menu for backoffice, 1=Menu for front office
  * @param  	array	$tabMenu       If array with menu entries already loaded, we put this array here (in most cases, it's empty)
- * @param	array	$menu			Object Menu to return back list of menu entries
+ * @param	Menu	$menu			Object Menu to return back list of menu entries
  * @param	int		$noout			Disable output (Initialise &$menu only).
  * @return	int						0
  */
@@ -70,13 +71,16 @@ function print_eldy_menu($db,$atarget,$type_user,&$tabMenu,&$menu,$noout=0)
 		$langs->load("companies");
 		$langs->load("suppliers");
 
+		// FIXME: add a global facility to handle accesskeys and allow user customization
+		$accesskey='T';
+
 		$classname="";
 		if ($_SESSION["mainmenu"] && $_SESSION["mainmenu"] == "companies") { $classname='class="tmenusel"'; $_SESSION['idmenu']=''; }
 		else $classname = 'class="tmenu"';
 		$idsel='companies';
 
 		if (empty($noout)) print_start_menu_entry($idsel,$classname,$showmode);
-		if (empty($noout)) print_text_menu_entry($langs->trans("ThirdParties"), $showmode, DOL_URL_ROOT.'/societe/index.php?mainmenu=companies&amp;leftmenu=', $id, $idsel, $classname, $atarget);
+		if (empty($noout)) print_text_menu_entry($langs->trans("ThirdParties"), $showmode, DOL_URL_ROOT.'/societe/index.php?mainmenu=companies&amp;leftmenu=', $id, $idsel, $classname, $atarget, $accesskey);
 		if (empty($noout)) print_end_menu_entry($showmode);
 		$menu->add('/societe/index.php?mainmenu=companies&amp;leftmenu=', $langs->trans("ThirdParties"), 0, $showmode, $atarget, "companies", '');
 	}
@@ -346,15 +350,16 @@ function print_start_menu_entry($idsel,$classname,$showmode)
  * @param	string	$idsel		Id sel
  * @param	string	$classname	Class name
  * @param	string	$atarget	Target
+ * @param   string  $accesskey  Accessibility key (Keyboard shortcut)
  * @return	void
  */
-function print_text_menu_entry($text, $showmode, $url, $id, $idsel, $classname, $atarget)
+function print_text_menu_entry($text, $showmode, $url, $id, $idsel, $classname, $atarget, $accesskey=null)
 {
 	global $langs;
 
 	if ($showmode == 1)
 	{
-		print '<a class="tmenuimage" href="'.$url.'"'.($atarget?' target="'.$atarget.'"':'').'>';
+		print '<a class="tmenuimage" href="'.$url.'"'.($atarget?' target="'.$atarget.'"':'').($accesskey?' accesskey="'.$accesskey.'"':'').'>';
 		print '<div class="'.$id.' '.$idsel.' topmenuimage"><span class="'.$id.' tmenuimage" id="mainmenuspan_'.$idsel.'"></span></div>';
 		print '</a>';
 		print '<a '.$classname.' id="mainmenua_'.$idsel.'" href="'.$url.'"'.($atarget?' target="'.$atarget.'"':'').'>';
