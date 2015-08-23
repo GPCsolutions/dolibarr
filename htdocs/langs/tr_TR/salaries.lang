@@ -10,4 +10,6 @@ SalariesPayments=Ücret ödemeleri
 ShowSalaryPayment=Ücret ödemesi göster
 THM=Ortalama saat ücreti
 TJM=Ortalama günlük ücret
-CurrentSalary=Current salary
+CurrentSalary=Güncel maaş
+THMDescription=Bu değer, eğer proje modülü kullanılıyorsa kullanıcılar tarafından girilen bir projede tüketilen sürenin maliyetinin hesaplanması için kullanılır
+TJMDescription=Bu değer yalnızca bilgi amaçlı olup hiçbir hesaplamada kulanılmaz

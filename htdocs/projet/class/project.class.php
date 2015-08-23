@@ -3,7 +3,7 @@
  * Copyright (C) 2005-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2013	   Florian Henry        <florian.henry@open-concept.pro>
- * Copyright (C) 2014      Marcos García        <marcosgdf@gmail.com>
+ * Copyright (C) 2014-2015 Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,6 +46,12 @@ class Project extends CommonObject
     var $id;
     var $ref;
     var $description;
+	/**
+	 * @var string
+	 * @deprecated
+	 * @see title
+	 */
+	public $titre;
     var $title;
     var $date_start;
     var $date_end;
@@ -59,12 +65,36 @@ class Project extends CommonObject
     var $budget_amount;
 
     var $statuts_short;
-    var $statuts;			// 0=draft, 1=opened, 2=closed
+    var $statuts_long;
+
+    var $statut;			// 0=draft, 1=opened, 2=closed
+    var $opp_status;		// opportunity status, into table llx_c_lead_status
 
     var $oldcopy;
 
     var $weekWorkLoad;			// Used to store workload details of a projet
     var $weekWorkLoadPerTask;	// Used to store workload details of tasks of a projet
+
+	/**
+	 * @var int Creation date
+	 * @deprecated
+	 * @see date_c
+	 */
+	public $datec;
+	/**
+	 * @var int Creation date
+	 */
+	public $date_c;
+	/**
+	 * @var int Modification date
+	 * @deprecated
+	 * @see date_m
+	 */
+	public $datem;
+	/**
+	 * @var int Modification date
+	 */
+	public $date_m;
 
 
     /**
@@ -77,7 +107,7 @@ class Project extends CommonObject
         $this->db = $db;
 
         $this->statuts_short = array(0 => 'Draft', 1 => 'Opened', 2 => 'Closed');
-        $this->statuts = array(0 => 'Draft', 1 => 'Opened', 2 => 'Closed');
+        $this->statuts_long = array(0 => 'Draft', 1 => 'Opened', 2 => 'Closed');
     }
 
     /**
@@ -113,10 +143,12 @@ class Project extends CommonObject
         $sql.= ", fk_soc";
         $sql.= ", fk_user_creat";
         $sql.= ", fk_statut";
+        $sql.= ", fk_opp_status";
         $sql.= ", public";
         $sql.= ", datec";
         $sql.= ", dateo";
         $sql.= ", datee";
+        $sql.= ", opp_amount";
         $sql.= ", budget_amount";
         $sql.= ", entity";
         $sql.= ") VALUES (";
@@ -125,12 +157,14 @@ class Project extends CommonObject
         $sql.= ", '" . $this->db->escape($this->description) . "'";
         $sql.= ", " . ($this->socid > 0 ? $this->socid : "null");
         $sql.= ", " . $user->id;
-        $sql.= ", 0";
+        $sql.= ", ".(is_numeric($this->statut) ? $this->statut : '0');
+        $sql.= ", ".(is_numeric($this->opp_status) ? $this->opp_status : 'NULL');
         $sql.= ", " . ($this->public ? 1 : 0);
         $sql.= ", '".$this->db->idate($now)."'";
         $sql.= ", " . ($this->date_start != '' ? "'".$this->db->idate($this->date_start)."'" : 'null');
         $sql.= ", " . ($this->date_end != '' ? "'".$this->db->idate($this->date_end)."'" : 'null');
-        $sql.= ", " . ($this->budget_amount != ''?price2num($this->budget_amount):'null');
+        $sql.= ", " . (strcmp($this->opp_amount,'') ? price2num($this->opp_amount) : 'null');
+        $sql.= ", " . (strcmp($this->budget_amount,'') ? price2num($this->budget_amount) : 'null');
         $sql.= ", ".$conf->entity;
         $sql.= ")";
 
@@ -202,6 +236,7 @@ class Project extends CommonObject
         // Clean parameters
         $this->title = trim($this->title);
         $this->description = trim($this->description);
+		if ($this->opp_amount < 0) $this->opp_amount='';
 
         if (dol_strlen(trim($this->ref)) > 0)
         {
@@ -213,16 +248,18 @@ class Project extends CommonObject
             $sql.= ", description = '" . $this->db->escape($this->description) . "'";
             $sql.= ", fk_soc = " . ($this->socid > 0 ? $this->socid : "null");
             $sql.= ", fk_statut = " . $this->statut;
+            $sql.= ", fk_opp_status = " . ($this->opp_status > 0 ? $this->opp_status : 'null');
             $sql.= ", public = " . ($this->public ? 1 : 0);
             $sql.= ", datec=" . ($this->date_c != '' ? "'".$this->db->idate($this->date_c)."'" : 'null');
             $sql.= ", dateo=" . ($this->date_start != '' ? "'".$this->db->idate($this->date_start)."'" : 'null');
             $sql.= ", datee=" . ($this->date_end != '' ? "'".$this->db->idate($this->date_end)."'" : 'null');
             $sql.= ", date_close=" . ($this->date_close != '' ? "'".$this->db->idate($this->date_close)."'" : 'null');
             $sql.= ", fk_user_close=" . ($this->fk_user_close > 0 ? $this->fk_user_close : "null");
-            $sql.= ", budget_amount = " . ($this->budget_amount > 0 ? $this->budget_amount : "null");
+            $sql.= ", opp_amount = " . (strcmp($this->opp_amount, '') ? price2num($this->opp_amount) : "null");
+            $sql.= ", budget_amount = " . (strcmp($this->budget_amount, '')  ? price2num($this->budget_amount) : "null");
             $sql.= " WHERE rowid = " . $this->id;
 
-            dol_syslog(get_class($this)."::Update", LOG_DEBUG);
+            dol_syslog(get_class($this)."::update", LOG_DEBUG);
             $resql=$this->db->query($sql);
             if ($resql)
             {
@@ -281,13 +318,13 @@ class Project extends CommonObject
                 $this->error = $this->db->lasterror();
                 $this->errors[] = $this->error;
                 $this->db->rollback();
-                dol_syslog(get_class($this)."::Update error -2 " . $this->error, LOG_ERR);
+                dol_syslog(get_class($this)."::update error -2 " . $this->error, LOG_ERR);
                 $result = -2;
             }
         }
         else
         {
-            dol_syslog(get_class($this)."::Update ref null");
+            dol_syslog(get_class($this)."::update ref null");
             $result = -1;
         }
 
@@ -305,8 +342,8 @@ class Project extends CommonObject
     {
         if (empty($id) && empty($ref)) return -1;
 
-        $sql = "SELECT rowid, ref, title, description, public, datec, budget_amount,";
-        $sql.= " tms, dateo, datee, date_close, fk_soc, fk_user_creat, fk_user_close, fk_statut, note_private, note_public, model_pdf";
+        $sql = "SELECT rowid, ref, title, description, public, datec, opp_amount, budget_amount,";
+        $sql.= " tms, dateo, datee, date_close, fk_soc, fk_user_creat, fk_user_close, fk_statut, fk_opp_status, note_private, note_public, model_pdf";
         $sql.= " FROM " . MAIN_DB_PREFIX . "projet";
         if (! empty($id))
         {
@@ -345,6 +382,8 @@ class Project extends CommonObject
                 $this->user_close_id = $obj->fk_user_close;
                 $this->public = $obj->public;
                 $this->statut = $obj->fk_statut;
+                $this->opp_status = $obj->fk_opp_status;
+                $this->opp_amount	= $obj->opp_amount;
                 $this->budget_amount	= $obj->budget_amount;
                 $this->modelpdf	= $obj->model_pdf;
 
@@ -406,31 +445,40 @@ class Project extends CommonObject
     }
 
     /**
-     * 	Return list of elements for type linked to project
+     * 	Return list of elements for type, linked to project
      *
-     * 	@param		string		$type			'propal','order','invoice','order_supplier','invoice_supplier'
+     * 	@param		string		$type			'propal','order','invoice','order_supplier','invoice_supplier',...
      * 	@param		string		$tablename		name of table associated of the type
-     * 	@param		string		$datefieldname	name of table associated of the type
-     *  @param		string		$dates			Start date (at 00:00:00)
-     *  @param		string		$datee			End date (at 23:00:00)
+     * 	@param		string		$datefieldname	name of date field for filter
+     *  @param		string		$dates			Start date (ex 00:00:00)
+     *  @param		string		$datee			End date (ex 23:59:59)
      * 	@return		mixed						Array list of object ids linked to project, < 0 or string if error
      */
     function get_element_list($type, $tablename, $datefieldname='', $dates='', $datee='')
     {
         $elements = array();
 
-        if ($type == 'agenda')
+		if ($type == 'agenda')
         {
             $sql = "SELECT id as rowid FROM " . MAIN_DB_PREFIX . "actioncomm WHERE fk_project=" . $this->id;
         }
+        elseif ($type == 'expensereport')
+		{
+            $sql = "SELECT ed.rowid FROM " . MAIN_DB_PREFIX . "expensereport as e, " . MAIN_DB_PREFIX . "expensereport_det as ed WHERE e.rowid = ed.fk_expensereport AND ed.fk_projet=" . $this->id;
+		}
+        elseif ($type == 'project_task')
+		{
+			$sql = "SELECT DISTINCT pt.rowid FROM " . MAIN_DB_PREFIX . "projet_task as pt, " . MAIN_DB_PREFIX . "projet_task_time as ptt WHERE pt.rowid = ptt.fk_task AND pt.fk_projet=" . $this->id;
+		}
+		elseif ($type == 'project_task_time')	// Case we want to duplicate line foreach user
+		{
+			$sql = "SELECT DISTINCT pt.rowid, ptt.fk_user FROM " . MAIN_DB_PREFIX . "projet_task as pt, " . MAIN_DB_PREFIX . "projet_task_time as ptt WHERE pt.rowid = ptt.fk_task AND pt.fk_projet=" . $this->id;
+		}
         else
 		{
             $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . $tablename." WHERE fk_projet=" . $this->id;
 		}
-    	if ($type == 'expensereport')
-		{
-            $sql = "SELECT ed.rowid FROM " . MAIN_DB_PREFIX . "expensereport as e, " . MAIN_DB_PREFIX . "expensereport_det as ed WHERE e.rowid = ed.fk_expensereport AND ed.fk_projet=" . $this->id;
-		}
+
 		if ($dates > 0)
 		{
 			if (empty($datefieldname) && ! empty($this->table_element_date)) $datefieldname=$this->table_element_date;
@@ -458,7 +506,7 @@ class Project extends CommonObject
                 {
                     $obj = $this->db->fetch_object($result);
 
-                    $elements[$i] = $obj->rowid;
+                    $elements[$i] = $obj->rowid.(empty($obj->fk_user)?'':'_'.$obj->fk_user);
 
                     $i++;
                 }
@@ -506,7 +554,7 @@ class Project extends CommonObject
         // Set fk_projet into elements to null
         $listoftables=array(
         		'facture'=>'fk_projet','propal'=>'fk_projet','commande'=>'fk_projet','facture_fourn'=>'fk_projet','commande_fournisseur'=>'fk_projet',
-        		'expensereport_det'=>'fk_projet','contrat'=>'fk_projet','fichinter'=>'fk_projet','don'=>'fk_project'
+        		'expensereport_det'=>'fk_projet','contrat'=>'fk_projet','fichinter'=>'fk_projet','don'=>'fk_projet'
         		);
         foreach($listoftables as $key => $value)
         {
@@ -712,6 +760,11 @@ class Project extends CommonObject
             $sql.= " AND entity = " . $conf->entity;
             $sql.= " AND fk_statut = 1";
 
+            if (! empty($conf->global->PROJECT_USE_OPPORTUNITIES))
+            {
+            	// TODO What to do if fk_opp_status is not code 'WIN' or 'LOST'
+            }
+
             dol_syslog(get_class($this)."::setClose", LOG_DEBUG);
             $resql = $this->db->query($sql);
             if ($resql)
@@ -768,7 +821,7 @@ class Project extends CommonObject
 
         if ($mode == 0)
         {
-            return $langs->trans($this->statuts[$statut]);
+            return $langs->trans($this->statuts_long[$statut]);
         }
         if ($mode == 1)
         {
@@ -777,38 +830,38 @@ class Project extends CommonObject
         if ($mode == 2)
         {
             if ($statut == 0)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut0') . ' ' . $langs->trans($this->statuts_short[$statut]);
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut0') . ' ' . $langs->trans($this->statuts_short[$statut]);
             if ($statut == 1)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut4') . ' ' . $langs->trans($this->statuts_short[$statut]);
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut4') . ' ' . $langs->trans($this->statuts_short[$statut]);
             if ($statut == 2)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut6') . ' ' . $langs->trans($this->statuts_short[$statut]);
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut6') . ' ' . $langs->trans($this->statuts_short[$statut]);
         }
         if ($mode == 3)
         {
             if ($statut == 0)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut0');
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut0');
             if ($statut == 1)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut4');
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut4');
             if ($statut == 2)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut6');
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut6');
         }
         if ($mode == 4)
         {
             if ($statut == 0)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut0') . ' ' . $langs->trans($this->statuts_short[$statut]);
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut0') . ' ' . $langs->trans($this->statuts_long[$statut]);
             if ($statut == 1)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut4') . ' ' . $langs->trans($this->statuts_short[$statut]);
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut4') . ' ' . $langs->trans($this->statuts_long[$statut]);
             if ($statut == 2)
-                return img_picto($langs->trans($this->statuts_short[$statut]), 'statut6') . ' ' . $langs->trans($this->statuts_short[$statut]);
+                return img_picto($langs->trans($this->statuts_long[$statut]), 'statut6') . ' ' . $langs->trans($this->statuts_long[$statut]);
         }
         if ($mode == 5)
         {
             if ($statut == 0)
-                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_short[$statut]), 'statut0');
+                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_long[$statut]), 'statut0');
             if ($statut == 1)
-                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_short[$statut]), 'statut4');
+                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_long[$statut]), 'statut4');
             if ($statut == 2)
-                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_short[$statut]), 'statut6');
+                return $langs->trans($this->statuts_short[$statut]) . ' ' . img_picto($langs->trans($this->statuts_long[$statut]), 'statut6');
         }
     }
 
@@ -818,9 +871,11 @@ class Project extends CommonObject
      * 	@param	int		$withpicto		0=No picto, 1=Include picto into link, 2=Only picto
      * 	@param	string	$option			Variant ('', 'nolink')
      * 	@param	int		$addlabel		0=Default, 1=Add label into string, >1=Add first chars into string
+     *  @param	string	$moreinpopup	Text to add into popup
+     *  @param	string	$sep			Separator between ref and label if option addlabel is set
      * 	@return	string					Chaine avec URL
      */
-    function getNomUrl($withpicto=0, $option='', $addlabel=0)
+    function getNomUrl($withpicto=0, $option='', $addlabel=0, $moreinpopup='', $sep=' - ')
     {
         global $langs;
 
@@ -831,7 +886,8 @@ class Project extends CommonObject
         if (! empty($this->ref))
             $label .= '<br><b>' . $langs->trans('Ref') . ':</b> ' . $this->ref;
         if (! empty($this->title))
-            $label .= '<br><b>' . $langs->trans('Name') . ':</b> ' . $this->title;
+            $label .= '<br><b>' . $langs->trans('Label') . ':</b> ' . $this->title;
+        if ($moreinpopup) $label.='<br>'.$moreinpopup;
         $linkclose = '" title="'.dol_escape_htmltag($label, 1).'" class="classfortooltip">';
 
         if ($option != 'nolink') {
@@ -850,7 +906,7 @@ class Project extends CommonObject
 
         if ($withpicto) $result.=($link . img_object($label, $picto, 'class="classfortooltip"') . $linkend);
         if ($withpicto && $withpicto != 2) $result.=' ';
-        if ($withpicto != 2) $result.=$link . $this->ref . $linkend . (($addlabel && $this->title) ? ' - ' . dol_trunc($this->title, ($addlabel > 1 ? $addlabel : 0)) : '');
+        if ($withpicto != 2) $result.=$link . $this->ref . $linkend . (($addlabel && $this->title) ? $sep . dol_trunc($this->title, ($addlabel > 1 ? $addlabel : 0)) : '');
         return $result;
     }
 
@@ -876,6 +932,8 @@ class Project extends CommonObject
         $this->date_m = $now;
         $this->date_start = $now;
         $this->note_public = 'SPECIMEN';
+		$this->fk_ele = 20000;
+        $this->opp_amount = 20000;
         $this->budget_amount = 10000;
 
         /*
@@ -1493,6 +1551,23 @@ class Project extends CommonObject
                 return -1;
         }
     }
+
+	/**
+	 * Function used to replace a thirdparty id with another one.
+	 *
+	 * @param DoliDB $db Database handler
+	 * @param int $origin_id Old thirdparty id
+	 * @param int $dest_id New thirdparty id
+	 * @return bool
+	 */
+	public static function replaceThirdparty(DoliDB $db, $origin_id, $dest_id)
+	{
+		$tables = array(
+			'projet'
+		);
+
+		return CommonObject::commonReplaceThirdparty($db, $origin_id, $dest_id, $tables);
+	}
 
 }
 

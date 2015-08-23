@@ -113,7 +113,7 @@ if($action)
 llxHeader('',$langs->trans("StockSetup"));
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("StockSetup"),$linkback,'setup');
+print_fiche_titre($langs->trans("StockSetup"),$linkback,'title_setup');
 
 $form=new Form($db);
 
@@ -122,7 +122,7 @@ $disabled='';
 if (! empty($conf->productbatch->enabled))
 {
 	$langs->load("productbatch");
-	$disabled=' disabled="disabled"';
+	$disabled=' disabled';
 	print info_admin($langs->trans("WhenProductBatchModuleOnOptionAreForced"));
 }
 

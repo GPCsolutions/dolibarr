@@ -1,13 +1,14 @@
 <?php
-/* Copyright (C) 2006-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2006		    Rodolphe Quiedeville	<rodolphe@quiedeville.org>
- * Copyright (C) 2007		    Patrick Raguin			  <patrick.raguin@gmail.com>
- * Copyright (C) 2010-2012  Regis Houssin			    <regis.houssin@capnetworks.com>
- * Copyright (C) 2013-2014  Florian Henry		  	  <florian.henry@open-concept.pro>
- * Copyright (C) 2013-2014  Juanjo Menent		  	  <jmenent@2byte.es>
- * Copyright (C) 2013       Christophe Battarel		<contact@altairis.fr>
+/* Copyright (C) 2006-2011  Laurent Destailleur     <eldy@users.sourceforge.net>
+ * Copyright (C) 2006       Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+ * Copyright (C) 2007       Patrick Raguin          <patrick.raguin@gmail.com>
+ * Copyright (C) 2010-2012  Regis Houssin           <regis.houssin@capnetworks.com>
+ * Copyright (C) 2013-2014  Florian Henry           <florian.henry@open-concept.pro>
+ * Copyright (C) 2013-2014  Juanjo Menent           <jmenent@2byte.es>
+ * Copyright (C) 2013       Christophe Battarel     <contact@altairis.fr>
  * Copyright (C) 2013       Alexandre Spangaro      <alexandre.spangaro@gmail.com>
  * Copyright (C) 2015       Frederic France         <frederic.france@free.fr>
+ * Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,15 +82,25 @@ function societe_prepare_head(Societe $object)
     	$h++;
     }
     //show categorie tab
-    if (! empty($conf->categorie->enabled)  && ! empty($user->rights->categorie->lire))
+    /*if (! empty($conf->categorie->enabled)  && ! empty($user->rights->categorie->lire))
     {
-        $type = 2;
-        if ($object->fournisseur) $type = 1;
+		require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
+        $type = Categorie::TYPE_CUSTOMER;
+        if ($object->fournisseur) $type = Categorie::TYPE_SUPPLIER;
         $head[$h][0] = DOL_URL_ROOT.'/categories/categorie.php?socid='.$object->id."&type=".$type;
         $head[$h][1] = $langs->trans('Categories');
         $head[$h][2] = 'category';
         $h++;
-    }
+    }*/
+
+    // Tab to link resources
+	if ($conf->resource->enabled && ! empty($conf->global->RESOURCE_ON_THIRDPARTIES))
+	{
+		$head[$h][0] = DOL_URL_ROOT.'/resource/element_resource.php?element=societe&element_id='.$object->id;
+		$head[$h][1] = $langs->trans("Resources");
+		$head[$h][2] = 'resources';
+		$h++;
+	}
 
     // Show more tabs from modules
     // Entries must be declared in modules descriptor with line
@@ -353,7 +364,7 @@ function getState($id,$withcode='',$dbtouse=0)
         }
         else
         {
-            return $langs->trans("NotDefined");
+            return $langs->transnoentitiesnoconv("NotDefined");
         }
     }
     else dol_print_error($dbtouse,'');
@@ -493,7 +504,7 @@ function show_projects($conf,$langs,$db,$object,$backtopage='')
                 $projecttmp = new Project($db);
 
                 $i=0;
-                $var=false;
+                $var=true;
                 while ($i < $num)
                 {
                     $obj = $db->fetch_object($result);
@@ -614,11 +625,11 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
     if (! empty($conf->agenda->enabled) && ! empty($user->rights->agenda->myactions->create))
     {
     	$colspan++;
-        print '<td>&nbsp;</td>';
+        print_liste_field_titre('');
     }
     // Edit
-    print '<td>&nbsp;</td>';
-    print "</tr>";
+    print_liste_field_titre('');
+	print "</tr>\n";
 
 
     print '<tr class="liste_titre">';
@@ -655,7 +666,7 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
     print "</tr>";
 
 
-    $sql = "SELECT p.rowid, p.lastname, p.firstname, p.fk_pays as country_id, p.poste, p.phone, p.phone_mobile, p.phone_perso, p.fax, p.email, p.skype, p.statut ";
+    $sql = "SELECT p.rowid, p.lastname, p.firstname, p.fk_pays as country_id, p.civility, p.poste, p.phone as phone_pro, p.phone_mobile, p.phone_perso, p.fax, p.email, p.skype, p.statut ";
     $sql .= ", p.civility as civility_id, p.address, p.zip, p.town";
     $sql .= " FROM ".MAIN_DB_PREFIX."socpeople as p";
     $sql .= " WHERE p.fk_soc = ".$object->id;
@@ -665,6 +676,8 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
 
     dol_syslog('core/lib/company.lib.php :: show_contacts', LOG_DEBUG);
     $result = $db->query($sql);
+    if (! $result) dol_print_error($db);
+
     $num = $db->num_rows($result);
 
 	$var=true;
@@ -684,6 +697,14 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
             $contactstatic->lastname = $obj->lastname;
             $contactstatic->firstname = $obj->firstname;
             $contactstatic->civility_id = $obj->civility_id;
+            $contactstatic->poste = $obj->poste;
+            $contactstatic->address = $obj->address;
+            $contactstatic->zip = $obj->zip;
+            $contactstatic->town = $obj->town;
+            $contactstatic->phone_pro = $obj->phone_pro;
+            $contactstatic->phone_mobile = $obj->phone_mobile;
+            $contactstatic->phone_perso = $obj->phone_perso;
+            $contactstatic->email = $obj->email;
             print $contactstatic->getNomUrl(1,'',0,'&backtopage='.urlencode($backtopage));
 			print '</td><td>';
             if ($obj->poste) print $obj->poste;
@@ -708,11 +729,13 @@ function show_contacts($conf,$langs,$db,$object,$backtopage='')
             	print '</a> ';
             }
             if ($coords) { print dol_print_address($coords,'address_contact_'.$obj->rowid, 'contact', $obj->rowid); $outdone++; }
-            if ($obj->phone || $obj->phone_mobile || $obj->phone_perso) print ($outdone?'<br>':'');
-            if ($obj->phone) { print dol_print_phone($obj->phone,$country_code['code'],$obj->rowid,$object->id,'AC_TEL','&nbsp;','phone'); $outdone++; }
+
+            if ($obj->phone_pro || $obj->phone_mobile || $obj->phone_perso || $obj->fax) print ($outdone?'<br>':'');
+            if ($obj->phone_pro) { print dol_print_phone($obj->phone_pro,$country_code['code'],$obj->rowid,$object->id,'AC_TEL','&nbsp;','phone'); $outdone++; }
             if ($obj->phone_mobile) { print dol_print_phone($obj->phone_mobile,$country_code['code'],$obj->rowid,$object->id,'AC_TEL','&nbsp;','phone'); $outdone++; }
             if ($obj->phone_perso) { print dol_print_phone($obj->phone_perso,$country_code['code'],$obj->rowid,$object->id,'AC_TEL','&nbsp;','phone'); $outdone++; }
             if ($obj->fax) { print dol_print_phone($obj->fax,$country_code['code'],$obj->rowid,$object->id,'AC_FAX','&nbsp;','fax'); $outdone++; }
+
             print '<div style="clear: both;"></div>';
             $outdone=0;
             if ($obj->email) print dol_print_email($obj->email,$obj->rowid,$object->id,'AC_EMAIL',0,0,1);
@@ -909,22 +932,21 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $sql.= " a.fk_element, a.elementtype,";
         $sql.= " c.code as acode, c.libelle,";
         $sql.= " u.login, u.rowid";
-        if (get_class($object) == 'Adherent') $sql.= ", m.lastname, m.firstname";
         if (get_class($object) == 'Societe')  $sql.= ", sp.lastname, sp.firstname";
+        if (get_class($object) == 'Adherent') $sql.= ", m.lastname, m.firstname";
         $sql.= " FROM ".MAIN_DB_PREFIX."user as u, ".MAIN_DB_PREFIX."actioncomm as a";
-        if (get_class($object) == 'Adherent') $sql.= ", ".MAIN_DB_PREFIX."adherent as m";
+        $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_actioncomm as c ON a.fk_action = c.id";
         if (get_class($object) == 'Societe')  $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople as sp ON a.fk_contact = sp.rowid";
-        $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_actioncomm as c ON a.fk_action = c.id ";
+        if (get_class($object) == 'Adherent') $sql.= ", ".MAIN_DB_PREFIX."adherent as m";
         $sql.= " WHERE u.rowid = a.fk_user_author";
         $sql.= " AND a.entity IN (".getEntity('agenda', 1).")";
-        if (get_class($object) == 'Adherent') {
+        if (get_class($object) == 'Adherent')
+        {
         	$sql.= " AND a.fk_element = m.rowid AND a.elementtype = 'member'";
-        	if (! empty($object->id))
-        		$sql.= " AND a.fk_element = ".$object->id;
+        	if (! empty($object->id)) $sql.= " AND a.fk_element = ".$object->id;
         }
-        if (get_class($object) == 'Societe'  && $object->id) $sql.= " AND a.fk_soc = ".$object->id;
+        if (get_class($object) == 'Societe' && $object->id) $sql.= " AND a.fk_soc = ".$object->id;
         if (! empty($objcon->id)) $sql.= " AND a.fk_contact = ".$objcon->id;
-        // $sql.= " AND c.id=a.fk_action";
         $sql.= " AND ((a.percent >= 0 AND a.percent < 100) OR (a.percent = -1 AND a.datep > '".$db->idate($now)."'))";
         $sql.= " ORDER BY a.datep DESC, a.id DESC";
 
@@ -949,6 +971,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
 
                     $out.="<tr ".$bc[$var].">";
 
+                    // Date
                     $out.='<td width="120" align="left" class="nowrap">';
                     $out.=dol_print_date($datep,'dayhour');
                     if ($datep2 && $datep2 != $datep)
@@ -976,7 +999,7 @@ function show_actions_todo($conf,$langs,$db,$object,$objcon='',$noprint=0)
 
                     // Title of event
                     //$out.='<td colspan="2">'.dol_trunc($obj->label,40).'</td>';
-                    $out.='<td colspan="2">'.$actionstatic->getNomUrl(1,40).'</td>';
+                    $out.='<td colspan="2">'.$actionstatic->getNomUrl(1,120).'</td>';
 
                     // Contact pour cette action
                     if (empty($objcon->id) && $obj->fk_contact > 0)
@@ -1061,19 +1084,18 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
         $sql.= " a.fk_user_author, a.fk_contact,";
         $sql.= " c.code as acode, c.libelle,";
         $sql.= " u.login, u.rowid as user_id";
-        if (get_class($object) == 'Adherent') $sql.= ", m.lastname, m.firstname";
         if (get_class($object) == 'Societe')  $sql.= ", sp.lastname, sp.firstname";
+        if (get_class($object) == 'Adherent') $sql.= ", m.lastname, m.firstname";
         $sql.= " FROM ".MAIN_DB_PREFIX."user as u, ".MAIN_DB_PREFIX."actioncomm as a";
-        if (get_class($object) == 'Adherent') $sql.= ", ".MAIN_DB_PREFIX."adherent as m";
+        $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_actioncomm as c ON a.fk_action = c.id";
         if (get_class($object) == 'Societe')  $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."socpeople as sp ON a.fk_contact = sp.rowid";
-        $sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_actioncomm as c ON a.fk_action = c.id ";
+        if (get_class($object) == 'Adherent') $sql.= ", ".MAIN_DB_PREFIX."adherent as m";
         $sql.= " WHERE u.rowid = a.fk_user_author";
         $sql.= " AND a.entity IN (".getEntity('agenda', 1).")";
+        if (get_class($object) == 'Societe'  && $object->id) $sql.= " AND a.fk_soc = ".$object->id;
         if (get_class($object) == 'Adherent') $sql.= " AND a.fk_element = m.rowid AND a.elementtype = 'member'";
         if (get_class($object) == 'Adherent' && $object->id) $sql.= " AND a.fk_element = ".$object->id;
-        if (get_class($object) == 'Societe'  && $object->id) $sql.= " AND a.fk_soc = ".$object->id;
         if (is_object($objcon) && $objcon->id) $sql.= " AND a.fk_contact = ".$objcon->id;
-        // $sql.= " AND c.id=a.fk_action";
         $sql.= " AND (a.percent = 100 OR (a.percent = -1 AND a.datep <= '".$db->idate($now)."'))";
         $sql.= " ORDER BY a.datep DESC, a.id DESC";
 
@@ -1219,14 +1241,14 @@ function show_actions_done($conf,$langs,$db,$object,$objcon='',$noprint=0)
                 //$actionstatic->libelle=$libelle;
                 $actionstatic->libelle=$histo[$key]['note'];
                 $actionstatic->id=$histo[$key]['id'];
-                $out.=$actionstatic->getNomUrl(1,40);
+                $out.=$actionstatic->getNomUrl(1,120);
             }
             if (isset($histo[$key]['type']) && $histo[$key]['type']=='mailing')
             {
                 $out.='<a href="'.DOL_URL_ROOT.'/comm/mailing/card.php?id='.$histo[$key]['id'].'">'.img_object($langs->trans("ShowEMailing"),"email").' ';
                 $transcode=$langs->trans("Action".$histo[$key]['acode']);
                 $libelle=($transcode!="Action".$histo[$key]['acode']?$transcode:'Send mass mailing');
-                $out.=dol_trunc($libelle,40);
+                $out.=dol_trunc($libelle,120);
             }
             $out.='</td>';
 

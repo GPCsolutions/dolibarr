@@ -147,7 +147,7 @@ if (preg_match('/^mac/i',PHP_OS)) $linuxlike=0;
 $wikihelp='EN:Setup Sms|FR:Paramétrage Sms|ES:Configuración Sms';
 llxHeader('',$langs->trans("Setup"),$wikihelp);
 
-print_fiche_titre($langs->trans("SmsSetup"),'','setup');
+print_fiche_titre($langs->trans("SmsSetup"),'','title_setup');
 
 print $langs->trans("SmsDesc")."<br>\n";
 print "<br>\n";
@@ -204,7 +204,7 @@ if ($action == 'edit')
 	print '</table>';
 
 	print '<br><div class="center">';
-	print '<input class="button" type="submit" name="save" value="'.$langs->trans("Save").'"'.(!count($listofmethods)?' disabled="disbaled"':'').'>';
+	print '<input class="button" type="submit" name="save" value="'.$langs->trans("Save").'"'.(!count($listofmethods)?' disabled':'').'>';
 	print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
 	print '<input class="button" type="submit" name="cancel" value="'.$langs->trans("Cancel").'">';
 	print '</div>';

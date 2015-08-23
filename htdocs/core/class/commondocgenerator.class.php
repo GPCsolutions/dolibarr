@@ -3,6 +3,7 @@
  * Copyright (C) 2004-2010	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2004		Eric Seigne				<eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2015       Marcos García           <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -118,6 +119,7 @@ abstract class CommonDocGenerator
             'mycompany_idprof5'=>$mysoc->idprof5,
             'mycompany_idprof6'=>$mysoc->idprof6,
         	'mycompany_vatnumber'=>$mysoc->tva_intra,
+			'mycompany_object'=>$mysoc->object,
         	// Only private not exists for "mysoc"
             'mycompany_note_private'=>$mysoc->note_private,
 
@@ -147,6 +149,7 @@ abstract class CommonDocGenerator
 
         $array_thirdparty = array(
             'company_name'=>$object->name,
+	        'company_name_alias' => $object->name_alias,
             'company_email'=>$object->email,
             'company_phone'=>$object->phone,
             'company_fax'=>$object->fax,
@@ -408,6 +411,7 @@ abstract class CommonDocGenerator
 			'line_fulldesc'=>doc_getlinedesc($line,$outputlangs),
 			'line_product_ref'=>$line->product_ref,
 			'line_product_label'=>$line->product_label,
+                        'line_product_type'=>$line->product_type,
 			'line_desc'=>$line->desc,
 			'line_vatrate'=>vatrate($line->tva_tx,true,$line->info_bits),
 			'line_up'=>price2num($line->subprice),

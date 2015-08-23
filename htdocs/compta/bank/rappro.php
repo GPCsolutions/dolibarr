@@ -2,6 +2,7 @@
 /* Copyright (C) 2001-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2010	   Juanjo Menent	    <jmenent@2byte.es>
+ * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -114,12 +115,12 @@ if ($resql)
 {
     $var=True;
     $num = $db->num_rows($resql);
-    if ($num > 0) $options .= '<option value="0"'.(GETPOST('cat')?'':' selected="true"').'>&nbsp;</option>';
+    if ($num > 0) $options .= '<option value="0"'.(GETPOST('cat')?'':' selected').'>&nbsp;</option>';
     $i = 0;
     while ($i < $num)
     {
         $obj = $db->fetch_object($resql);
-        $options .= '<option value="'.$obj->rowid.'"'.(GETPOST('cat')==$obj->rowid?' selected="true"':'').'>'.$obj->label.'</option>'."\n";
+        $options .= '<option value="'.$obj->rowid.'"'.(GETPOST('cat')==$obj->rowid?' selected':'').'>'.$obj->label.'</option>'."\n";
         $i++;
     }
     $db->free($resql);
@@ -180,7 +181,7 @@ if ($resql)
     $var=True;
     $num = $db->num_rows($resql);
 
-    print_fiche_titre($langs->trans("Reconciliation").': <a href="account.php?account='.$acct->id.'">'.$acct->label.'</a>');
+    print_fiche_titre($langs->trans("Reconciliation").': <a href="account.php?account='.$acct->id.'">'.$acct->label.'</a>','title_bank.png');
     print '<br>';
 
     // Show last bank receipts
@@ -419,7 +420,7 @@ if ($resql)
         {
 
             print '<td align="center" class="nowrap">';
-            print '<input class="flat" name="rowid['.$objp->rowid.']" type="checkbox" value="'.$objp->rowid.'" size="1"'.(! empty($_POST['rowid'][$objp->rowid])?' checked="checked"':'').'>';
+            print '<input class="flat" name="rowid['.$objp->rowid.']" type="checkbox" value="'.$objp->rowid.'" size="1"'.(! empty($_POST['rowid'][$objp->rowid])?' checked':'').'>';
 //             print '<input class="flat" name="num_releve" type="text" value="'.$objp->num_releve.'" size="8">';
 //             print ' &nbsp; ';
 //             print "<input class=\"button\" type=\"submit\" value=\"".$langs->trans("Conciliate")."\">";

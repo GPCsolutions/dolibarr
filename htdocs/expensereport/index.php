@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2003		Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011	Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2015	Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004		Eric Seigne          <eric.seigne@ryxeo.com>
  * Copyright (C) 2005-2011	Regis Houssin        <regis.houssin@capnetworks.com>
  *
@@ -70,13 +70,11 @@ $totalnb=$totalsum=0;
 $sql = "SELECT tf.code, tf.label, count(de.rowid) as nb, sum(de.total_ht) as km";
 $sql.= " FROM ".MAIN_DB_PREFIX."expensereport as d, ".MAIN_DB_PREFIX."expensereport_det as de, ".MAIN_DB_PREFIX."c_type_fees as tf";
 $sql.= " WHERE de.fk_expensereport = d.rowid AND de.fk_c_type_fees = tf.id";
-
 // RESTRICT RIGHTS
 if (empty($user->rights->expensereport->readall) && empty($user->rights->expensereport->lire_tous))
 {
 	$sql.= " AND d.fk_user_author IN (".join(',',$childids).")\n";
 }
-
 $sql.= " GROUP BY tf.code, tf.label";
 
 $result = $db->query($sql);
@@ -107,7 +105,7 @@ print_fiche_titre($langs->trans("ExpensesArea"));
 print '<div class="fichecenter"><div class="fichethirdleft">';
 
 
-print '<table class="noborder" width="100%">';
+print '<table class="noborder nohover" width="100%">';
 print '<tr class="liste_titre">';
 print '<td colspan="4">'.$langs->trans("Statistics").'</td>';
 print "</tr>\n";
@@ -122,7 +120,7 @@ if ($conf->use_javascript_ajax)
 {
     print '<tr '.$bc[0].'><td align="center" colspan="4">';
     $data=array('series'=>$dataseries);
-    dol_print_graph('stats',320,180,$data,1,'pie',0);
+    dol_print_graph('stats',320,180,$data,1,'pie',0,'',0);
     print '</td></tr>';
 }
 
@@ -202,7 +200,7 @@ if ($result)
     }
     else
     {
-        print '<tr '.$bc[$var].'><td colspan="2">'.$langs->trans("None").'</td></tr>';
+        print '<tr '.$bc[$var].'><td colspan="6">'.$langs->trans("None").'</td></tr>';
     }
     print '</table><br>';
 }

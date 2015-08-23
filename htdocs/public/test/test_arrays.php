@@ -2,17 +2,17 @@
 //define("NOLOGIN",1);		// This means this output page does not require to be logged.
 define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
 
-
 require '../../main.inc.php';
 
-if ($_SERVER['REMOTE_ADDR'] != '127.0.0.1')
-{
-	print "Page available only from remote address 127.0.0.1";
-	exit;
+if ($dolibarr_main_prod) {
+	accessforbidden();
 }
 
-
 $usedolheader=1;	// 1 = Test inside a dolibarr page, 0 = Use hard coded header
+
+$form=new Form($db);
+
+
 
 
 // HEADER
@@ -30,14 +30,14 @@ if (empty($usedolheader))
 	<link rel="shortcut icon" type="image/x-icon" href="<?php echo DOL_URL_ROOT ?>/theme/eldy/img/favicon.ico"/>
 	<title>Test page</title>
 	<!-- Includes for JQuery (Ajax library) -->
-	<link rel="stylesheet" type="text/css" href="<?php echo DOL_URL_ROOT ?>/includes/jquery/css/smoothness/jquery-ui-latest.custom.css" />
+	<link rel="stylesheet" type="text/css" href="<?php echo DOL_URL_ROOT ?>/includes/jquery/css/smoothness/jquery-ui.custom.css" />
 	<link rel="stylesheet" type="text/css" href="<?php echo DOL_URL_ROOT ?>/includes/jquery/plugins/datatables/css/jquery.dataTables.css" />
 	<?php if ($_GET["dol_use_jmobile"] == 1) { ?>
 	<link rel="stylesheet" type="text/css" href="<?php echo DOL_URL_ROOT ?>/includes/jquery/plugins/mobile/jquery.mobile-latest.min.css" />
 	<?php } ?>
 	<link rel="stylesheet" type="text/css" title="default" href="<?php echo DOL_URL_ROOT ?>/theme/eldy/style.css.php<?php echo ($_GET["dol_use_jmobile"] == 1)?'?dol_use_jmobile=1&dol_optimize_smallscreen=1':''; ?>" />
 	<!-- Includes JS for JQuery -->
-	<script type="text/javascript" src="<?php echo DOL_URL_ROOT ?>/includes/jquery/js/jquery-latest.min.js"></script>
+	<script type="text/javascript" src="<?php echo DOL_URL_ROOT ?>/includes/jquery/js/jquery.min.js"></script>
 	<script type="text/javascript" src="<?php echo DOL_URL_ROOT ?>/includes/jquery/plugins/tablednd/jquery.tablednd.0.6.min.js"></script>
 	<script type="text/javascript" src="<?php echo DOL_URL_ROOT ?>/includes/jquery/plugins/datatables/js/jquery.dataTables.js"></script>
 	<?php if ($_GET["dol_use_jmobile"] == 1) { ?>
@@ -65,8 +65,9 @@ else
 
 <h1>
 This page is a sample of page using tables. It is designed to make test with<br>
-- css (edit page to change to test another css)<br>
-- jmobile (add parameter dol_use_jmobile=1&dol_optimize_smallscreen=1 to enable view with jmobile)<br>
+- css (add parameter &theme=newtheme to test another theme or edit css of current theme)<br>
+- jmobile (add parameter <a href="<?php echo $_SERVER["PHP_SELF"].'?dol_use_jmobile=1&dol_optimize_smallscreen=1'; ?>">dol_use_jmobile=1&dol_optimize_smallscreen=1</a> to enable view with jmobile)<br>
+- no javascript / usage for bind people (add parameter <a href="<?php echo $_SERVER["PHP_SELF"].'?nojs=1'; ?>">nojs=1</a> to force disable javascript)<br>
 - dataTables<br>
 - tablednd<br>
 </h1>
@@ -115,29 +116,84 @@ This page is a sample of page using tables. It is designed to make test with<br>
 
 
 
-<br><hr><br>Example 1 : Standard table => Use this if you need the drag and drop for lines<br>
+<br><hr><br>Example 1 : Standard table/thead/tbody/tr/th-td (no class pair/impair on td) => Use this if you need the drag and drop for lines or for long result tables<br>
 
 <?php
+include_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+$productspecimen=new Product($db);
+$productspecimen->initAsSpecimen();
+
 $sortfield='aaa';
 $sortorder='ASC';
 $tasksarray=array(1,2,3);	// To force having several lines
 $tagidfortablednd='tablelines3';
 if (! empty($conf->use_javascript_ajax)) include DOL_DOCUMENT_ROOT.'/core/tpl/ajaxrow.tpl.php';
+
+$nav='';
+$nav.='<form name="dateselect" action="'.$_SERVER["PHP_SELF"].'?action=show_peruser'.$param.'">';
+if ($actioncode || isset($_GET['actioncode']) || isset($_POST['actioncode'])) $nav.='<input type="hidden" name="actioncode" value="'.$actioncode.'">';
+if ($status || isset($_GET['status']) || isset($_POST['status']))  $nav.='<input type="hidden" name="status" value="'.$status.'">';
+if ($filter)  $nav.='<input type="hidden" name="filter" value="'.$filter.'">';
+if ($filtert) $nav.='<input type="hidden" name="filtert" value="'.$filtert.'">';
+if ($socid)   $nav.='<input type="hidden" name="socid" value="'.$socid.'">';
+if ($showbirthday)  $nav.='<input type="hidden" name="showbirthday" value="1">';
+if ($pid)    $nav.='<input type="hidden" name="projectid" value="'.$pid.'">';
+if ($type)   $nav.='<input type="hidden" name="type" value="'.$type.'">';
+if ($usergroup) $nav.='<input type="hidden" name="usergroup" value="'.$usergroup.'">';
+$nav.=$form->select_date($dateselect, 'dateselect', 0, 0, 1, '', 1, 0, 1);
+$nav.=' <input type="submit" name="submitdateselect" class="button" value="'.$langs->trans("Refresh").'">';
+$nav.='</form>';
+
+print_barre_liste('Title of my list', 3, $_SERVER["PHP_SELF"], '', '', '', 'Text in middle', 20, 5000, '', 0, $nav);
+
 ?>
 <table class="liste noborder tagtable centpercent" id="tablelines3">
+<?php
+$moreforfilter.='<div class="divsearchfield">';
+$moreforfilter.=$langs->trans('This is a select list for a filter A'). ': ';
+$cate_arbo = array('field1'=>'value1a into the select list A','field2'=>'value2a');
+$moreforfilter.=$form->selectarray('search_aaa', $cate_arbo, '', 1);		// List without js combo
+$moreforfilter.='</div>';
+
+$moreforfilter.='<div class="divsearchfield">';
+$moreforfilter.=$langs->trans('This is a select list for a filter B'). ': ';
+$cate_arbo = array('field1'=>'value1b into the select list B','field2'=>'value2b');
+$moreforfilter.=$form->selectarray('search_bbb', $cate_arbo, '', 1, 0, 0, '', 0, 0, 0, 0, '', 1);		// List with js combo
+$moreforfilter.='</div>';
+
+$moreforfilter.='<div class="divsearchfield">';
+$moreforfilter.=$langs->trans('This is a select list for a filter C'). ': ';
+$cate_arbo = array('field1'=>'value1c into the select list C','field2'=>'value2c');
+$moreforfilter.=$form->selectarray('search_ccc', $cate_arbo, '', 1, 0, 0, '', 0, 0, 0, 0, '', 1);		// List with js combo
+$moreforfilter.='</div>';
+
+$moreforfilter.='<div class="divsearchfield">';
+$moreforfilter.=$langs->trans('This is a select list for a filter D'). ': ';
+$cate_arbo = array('field1'=>'value1d into the select list D','field2'=>'value2d');
+$moreforfilter.=$form->selectarray('search_ddd', $cate_arbo, '', 1, 0, 0, '', 0, 0, 0, 0, '', 1);		// List with js combo
+$moreforfilter.='</div>';
+
+if (! empty($moreforfilter))
+{
+    print '<tr class="liste_titre">';
+    print '<td class="liste_titre" colspan="10">';
+    print $moreforfilter;
+    print '</td></tr>';
+}
+?>
 <tr class="liste_titre">
 <?php print getTitleFieldOfList($langs->trans('title1'),0,$_SERVER["PHP_SELF"],'aaa','','','align="left"',$sortfield,$sortorder); ?>
 <?php print getTitleFieldOfList($langs->trans('title2'),0,$_SERVER["PHP_SELF"],'bbb','','','align="right"',$sortfield,$sortorder); ?>
 <?php print getTitleFieldOfList($langs->trans('title3'),0,$_SERVER["PHP_SELF"],'ccc','','','align="center"',$sortfield,$sortorder); ?>
 </tr>
-<tr class="pair"><td class="pair">a1</td><td class="pair" align="right">b1</td><td class="tdlineupdown pair" align="left">c1</td></tr>
-<tr class="impair"><td class="impair">a2</td><td class="impair" align="right">b2</td><td class="tdlineupdown impair" align="left">c2</td></tr>
+<tr class="pair"><td><?php echo $productspecimen->getNomUrl(1); ?></td><td align="right">b1</td><td class="tdlineupdown" align="left">c1</td></tr>
+<tr class="impair"><td>a2</td><td align="right">b2</td><td class="tdlineupdown" align="left">c2</td></tr>
 </table>
 <br>
 
 
 
-<br><hr><br>Example 2 : Table using tags: table/thead/tbody/tr/td + dataTable => Use this for long result tables<br>
+<br><hr><br>Example 2 : Table using tags: table/thead/tbody/tr/th-td + dataTable => Use this for short result tables<br>
 
 
 
@@ -221,9 +277,11 @@ $('xxxth').replaceWith(
 <table id="idtableexample2" class="centpercent">
 	<thead>
     <tr class="liste_titre">
-        <th>snake</th>
-        <th><label><input type="checkbox" name="hidedetails" value="2"> A checkbox inside a cell</label></th>
-		<?php print getTitleFieldOfList($langs->trans('zzz'),1,$_SERVER["PHP_SELF"],'','','','align="center" class="tagtd"',$sortfield,$sortorder); ?>
+        <th>Column A</th>
+        <th><label><input type="checkbox" name="hidedetails" value="2"> A checkbox inside a title of Column B</label></th>
+		<?php
+		print getTitleFieldOfList($langs->trans('Column C'),1,$_SERVER["PHP_SELF"],'','','','align="center" class="tagtd"',$sortfield,$sortorder);
+		?>
     </tr>
     </thead>
     <tbody>
@@ -292,7 +350,7 @@ $('xxxth').replaceWith(
 <br>
 
 
-<br><hr><br>Example 3 : Table using tags: div.tagtable+div.tagtr+div or div.tagtable+div.tagtr+div.tagtd => Use this, but AVOID IT if possible, for tables that need to have a different form for each line (drag and drop of lines does not work for this case, also height of title can't be forced to a minimum)<br><br>
+<br><hr><br>Example 3 : Table using tags: div.tagtable+div.tagtr+div or div.tagtable+div.tagtr+div.tagtd => Use this for tables that need to have a different form for each line, but AVOID IT if possible (drag and drop of lines does not work for this case, also height of title can't be forced to a minimum)<br><br>
 
 
 <?php
@@ -302,22 +360,28 @@ $('xxxth').replaceWith(
 ?>
 <div class="tagtable centpercent" id="tablelines">
     <div class="tagtr liste_titre">
-        <div class="tagtd">line3<input type="hidden" name="cartitem" value="3"></div>
-        <div class="tagtd">dfsdf</div>
-        <div class="tagtd">ffdsfsd</div>
-        <div class="tagtd tdlineupdown">aaaa</div>
+        <div class="tagtd">Title A<input type="hidden" name="cartitem" value="3"></div>
+        <div class="tagtd">title B</div>
+        <div class="tagtd">title C</div>
+        <div class="tagtd">title D</div>
     </div>
-    <div class="impair tagtr">
+    <div class="pair tagtr">
         <div class="tagtd">line4<input type="hidden" name="cartitem" value="3"></div>
         <div class="tagtd">dfsdf</div>
         <div class="tagtd"><input name="count" value="4"></div>
         <div class="tagtd tdlineupdown">bbbb</div>
     </div>
-    <div class="pair tagtr">
+    <div class="impair tagtr">
         <div class="tagtd">line5<input type="hidden" name="cartitemb" value="3"></div>
         <div class="tagtd">dfsdf</div>
         <div class="tagtd"><input name="countb" value="4"></div>
         <div class="tagtd tdlineupdown">bbbb</div>
+    </div>
+    <div class="pair tagtr">
+        <div class="tagtd">line6<input type="hidden" name="cartitem" value="3"></div>
+        <div class="tagtd">jghjgh</div>
+        <div class="tagtd">5</div>
+        <div class="tagtd tdlineupdown">lll</div>
     </div>
 <!-- Using form into div make Firefox crazy (page loading does not end) -->
 <!--	<form class="liste_titre" method="POST" action="1.php">

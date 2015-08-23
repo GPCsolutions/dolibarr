@@ -7,6 +7,8 @@
  * Copyright (C) 2013      Christophe Battarel    <christophe.battarel@altairis.fr>
  * Copyright (C) 2013      Cédric Salvador        <csalvador@gpcsolutions.fr>
  * Copyright (C) 2015      Frederic France        <frederic.france@free.fr>
+ * Copyright (C) 2015      Marcos García          <marcosgdf@gmail.com>
+ * Copyright (C) 2015      Jean-François Ferry      <jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +46,8 @@ $orderyear=GETPOST("orderyear","int");
 $ordermonth=GETPOST("ordermonth","int");
 $deliveryyear=GETPOST("deliveryyear","int");
 $deliverymonth=GETPOST("deliverymonth","int");
-$search_ref=GETPOST('search_ref','alpha');
+$search_product_category=GETPOST('search_product_category','int');
+$search_ref=GETPOST('search_ref','alpha')!=''?GETPOST('search_ref','alpha'):GETPOST('sref','alpha');
 $search_ref_customer=GETPOST('search_ref_customer','alpha');
 $search_company=GETPOST('search_company','alpha');
 $sall=GETPOST('sall');
@@ -77,6 +80,7 @@ if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter")) // Both 
     $search_categ='';
     $search_user='';
     $search_sale='';
+    $search_product_category='';
     $search_ref='';
     $search_ref_customer='';
     $search_company='';
@@ -113,10 +117,14 @@ $companystatic = new Societe($db);
 $help_url="EN:Module_Customers_Orders|FR:Module_Commandes_Clients|ES:Módulo_Pedidos_de_clientes";
 llxHeader('',$langs->trans("Orders"),$help_url);
 
-$sql = 'SELECT s.nom as name, s.rowid as socid, s.client, s.code_client, c.rowid, c.ref, c.total_ht, c.tva as total_tva, c.total_ttc, c.ref_client,';
-$sql.= ' c.date_valid, c.date_commande, c.note_private, c.date_livraison, c.fk_statut, c.facture as facturee';
+$sql = 'SELECT';
+if ($sall || $search_product_category > 0) $sql = 'SELECT DISTINCT';
+$sql.= ' s.nom as name, s.rowid as socid, s.client, s.code_client, c.rowid, c.ref, c.total_ht, c.tva as total_tva, c.total_ttc, c.ref_client,';
+$sql.= ' c.date_valid, c.date_commande, c.note_private, c.date_livraison as date_delivery, c.fk_statut, c.facture as facturee';
 $sql.= ' FROM '.MAIN_DB_PREFIX.'societe as s';
 $sql.= ', '.MAIN_DB_PREFIX.'commande as c';
+if ($sall || $search_product_category > 0) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'commandedet as pd ON c.rowid=pd.fk_commande';
+if ($search_product_category > 0) $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as cp ON cp.fk_product=pd.fk_product';
 // We'll need this table joined to the select in order to filter by sale
 if ($search_sale > 0 || (! $user->rights->societe->client->voir && ! $socid)) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 if ($search_user > 0)
@@ -125,16 +133,12 @@ if ($search_user > 0)
     $sql.=", ".MAIN_DB_PREFIX."c_type_contact as tc";
 }
 $sql.= ' WHERE c.fk_soc = s.rowid';
-$sql.= ' AND c.entity = '.$conf->entity;
-if ($socid)	$sql.= ' AND s.rowid = '.$socid;
+$sql.= ' AND c.entity IN ('.getEntity('commande', 1).')';
+if ($search_product_category > 0) $sql.=" AND cp.fk_categorie = ".$search_product_category;
+if ($socid > 0) $sql.= ' AND s.rowid = '.$socid;
 if (!$user->rights->societe->client->voir && !$socid) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
-if ($search_ref) {
-	$sql .= natural_search('c.ref', $search_ref);
-}
-if ($sall)
-{
-	$sql .= natural_search(array('c.ref', 'c.note_private'), $sall);
-}
+if ($search_ref) $sql .= natural_search('c.ref', $search_ref);
+if ($sall) $sql .= natural_search(array('c.ref', 'c.note_private'), $sall);
 if ($viewstatut <> '')
 {
 	if ($viewstatut < 4 && $viewstatut > -3)
@@ -188,24 +192,12 @@ else if ($deliveryyear > 0)
 {
     $sql.= " AND c.date_livraison BETWEEN '".$db->idate(dol_get_first_day($deliveryyear,1,false))."' AND '".$db->idate(dol_get_last_day($deliveryyear,12,false))."'";
 }
-if (!empty($search_company))
-{
-	$sql .= natural_search('s.nom', $search_company);
-}
-if (!empty($search_ref_customer))
-{
-	$sql.= ' AND c.ref_client LIKE \'%'.$db->escape($search_ref_customer).'%\'';
-}
+if (!empty($search_company)) $sql .= natural_search('s.nom', $search_company);
+if (!empty($search_ref_customer)) $sql.= natural_search('c.ref_client', $search_ref_customer);
 if ($search_sale > 0) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$search_sale;
-if ($search_user > 0)
-{
-    $sql.= " AND ec.fk_c_type_contact = tc.rowid AND tc.element='commande' AND tc.source='internal' AND ec.element_id = c.rowid AND ec.fk_socpeople = ".$search_user;
-}
-if ($search_total_ht != '')
-{
-	$sql.= natural_search('c.total_ht', $search_total_ht, 1);
-}
-$sql.= ' ORDER BY '.$sortfield.' '.$sortorder;
+if ($search_user > 0) $sql.= " AND ec.fk_c_type_contact = tc.rowid AND tc.element='commande' AND tc.source='internal' AND ec.element_id = c.rowid AND ec.fk_socpeople = ".$search_user;
+if ($search_total_ht != '') $sql.= natural_search('c.total_ht', $search_total_ht, 1);
+$sql.= $db->order($sortfield,$sortorder);
 
 $nbtotalofrecords = 0;
 if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST))
@@ -213,7 +205,6 @@ if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST))
 	$result = $db->query($sql);
 	$nbtotalofrecords = $db->num_rows($result);
 }
-
 
 $sql.= $db->plimit($limit + 1,$offset);
 
@@ -261,7 +252,7 @@ if ($resql)
 	if ($search_total_ht != '') $param.='&search_total_ht='.$search_total_ht;
 
 	$num = $db->num_rows($resql);
-	print_barre_liste($title, $page,$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num,$nbtotalofrecords);
+	print_barre_liste($title, $page,$_SERVER["PHP_SELF"],$param,$sortfield,$sortorder,'',$num,$nbtotalofrecords,'title_commercial.png');
 	$i = 0;
 
 	// Lignes des champs de filtre
@@ -276,22 +267,37 @@ if ($resql)
  	if ($user->rights->societe->client->voir || $socid)
  	{
  		$langs->load("commercial");
+		$moreforfilter.='<div class="divsearchfield">';
  		$moreforfilter.=$langs->trans('ThirdPartiesOfSaleRepresentative'). ': ';
-		$moreforfilter.=$formother->select_salesrepresentatives($search_sale,'search_sale',$user);
-	 	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
+		$moreforfilter.=$formother->select_salesrepresentatives($search_sale, 'search_sale', $user, 0, 1, 'maxwidth300');
+	 	$moreforfilter.='</div>';
  	}
 	// If the user can view prospects other than his'
 	if ($user->rights->societe->client->voir || $socid)
 	{
-	    $moreforfilter.=$langs->trans('LinkedToSpecificUsers'). ': ';
-	    $moreforfilter.=$form->select_dolusers($search_user,'search_user',1);
+		$moreforfilter.='<div class="divsearchfield">';
+		$moreforfilter.=$langs->trans('LinkedToSpecificUsers'). ': ';
+	    $moreforfilter.=$form->select_dolusers($search_user, 'search_user', 1, '', 0, '', '', 0, 0, 0, '', 0, '', 'maxwidth300');
+	 	$moreforfilter.='</div>';
+	}
+	// If the user can view prospects other than his'
+	if ($conf->categorie->enabled && $user->rights->produit->lire)
+	{
+		include_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
+		$moreforfilter.='<div class="divsearchfield">';
+		$moreforfilter.=$langs->trans('IncludingProductWithTag'). ': ';
+		$cate_arbo = $form->select_all_categories(Categorie::TYPE_PRODUCT, null, 'parent', null, null, 1);
+		$moreforfilter.=$form->selectarray('search_product_category', $cate_arbo, $search_product_category, 1, 0, 0, '', 0, 0, 0, 0, '', 1);
+		$moreforfilter.='</div>';
 	}
 	if (! empty($moreforfilter))
 	{
-	    print '<tr class="liste_titre">';
-	    print '<td class="liste_titre" colspan="9">';
-	    print $moreforfilter;
-	    print '</td></tr>';
+		print '<div class="liste_titre">';
+		print $moreforfilter;
+    	$parameters=array();
+    	$reshook=$hookmanager->executeHooks('printFieldPreListTitle',$parameters);    // Note that $action and $object may have been modified by hook
+    	print $hookmanager->resPrint;
+    	print '</div>';
 	}
 
 	print '<tr class="liste_titre">';
@@ -301,7 +307,11 @@ if ($resql)
 	print_liste_field_titre($langs->trans('OrderDate'),$_SERVER["PHP_SELF"],'c.date_commande','',$param, 'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('DeliveryDate'),$_SERVER["PHP_SELF"],'c.date_livraison','',$param, 'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans('AmountHT'),$_SERVER["PHP_SELF"],'c.total_ht','',$param, 'align="right"',$sortfield,$sortorder);
+	$parameters=array();
+    $reshook=$hookmanager->executeHooks('printFieldListTitle',$parameters);    // Note that $action and $object may have been modified by hook
+    print $hookmanager->resPrint;
 	print_liste_field_titre($langs->trans('Status'),$_SERVER["PHP_SELF"],'c.fk_statut','',$param,'align="right"',$sortfield,$sortorder);
+	print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
 	print '</tr>';
 
 	print '<tr class="liste_titre">';
@@ -325,6 +335,10 @@ if ($resql)
 	print '</td>';
 	print '<td class="liste_titre" align="right">';
 	print '<input class="flat" type="text" size="6" name="search_total_ht" value="'.$search_total_ht.'">';
+	print '</td>';
+	print '<td align="right">';
+	$liststatus=array('0'=>$langs->trans("StatusOrderDraftShort"), '1'=>$langs->trans("StatusOrderValidated"), '2'=>$langs->trans("StatusOrderSentShort"), '3'=>$langs->trans("StatusOrderToBill"), '4'=>$langs->trans("StatusOrderProcessed"), '-1'=>$langs->trans("StatusOrderCanceledShort"));
+	print $form->selectarray('viewstatut', $liststatus, $viewstatut, 1);
 	print '</td>';
 	print '<td class="liste_titre" align="right"><input type="image" class="liste_titre" name="button_search" src="'.img_picto($langs->trans("Search"),'search.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("Search")).'" title="'.dol_escape_htmltag($langs->trans("Search")).'">';
 	print '<input type="image" class="liste_titre" name="button_removefilter" src="'.img_picto($langs->trans("Search"),'searchclear.png','','',1).'" value="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'" title="'.dol_escape_htmltag($langs->trans("RemoveFilter")).'">';
@@ -430,7 +444,7 @@ if ($resql)
 
         // warning late icon
 		print '<td style="min-width: 20px" class="nobordernopadding nowrap">';
-		if (($objp->fk_statut > 0) && ($objp->fk_statut < 3) && max($db->jdate($objp->date_commande),$db->jdate($objp->date_livraison)) < ($now - $conf->commande->client->warning_delay))
+		if (($objp->fk_statut > 0) && ($objp->fk_statut < 3) && max($db->jdate($objp->date_commande),$db->jdate($objp->date_delivery)) < ($now - $conf->commande->client->warning_delay))
 			print img_picto($langs->trans("Late"),"warning");
 		if(!empty($objp->note_private))
 		{
@@ -482,7 +496,7 @@ if ($resql)
 
 		// Delivery date
 		print '<td align="center">';
-		print dol_print_date($db->jdate($objp->date_livraison), 'day');
+		print dol_print_date($db->jdate($objp->date_delivery), 'day');
 		print '</td>';
 
 		// Amount HT
@@ -490,6 +504,8 @@ if ($resql)
 
 		// Statut
 		print '<td align="right" class="nowrap">'.$generic_commande->LibStatut($objp->fk_statut,$objp->facturee,5).'</td>';
+
+		print '<td></td>';
 
 		print '</tr>';
 
@@ -505,7 +521,8 @@ if ($resql)
 		print '<td class="nowrap" colspan="5">'.$langs->trans('TotalHT').'</td>';
 		// Total HT
 		print '<td align="right" class="nowrap">'.price($total).'</td>';
-		print '<td class="nowrap">&nbsp;</td>';
+		print '<td></td>';
+		print '<td></td>';
 		print '</tr>';
 	}
 

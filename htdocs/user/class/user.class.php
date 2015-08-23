@@ -4,11 +4,12 @@
  * Copyright (c) 2004-2012 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Sebastien Di Cintio  <sdicintio@ressource-toi.org>
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
- * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2015 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2005      Lionel Cousteix      <etm_ltd@tiscali.co.uk>
  * Copyright (C) 2011      Herve Prot           <herve.prot@symeos.com>
  * Copyright (C) 2013-2014 Philippe Grand       <philippe.grand@atoo-net.com>
  * Copyright (C) 2013      Alexandre Spangaro   <alexandre.spangaro@gmail.com>
+ * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,6 +50,7 @@ class User extends CommonObject
 	var $search_sid;
 	var $lastname;
 	var $firstname;
+	var $gender;
 	var $note;
 	var $email;
 	var $skype;
@@ -59,6 +61,7 @@ class User extends CommonObject
 	var $user_mobile;
 	var $admin;
 	var $login;
+    var $api_key;
 	var $entity;
 
 	//! Clear password in memory
@@ -72,8 +75,16 @@ class User extends CommonObject
 	var $datem;
 
 	//! If this is defined, it is an external user
-	var $societe_id;	// deprecated
-	var $contact_id;	// deprecated
+	/**
+	 * @deprecated
+	 * @see socid
+	 */
+	var $societe_id;
+	/**
+	 * @deprecated
+	 * @see contactid
+	 */
+	var $contact_id;
 	var $socid;
 	var $contactid;
 
@@ -150,10 +161,10 @@ class User extends CommonObject
 		$login=trim($login);
 
 		// Get user
-		$sql = "SELECT u.rowid, u.lastname, u.firstname, u.email, u.job, u.skype, u.signature, u.office_phone, u.office_fax, u.user_mobile,";
+		$sql = "SELECT u.rowid, u.lastname, u.firstname, u.gender, u.email, u.job, u.skype, u.signature, u.office_phone, u.office_fax, u.user_mobile,";
 		$sql.= " u.admin, u.login, u.note,";
-		$sql.= " u.pass, u.pass_crypted, u.pass_temp,";
-		$sql.= " u.fk_societe, u.fk_socpeople, u.fk_member, u.fk_user, u.ldap_sid,";
+		$sql.= " u.pass, u.pass_crypted, u.pass_temp, u.api_key,";
+		$sql.= " u.fk_soc, u.fk_socpeople, u.fk_member, u.fk_user, u.ldap_sid,";
 		$sql.= " u.statut, u.lang, u.entity,";
 		$sql.= " u.datec as datec,";
 		$sql.= " u.tms as datem,";
@@ -211,10 +222,12 @@ class User extends CommonObject
 				$this->firstname 	= $obj->firstname;
 
 				$this->login		= $obj->login;
+				$this->gender       = $obj->gender;
 				$this->pass_indatabase = $obj->pass;
 				$this->pass_indatabase_crypted = $obj->pass_crypted;
 				$this->pass			= $obj->pass;
 				$this->pass_temp	= $obj->pass_temp;
+                $this->api_key		= $obj->api_key;
 				$this->office_phone	= $obj->office_phone;
 				$this->office_fax   = $obj->office_fax;
 				$this->user_mobile  = $obj->user_mobile;
@@ -242,9 +255,9 @@ class User extends CommonObject
 				$this->datelastlogin		= $this->db->jdate($obj->datel);
 				$this->datepreviouslogin	= $this->db->jdate($obj->datep);
 
-				$this->societe_id           = $obj->fk_societe;		// deprecated
+				$this->societe_id           = $obj->fk_soc;		// deprecated
 				$this->contact_id           = $obj->fk_socpeople;	// deprecated
-				$this->socid                = $obj->fk_societe;
+				$this->socid                = $obj->fk_soc;
 				$this->contactid            = $obj->fk_socpeople;
 				$this->fk_member            = $obj->fk_member;
 				$this->fk_user        		= $obj->fk_user;
@@ -935,6 +948,7 @@ class User extends CommonObject
 		$this->admin		= 0;
 		$this->lastname		= $contact->lastname;
 		$this->firstname	= $contact->firstname;
+		$this->gender		= $contact->gender;
 		$this->email		= $contact->email;
     	$this->skype 		= $contact->skype;
 		$this->office_phone	= $contact->phone_pro;
@@ -957,7 +971,7 @@ class User extends CommonObject
 		{
 			$sql = "UPDATE ".MAIN_DB_PREFIX."user";
 			$sql.= " SET fk_socpeople=".$contact->id;
-			if ($contact->socid) $sql.=", fk_societe=".$contact->socid;
+			if ($contact->socid) $sql.=", fk_soc=".$contact->socid;
 			$sql.= " WHERE rowid=".$this->id;
 			$resql=$this->db->query($sql);
 
@@ -1006,6 +1020,7 @@ class User extends CommonObject
 		$this->admin = 0;
 		$this->lastname     = $member->lastname;
 		$this->firstname    = $member->firstname;
+		$this->gender		= $member->gender;
 		$this->email        = $member->email;
 		$this->fk_member    = $member->id;
 		$this->pass         = $member->pass;
@@ -1030,7 +1045,7 @@ class User extends CommonObject
 			if ($result > 0 && $member->fk_soc)	// If member is linked to a thirdparty
 			{
 				$sql = "UPDATE ".MAIN_DB_PREFIX."user";
-				$sql.= " SET fk_societe=".$member->fk_soc;
+				$sql.= " SET fk_soc=".$member->fk_soc;
 				$sql.= " WHERE rowid=".$this->id;
 
 				dol_syslog(get_class($this)."::create_from_member", LOG_DEBUG);
@@ -1128,7 +1143,9 @@ class User extends CommonObject
 		$this->lastname     = trim($this->lastname);
 		$this->firstname    = trim($this->firstname);
 		$this->login        = trim($this->login);
+		$this->gender       = trim($this->gender);
 		$this->pass         = trim($this->pass);
+        $this->api_key      = trim($this->api_key);
 		$this->office_phone = trim($this->office_phone);
 		$this->office_fax   = trim($this->office_fax);
 		$this->user_mobile  = trim($this->user_mobile);
@@ -1155,11 +1172,13 @@ class User extends CommonObject
 
 		$this->db->begin();
 
-		// Mise a jour autres infos
+		// Update datas
 		$sql = "UPDATE ".MAIN_DB_PREFIX."user SET";
 		$sql.= " lastname = '".$this->db->escape($this->lastname)."'";
 		$sql.= ", firstname = '".$this->db->escape($this->firstname)."'";
 		$sql.= ", login = '".$this->db->escape($this->login)."'";
+        $sql.= ", api_key = '".$this->db->escape($this->api_key)."'";
+		$sql.= ", gender = ".($this->gender != -1 ? "'".$this->db->escape($this->gender)."'" : "null");	// 'man' or 'woman'
 		$sql.= ", admin = ".$this->admin;
 		$sql.= ", address = '".$this->db->escape($this->address)."'";
 		$sql.= ", zip = '".$this->db->escape($this->zip)."'";
@@ -1234,6 +1253,7 @@ class User extends CommonObject
 						$adh->firstname=$this->firstname;
 						$adh->lastname=$this->lastname;
 						$adh->login=$this->login;
+						$adh->gender=$this->gender;
 						$adh->pass=$this->pass;
 						$adh->societe=(empty($adh->societe) && $this->societe_id ? $this->societe_id : $adh->societe);
 
@@ -1478,10 +1498,10 @@ class User extends CommonObject
 
 
 	/**
-	 *  Envoie mot de passe par mail
+	 *  Send new password by email
 	 *
-	 *  @param	User	$user           Object user de l'utilisateur qui fait l'envoi
-	 *  @param	string	$password       Nouveau mot de passe
+	 *  @param	User	$user           Object user that send email
+	 *  @param	string	$password       New password
 	 *	@param	int		$changelater	1=Change password only after clicking on confirm email
 	 *  @return int 		            < 0 si erreur, > 0 si ok
 	 */
@@ -1527,7 +1547,7 @@ class User extends CommonObject
 			$mesg.= $outputlangs->transnoentitiesnoconv("Login")." = ".$this->login."\n";
 			$mesg.= $outputlangs->transnoentitiesnoconv("Password")." = ".$password."\n\n";
 			$mesg.= "\n";
-			$url = $urlwithroot;
+			$url = $urlwithroot.'/';
 			$mesg.= $outputlangs->transnoentitiesnoconv("ClickHereToGoTo", $conf->global->MAIN_APPLICATION_TITLE).': '.$url."\n\n";
 			$mesg.= "--\n";
 			$mesg.= $user->getFullName($outputlangs);	// Username that make then sending
@@ -1771,21 +1791,44 @@ class User extends CommonObject
 		}
 	}
 
+
+	/**
+	 *  Return a link with photo
+	 * 	Use this->id,this->photo
+	 *
+	 *	@param	int		$width			Width of image
+	 *	@param	int		$height			Height of image
+	 *  @param	string	$cssclass		Force a css class
+	 *	@return	string					String with URL link
+	 */
+	function getPhotoUrl($width, $height, $cssclass='')
+	{
+		$result='';
+
+		$result.='<a href="'.DOL_URL_ROOT.'/user/card.php?id='.$this->id.'">';
+	    $result.=Form::showphoto('userphoto', $this, $width, $height, 0, $cssclass);
+	    $result.='</a>';
+
+	    return $result;
+	}
+
 	/**
 	 *  Return a link to the user card (with optionaly the picto)
 	 * 	Use this->id,this->lastname, this->firstname
 	 *
-	 *	@param	int		$withpicto		Include picto in link (0=No picto, 1=Include picto into link, 2=Only picto)
-	 *	@param	string	$option			On what the link point to
-     *  @param  integer $infologin      Add connection info to the tooltip
-     *  @param	integer	$notooltip		1=Disable tooltip
-     *  @param	int		$maxlen			Max length of visible user name
-	 *	@return	string					String with URL
+	 *	@param	int		$withpicto			Include picto in link (0=No picto, 1=Include picto into link, 2=Only picto)
+	 *	@param	string	$option				On what the link point to
+     *  @param  integer $infologin      	Add connection info to the tooltip
+     *  @param	integer	$notooltip			1=Disable tooltip
+     *  @param	int		$maxlen				Max length of visible user name
+     *  @param	int		$hidethirdpartylogo	Hide logo of thirdparty if user is external user
+	 *	@return	string						String with URL
 	 */
-	function getNomUrl($withpicto=0, $option='', $infologin=0, $notooltip=0, $maxlen=24)
+	function getNomUrl($withpicto=0, $option='', $infologin=0, $notooltip=0, $maxlen=24, $hidethirdpartylogo=0)
 	{
 		global $langs, $conf, $db;
         global $dolibarr_main_authentication, $dolibarr_main_demo;
+        global $menumanager;
 
 
         $result = '';
@@ -1796,14 +1839,14 @@ class User extends CommonObject
         $label.= '<b>' . $langs->trans('Name') . ':</b> ' . $this->getFullName($langs,'','');
         if (! empty($this->login))
         $label.= '<br><b>' . $langs->trans('Login') . ':</b> ' . $this->login;
-        if (! empty($this->email))
         $label.= '<br><b>' . $langs->trans("EMail").':</b> '.$this->email;
         if (! empty($this->admin))
         $label.= '<br><b>' . $langs->trans("Administrator").'</b>: '.yn($this->admin);
-        if (! empty($this->societe_id)) {
+        if (! empty($this->societe_id) )	// Add thirdparty for external users
+        {
             $thirdpartystatic = new Societe($db);
             $thirdpartystatic->fetch($this->societe_id);
-            $companylink = ' ('.$thirdpartystatic->getNomUrl('','').')';
+            if (empty($hidethirdpartylogo)) $companylink = ' '.$thirdpartystatic->getNomUrl(2);	// picto only of company
             $company=' ('.$langs->trans("Company").': '.$thirdpartystatic->name.')';
         }
         $type=($this->societe_id?$langs->trans("External").$company:$langs->trans("Internal"));
@@ -1812,7 +1855,7 @@ class User extends CommonObject
         if (! empty($this->photo))
         {
         	$label.= '<div class="photointooltip">';
-            $label.= Form::showphoto('userphoto', $this, 80);
+            $label.= Form::showphoto('userphoto', $this, 80, 0, 0, 'photowithmargin photologintooltip');
         	$label.= '</div><div style="clear: both;"></div>';
         }
 
@@ -1846,7 +1889,7 @@ class User extends CommonObject
             $result.=($link.img_object(($notooltip?'':$label), 'user', ($notooltip?'':'class="classfortooltip"')).$linkend);
             if ($withpicto != 2) $result.=' ';
 		}
-		$result.= $link . $this->getFullName($langs,'','',$maxlen) . $companylink . $linkend;
+		$result.= $link . $this->getFullName($langs,'',-1,$maxlen) . $linkend . $companylink;
 		return $result;
 	}
 
@@ -2046,6 +2089,7 @@ class User extends CommonObject
 
 		$this->lastname='DOLIBARR';
 		$this->firstname='SPECIMEN';
+		$this->gender='man';
 		$this->note='This is a note';
 		$this->email='email@specimen.com';
     	$this->skype='tom.hanson';
@@ -2285,9 +2329,10 @@ class User extends CommonObject
 	 *				fullpath = chemin complet compose des id: "_grandparentid_parentid_id"
 	 *
 	 *  @param      int		$deleteafterid      Removed all users including the leaf $deleteafterid (and all its child) in user tree.
+	 *  @param		string	$filter				SQL filter on users
 	 *	@return		array		      		  	Array of users $this->users. Note: $this->parentof is also set.
 	 */
-	function get_full_tree($deleteafterid=0)
+	function get_full_tree($deleteafterid=0, $filter='')
 	{
 		global $conf,$user;
 
@@ -2297,7 +2342,7 @@ class User extends CommonObject
 		$this->load_parentof();
 
 		// Init $this->users array
-		$sql = "SELECT DISTINCT u.rowid, u.firstname, u.lastname, u.fk_user, u.login, u.statut, u.entity";	// Distinct reduce pb with old tables with duplicates
+		$sql = "SELECT DISTINCT u.rowid, u.firstname, u.lastname, u.fk_user, u.fk_soc, u.login, u.email, u.gender, u.statut, u.entity";	// Distinct reduce pb with old tables with duplicates
 		$sql.= " FROM ".MAIN_DB_PREFIX."user as u";
 		if(! empty($conf->multicompany->enabled) && $conf->entity == 1 && (! empty($conf->multicompany->transverse_mode) || (! empty($user->admin) && empty($user->entity))))
 		{
@@ -2307,6 +2352,8 @@ class User extends CommonObject
 		{
 			$sql.= " WHERE u.entity IN (".getEntity('user',1).")";
 		}
+		if ($filter) $sql.=" AND ".$filter;
+
 		dol_syslog(get_class($this)."::get_full_tree get user list", LOG_DEBUG);
 		$resql = $this->db->query($sql);
 		if ($resql)
@@ -2317,11 +2364,14 @@ class User extends CommonObject
 				$this->users[$obj->rowid]['rowid'] = $obj->rowid;
 				$this->users[$obj->rowid]['id'] = $obj->rowid;
 				$this->users[$obj->rowid]['fk_user'] = $obj->fk_user;
+				$this->users[$obj->rowid]['fk_soc'] = $obj->fk_soc;
 				$this->users[$obj->rowid]['firstname'] = $obj->firstname;
 				$this->users[$obj->rowid]['lastname'] = $obj->lastname;
 				$this->users[$obj->rowid]['login'] = $obj->login;
 				$this->users[$obj->rowid]['statut'] = $obj->statut;
 				$this->users[$obj->rowid]['entity'] = $obj->entity;
+				$this->users[$obj->rowid]['email'] = $obj->email;
+				$this->users[$obj->rowid]['gender'] = $obj->gender;
 				$i++;
 			}
 		}
@@ -2423,5 +2473,21 @@ class User extends CommonObject
 		return;
 	}
 
+	/**
+	 * Function used to replace a thirdparty id with another one.
+	 *
+	 * @param DoliDB $db Database handler
+	 * @param int $origin_id Old thirdparty id
+	 * @param int $dest_id New thirdparty id
+	 * @return bool
+	 */
+	public static function replaceThirdparty(DoliDB $db, $origin_id, $dest_id)
+	{
+		$tables = array(
+			'user'
+		);
+
+		return CommonObject::commonReplaceThirdparty($db, $origin_id, $dest_id, $tables);
+	}
 }
 

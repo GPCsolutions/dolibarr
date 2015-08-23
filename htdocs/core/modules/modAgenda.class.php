@@ -6,6 +6,7 @@
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
  * Copyright (C) 2009-2011 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2013      Cedric Gross          <c.gross@kreiz-it.fr>
+ * Copyright (C) 2015       Bahfir Abbes        <bafbes@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,6 +91,7 @@ class modAgenda extends DolibarrModules
         $this->const[12] = array("MAIN_AGENDA_ACTIONAUTO_SHIPPING_VALIDATE","chaine","1");
         $this->const[13] = array("MAIN_AGENDA_ACTIONAUTO_SHIPPING_SENTBYMAIL","chaine","1");
         $this->const[14] = array("MAIN_AGENDA_ACTIONAUTO_BILL_UNVALIDATE","chaine","1");
+        $this->const[15] = array("MAIN_AGENDA_ACTIONAUTO_BILL_SUPPLIER_UNVALIDATE","chaine","1");
 
 		// New pages on tabs
 		// -----------------
@@ -397,39 +399,4 @@ class modAgenda extends DolibarrModules
 		$this->export_sql_end[$r] .=' ORDER BY ac.datep';
 
 	}
-
-
-	/**
-	 *		Function called when module is enabled.
-	 *		The init function add constants, boxes, permissions and menus (defined in constructor) into Dolibarr database.
-	 *		It also creates data directories
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-	 */
-	function init($options='')
-	{
-		// Prevent pb of modules not correctly disabled
-		//$this->remove($options);
-
-		$sql = array();
-
-		return $this->_init($sql,$options);
-	}
-
-	/**
-	 *		Function called when module is disabled.
-	 *      Remove from database constants, boxes and permissions from Dolibarr database.
-	 *		Data directories are not deleted
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-	 */
-	function remove($options='')
-	{
-		$sql = array();
-
-		return $this->_remove($sql,$options);
-	}
-
 }

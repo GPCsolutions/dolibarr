@@ -130,35 +130,35 @@ class modProjet extends DolibarrModules
 
 		$r++;
 		$this->rights[$r][0] = 41; // id de la permission
-		$this->rights[$r][1] = "Lire les projets et tâches (partagés ou dont je suis contact)"; // libelle de la permission
+		$this->rights[$r][1] = "Read projects and tasks (shared projects or projects I am contact for). Can also enter time consumed on assigned tasks (timesheet)"; // libelle de la permission
 		$this->rights[$r][2] = 'r'; // type de la permission (deprecie a ce jour)
 		$this->rights[$r][3] = 1; // La permission est-elle une permission par defaut
 		$this->rights[$r][4] = 'lire';
 
 		$r++;
 		$this->rights[$r][0] = 42; // id de la permission
-		$this->rights[$r][1] = "Creer/modifier les projets et tâches (partagés ou dont je suis contact)"; // libelle de la permission
+		$this->rights[$r][1] = "Create/modify projects and tasks (shared projects or projects I am contact for)"; // libelle de la permission
 		$this->rights[$r][2] = 'w'; // type de la permission (deprecie a ce jour)
 		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
 		$this->rights[$r][4] = 'creer';
 
 		$r++;
 		$this->rights[$r][0] = 44; // id de la permission
-		$this->rights[$r][1] = "Supprimer les projets et tâches (partagés ou dont je suis contact)"; // libelle de la permission
+		$this->rights[$r][1] = "Delete project and tasks (shared projects or projects I am contact for)"; // libelle de la permission
 		$this->rights[$r][2] = 'd'; // type de la permission (deprecie a ce jour)
 		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
 		$this->rights[$r][4] = 'supprimer';
 
 		$r++;
 		$this->rights[$r][0] = 45; // id de la permission
-		$this->rights[$r][1] = "Exporter les projets"; // libelle de la permission
+		$this->rights[$r][1] = "Export projects"; // libelle de la permission
 		$this->rights[$r][2] = 'd'; // type de la permission (deprecie a ce jour)
 		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
 		$this->rights[$r][4] = 'export';
 
 		$r++;
 		$this->rights[$r][0] = 141; // id de la permission
-		$this->rights[$r][1] = "Lire tous les projets et tâches (y compris prives qui ne me sont pas affectes)"; // libelle de la permission
+		$this->rights[$r][1] = "Read all projects and tasks (also private projects I am not contact for)"; // libelle de la permission
 		$this->rights[$r][2] = 'r'; // type de la permission (deprecie a ce jour)
 		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
 		$this->rights[$r][4] = 'all';
@@ -166,7 +166,7 @@ class modProjet extends DolibarrModules
 
 		$r++;
 		$this->rights[$r][0] = 142; // id de la permission
-		$this->rights[$r][1] = "Creer/modifier tous les projets et tâches (y compris prives qui ne me sont pas affectes)"; // libelle de la permission
+		$this->rights[$r][1] = "Create/modify all projects and tasks (also private projects I am not contact for)"; // libelle de la permission
 		$this->rights[$r][2] = 'w'; // type de la permission (deprecie a ce jour)
 		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
 		$this->rights[$r][4] = 'all';
@@ -174,7 +174,7 @@ class modProjet extends DolibarrModules
 
 		$r++;
 		$this->rights[$r][0] = 144; // id de la permission
-		$this->rights[$r][1] = "Supprimer tous les projets et tâches (y compris prives qui ne me sont pas affectes)"; // libelle de la permission
+		$this->rights[$r][1] = "Delete all projects and tasks (also private projects I am not contact for)"; // libelle de la permission
 		$this->rights[$r][2] = 'd'; // type de la permission (deprecie a ce jour)
 		$this->rights[$r][3] = 0; // La permission est-elle une permission par defaut
 		$this->rights[$r][4] = 'all';
@@ -188,7 +188,7 @@ class modProjet extends DolibarrModules
 		$this->export_code[$r]=$this->rights_class.'_'.$r;
 		$this->export_label[$r]='ProjectsAndTasksLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
 		$this->export_permission[$r]=array(array("projet","export"));
-		$this->export_dependencies_array[$r]=array('task_time'=>'ppt.rowid');
+		$this->export_dependencies_array[$r]=array('task_time'=>'ptt.rowid');
 
 		$this->export_TypeFields_array[$r]=array('s.rowid'=>"List:societe:nom",'s.nom'=>'Text','s.address'=>'Text','s.zip'=>'Text','s.town'=>'Text','s.fk_pays'=>'List:c_country:label',
 		's.phone'=>'Text','s.siren'=>'Text','s.siret'=>'Text','s.ape'=>'Text','s.idprof4'=>'Text','s.code_compta'=>'Text','s.code_compta_fournisseur'=>'Text',
@@ -231,8 +231,11 @@ class modProjet extends DolibarrModules
         				$typeFilter="Boolean";
         				break;
         			case 'sellist':
-        				$typeFilter="List:".$obj->param;
-        				break;
+						$tmp='';
+						$tmpparam=unserialize($obj->param);	// $tmp ay be array 'options' => array 'c_currencies:code_iso:code_iso' => null
+						if ($tmpparam['options'] && is_array($tmpparam['options'])) $tmp=array_shift(array_keys($tmpparam['options']));
+						if (preg_match('/[a-z0-9_]+:[a-z0-9_]+:[a-z0-9_]+/', $tmp)) $typeFilter="List:".$tmp;
+						break;
         		}
         		$this->export_fields_array[$r][$fieldname]=$fieldlabel;
         		$this->export_TypeFields_array[$r][$fieldname]=$typeFilter;
@@ -242,8 +245,8 @@ class modProjet extends DolibarrModules
         // End add extra fields
 
 		// Add fields for tasks
-        $this->export_fields_array[$r]=array_merge($this->export_fields_array[$r], array('pt.rowid'=>'RefTask','pt.dateo'=>"TaskDateStart",'pt.datee'=>"TaskDateEnd",'pt.duration_effective'=>"DurationEffective",'pt.planned_workload'=>"PlannedWorkload",'pt.progress'=>"Progress",'pt.description'=>"TaskDescription"));
-		$this->export_entities_array[$r]=array_merge($this->export_entities_array[$r], array('pt.rowid'=>'projecttask','pt.dateo'=>"projecttask",'pt.datee'=>"projecttask",'pt.duration_effective'=>"projecttask",'pt.planned_workload'=>"projecttask",'pt.progress'=>"projecttask",'pt.description'=>"projecttask"));
+        $this->export_fields_array[$r]=array_merge($this->export_fields_array[$r], array('pt.rowid'=>'RefTask','pt.label'=>'LabelTask','pt.dateo'=>"TaskDateStart",'pt.datee'=>"TaskDateEnd",'pt.duration_effective'=>"DurationEffective",'pt.planned_workload'=>"PlannedWorkload",'pt.progress'=>"Progress",'pt.description'=>"TaskDescription"));
+		$this->export_entities_array[$r]=array_merge($this->export_entities_array[$r], array('pt.rowid'=>'projecttask','pt.label'=>'projecttask','pt.dateo'=>"projecttask",'pt.datee'=>"projecttask",'pt.duration_effective'=>"projecttask",'pt.planned_workload'=>"projecttask",'pt.progress'=>"projecttask",'pt.description'=>"projecttask"));
         // Add extra fields
         $sql="SELECT name, label FROM ".MAIN_DB_PREFIX."extrafields WHERE elementtype = 'projet_task'";
         $resql=$this->db->query($sql);
@@ -269,8 +272,11 @@ class modProjet extends DolibarrModules
         				$typeFilter="Boolean";
         				break;
         			case 'sellist':
-        				$typeFilter="List:".$obj->param;
-        				break;
+						$tmp='';
+						$tmpparam=unserialize($obj->param);	// $tmp ay be array 'options' => array 'c_currencies:code_iso:code_iso' => null
+						if ($tmpparam['options'] && is_array($tmpparam['options'])) $tmp=array_shift(array_keys($tmpparam['options']));
+						if (preg_match('/[a-z0-9_]+:[a-z0-9_]+:[a-z0-9_]+/', $tmp)) $typeFilter="List:".$tmp;
+						break;
         		}
         		$this->export_fields_array[$r][$fieldname]=$fieldlabel;
         		$this->export_TypeFields_array[$r][$fieldname]=$typeFilter;
@@ -286,11 +292,9 @@ class modProjet extends DolibarrModules
         $this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'projet_extrafields as extra ON p.rowid = extra.fk_object';
 		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX."projet_task as pt ON p.rowid = pt.fk_projet";
         $this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'projet_task_extrafields as extra2 ON pt.rowid = extra2.fk_object';
-		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX."projet_task_time as ptt ON pt.rowid = ptt.fk_task,";
-		$this->export_sql_end[$r] .=' '.MAIN_DB_PREFIX.'societe as s';
-		$this->export_sql_end[$r] .=' WHERE p.fk_soc = s.rowid';
-		$this->export_sql_end[$r] .=' AND p.entity IN ('.getEntity('project',1).')';
-
+		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX."projet_task_time as ptt ON pt.rowid = ptt.fk_task";
+		$this->export_sql_end[$r] .=' LEFT JOIN '.MAIN_DB_PREFIX.'societe as s ON p.fk_soc = s.rowid';
+		$this->export_sql_end[$r] .=' WHERE p.entity = '.$conf->entity;
 	}
 
 
@@ -357,20 +361,4 @@ class modProjet extends DolibarrModules
 
 		return $this->_init($sql,$options);
 	}
-
-    /**
-	 *		Function called when module is disabled.
-	 *      Remove from database constants, boxes and permissions from Dolibarr database.
-	 *		Data directories are not deleted
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-     */
-    function remove($options='')
-    {
-		$sql = array();
-
-		return $this->_remove($sql,$options);
-    }
-
 }

@@ -41,6 +41,7 @@ class Account extends CommonObject
     /**
      * @var	int		Use id instead of rowid
      * @deprecated
+     * @see id
      */
     var $rowid;
     var $id;
@@ -240,6 +241,11 @@ class Account extends CommonObject
      */
     function addline($date, $oper, $label, $amount, $num_chq, $categorie, $user, $emetteur='',$banque='')
     {
+	    // Deprecatîon warning
+	    if (is_numeric($oper)) {
+		    dol_syslog(__METHOD__ . ": using numeric operations is deprecated", LOG_WARNING);
+	    }
+
         // Clean parameters
         $emetteur=trim($emetteur);
         $banque=trim($banque);
@@ -781,8 +787,8 @@ class Account extends CommonObject
         		$result=$this->deleteExtraFields();
         		if ($result < 0)
         		{
-        			return -1;
         			dol_syslog(get_class($this)."::delete error -4 ".$this->error, LOG_ERR);
+        			return -1;
         		}
         	}
 
@@ -930,7 +936,7 @@ class Account extends CommonObject
         $sql.= " ".MAIN_DB_PREFIX."bank_account as ba";
         $sql.= " WHERE b.rappro=0";
         $sql.= " AND b.fk_account = ba.rowid";
-        $sql.= " AND ba.entity = ".$conf->entity;
+        $sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
         $sql.= " AND (ba.rappro = 1 AND ba.courant != 2)";	// Compte rapprochable
         if ($filteraccountid) $sql.=" AND ba.rowid = ".$filteraccountid;
 
@@ -1191,7 +1197,7 @@ class AccountLine extends CommonObject
         $sql.= " FROM ".MAIN_DB_PREFIX."bank as b,";
         $sql.= " ".MAIN_DB_PREFIX."bank_account as ba";
         $sql.= " WHERE b.fk_account = ba.rowid";
-        $sql.= " AND ba.entity = ".$conf->entity;
+        $sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
         if ($num) $sql.= " AND b.num_chq='".$this->db->escape($num)."'";
         else if ($ref) $sql.= " AND b.rowid='".$this->db->escape($ref)."'";
         else $sql.= " AND b.rowid=".$rowid;

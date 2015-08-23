@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2001-2005 Rodolphe Quiedeville        <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2014 Laurent Destailleur         <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2015 Laurent Destailleur         <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Eric Seigne                 <eric.seigne@ryxeo.com>
  * Copyright (C) 2006      Andre Cianfarani            <acianfa@free.fr>
  * Copyright (C) 2005-2012 Regis Houssin               <regis.houssin@capnetworks.com>
@@ -8,6 +8,7 @@
  * Copyright (C) 2010-2014 Juanjo Menent               <jmenent@2byte.es>
  * Copyright (C) 2013      Alexandre Spangaro          <alexandre.spangaro@gmail.com>
  * Copyright (C) 2015      Frederic France             <frederic.france@free.fr>
+ * Copyright (C) 2015      Marcos García               <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +36,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/client.class.php';
 require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
+require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 if (! empty($conf->facture->enabled)) require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 if (! empty($conf->propal->enabled)) require_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
 if (! empty($conf->commande->enabled)) require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
@@ -97,15 +99,13 @@ if (empty($reshook))
 		$action="";
 	}
 
+	// set accountancy code
 	if ($action == 'setcustomeraccountancycode')
 	{
 		$result=$object->fetch($id);
 		$object->code_compta=$_POST["customeraccountancycode"];
 		$result=$object->update($object->id,$user,1,1,0);
-		if ($result < 0)
-		{
-			setEventMessage($object->errors, 'errors');
-		}
+		if ($result < 0) setEventMessage($object->error,$object->errors,'errors');
 	}
 
 	// conditions de reglement
@@ -113,7 +113,7 @@ if (empty($reshook))
 	{
 		$object->fetch($id);
 		$result=$object->setPaymentTerms(GETPOST('cond_reglement_id','int'));
-		if ($result < 0) dol_print_error($db,$object->error);
+		if ($result < 0) setEventMessage($object->error,$object->errors,'errors');
 	}
 
 	// mode de reglement
@@ -121,7 +121,7 @@ if (empty($reshook))
 	{
 		$object->fetch($id);
 		$result=$object->setPaymentMethods(GETPOST('mode_reglement_id','int'));
-		if ($result < 0) dol_print_error($db,$object->error);
+		if ($result < 0) setEventMessage($object->error,$object->errors,'errors');
 	}
 
 	// assujetissement a la TVA
@@ -130,7 +130,7 @@ if (empty($reshook))
 		$object->fetch($id);
 		$object->tva_assuj=$_POST['assujtva_value'];
 		$result=$object->update($object->id);
-		if ($result < 0) dol_print_error($db,$object->error);
+		if ($result < 0) setEventMessage($object->error,$object->errors,'errors');
 	}
 
 	// set prospect level
@@ -139,25 +139,25 @@ if (empty($reshook))
 		$object->fetch($id);
 		$object->fk_prospectlevel=GETPOST('prospect_level_id','alpha');
 		$result=$object->set_prospect_level($user);
-		if ($result < 0) setEventMessage($object->error,'errors');
+		if ($result < 0) setEventMessage($object->error,$object->errors,'errors');
 	}
 
-	// update prospect level
-	if ($action == 'cstc')
+	// set communication status
+	if ($action == 'setstcomm')
 	{
 		$object->fetch($id);
-		$object->stcomm_id=GETPOST('stcomm','int');
+		$object->stcomm_id=dol_getIdFromCode($db, GETPOST('stcomm','alpha'), 'c_stcomm');
 		$result=$object->set_commnucation_level($user);
-		if ($result < 0) setEventMessage($object->error,'errors');
+		if ($result < 0) setEventMessages($object->error,$object->errors,'errors');
 	}
 
 	// update outstandng limit
 	if ($action == 'setoutstanding_limit')
 	{
 		$object->fetch($id);
-		$object->outstanding_limit=GETPOST('setoutstanding_limit');
+		$object->outstanding_limit=GETPOST('outstanding_limit');
 		$result=$object->set_OutstandingBill($user);
-		if ($result < 0) setEventMessage($object->error,'errors');
+		if ($result < 0) setEventMessage($object->error,$object->errors,'errors');
 	}
 }
 
@@ -227,6 +227,11 @@ if ($id > 0)
 	print $form->showrefnav($object,'socid','',($user->societe_id?0:1),'rowid','nom','','');
 	print '</td></tr>';
 
+	// Alias name (commercial, trademark or alias name)
+	print '<tr><td>'.$langs->trans('AliasNameShort').'</td><td colspan="3">';
+	print $object->name_alias;
+	print "</td></tr>";
+
 	// Prospect/Customer
 	print '<tr><td width="30%">'.$langs->trans('ProspectCustomer').'</td><td width="70%" colspan="3">';
 	print $object->getLibCustProspStatut();
@@ -260,7 +265,7 @@ if ($id > 0)
 	}
 
 	// Address
-	print '<tr><td valign="top">'.$langs->trans('Address').'</td><td colspan="3">';
+	print '<tr><td>'.$langs->trans('Address').'</td><td colspan="3">';
 	dol_print_address($object->address,'gmap','thirdparty',$object->id);
 	print "</td></tr>";
 
@@ -405,10 +410,19 @@ if ($id > 0)
 		print '</td><td colspan="3">';
 		$limit_field_type = (! empty($conf->global->MAIN_USE_JQUERY_JEDITABLE)) ? 'numeric' : 'amount';
 		print $form->editfieldval("OutstandingBill",'outstanding_limit',$object->outstanding_limit,$object,$user->rights->societe->creer,$limit_field_type,($object->outstanding_limit != '' ? price($object->outstanding_limit) : ''));
+		if (empty($object->outstanding_limit)) print $langs->trans("NoLimit");
 		// display amount and link to unpaid bill
-		$outstandigBills = $object->get_OutstandingBill();
-		if ($outstandigBills != 0)
-			print " (".$langs->trans("CurrentOutstandingBill")." <a href='".DOL_URL_ROOT."/compta/facture/list.php?socid=".$object->id."&search_status=1'>".price($outstandigBills, '', $langs, 0, 0, -1, $conf->currency).'</a>)';
+		$outstandingBills = $object->get_OutstandingBill();
+		print ' (' . $langs->trans('CurrentOutstandingBill') . ': ';
+		print price($outstandingBills, '', $langs, 0, 0, - 1, $conf->currency);
+		if ($object->outstanding_limit != '') 
+		{
+			if ($outstandingBills > $object->outstanding_limit)
+				print img_warning($langs->trans("OutstandingBillReached"));
+			//print ' / ' . price($soc->outstanding_limit);
+		}
+		print ')';
+		
 		print '</td>';
 		print '</tr>';
 	}
@@ -451,14 +465,24 @@ if ($id > 0)
 		print '</tr>';
 
 		// Status
-		print '<tr><td>'.$langs->trans("StatusProsp").'</td><td colspan="2">'.$object->getLibProspCommStatut(4).'</td>';
-		print '<td>';
-		if ($object->stcomm_id != -1) print '<a href="card.php?socid='.$object->id.'&amp;stcomm=-1&amp;action=cstc">'.img_action(0,-1).'</a>';
-		if ($object->stcomm_id !=  0) print '<a href="card.php?socid='.$object->id.'&amp;stcomm=0&amp;action=cstc">'.img_action(0,0).'</a>';
-		if ($object->stcomm_id !=  1) print '<a href="card.php?socid='.$object->id.'&amp;stcomm=1&amp;action=cstc">'.img_action(0,1).'</a>';
-		if ($object->stcomm_id !=  2) print '<a href="card.php?socid='.$object->id.'&amp;stcomm=2&amp;action=cstc">'.img_action(0,2).'</a>';
-		if ($object->stcomm_id !=  3) print '<a href="card.php?socid='.$object->id.'&amp;stcomm=3&amp;action=cstc">'.img_action(0,3).'</a>';
-		print '</td></tr>';
+		$object->loadCacheOfProspStatus();
+		print '<tr><td>'.$langs->trans("StatusProsp").'</td><td colspan="3">'.$object->getLibProspCommStatut(4, $object->cacheprospectstatus[$object->stcomm_id]['label']);
+		print ' &nbsp; &nbsp; <div class="floatright">';
+		foreach($object->cacheprospectstatus as $key => $val)
+		{
+			$titlealt='default';
+			if (! empty($val['code']) && ! in_array($val['code'], array('ST_NO', 'ST_NEVER', 'ST_TODO', 'ST_PEND', 'ST_DONE'))) $titlealt=$val['label'];
+			if ($object->stcomm_id != $val['id']) print '<a class="pictosubstatus" href="'.$_SERVER["PHP_SELF"].'?socid='.$object->id.'&stcomm='.$val['code'].'&action=setstcomm">'.img_action($titlealt,$val['code']).'</a>';
+		}
+		print '</div></td></tr>';
+	}
+
+	// Categories
+	if (!empty( $conf->categorie->enabled ) && !empty( $user->rights->categorie->lire )) {
+		print '<tr><td>' . $langs->trans( "Categories" ) . '</td>';
+		print '<td colspan="3">';
+		print $form->showCategories( $object->id, 'customer', 1 );
+		print "</td></tr>";
 	}
 
 	// Other attributes
@@ -478,7 +502,7 @@ if ($id > 0)
     {
         $langs->load("members");
         $langs->load("users");
-        print '<tr><td width="25%" valign="top">'.$langs->trans("LinkedToDolibarrMember").'</td>';
+        print '<tr><td width="25%">'.$langs->trans("LinkedToDolibarrMember").'</td>';
         print '<td colspan="3">';
         $adh=new Adherent($db);
         $result=$adh->fetch('','',$object->id);
@@ -627,7 +651,7 @@ if ($id > 0)
 				print '<table class="noborder" width="100%">';
 
 				print '<tr class="liste_titre">';
-				print '<td colspan="4"><table width="100%" class="nobordernopadding"><tr><td>'.$langs->trans("LastOrders",($num<=$MAXLIST?"":$MAXLIST)).'</td><td align="right"><a href="'.DOL_URL_ROOT.'/commande/list.php?socid='.$object->id.'">'.$langs->trans("AllOrders").' <span class="badge">'.$num.'</span></a></td>';
+				print '<td colspan="4"><table width="100%" class="nobordernopadding"><tr><td>'.$langs->trans("LastCustomerOrders",($num<=$MAXLIST?"":$MAXLIST)).'</td><td align="right"><a href="'.DOL_URL_ROOT.'/commande/list.php?socid='.$object->id.'">'.$langs->trans("AllOrders").' <span class="badge">'.$num.'</span></a></td>';
 				print '<td width="20px" align="right"><a href="'.DOL_URL_ROOT.'/commande/stats/index.php?socid='.$object->id.'">'.img_picto($langs->trans("Statistics"),'stats').'</a></td>';
 				//if($num2 > 0) print '<td width="20px" align="right"><a href="'.DOL_URL_ROOT.'/commande/orderstoinvoice.php?socid='.$object->id.'">'.img_picto($langs->trans("CreateInvoiceForThisCustomer"),'object_bill').'</a></td>';
 				//else print '<td width="20px" align="right"><a href="#">'.img_picto($langs->trans("NoOrdersToInvoice"),'object_bill').'</a></td>';
@@ -678,7 +702,7 @@ if ($id > 0)
         $sql.= ', s.rowid as socid';
         $sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."expedition as e";
         $sql.= " WHERE e.fk_soc = s.rowid AND s.rowid = ".$object->id;
-        $sql.= " AND e.entity = ".$conf->entity;
+        $sql.= " AND e.entity IN (".getEntity('expedition', 1).")";
         $sql.= ' GROUP BY e.rowid';
         $sql.= ', e.ref';
         $sql.= ', e.date_creation';
@@ -854,7 +878,7 @@ if ($id > 0)
 		$facturestatic = new Facture($db);
 
         $sql = 'SELECT f.rowid as facid, f.facnumber, f.type, f.amount';
-        $sql.= ', f.total';
+        $sql.= ', f.total as total_ht';
         $sql.= ', f.tva as total_tva';
         $sql.= ', f.total_ttc';
 		$sql.= ', f.datef as df, f.datec as dc, f.paye as paye, f.fk_statut as statut';
@@ -896,7 +920,7 @@ if ($id > 0)
 				$facturestatic->id = $objp->facid;
 				$facturestatic->ref = $objp->facnumber;
 				$facturestatic->type = $objp->type;
-                $facturestatic->total_ht = $objp->total;
+                $facturestatic->total_ht = $objp->total_ht;
                 $facturestatic->total_tva = $objp->total_tva;
                 $facturestatic->total_ttc = $objp->total_ttc;
 				print $facturestatic->getNomUrl(1);
@@ -909,7 +933,7 @@ if ($id > 0)
 				{
 					print '<td align="right"><b>!!!</b></td>';
 				}
-				print '<td align="right" width="120">'.price($objp->total_ttc).'</td>';
+				print '<td align="right" width="120">'.price($objp->total_ht).'</td>';
 
 				print '<td align="right" class="nowrap" width="100" >'.($facturestatic->LibStatut($objp->paye,$objp->statut,5,$objp->am)).'</td>';
 				print "</tr>\n";

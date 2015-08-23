@@ -847,13 +847,10 @@ if (empty($reshook))
 		}
 		$ret = $object->fetch($id); // Reload to get new records
 		$result = $object->generateDocument($object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
-
-		if ($result <= 0) {
-			dol_print_error($db, $result);
-			exit();
-		} else {
-			header('Location: ' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . (empty($conf->global->MAIN_JUMP_TAG) ? '' : '#builddoc'));
-			exit();
+		if ($result <= 0)
+		{
+			setEventMessages($object->error, $object->errors, 'errors');
+	        $action='';
 		}
 	}
 
@@ -1216,7 +1213,7 @@ if ($action == 'create')
 		if (! empty($conf->global->PRODUCT_SHOW_WHEN_CREATE))
 			print '<tr><td colspan="3">&nbsp;</td></tr>';
 
-		print '<tr><td valign="top"><input type="radio" name="createmode" value="empty" checked="checked"></td>';
+		print '<tr><td valign="top"><input type="radio" name="createmode" value="empty" checked></td>';
 		print '<td valign="top" colspan="2">' . $langs->trans("CreateEmptyAsk") . '</td></tr>';
 	}
 
@@ -1712,10 +1709,12 @@ if ($action == 'create')
 
 		$somethingshown = $formfile->show_documents('askpricesupplier', $filename, $filedir, $urlsource, $genallowed, $delallowed, $object->modelpdf, 1, 0, 0, 28, 0, '', 0, '', $soc->default_lang);
 
-		/*
-		 * Linked object block
-		*/
-		$somethingshown = $object->showLinkedObjectBlock();
+		// Linked object block
+		$somethingshown = $form->showLinkedObjectBlock($object);
+
+		// Show links to link elements
+		//$linktoelem = $form->showLinkToObjectBlock($object);
+		//if ($linktoelem) print '<br>'.$linktoelem;
 
 		print '</div><div class="fichehalfright"><div class="ficheaddleft">';
 
@@ -1730,14 +1729,17 @@ if ($action == 'create')
 	/*
 	 * Action presend
  	 */
+	if (GETPOST('modelselected')) {
+		$action = 'presend';
+	}
 	if ($action == 'presend')
 	{
 		$object->fetch_projet();
 
 		$ref = dol_sanitizeFileName($object->ref);
 		include_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
-		$fileparams = dol_most_recent_file($conf->askpricesupplier->dir_output . '/' . $ref, preg_quote($ref, '/'));
-		$file = $fileparams ['fullname'];
+		$fileparams = dol_most_recent_file($conf->askpricesupplier->dir_output . '/' . $ref, preg_quote($ref, '/').'[^\-]+');
+		$file = $fileparams['fullname'];
 
 		// Define output language
 		$outputlangs = $langs;
@@ -1757,16 +1759,20 @@ if ($action == 'create')
 		// Build document if it not exists
 		if (! $file || ! is_readable($file)) {
 			$result = $object->generateDocument(GETPOST('model') ? GETPOST('model') : $object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
-			if ($result <= 0) {
+			if ($result <= 0)
+			{
 				dol_print_error($db, $result);
 				exit();
 			}
-			$fileparams = dol_most_recent_file($conf->askpricesupplier->dir_output . '/' . $ref, preg_quote($ref, '/'));
-			$file = $fileparams ['fullname'];
+			$fileparams = dol_most_recent_file($conf->askpricesupplier->dir_output . '/' . $ref, preg_quote($ref, '/').'[^\-]+');
+			$file = $fileparams['fullname'];
 		}
 
+		print '<div class="clearboth"></div>';
 		print '<br>';
-		print_titre($langs->trans('SendAskByMail'));
+		print_fiche_titre($langs->trans('SendAskByMail'));
+
+		dol_fiche_head('');
 
 		// Create form object
 		include_once DOL_DOCUMENT_ROOT . '/core/class/html.formmail.class.php';
@@ -1802,6 +1808,7 @@ if ($action == 'create')
 		// Tableau des parametres complementaires
 		$formmail->param['action'] = 'send';
 		$formmail->param['models'] = 'askpricesupplier_send';
+		$formmail->param['models_id']=GETPOST('modelmailselected','int');
 		$formmail->param['id'] = $object->id;
 		$formmail->param['returnurl'] = $_SERVER["PHP_SELF"] . '?id=' . $object->id;
 		// Init list of files
@@ -1812,7 +1819,7 @@ if ($action == 'create')
 
 		print $formmail->get_form();
 
-		print '<br>';
+		dol_fiche_end();
 	}
 }
 

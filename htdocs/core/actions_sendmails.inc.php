@@ -23,7 +23,7 @@
  */
 
 
-// TODO Include this include file into all class objects
+// TODO Include this include file into all element pages allowing email sending
 
 // $id must be defined
 // $actiontypecode must be defined
@@ -64,7 +64,7 @@ if (! empty($_POST['removedfile']))
 /*
  * Send mail
  */
-if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_POST['removedfile'] && ! $_POST['cancel'])
+if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_POST['removedfile'] && ! $_POST['cancel'] && !$_POST['modelselected'])
 {
 	$langs->load('mails');
 
@@ -141,9 +141,9 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 			$replyto = $_POST['replytoname']. ' <' . $_POST['replytomail'].'>';
 			$message = $_POST['message'];
 			$sendtobcc= GETPOST('sendtoccc');
-			if ($mode == 'emailfromproposal') $sendtobcc = (empty($conf->global->MAIN_MAIL_AUTOCOPY_PROPOSAL_TO)?'':$conf->global->MAIN_MAIL_AUTOCOPY_PROPOSAL_TO);
-			if ($mode == 'emailfromorder')    $sendtobcc = (empty($conf->global->MAIN_MAIL_AUTOCOPY_ORDER_TO)?'':$conf->global->MAIN_MAIL_AUTOCOPY_ORDER_TO);
-			if ($mode == 'emailfrominvoice')  $sendtobcc = (empty($conf->global->MAIN_MAIL_AUTOCOPY_INVOICE_TO)?'':$conf->global->MAIN_MAIL_AUTOCOPY_INVOICE_TO);
+			if ($mode == 'emailfromproposal') $sendtobcc .= (empty($conf->global->MAIN_MAIL_AUTOCOPY_PROPOSAL_TO) ? '' : (($sendtobcc?", ":"").$conf->global->MAIN_MAIL_AUTOCOPY_PROPOSAL_TO));
+			if ($mode == 'emailfromorder')    $sendtobcc .= (empty($conf->global->MAIN_MAIL_AUTOCOPY_ORDER_TO) ? '' : (($sendtobcc?", ":"").$conf->global->MAIN_MAIL_AUTOCOPY_ORDER_TO));
+			if ($mode == 'emailfrominvoice')  $sendtobcc .= (empty($conf->global->MAIN_MAIL_AUTOCOPY_INVOICE_TO) ? '' : (($sendtobcc?", ":"").$conf->global->MAIN_MAIL_AUTOCOPY_INVOICE_TO));
 
 			$deliveryreceipt = $_POST['deliveryreceipt'];
 
@@ -170,9 +170,11 @@ if (($action == 'send' || $action == 'relance') && ! $_POST['addfile'] && ! $_PO
 			$filename = $attachedfiles['names'];
 			$mimetype = $attachedfiles['mimes'];
 
+			$trackid = GETPOST('trackid','aZ');
+
 			// Send mail
 			require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
-			$mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,$sendtobcc,$deliveryreceipt,-1);
+			$mailfile = new CMailFile($subject,$sendto,$from,$message,$filepath,$mimetype,$filename,$sendtocc,$sendtobcc,$deliveryreceipt,-1,'','',$trackid);
 			if ($mailfile->error)
 			{
 				$mesgs[]='<div class="error">'.$mailfile->error.'</div>';

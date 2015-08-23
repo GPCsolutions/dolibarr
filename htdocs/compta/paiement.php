@@ -6,7 +6,7 @@
  * Copyright (C) 2007      Franky Van Liedekerke <franky.van.liedekerke@telenet.be>
  * Copyright (C) 2012      Cédric Salvador       <csalvador@gpcsolutions.fr>
  * Copyright (C) 2014      Raphaël Doursenaud    <rdoursenaud@gpcsolutions.fr>
- * Copyright (C) 2014		Teddy Andreotti			<125155@supinfo.com>
+ * Copyright (C) 2014      Teddy Andreotti       <125155@supinfo.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -403,6 +403,8 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
 		print '<input type="hidden" name="type" id="invoice_type" value="'.$facture->type.'">';
 		print '<input type="hidden" name="thirdpartylabel" id="thirdpartylabel" value="'.dol_escape_htmltag($facture->client->name).'">';
 
+		dol_fiche_head();
+
 		print '<table class="border" width="100%">';
 
         // Third party
@@ -461,6 +463,8 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
         print '<td><input name="chqbank" size="30" type="text" value="'.GETPOST('chqbank').'"></td></tr>';
 
         print '</table>';
+
+		dol_fiche_end();
 
         /*
          * List of unpaid invoices
@@ -571,7 +575,7 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
                     }
                     else
                     {
-                        print '<input type="text" size="8" name="'.$namef.'_disabled" value="'.$_POST[$namef].'" disabled="disabled">';
+                        print '<input type="text" size="8" name="'.$namef.'_disabled" value="'.$_POST[$namef].'" disabled>';
                         print '<input type="hidden" name="'.$namef.'" value="'.$_POST[$namef].'">';
                     }
                     print "</td>";
@@ -632,7 +636,7 @@ if ($action == 'create' || $action == 'confirm_paiement' || $action == 'add_paie
         	if ($facture->type == 2) $buttontitle=$langs->trans('ToMakePaymentBack');
 
         	print '<br><div class="center">';
-        	print '<input type="checkbox" checked="checked" name="closepaidinvoices"> '.$checkboxlabel;
+        	print '<input type="checkbox" checked name="closepaidinvoices"> '.$checkboxlabel;
             /*if (! empty($conf->prelevement->enabled))
             {
                 $langs->load("withdrawals");
@@ -701,7 +705,7 @@ if (! GETPOST('action'))
         print_liste_field_titre($langs->trans('Date'),$_SERVER["PHP_SELF"],'dp','','','',$sortfield,$sortorder);
         print_liste_field_titre($langs->trans('Type'),$_SERVER["PHP_SELF"],'libelle','','','',$sortfield,$sortorder);
         print_liste_field_titre($langs->trans('Amount'),$_SERVER["PHP_SELF"],'fa_amount','','','align="right"',$sortfield,$sortorder);
-        print '<td>&nbsp;</td>';
+		print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
         print "</tr>\n";
 
         while ($i < min($num,$limit))
@@ -724,6 +728,6 @@ if (! GETPOST('action'))
     }
 }
 
-$db->close();
-
 llxFooter();
+
+$db->close();

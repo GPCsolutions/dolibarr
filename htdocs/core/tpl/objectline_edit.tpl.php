@@ -23,6 +23,7 @@
  * $object (invoice, order, ...)
  * $conf
  * $langs
+ * $seller, $nuyer
  * $dateSelector
  * $forceall (0 by default, 1 for supplier invoices/orders)
  * $senderissupplier (0 by default, 1 for supplier invoices/orders)
@@ -98,7 +99,7 @@ $coldisplay=-1; // We remove first td
 		$doleditor=new DolEditor('product_desc',$line->description,'',164,$toolbarname,'',false,true,$enable,$nbrows,'98%');
 		$doleditor->Create();
 	} else {
-		print '<textarea id="desc" class="flat" name="desc" readonly="readonly" style="width: 200px; height:80px;">' . $line->description . '</textarea>';
+		print '<textarea id="desc" class="flat" name="desc" readonly style="width: 200px; height:80px;">' . $line->description . '</textarea>';
 	}
 	?>
 	</td>
@@ -112,23 +113,22 @@ $coldisplay=-1; // We remove first td
 	if ($this->situation_counter == 1 || !$this->situation_cycle_ref) {
 		print '<td align="right">' . $form->load_tva('tva_tx',$line->tva_tx,$seller,$buyer,0,$line->info_bits,$line->product_type) . '</td>';
 	} else {
-		print '<td align="right"><input size="1" type="text" class="flat" name="tva_tx" value="' . price($line->tva_tx) . '" readonly="readonly" />%</td>';
+		print '<td align="right"><input size="1" type="text" class="flat" name="tva_tx" value="' . price($line->tva_tx) . '" readonly />%</td>';
 	}
 
 	$coldisplay++;
 	print '<td align="right"><input type="text" class="flat" size="8" id="price_ht" name="price_ht" value="' . (isset($line->pu_ht)?price($line->pu_ht,0,'',0):price($line->subprice,0,'',0)) . '"';
-	if ($this->situation_counter > 1) print ' readonly="readonly"';
+	if ($this->situation_counter > 1) print ' readonly';
 	print '></td>';
 
 	if ($inputalsopricewithtax)
 	{
 		$coldisplay++;
 		print '<td align="right"><input type="text" class="flat" size="8" id="price_ttc" name="price_ttc" value="'.(isset($line->pu_ttc)?price($line->pu_ttc,0,'',0):'').'"';
-		if ($this->situation_counter > 1) print ' readonly="readonly"';
+		if ($this->situation_counter > 1) print ' readonly';
 		print '></td>';
 	}
 	?>
-
 	<td align="right"><?php $coldisplay++; ?>
 	<?php if (($line->info_bits & 2) != 2) {
 		// I comment this because it shows info even when not required
@@ -136,17 +136,26 @@ $coldisplay=-1; // We remove first td
 		// must also not be output for most entities (proposal, intervention, ...)
 		//if($line->qty > $line->stock) print img_picto($langs->trans("StockTooLow"),"warning", 'style="vertical-align: bottom;"')." ";
 		print '<input size="3" type="text" class="flat" name="qty" id="qty" value="' . $line->qty . '"';
-		if ($this->situation_counter > 1) print ' readonly="readonly"';
+		if ($this->situation_counter > 1) print ' readonly';
 		print '>';
 	} else { ?>
 		&nbsp;
 	<?php } ?>
 	</td>
 
-	<td align="right" nowrap><?php $coldisplay++; ?>
+	<?php
+	if($conf->global->PRODUCT_USE_UNITS)
+	{
+		print '<td align="left">';
+		print $form->selectUnits($line->fk_unit, "units");
+		print '</td>';
+	}
+	?>
+
+	<td align="right" class="nowrap"><?php $coldisplay++; ?>
 	<?php if (($line->info_bits & 2) != 2) {
 		print '<input size="1" type="text" class="flat" name="remise_percent" id="remise_percent" value="' . $line->remise_percent . '"';
-		if ($this->situation_counter > 1) print ' readonly="readonly"';
+		if ($this->situation_counter > 1) print ' readonly';
 		print '>%';
 	} else { ?>
 		&nbsp;
@@ -155,7 +164,7 @@ $coldisplay=-1; // We remove first td
 	<?php
 	if ($this->situation_cycle_ref) {
 		$coldisplay++;
-		print '<td align="right" nowrap><input type="text" size="1" value="' . $line->situation_percent . '" name="progress">%</td>';
+		print '<td align="right" class="nowrap"><input type="text" size="1" value="' . $line->situation_percent . '" name="progress">%</td>';
 	}
 	if (! empty($usemargins))
 	{
@@ -213,9 +222,9 @@ $coldisplay=-1; // We remove first td
 	<td colspan="11"><?php echo $langs->trans('ServiceLimitedDuration').' '.$langs->trans('From').' '; ?>
 	<?php
 	$hourmin=(isset($conf->global->MAIN_USE_HOURMIN_IN_DATE_RANGE)?$conf->global->MAIN_USE_HOURMIN_IN_DATE_RANGE:'');
-	echo $form->select_date($line->date_start,'date_start',$hourmin,$hourmin,$line->date_start?0:1,"updateligne");
+	echo $form->select_date($line->date_start,'date_start',$hourmin,$hourmin,$line->date_start?0:1,"updateligne",1,0,1);
 	echo ' '.$langs->trans('to').' ';
-	echo $form->select_date($line->date_end,'date_end',$hourmin,$hourmin,$line->date_end?0:1,"updateligne");
+	echo $form->select_date($line->date_end,'date_end',$hourmin,$hourmin,$line->date_end?0:1,"updateligne",1,0,1);
 	?>
 	</td>
 </tr>
@@ -283,10 +292,10 @@ if (! empty($conf->margin->enabled))
 		{
 		?>
 			$('#savelinebutton').click(function (e) {
-				return checkEditLine(e, "marginRate");
+				return checkEditLine(e, "np_marginRate");
 			});
 			$("input[name='np_marginRate']:first").blur(function(e) {
-				return checkEditLine(e, "marginRate");
+				return checkEditLine(e, "np_marginRate");
 			});
 		<?php
 		}
@@ -294,10 +303,10 @@ if (! empty($conf->margin->enabled))
 		{
 		?>
 			$('#savelinebutton').click(function (e) {
-				return checkEditLine(e, "markRate");
+				return checkEditLine(e, "np_markRate");
 			});
 			$("input[name='np_markRate']:first").blur(function(e) {
-				return checkEditLine(e, "markRate");
+				return checkEditLine(e, "np_markRate");
 			});
 		<?php
 		}

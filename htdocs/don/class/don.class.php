@@ -54,14 +54,20 @@ class Don extends CommonObject
     var $country;
     var $email;
     var $public;
-    var $fk_project;
+    var $fk_projet;
     var $modepaiement;
     var $modepaiementid;
     var $note_private;
     var $note_public;
     var $statut;
-
+	var $modelpdf;
     var $projet;
+
+	/**
+	 * @deprecated
+	 * @see note_private, note_public
+	 */
+	var $commentaire;
 
     /**
      *  Constructor
@@ -306,14 +312,14 @@ class Don extends CommonObject
      * @return  int  		        <0 if KO, id of created donation if OK
      * TODO    add numbering module for Ref
      */
-    function create($user, $notrigger)
+    function create($user, $notrigger=0)
     {
         global $conf, $langs;
-		
+
 		$error = 0;
 		$ret = 0;
         $now=dol_now();
-		
+
         // Clean parameters
         $this->address=($this->address>0?$this->address:$this->address);
         $this->zip=($this->zip>0?$this->zip:$this->zip);
@@ -337,7 +343,7 @@ class Don extends CommonObject
         // $sql.= ", country"; -- Deprecated
         $sql.= ", fk_country";
         $sql.= ", public";
-        $sql.= ", fk_project";
+        $sql.= ", fk_projet";
         $sql.= ", note_private";
         $sql.= ", note_public";
         $sql.= ", fk_user_author";
@@ -359,7 +365,7 @@ class Don extends CommonObject
         $sql.= ", '".$this->db->escape($this->town)."'";
 		$sql.= ", ".$this->country_id;
         $sql.= ", ".$this->public;
-        $sql.= ", ".($this->fk_project > 0?$this->fk_project:"null");
+        $sql.= ", ".($this->fk_projet > 0?$this->fk_projet:"null");
        	$sql.= ", ".(!empty($this->note_private)?("'".$this->db->escape($this->note_private)."'"):"NULL");
 		$sql.= ", ".(!empty($this->note_public)?("'".$this->db->escape($this->note_public)."'"):"NULL");
         $sql.= ", ".$user->id;
@@ -391,7 +397,7 @@ class Don extends CommonObject
             $this->errno = $this->db->lasterrno();
             $error++;
         }
-		
+
 		// Update extrafield
         if (!$error) {
         	if (empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) // For avoid conflicts if trigger used
@@ -403,7 +409,7 @@ class Don extends CommonObject
         		}
         	}
         }
-		
+
 		if (!$error && !empty($conf->global->MAIN_DISABLEDRAFTSTATUS))
         {
             $res = $this->setValid($user);
@@ -434,7 +440,7 @@ class Don extends CommonObject
         global $langs, $conf;
 
 		$error=0;
-		
+
         // Clean parameters
         $this->address=($this->address>0?$this->address:$this->address);
         $this->zip=($this->zip>0?$this->zip:$this->zip);
@@ -455,7 +461,7 @@ class Don extends CommonObject
         $sql .= ",town='".$this->db->escape($this->town)."'";
         $sql .= ",fk_country = ".$this->country_id;
         $sql .= ",public=".$this->public;
-        $sql .= ",fk_project=".($this->fk_project>0?$this->fk_project:'null');
+        $sql .= ",fk_projet=".($this->fk_projet>0?$this->fk_projet:'null');
         $sql .= ",note_private=".(!empty($this->note_private)?("'".$this->db->escape($this->note_private)."'"):"NULL");
         $sql .= ",note_public=".(!empty($this->note_public)?("'".$this->db->escape($this->note_public)."'"):"NULL");
         $sql .= ",datedon='".$this->db->idate($this->date)."'";
@@ -521,27 +527,28 @@ class Don extends CommonObject
      */
     function delete($user, $notrigger=0)
     {
-		global $conf, $langs;
+		global $user, $conf, $langs;
 		require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
-		
-		$error = 0;
-        
-		$this->db->begin();
-		
-        // Delete donation
-        if (! $error)
-        {
-	        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "don";
-	        $sql.= " WHERE rowid=" . $this->id;
 
-	        $resql = $this->db->query($sql);
-	        if (!$resql)
-	        {
-	        	$this->errors[] = $this->db->lasterror();
-	        	$error++;
-	        }
+		$error = 0;
+
+		$this->db->begin();
+
+   		if (! $error)
+        {
+            if (!$notrigger)
+            {
+                // Call trigger
+                $result=$this->call_trigger('DON_DELETE',$user);
+
+                if ($result < 0) {
+                    $error++;
+                }
+                // End call triggers
+            }
         }
 
+        // Delete donation
         if (! $error)
         {
 	        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "don_extrafields";
@@ -557,16 +564,15 @@ class Don extends CommonObject
 
 		if (! $error)
         {
-            if (!$notrigger)
-            {
-                // Call trigger
-                $result=$this->call_trigger('DON_DELETE',$user);
+	        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "don";
+	        $sql.= " WHERE rowid=" . $this->id;
 
-                if ($result < 0) {
-                    $error++;
-                }
-                // End call triggers
-            }
+	        $resql = $this->db->query($sql);
+	        if (!$resql)
+	        {
+	        	$this->errors[] = $this->db->lasterror();
+	        	$error++;
+	        }
         }
 
     	if (! $error)
@@ -576,7 +582,7 @@ class Don extends CommonObject
         }
         else
        {
-        	foreach ( $this->errors as $errmsg )
+        	foreach($this->errors as $errmsg)
         	{
 				dol_syslog(get_class($this) . "::delete " . $errmsg, LOG_ERR);
 				$this->error .= ($this->error ? ', ' . $errmsg : $errmsg);
@@ -601,11 +607,11 @@ class Don extends CommonObject
         $sql = "SELECT d.rowid, d.datec, d.tms as datem, d.datedon,";
         $sql.= " d.firstname, d.lastname, d.societe, d.amount, d.fk_statut, d.address, d.zip, d.town, ";
         $sql.= " d.fk_country, d.country as country_olddata, d.public, d.amount, d.fk_payment, d.paid, d.note_private, d.note_public, cp.libelle, d.email, d.phone, ";
-        $sql.= " d.phone_mobile, d.fk_project,";
+        $sql.= " d.phone_mobile, d.fk_projet, d.model_pdf,";
         $sql.= " p.title as project_label,";
         $sql.= " c.code as country_code, c.label as country";
         $sql.= " FROM ".MAIN_DB_PREFIX."don as d";
-        $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON p.rowid = d.fk_project";
+        $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."projet as p ON p.rowid = d.fk_projet";
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_paiement as cp ON cp.id = d.fk_payment";
         $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."c_country as c ON d.fk_country = c.rowid";
 		if (! empty($id))
@@ -647,16 +653,17 @@ class Don extends CommonObject
                 $this->phone          = $obj->phone;
                 $this->phone_mobile   = $obj->phone_mobile;
                 $this->project        = $obj->project_label;
-                $this->fk_project     = $obj->fk_project;
+                $this->fk_projet      = $obj->fk_projet;
                 $this->public         = $obj->public;
                 $this->modepaymentid  = $obj->fk_payment;
                 $this->modepayment    = $obj->libelle;
-				$this->paid			  = $obj->paid;	
+				$this->paid			  = $obj->paid;
                 $this->amount         = $obj->amount;
                 $this->note_private	  = $obj->note_private;
                 $this->note_public	  = $obj->note_public;
+                $this->modelpdf       = $obj->model_pdf;
                 $this->commentaire    = $obj->note;	// deprecated
-				
+
 				// Retrieve all extrafield for thirdparty
                 // fetch optionals attributes and labels
                 require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
@@ -677,8 +684,8 @@ class Don extends CommonObject
     /**
      *    Validate a promise of donation
      *
-     *    @param	int		$id   	id of donation
-     *    @param  	int		$userid  	User who validate the promise
+     *    @param	int		$id   		id of donation
+     *    @param  	int		$userid  	User who validate the donation/promise
      *    @return   int     			<0 if KO, >0 if OK
      */
     function valid_promesse($id, $userid)
@@ -706,16 +713,16 @@ class Don extends CommonObject
     }
 
     /**
-     *    Classe le don comme paye, le don a ete recu
+     *    Classify the donation as paid, the donation was received
      *
-     *    @param	int		$id           	    id du don a modifier
-     *    @param    int		$modepaiement   	mode de paiement
+     *    @param	int		$id           	    id of donation
+     *    @param    int		$modepayment   	    mode of payment
      *    @return   int      					<0 if KO, >0 if OK
      */
-    function set_paid($id, $modepaiement='')
+    function set_paid($id, $modepayment='')
     {
         $sql = "UPDATE ".MAIN_DB_PREFIX."don SET fk_statut = 2";
-        if ($modepaiement)
+        if ($modepayment)
         {
             $sql .= ", fk_payment=$modepayment";
         }
@@ -741,7 +748,7 @@ class Don extends CommonObject
     }
 
     /**
-     *    Set donation to status canceled
+     *    Set donation to status cancelled
      *
      *    @param	int		$id   	    id of donation
      *    @return   int     			<0 if KO, >0 if OK
@@ -821,7 +828,7 @@ class Don extends CommonObject
         if ($withpicto != 2) $result.=$link.$this->id.$linkend;
         return $result;
     }
-	
+
 	/**
 	 * Information on record
 	 *

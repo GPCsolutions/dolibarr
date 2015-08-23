@@ -2,14 +2,16 @@
 /* Copyright (C) 2003-2006	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2014	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2005		Marc Barilley / Ocebo	<marc@ocebo.com>
- * Copyright (C) 2005-2013	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2015	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2006		Andre Cianfarani		<acianfa@free.fr>
  * Copyright (C) 2010-2013	Juanjo Menent			<jmenent@2byte.es>
  * Copyright (C) 2011		Philippe Grand			<philippe.grand@atoo-net.com>
  * Copyright (C) 2012-2013	Christophe Battarel		<christophe.battarel@altairis.fr>
  * Copyright (C) 2012		Marcos García			<marcosgdf@gmail.com>
+ * Copyright (C) 2012       Cedric Salvador      <csalvador@gpcsolutions.fr>
  * Copyright (C) 2013		Florian Henry			<florian.henry@open-concept.pro>
  * Copyright (C) 2014       Ferran Marcet			<fmarcet@2byte.es>
+ * Copyright (C) 2015       Jean-François Ferry		<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +32,7 @@
  * \ingroup commande
  * \brief Page to show customer order
  */
+
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.formorder.class.php';
@@ -144,7 +147,7 @@ if (empty($reshook))
 	// Reopen a closed order
 	else if ($action == 'reopen' && $user->rights->commande->creer)
 	{
-		if ($object->statut == Commande::STATUS_CLOSED)
+		if ($object->statut == STATUS_CANCELED || $object->statut == Commande::STATUS_CLOSED)
 		{
 			$result = $object->set_reopen($user);
 			if ($result > 0)
@@ -347,7 +350,7 @@ if (empty($reshook))
 									$array_options = $lines[$i]->array_options;
 								}
 
-								$result = $object->addline($desc, $lines[$i]->subprice, $lines[$i]->qty, $lines[$i]->tva_tx, $lines[$i]->localtax1_tx, $lines[$i]->localtax2_tx, $lines[$i]->fk_product, $lines[$i]->remise_percent, $lines[$i]->info_bits, $lines[$i]->fk_remise_except, 'HT', 0, $date_start, $date_end, $product_type, $lines[$i]->rang, $lines[$i]->special_code, $fk_parent_line, $lines[$i]->fk_fournprice, $lines[$i]->pa_ht, $label, $array_options);
+								$result = $object->addline($desc, $lines[$i]->subprice, $lines[$i]->qty, $lines[$i]->tva_tx, $lines[$i]->localtax1_tx, $lines[$i]->localtax2_tx, $lines[$i]->fk_product, $lines[$i]->remise_percent, $lines[$i]->info_bits, $lines[$i]->fk_remise_except, 'HT', 0, $date_start, $date_end, $product_type, $lines[$i]->rang, $lines[$i]->special_code, $fk_parent_line, $lines[$i]->fk_fournprice, $lines[$i]->pa_ht, $label, $array_options, $lines[$i]->fk_unit);
 
 								if ($result < 0) {
 									$error++;
@@ -543,7 +546,8 @@ if (empty($reshook))
 	}
 
 	// Add a new line
-	else if ($action == 'addline' && $user->rights->commande->creer) {
+	else if ($action == 'addline' && $user->rights->commande->creer)
+	{
 		$langs->load('errors');
 		$error = 0;
 
@@ -712,6 +716,7 @@ if (empty($reshook))
 					}
 
 				$type = $prod->type;
+				$fk_unit = $prod->fk_unit;
 			} else {
 				$pu_ht = price2num($price_ht, 'MU');
 				$pu_ttc = price2num(GETPOST('price_ttc'), 'MU');
@@ -720,6 +725,7 @@ if (empty($reshook))
 				$label = (GETPOST('product_label') ? GETPOST('product_label') : '');
 				$desc = $product_desc;
 				$type = GETPOST('type');
+				$fk_unit=GETPOST('units', 'alpha');
 			}
 
 			// Margin
@@ -741,7 +747,7 @@ if (empty($reshook))
 				setEventMessage($mesg, 'errors');
 			} else {
 				// Insert line
-				$result = $object->addline($desc, $pu_ht, $qty, $tva_tx, $localtax1_tx, $localtax2_tx, $idprod, $remise_percent, $info_bits, 0, $price_base_type, $pu_ttc, $date_start, $date_end, $type, - 1, 0, GETPOST('fk_parent_line'), $fournprice, $buyingprice, $label, $array_options);
+				$result = $object->addline($desc, $pu_ht, $qty, $tva_tx, $localtax1_tx, $localtax2_tx, $idprod, $remise_percent, $info_bits, 0, $price_base_type, $pu_ttc, $date_start, $date_end, $type, - 1, 0, GETPOST('fk_parent_line'), $fournprice, $buyingprice, $label, $array_options, $fk_unit);
 
 				if ($result > 0) {
 					$ret = $object->fetch($object->id); // Reload to get new records
@@ -777,6 +783,7 @@ if (empty($reshook))
 					unset($_POST['np_markRate']);
 					unset($_POST['dp_desc']);
 					unset($_POST['idprod']);
+					unset($_POST['units']);
 
 			    	unset($_POST['date_starthour']);
 			    	unset($_POST['date_startmin']);
@@ -800,7 +807,7 @@ if (empty($reshook))
 	/*
 	 *  Update a line
 	 */
-	else if ($action == 'updateline' && $user->rights->commande->creer && GETPOST('save') == $langs->trans('Save'))
+	else if ($action == 'updateline' && $user->rights->commande->creer && GETPOST('save'))
 	{
 		// Clean parameters
 		$date_start='';
@@ -816,10 +823,10 @@ if (empty($reshook))
 		if (preg_match('/\*/', $vat_rate))
 			$info_bits |= 0x01;
 
-			// Define vat_rate
+		// Define vat_rate
 		$vat_rate = str_replace('*', '', $vat_rate);
-		$localtax1_rate = get_localtax($vat_rate, 1, $object->thirdparty);
-		$localtax2_rate = get_localtax($vat_rate, 2, $object->thirdparty);
+		$localtax1_rate = get_localtax($vat_rate, 1, $object->thirdparty, $mysoc);
+		$localtax2_rate = get_localtax($vat_rate, 2, $object->thirdparty, $mysoc);
 
 		// Add buying price
 		$fournprice = (GETPOST('fournprice') ? GETPOST('fournprice') : '');
@@ -835,6 +842,10 @@ if (empty($reshook))
 				unset($_POST["options_" . $key]);
 			}
 		}
+
+		// Define special_code for special lines
+		$special_code=GETPOST('special_code');
+		if (! GETPOST('qty')) $special_code=3;
 
 		// Check minimum price
 		$productid = GETPOST('productid', 'int');
@@ -866,7 +877,7 @@ if (empty($reshook))
 		}
 
 		if (! $error) {
-			$result = $object->updateline(GETPOST('lineid'), $description, $pu_ht, GETPOST('qty'), GETPOST('remise_percent'), $vat_rate, $localtax1_rate, $localtax2_rate, 'HT', $info_bits, $date_start, $date_end, $type, GETPOST('fk_parent_line'), 0, $fournprice, $buyingprice, $label, 0, $array_options);
+			$result = $object->updateline(GETPOST('lineid'), $description, $pu_ht, GETPOST('qty'), GETPOST('remise_percent'), $vat_rate, $localtax1_rate, $localtax2_rate, 'HT', $info_bits, $date_start, $date_end, $type, GETPOST('fk_parent_line'), 0, $fournprice, $buyingprice, $label, $special_code, $array_options, GETPOST('units'));
 
 			if ($result >= 0) {
 				if (empty($conf->global->MAIN_DISABLE_PDF_AUTOUPDATE)) {
@@ -1081,10 +1092,10 @@ if (empty($reshook))
 			$outputlangs->setDefaultLang($newlang);
 		}
 		$result = $object->generateDocument($object->modelpdf, $outputlangs, $hidedetails, $hidedesc, $hideref);
-
-		if ($result <= 0) {
-			dol_print_error($db, $result);
-			exit();
+		if ($result <= 0)
+		{
+			setEventMessages($object->error, $object->errors, 'errors');
+	        $action='';
 		}
 	}
 
@@ -1117,7 +1128,7 @@ if (empty($reshook))
 		if (! $error)
 		{
 			// Actions on extra fields (by external module or standard code)
-			// FIXME le hook fait double emploi avec le trigger !!
+			// TODO le hook fait double emploi avec le trigger !!
 			$hookmanager->initHooks(array('orderdao'));
 			$parameters = array('id' => $object->id);
 			$reshook = $hookmanager->executeHooks('insertExtraFields', $parameters, $object, $action); // Note that $action and $object may have been modified by
@@ -1204,6 +1215,7 @@ llxHeader('', $langs->trans('Order'), 'EN:Customers_Orders|FR:Commandes_Clients|
 $form = new Form($db);
 $formfile = new FormFile($db);
 $formorder = new FormOrder($db);
+if (! empty($conf->projet->enabled)) { $formproject = new FormProjets($db); }
 
 /**
  * *******************************************************************
@@ -1214,7 +1226,7 @@ $formorder = new FormOrder($db);
  */
 if ($action == 'create' && $user->rights->commande->creer)
 {
-	print_fiche_titre($langs->trans('CreateOrder'));
+	print_fiche_titre($langs->trans('CreateOrder'),'','title_commercial.png');
 
 	$soc = new Societe($db);
 	if ($socid > 0)
@@ -1269,7 +1281,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 			$demand_reason_id	= (!empty($objectsrc->demand_reason_id)?$objectsrc->demand_reason_id:(!empty($soc->demand_reason_id)?$soc->demand_reason_id:0));
 			$remise_percent		= (!empty($objectsrc->remise_percent)?$objectsrc->remise_percent:(!empty($soc->remise_percent)?$soc->remise_percent:0));
 			$remise_absolue		= (!empty($objectsrc->remise_absolue)?$objectsrc->remise_absolue:(!empty($soc->remise_absolue)?$soc->remise_absolue:0));
-			$dateinvoice		= empty($conf->global->MAIN_AUTOFILL_DATE)?-1:'';
+			$dateorder		    = empty($conf->global->MAIN_AUTOFILL_DATE_ORDER)?-1:'';
 
 			$datedelivery = (! empty($objectsrc->date_livraison) ? $objectsrc->date_livraison : '');
 
@@ -1290,7 +1302,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 		$demand_reason_id   = $soc->demand_reason_id;
 		$remise_percent     = $soc->remise_percent;
 		$remise_absolue     = 0;
-		$dateinvoice        = empty($conf->global->MAIN_AUTOFILL_DATE)?-1:'';
+		$dateorder          = empty($conf->global->MAIN_AUTOFILL_DATE_ORDER)?-1:'';
 		$projectid          = 0;
 	}
 	$absolute_discount=$soc->getAvailableDiscounts();
@@ -1305,10 +1317,12 @@ if ($action == 'create' && $user->rights->commande->creer)
 	print '<input type="hidden" name="origin" value="' . $origin . '">';
 	print '<input type="hidden" name="originid" value="' . $originid . '">';
 
+	dol_fiche_head('');
+
 	print '<table class="border" width="100%">';
 
 	// Reference
-	print '<tr><td class="fieldrequired">' . $langs->trans('Ref') . '</td><td colspan="2">' . $langs->trans("Draft") . '</td></tr>';
+	print '<tr><td width="25%" class="fieldrequired">' . $langs->trans('Ref') . '</td><td colspan="2">' . $langs->trans("Draft") . '</td></tr>';
 
 	// Reference client
 	print '<tr><td>' . $langs->trans('RefCustomer') . '</td><td colspan="2">';
@@ -1358,7 +1372,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 	}
 	// Date
 	print '<tr><td class="fieldrequired">' . $langs->trans('Date') . '</td><td colspan="2">';
-	$form->select_date('', 're', '', '', '', "crea_commande", 1, 1);
+	$form->select_date('', 're', '', '', '', "crea_commande", 1, 1);			// Always autofill date with current date
 	print '</td></tr>';
 
 	// Date de livraison
@@ -1366,7 +1380,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 	if (empty($datedelivery))
 	{
 		if (! empty($conf->global->DATE_LIVRAISON_WEEK_DELAY)) $datedelivery = time() + ((7*$conf->global->DATE_LIVRAISON_WEEK_DELAY) * 24 * 60 * 60);
-		else $datedelivery=empty($conf->global->MAIN_AUTOFILL_DATE)?-1:'';
+		else $datedelivery=empty($conf->global->MAIN_AUTOFILL_DATE_DELIVERY)?-1:'';
 	}
 	$form->select_date($datedelivery, 'liv_', '', '', '', "crea_commande", 1, 1);
 	print "</td></tr>";
@@ -1409,14 +1423,16 @@ if ($action == 'create' && $user->rights->commande->creer)
 	// Project
 	if (! empty($conf->projet->enabled) && $socid > 0)
 	{
-		$formproject = new FormProjets($db);
+		$projectid = GETPOST('projectid')?GETPOST('projectid'):0;
+		if ($origin == 'project') $projectid = ($originid ? $originid : 0);
 
-		print '<tr><td>' . $langs->trans('Project') . '</td><td colspan="2">';
+		$langs->load("projects");
+		print '<tr>';
+		print '<td>' . $langs->trans("Project") . '</td><td colspan="2">';
 		$numprojet = $formproject->select_projects($soc->id, $projectid, 'projectid', 0);
-		if ($numprojet == 0) {
-			print ' &nbsp; <a href="' . DOL_URL_ROOT . '/projet/card.php?socid=' . $soc->id . '&action=create">' . $langs->trans("AddProject") . '</a>';
-		}
-		print '</td></tr>';
+		print ' &nbsp; <a href="'.DOL_URL_ROOT.'/projet/card.php?socid=' . $soc->id . '&action=create&status=1&backtopage='.urlencode($_SERVER["PHP_SELF"].'?action=create&socid='.$soc->id).'">' . $langs->trans("AddProject") . '</a>';
+		print '</td>';
+		print '</tr>';
 	}
 
 	// Incoterms
@@ -1445,29 +1461,30 @@ if ($action == 'create' && $user->rights->commande->creer)
 	print $form->selectarray('model', $liste, $conf->global->COMMANDE_ADDON_PDF);
 	print "</td></tr>";
 
-	// Note publique
+	// Note public
 	print '<tr>';
 	print '<td class="border" valign="top">' . $langs->trans('NotePublic') . '</td>';
 	print '<td valign="top" colspan="2">';
 
-	$doleditor = new DolEditor('note_public', $note_public, '', 80, 'dolibarr_notes', 'In', 0, false, true, ROWS_3, 70);
+	$doleditor = new DolEditor('note_public', $note_public, '', 80, 'dolibarr_notes', 'In', 0, false, true, ROWS_3, '90%');
 	print $doleditor->Create(1);
 	// print '<textarea name="note_public" wrap="soft" cols="70" rows="'.ROWS_3.'">'.$note_public.'</textarea>';
 	print '</td></tr>';
 
-	// Note privee
+	// Note private
 	if (empty($user->societe_id)) {
 		print '<tr>';
 		print '<td class="border" valign="top">' . $langs->trans('NotePrivate') . '</td>';
 		print '<td valign="top" colspan="2">';
 
-		$doleditor = new DolEditor('note_private', $note_private, '', 80, 'dolibarr_notes', 'In', 0, false, true, ROWS_3, 70);
+		$doleditor = new DolEditor('note_private', $note_private, '', 80, 'dolibarr_notes', 'In', 0, false, true, ROWS_3, '90%');
 		print $doleditor->Create(1);
 		// print '<textarea name="note" wrap="soft" cols="70" rows="'.ROWS_3.'">'.$note_private.'</textarea>';
 		print '</td></tr>';
 	}
 
-	if (! empty($origin) && ! empty($originid) && is_object($objectsrc)) {
+	if (! empty($origin) && ! empty($originid) && is_object($objectsrc))
+	{
 		// TODO for compatibility
 		if ($origin == 'contrat') {
 			// Calcul contrat->price (HT), contrat->total (TTC), contrat->tva
@@ -1501,8 +1518,11 @@ if ($action == 'create' && $user->rights->commande->creer)
 		}
 
 		print '<tr><td>' . $langs->trans('TotalTTC') . '</td><td colspan="2">' . price($objectsrc->total_ttc) . "</td></tr>";
-	} else {
-		if (! empty($conf->global->PRODUCT_SHOW_WHEN_CREATE)) {
+	}
+	else
+	{
+		if (! empty($conf->global->PRODUCT_SHOW_WHEN_CREATE))
+		{
 			/*
 			 * Services/produits predefinis
 			*/
@@ -1534,8 +1554,10 @@ if ($action == 'create' && $user->rights->commande->creer)
 
 	print '</table>';
 
+	dol_fiche_end();
+
 	// Button "Create Draft"
-	print '<br><div class="center"><input type="submit" class="button" name="bouton" value="' . $langs->trans('CreateDraft') . '"></div>';
+	print '<div class="center"><input type="submit" class="button" name="bouton" value="' . $langs->trans('CreateDraft') . '"></div>';
 
 	print '</form>';
 
@@ -1928,7 +1950,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 		print '<table class="nobordernopadding" width="100%"><tr><td>';
 		print $langs->trans('AvailabilityPeriod');
 		print '</td>';
-		if ($action != 'editavailability' && $object->brouillon)
+		if ($action != 'editavailability')
 			print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editavailability&amp;id=' . $object->id . '">' . img_edit($langs->trans('SetAvailability'), 1) . '</a></td>';
 		print '</tr></table>';
 		print '</td><td colspan="3">';
@@ -1944,7 +1966,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 		print '<table class="nobordernopadding" width="100%"><tr><td>';
 		print $langs->trans('Source');
 		print '</td>';
-		if ($action != 'editdemandreason' && ! empty($object->brouillon))
+		if ($action != 'editdemandreason')
 			print '<td align="right"><a href="' . $_SERVER["PHP_SELF"] . '?action=editdemandreason&amp;id=' . $object->id . '">' . img_edit($langs->trans('SetDemandReason'), 1) . '</a></td>';
 		print '</tr></table>';
 		print '</td><td colspan="3">';
@@ -1953,14 +1975,15 @@ if ($action == 'create' && $user->rights->commande->creer)
 		} else {
 			$form->formInputReason($_SERVER['PHP_SELF'] . '?id=' . $object->id, $object->demand_reason_id, 'none');
 		}
-		// Removed because using dictionary is an admin feature, not a user feature. Ther is already the "star" to show info to admin users.
+		// Removed because using dictionary is an admin feature, not a user feature. There is already the "star" to show info to admin users.
 		// This is to avoid too heavy screens and have an uniform look and feel for all screens.
 		// print '</td><td>';
 		// print '<a href="'.DOL_URL_ROOT.'/admin/dict.php?id=22&origin=order&originid='.$object->id.'">'.$langs->trans("DictionarySource").'</a>';
 		print '</td></tr>';
 
 		// Project
-		if (! empty($conf->projet->enabled)) {
+		if (! empty($conf->projet->enabled))
+		{
 			$langs->load('projects');
 			print '<tr><td height="10">';
 			print '<table class="nobordernopadding" width="100%"><tr><td>';
@@ -1979,7 +2002,8 @@ if ($action == 'create' && $user->rights->commande->creer)
 			print '</td></tr>';
 		}
 
-		if ($soc->outstanding_limit) {
+		if ($soc->outstanding_limit)
+		{
 			// Outstanding Bill
 			print '<tr><td>';
 			print $langs->trans('OutstandingBill');
@@ -2209,7 +2233,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 				}
 
 				// Reopen a closed order
-				if ($object->statut == Commande::STATUS_CLOSED && $user->rights->commande->creer) {
+				if (($object->statut == Commande::STATUS_CLOSED || $object->statut == Commande::STATUS_CANCELED) && $user->rights->commande->creer) {
 					print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&amp;action=reopen">' . $langs->trans('ReOpen') . '</a></div>';
 				}
 
@@ -2283,10 +2307,13 @@ if ($action == 'create' && $user->rights->commande->creer)
 			$delallowed = $user->rights->commande->supprimer;
 			$somethingshown = $formfile->show_documents('commande', $comref, $filedir, $urlsource, $genallowed, $delallowed, $object->modelpdf, 1, 0, 0, 28, 0, '', '', '', $soc->default_lang);
 
-			/*
-			 * Linked object block
-			 */
-			$somethingshown = $object->showLinkedObjectBlock();
+			// Linked object block
+			$somethingshown = $form->showLinkedObjectBlock($object);
+
+			// Show links to link elements
+			//$linktoelem = $form->showLinkToObjectBlock($object);
+			//if ($linktoelem) print '<br>'.$linktoelem;
+
 
 			print '</div><div class="fichehalfright"><div class="ficheaddleft">';
 			// print '</td><td valign="top" width="50%">';
@@ -2309,8 +2336,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 
 			$ref = dol_sanitizeFileName($object->ref);
 			include_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
-			$fileparams = dol_most_recent_file($conf->commande->dir_output . '/' . $ref, preg_quote($ref, '/'));
-			$file = $fileparams ['fullname'];
+			$file = $fileparams['fullname'];
 
 			// Define output language
 			$outputlangs = $langs;
@@ -2334,12 +2360,15 @@ if ($action == 'create' && $user->rights->commande->creer)
 					dol_print_error($db, $result);
 					exit();
 				}
-				$fileparams = dol_most_recent_file($conf->commande->dir_output . '/' . $ref, preg_quote($ref, '/'));
-				$file = $fileparams ['fullname'];
+				$fileparams = dol_most_recent_file($conf->commande->dir_output . '/' . $ref, preg_quote($ref, '/').'[^\-]+');
+				$file = $fileparams['fullname'];
 			}
 
+			print '<div class="clearboth"></div>';
 			print '<br>';
-			print_titre($langs->trans('SendOrderByMail'));
+			print_fiche_titre($langs->trans('SendOrderByMail'));
+
+			dol_fiche_head('');
 
 			// Cree l'objet formulaire mail
 			include_once DOL_DOCUMENT_ROOT . '/core/class/html.formmail.class.php';
@@ -2378,8 +2407,10 @@ if ($action == 'create' && $user->rights->commande->creer)
 			$contactarr = array();
 			$contactarr = $object->liste_contact(- 1, 'external');
 
-			if (is_array($contactarr) && count($contactarr) > 0) {
-				foreach ($contactarr as $contact) {
+			if (is_array($contactarr) && count($contactarr) > 0)
+			{
+				foreach ($contactarr as $contact)
+				{
 					if ($contact['libelle'] == $langs->trans('TypeContact_commande_external_CUSTOMER')) {	// TODO Use code and not label
 						$contactstatic = new Contact($db);
 						$contactstatic->fetch($contact ['id']);
@@ -2395,6 +2426,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 			// Tableau des parametres complementaires
 			$formmail->param['action'] = 'send';
 			$formmail->param['models'] = 'order_send';
+			$formmail->param['models_id']=GETPOST('modelmailselected','int');
 			$formmail->param['orderid'] = $object->id;
 			$formmail->param['returnurl'] = $_SERVER["PHP_SELF"] . '?id=' . $object->id;
 
@@ -2407,7 +2439,7 @@ if ($action == 'create' && $user->rights->commande->creer)
 			// Show form
 			print $formmail->get_form();
 
-			print '<br>';
+			dol_fiche_end();
 		}
 	}
 }

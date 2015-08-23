@@ -341,11 +341,14 @@ dol_fiche_head($head, $tabactive, $langs->trans('Agenda'), 0, 'action');
 print_actions_filter($form,$canedit,$status,$year,$month,$day,$showbirthday,0,$filtert,0,$pid,$socid,$action,$listofextcals,$actioncode,$usergroup);
 dol_fiche_end();
 
+
+// Define the legend/list of calendard to show
+$s=''; $link='';
+
 $showextcals=$listofextcals;
-// Legend
-if (! empty($conf->use_javascript_ajax))
+
+if (! empty($conf->use_javascript_ajax))	// If javascript on
 {
-	$s='';
 	$s.='<script type="text/javascript">' . "\n";
 	$s.='jQuery(document).ready(function () {' . "\n";
 	$s.='jQuery("#check_birthday").click(function() { jQuery(".family_birthday").toggle(); });' . "\n";
@@ -358,7 +361,10 @@ if (! empty($conf->use_javascript_ajax))
   	$s.='});' . "\n";
 	$s.='</script>' . "\n";
 
-	$s.='<div class="nowrap clear float"><input type="checkbox" id="check_mytasks" name="check_mytasks" checked="true" disabled="disabled"> ' . $langs->trans("LocalAgenda").' &nbsp; </div>';
+	// Local calendar
+	$s.='<div class="nowrap clear float"><input type="checkbox" id="check_mytasks" name="check_mytasks" checked disabled> ' . $langs->trans("LocalAgenda").' &nbsp; </div>';
+
+	// External calendars
 	if (is_array($showextcals) && count($showextcals) > 0)
 	{
 		$s.='<script type="text/javascript">' . "\n";
@@ -374,16 +380,26 @@ if (! empty($conf->use_javascript_ajax))
 		foreach ($showextcals as $val)
 		{
 			$htmlname = md5($val['name']);
-			$s.='<div class="nowrap float"><input type="checkbox" id="check_ext' . $htmlname . '" name="check_ext' . $htmlname . '" checked="true"> ' . $val['name'] . ' &nbsp; </div>';
+			$s.='<div class="nowrap float"><input type="checkbox" id="check_ext' . $htmlname . '" name="check_ext' . $htmlname . '" checked> ' . $val['name'] . ' &nbsp; </div>';
 		}
 	}
+
+	// Birthdays
 	$s.='<div class="nowrap float"><input type="checkbox" id="check_birthday" name="check_birthday"> '.$langs->trans("AgendaShowBirthdayEvents").' &nbsp; </div>';
+
+	// Calendars from hooks
+    $parameters=array(); $object=null;
+	$reshook=$hookmanager->executeHooks('addCalendarChoice',$parameters,$object,$action);
+    if (empty($reshook))
+    {
+		$s.= $hookmanager->resPrint;
+    }
+    elseif ($reshook > 1)
+	{
+    	$s = $hookmanager->resPrint;
+    }
 }
-
-
-$link='';
-// Add link to show birthdays
-if (empty($conf->use_javascript_ajax))
+else 									// If javascript off
 {
 	$newparam=$param;   // newparam is for birthday links
     $newparam=preg_replace('/showbirthday=[0-1]/i','showbirthday='.(empty($showbirthday)?1:0),$newparam);
@@ -396,10 +412,10 @@ if (empty($conf->use_javascript_ajax))
     $link.='</a>';
 }
 
-print_fiche_titre($s,$link.' &nbsp; &nbsp; '.$nav, '');
+print_fiche_titre($s, $link.' &nbsp; &nbsp; '.$nav, '');
 
 
-// Get event in an array
+// Load events from database into $eventarray
 $eventarray=array();
 
 $sql = 'SELECT ';
@@ -469,6 +485,7 @@ if ($filtert > 0 || $usergroup > 0)
 // Sort on date
 $sql.= ' ORDER BY datep';
 //print $sql;
+
 
 dol_syslog("comm/action/index.php", LOG_DEBUG);
 $resql=$db->query($sql);
@@ -571,6 +588,7 @@ else
     dol_print_error($db);
 }
 
+// Complete $eventarray with birthdates
 if ($showbirthday)
 {
     // Add events in array
@@ -638,6 +656,7 @@ if ($showbirthday)
     }
 }
 
+// Complete $eventarray with external import Ical
 if (count($listofextcals))
 {
     require_once DOL_DOCUMENT_ROOT.'/comm/action/class/ical.class.php';
@@ -877,6 +896,15 @@ if (count($listofextcals))
         }
     }
 }
+
+
+
+// Complete $eventarray with events coming from external module
+$parameters=array(); $object=null;
+$reshook=$hookmanager->executeHooks('getCalendarEvents',$parameters,$object,$action);
+if (! empty($hookmanager->resArray['eventarray'])) $eventarray=array_merge($eventarray, $hookmanager->resArray['eventarray']);
+
+
 
 $maxnbofchar=18;
 $cachethirdparties=array();
@@ -1372,7 +1400,7 @@ function show_day_events($db, $day, $month, $year, $monthshown, $style, &$eventa
 
                     print '</td>';
                     // Status - Percent
-                    print '<td align="right" class="nowrap">';
+                    print '<td align="right" class="nowrap cal_event_right">';
                     if ($event->type_code != 'BIRTHDAY' && $event->type_code != 'ICALEVENT') print $event->getLibStatut(3,1);
                     else print '&nbsp;';
                     print '</td></tr></table>';

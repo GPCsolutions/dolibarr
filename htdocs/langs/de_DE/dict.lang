@@ -232,7 +232,7 @@ CountryUY=Uruguay
 CountryUZ=Usbekistan
 CountryVU=Vanuatu
 CountryVE=Venezuela
-CountryVN=Viet Nam
+CountryVN=Vietnam
 CountryVG=Virgin Islands, British
 CountryVI=Virgin Islands, US
 CountryWF=Wallis und Futuna
@@ -253,12 +253,11 @@ CivilityMR=Herr
 CivilityMLE=Fräulein
 CivilityMTRE=Professor
 CivilityDR=Doktor
-
 ##### Currencies #####
 Currencyeuros=Euro
 CurrencyAUD=AU Dollar
 CurrencySingAUD=AU Dollar
-CurrencyCAD=CAN Dollar
+CurrencyCAD=CAN Dollars
 CurrencySingCAD=CAN Dollar
 CurrencyCHF=Schweizer Franken
 CurrencySingCHF=Schweizer Franken
@@ -290,10 +289,10 @@ CurrencyXOF=CFA Francs BCEAO
 CurrencySingXOF=CFA Franc BCEAO
 CurrencyXPF=CFP Francs
 CurrencySingXPF=CFP Franc
-
 CurrencyCentSingEUR=Cent
+CurrencyCentINR=Paisa
+CurrencyCentSingINR=Paise
 CurrencyThousandthSingTND=Tausendstel
-
 #### Input reasons #####
 DemandReasonTypeSRC_INTE=Internet
 DemandReasonTypeSRC_CAMP_MAIL=Rundschreiben
@@ -306,7 +305,6 @@ DemandReasonTypeSRC_WOM=Mund-zu-Mund-Propaganda
 DemandReasonTypeSRC_PARTNER=Partner
 DemandReasonTypeSRC_EMPLOYEE=Angestellter
 DemandReasonTypeSRC_SPONSORING=Sponsoring
-
 #### Paper formats ####
 PaperFormatEU4A0=Format 4A0
 PaperFormatEU2A0=Format 2A0

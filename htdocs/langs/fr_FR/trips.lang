@@ -9,6 +9,7 @@ TripCard=Fiche note de frais
 AddTrip=Créer note de frais
 ListOfTrips=Liste des notes de frais
 ListOfFees=Liste des notes de frais
+ShowTrip=Afficher la note de frais
 NewTrip=Nouvelle note de frais
 CompanyVisited=Société/institution visitée
 Kilometers=Kilomètres
@@ -17,110 +18,86 @@ DeleteTrip=Supprimer les notes de frais / déplacements
 ConfirmDeleteTrip=Êtes-vous sûr de vouloir supprimer cette note de frais ?
 ListTripsAndExpenses=Liste des notes de frais
 ListToApprove=En attente d'approbation
-ExpensesArea=Espace Notes de frais
+ExpensesArea=Espace notes de frais
 SearchATripAndExpense=Rechercher une note de frais
 ClassifyRefunded=Classer 'Remboursé'
 ExpenseReportWaitingForApproval=Une nouvelle note de frais a été soumise pour approbation
-ExpenseReportWaitingForApprovalMessage=A new expense report has been submitted and is waiting for approval.\n- User: %s\n- Period: %s\nClick here to validate: %s
+ExpenseReportWaitingForApprovalMessage=Une nouvelle note de frais a été soumise et est en attente de validation.\n- Utilisateur: %s\n- Période: %s\nCliquer ici pour valider: %s
 TripId=Id note de frais
-AnyOtherInThisListCanValidate=Person to inform for validation.
+AnyOtherInThisListCanValidate=Personne à informer pour la validation.
 TripSociete=Information société
 TripSalarie=Informations utilisateur
 TripNDF=Informations note de frais
-DeleteLine=Effacer une ligne de note de frais
-ConfirmDeleteLine=Are you sure you want to delete this line ?
-PDFStandardExpenseReports=Standard template to generate a PDF document for expense report
-ExpenseReportLine=Expense report line
+DeleteLine=Supprimer une ligne d'une note de frais
+ConfirmDeleteLine=Êtes-vous sûr de vouloir supprimer cette ligne ?
+PDFStandardExpenseReports=Modèle de note de frais PDF standard
+ExpenseReportLine=Ligne de la note de frais
 TF_OTHER=Autre
-TF_TRANSPORTATION=Transportation
+TF_TRANSPORTATION=Transport
 TF_LUNCH=Repas
-TF_METRO=Metro
+TF_METRO=Métro
 TF_TRAIN=Train
 TF_BUS=Bus
-TF_CAR=Car
-TF_PEAGE=Toll
-TF_ESSENCE=Fuel
-TF_HOTEL=Hostel
+TF_CAR=Voiture
+TF_PEAGE=Péage
+TF_ESSENCE=Carburant
+TF_HOTEL=Hôtel
 TF_TAXI=Taxi
 
-ErrorDoubleDeclaration=You have declared another expense report into a similar date range.
-ListTripsAndExpenses=Liste des notes de frais
-AucuneNDF=No expense reports found for this criteria
-AucuneLigne=There is no expense report declared yet
+ErrorDoubleDeclaration=Vous avez déclaré une autre note de frais dans une période similaire.
+AucuneNDF=Pas de note de frais trouvées avec ces critères
+AucuneLigne=Aucune note de frais déclarée
 AddLine=Ajout nouvelle ligne
-AddLineMini=Add
+AddLineMini=Ajouter
 
 Date_DEBUT=Date début
 Date_FIN=Date fin
 ModePaiement=Mode de paiement
 Note=Note
-Project=Project
+Project=Projet
 
-VALIDATOR=User to inform for approbation
-VALIDOR=Approved by
-AUTHOR=Recorded by
-AUTHORPAIEMENT=Paied by
-REFUSEUR=Denied by
-CANCEL_USER=Canceled by
+VALIDATOR=Utilisateur responsable de l'approbation
+VALIDOR=Approuvé par
+AUTHOR=Enregistré par
+AUTHORPAIEMENT=Payé par
+REFUSEUR=Refusé par
+CANCEL_USER=Supprimé par
 
-MOTIF_REFUS=Reason
-MOTIF_CANCEL=Reason
+MOTIF_REFUS=Motif
+MOTIF_CANCEL=Motif
 
-DATE_REFUS=Deny date
-DATE_SAVE=Validation date
-DATE_VALIDE=Validation date
-DateApprove=Approving date
-DATE_CANCEL=Cancelation date
-DATE_PAIEMENT=Payment date
+DATE_REFUS=Date refus
+DATE_SAVE=Date validation
+DATE_VALIDE=Date validation
+DATE_CANCEL=Date annulation
+DATE_PAIEMENT=Date de paiement
 
-Deny=Deny
-TO_PAID=Pay
-BROUILLONNER=Reopen
-SendToValid=Sent to approve
-ModifyInfoGen=Edit
-ValidateAndSubmit=Validate and submit for approval
+TO_PAID=Payer
+BROUILLONNER=Réouvrir
+SendToValid=Envoyer approbation
+ModifyInfoGen=Editer
+ValidateAndSubmit=Valider et envoyer pour approbation
+ValidatedWaitingApproval=Validé (en attente d'approbation)
 
-NOT_VALIDATOR=You are not allowed to approve this expense report
-NOT_AUTHOR=You are not the author of this expense report. Operation cancelled.
+NOT_VALIDATOR=Vous n'êtes pas autorisé a approuver cette note de frais
+NOT_AUTHOR=Vous n'êtes pas l'auteur de cette note de frais. Opération annulé.
 
-RefuseTrip=Deny an expense report
-ConfirmRefuseTrip=Are you sure you want to deny this expense report ?
+RefuseTrip=Refuser une note de frais
+ConfirmRefuseTrip=Êtes-vous sûr de vouloir refuser cette note de frais ?
 
-ValideTrip=Approve expense report
-ConfirmValideTrip=Are you sure you want to approve this expense report ?
+ValideTrip=Approuver note de frais
+ConfirmValideTrip=Êtes-vous sûr de vouloir approuver cette note de frais ?
 
-PaidTrip=Pay an expense report
-ConfirmPaidTrip=Are you sure you want to change status of this expense report to "Paid" ?
+PaidTrip=Payer note de frais
+ConfirmPaidTrip=Êtes-vous sûr de vouloir changer le statut de cette note de frais en "Payé" ?
 
-CancelTrip=Cancel an expense report
-ConfirmCancelTrip=Are you sure you want to cancel this expense report ?
+CancelTrip=Annuler note de frais
+ConfirmCancelTrip=Êtes-vous sûr de vouloir annuler cette note de frais ?
 
-BrouillonnerTrip=Move back expense report to status "Draft"n
-ConfirmBrouillonnerTrip=Are you sure you want to move this expense report to status "Draft" ?
+BrouillonnerTrip=Passer le rapport de dépenses au statut "Brouillon"
+ConfirmBrouillonnerTrip=Êtes-vous sûr de vouloir changer le statut de cette note de frais en "Brouillon" ?
 
-SaveTrip=Validate expense report
-ConfirmSaveTrip=Are you sure you want to validate this expense report ?
+SaveTrip=Valider note de frais
+ConfirmSaveTrip=Êtes-vous sûr de vouloir valider cette note de frais ?
 
-Synchro_Compta=NDF <-> Compte
-
-TripSynch=Synchronisation : Notes de frais <-> Compte courant
-TripToSynch=Notes de frais à intégrer dans la compta
-AucuneTripToSynch=Aucune note de frais n'est en statut "Payée".
-ViewAccountSynch=Voir le compte
-
-ConfirmNdfToAccount=Êtes-vous sûr de vouloir intégrer cette note de frais dans le compte courant?
-ndfToAccount=Note de frais - Intégration
-
-ConfirmAccountToNdf=Êtes-vous sûr de vouloir retirer cette note de frais du compte courant?
-AccountToNdf=Note de frais - Retrait
-
-LINE_NOT_ADDED=Ligne non ajoutée :
-NO_PROJECT=Aucun projet sélectionné.
-NO_DATE=Aucune date sélectionnée.
-NO_PRICE=Aucun prix indiqué.
-
-TripForValid=à Valider
-TripForPaid=à Payer
-TripPaid=Payée
-
-NoTripsToExportCSV=No expense report to export for this period.
+NoTripsToExportCSV=Pas de note de frais à exporter dans cette période

@@ -5,6 +5,7 @@
  * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
  * Copyright (C) 2014      Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2015			 Claudio Aschieri			<c.aschieri@19.coop>
+ * Copyright (C) 2015      Jean-François Ferry		<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,7 +100,8 @@ $sql.= ", ".MAIN_DB_PREFIX."contrat as c";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."contratdet as cd ON c.rowid = cd.fk_contrat";
 $sql.= " WHERE c.fk_soc = s.rowid ";
 $sql.= " AND c.entity = ".$conf->entity;
-if ($socid) $sql.= " AND s.rowid = ".$socid;
+if ($socid) $sql.= " AND s.rowid = ".$db->escape($socid);
+if (!$user->rights->societe->client->voir && !$socid) $sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 
 if ($search_name) {
     $sql .= natural_search('s.nom', $search_name);
@@ -111,7 +113,7 @@ if (!empty($search_ref_supplier)) {
 	$sql .= natural_search(array('c.ref_supplier'), $search_ref_supplier);
 }
 
-if ($search_sale > 0) 
+if ($search_sale > 0)
 {
 	$sql.= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$search_sale;
 }
@@ -129,7 +131,7 @@ if ($resql)
     $num = $db->num_rows($resql);
     $i = 0;
 
-    print_barre_liste($langs->trans("ListOfContracts"), $page, $_SERVER["PHP_SELF"], '&search_contract='.$search_contract.'&search_name='.$search_name, $sortfield, $sortorder,'',$num);
+    print_barre_liste($langs->trans("ListOfContracts"), $page, $_SERVER["PHP_SELF"], '&search_contract='.$search_contract.'&search_name='.$search_name, $sortfield, $sortorder,'',$num,$totalnboflines,'title_commercial.png');
 
     print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
     print '<table class="liste" width="100%">';
@@ -143,7 +145,7 @@ if ($resql)
     	$moreforfilter.=$formother->select_salesrepresentatives($search_sale,'search_sale',$user);
     	$moreforfilter.=' &nbsp; &nbsp; &nbsp; ';
     }
-    
+
     if ($moreforfilter)
     {
     	print '<tr class="liste_titre">';
@@ -151,13 +153,14 @@ if ($resql)
     	print $moreforfilter;
     	print '</td></tr>';
     }
-    
+
     print '<tr class="liste_titre">';
-    $param='&amp;search_contract='.$search_contract;
-    $param.='&amp;search_name='.$search_name;
-    $param.='&amp;search_ref_supplier='.$search_ref_supplier;
+
+    $param='&search_contract='.$search_contract;
+    $param.='&search_name='.$search_name;
+    $param.='&search_ref_supplier='.$search_ref_supplier;
     $param.='&search_sale=' .$search_sale;
-    
+
     print_liste_field_titre($langs->trans("Ref"), $_SERVER["PHP_SELF"], "c.rowid","","$param",'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("RefCustomer"), $_SERVER["PHP_SELF"], "c.ref_supplier","","$param",'',$sortfield,$sortorder);
     print_liste_field_titre($langs->trans("Company"), $_SERVER["PHP_SELF"], "s.nom","","$param",'',$sortfield,$sortorder);
@@ -174,13 +177,13 @@ if ($resql)
     print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
     print '<tr class="liste_titre">';
     print '<td class="liste_titre">';
-    print '<input type="text" class="flat" size="3" name="search_contract" value="'.$search_contract.'">';
+    print '<input type="text" class="flat" size="3" name="search_contract" value="'.dol_escape_htmltag($search_contract).'">';
     print '</td>';
     print '<td class="liste_titre">';
-    print '<input type="text" class="flat" size="7" name="search_ref_supplier value="'.$search_ref_supplier.'">';
+    print '<input type="text" class="flat" size="7" name="search_ref_supplier value="'.dol_escape_htmltag($search_ref_supplier).'">';
     print '</td>';
     print '<td class="liste_titre">';
-    print '<input type="text" class="flat" size="24" name="search_name" value="'.$search_name.'">';
+    print '<input type="text" class="flat" size="24" name="search_name" value="'.dol_escape_htmltag($search_name).'">';
     print '</td>';
     print '<td class="liste_titre">&nbsp;</td>';
     //print '<td class="liste_titre">&nbsp;</td>';
@@ -201,7 +204,7 @@ if ($resql)
         print '<td>'.$obj->ref_supplier.'</td>';
         print '<td><a href="../comm/card.php?socid='.$obj->socid.'">'.img_object($langs->trans("ShowCompany"),"company").' '.$obj->name.'</a></td>';
         //print '<td align="center">'.dol_print_date($obj->datec).'</td>';
-        
+
         // Sales Rapresentatives
         print '<td>';
         if($obj->socid)
@@ -236,8 +239,8 @@ if ($resql)
         	print '&nbsp';
         }
         print '</td>';
-        
-        
+
+
         print '<td align="center">'.dol_print_date($db->jdate($obj->date_contrat)).'</td>';
         //print '<td align="center">'.$staticcontrat->LibStatut($obj->statut,3).'</td>';
         print '<td align="center">'.($obj->nb_initial>0?$obj->nb_initial:'').'</td>';

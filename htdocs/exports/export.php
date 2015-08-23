@@ -58,6 +58,7 @@ $entitytoicon = array(
 	'account'      => 'account',
 	'product'      => 'product',
     'warehouse'    => 'stock',
+    'batch'        => 'stock',
 	'category'     => 'category',
 	'shipment'     => 'sending',
     'shipment_line'=> 'sending',
@@ -88,7 +89,8 @@ $entitytolang = array(
 	'product'      => 'Product',
     'service'      => 'Service',
     'stock'        => 'Stock',
-    'warehouse'    => 'Warehouse',
+    'batch'        => 'Batch',
+	'warehouse'    => 'Warehouse',
 	'category'     => 'Category',
 	'other'        => 'Other',
     'trip'         => 'TripsAndExpenses',
@@ -99,11 +101,11 @@ $entitytolang = array(
     'task_time'    => 'TaskTimeSpent',
 	'action'       => 'Event',
 	'expensereport'=> 'ExpenseReport',
-	'expensereport_line'=> 'ExpenseReportLine',
+	'expensereport_line'=> 'ExpenseReportLine'
 );
 
 $array_selected=isset($_SESSION["export_selected_fields"])?$_SESSION["export_selected_fields"]:array();
-$array_filtervalue=isset($_SESSION["export_FilterValue_fields"])?$_SESSION["export_FilterValue_fields"]:array();
+$array_filtervalue=isset($_SESSION["export_filtered_fields"])?$_SESSION["export_filtered_fields"]:array();
 $datatoexport=GETPOST("datatoexport");
 $action=GETPOST('action', 'alpha');
 $confirm=GETPOST('confirm', 'alpha');
@@ -226,7 +228,6 @@ if ($action=='downfield' || $action=='upfield')
 if ($step == 1 || $action == 'cleanselect')
 {
     $_SESSION["export_selected_fields"]=array();
-    //$_SESSION["export_FilterValue_fields"]=array();
     $_SESSION["export_filtered_fields"]=array();
     $array_selected=array();
     $array_filtervalue=array();
@@ -284,12 +285,15 @@ if ($action == 'add_export_model')
 		}
 
 		$hexafiltervalue='';
-		foreach($array_filtervalue as $key=>$val)
+		if (! empty($array_filtervalue) && is_array($array_filtervalue))
 		{
-			if ($hexafilter) $hexafiltervalue.=',';
-			$hexafiltervalue.=$key.'='.$val;
+			foreach($array_filtervalue as $key=>$val)
+			{
+				if ($hexafiltervalue) $hexafiltervalue.=',';
+				$hexafiltervalue.=$key.'='.$val;
+			}
 		}
-
+		
 	    $objexport->model_name = $export_name;
 	    $objexport->datatoexport = $datatoexport;
 	    $objexport->hexa = $hexa;
@@ -315,10 +319,11 @@ if ($action == 'add_export_model')
 	}
 }
 
+// Reload an predefined export model
 if ($step == 2 && $action == 'select_model')
 {
     $_SESSION["export_selected_fields"]=array();
-    $_SESSION["export_FilterValue_fields"]=array();
+    $_SESSION["export_filtered_fields"]=array();
 
     $array_selected=array();
     $array_filtervalue=array();
@@ -335,16 +340,15 @@ if ($step == 2 && $action == 'select_model')
 		}
 		$_SESSION["export_selected_fields"]=$array_selected;
 
-		$fieldsarray=explode(',',$objexport->hexafilter);
 		$fieldsarrayvalue=explode(',',$objexport->hexafiltervalue);
 		$i=1;
-		foreach($fieldsarray as $val)
+		foreach($fieldsarrayvalue as $val)
 		{
 			$tmp=explode('=',$val);
 			$array_filtervalue[$tmp[0]]=$tmp[1];
 			$i++;
 		}
-		$_SESSION["export_FilterValue_fields"]=$array_filtervalue;
+		$_SESSION["export_filtered_fields"]=$array_filtervalue;
     }
 }
 
@@ -354,7 +358,7 @@ if ($step == 4 && $action == 'submitFormField')
 	// on boucle sur les champs selectionne pour recuperer la valeur
 	if (is_array($objexport->array_export_TypeFields[0]))
 	{
-		$_SESSION["export_FilterValue_fields"]=array();
+		$_SESSION["export_filtered_fields"]=array();
 		//var_dump($_POST);
 		foreach($objexport->array_export_TypeFields[0] as $code => $type)	// $code: s.fieldname $value: Text|Boolean|List:ccc
 		{
@@ -370,7 +374,7 @@ if ($step == 4 && $action == 'submitFormField')
 			}
 		}
 		$array_filtervalue=(! empty($objexport->array_export_FilterValue[0])?$objexport->array_export_FilterValue[0]:'');
-		$_SESSION["export_FilterValue_fields"]=$array_filtervalue;
+		$_SESSION["export_filtered_fields"]=$array_filtervalue;
 	}
 }
 
@@ -990,7 +994,7 @@ if ($step == 4 && $datatoexport)
 
 if ($step == 5 && $datatoexport)
 {
-    asort($array_selected);
+	asort($array_selected);
 
     llxHeader('',$langs->trans("NewExport"),'EN:Module_Exports_En|FR:Module_Exports|ES:M&oacute;dulo_Exportaciones');
 
@@ -1140,6 +1144,7 @@ if ($step == 5 && $datatoexport)
 
     print '</td><td width="50%">&nbsp;</td></tr>';
     print '</table>';
+
 }
 
 print '<br>';
@@ -1147,6 +1152,8 @@ print '<br>';
 llxFooter();
 
 $db->close();
+
+exit;	// don't know why but apache hangs with php 5.3.10-1ubuntu3.12 and apache 2.2.2 if i remove this exit or replace with return
 
 
 /**
@@ -1170,4 +1177,3 @@ function getablenamefromfield($code,$sqlmaxforexport)
 	}
 	else return '';
 }
-

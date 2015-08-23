@@ -96,7 +96,7 @@ $sql .= " JOIN " . MAIN_DB_PREFIX . "facture_fourn as f ON f.rowid = fd.fk_factu
 $sql .= " JOIN " . MAIN_DB_PREFIX . "societe as s ON s.rowid = f.fk_soc";
 $sql .= " WHERE f.fk_statut > 0 ";
 if (! empty($conf->multicompany->enabled)) {
-	$sql .= " AND f.entity = " . $conf->entity;
+	$sql .= " AND f.entity IN (" . getEntity("facture_fourn", 1) . ")";
 }
 if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS))
 	$sql .= " AND f.type IN (0,1,2)";
@@ -112,7 +112,7 @@ if ($result) {
 	$num = $db->num_rows($result);
 	// les variables
 	$cptfour = (! empty($conf->global->ACCOUNTING_ACCOUNT_SUPPLIER)) ? $conf->global->ACCOUNTING_ACCOUNT_SUPPLIER : $langs->trans("CodeNotDef");
-	$cpttva = (! empty($conf->global->ACCOUNTING_VAT_ACCOUNT)) ? $conf->global->ACCOUNTING_VAT_ACCOUNT : $langs->trans("CodeNotDef");
+	$cpttva = (! empty($conf->global->ACCOUNTING_VAT_SOLD_ACCOUNT)) ? $conf->global->ACCOUNTING_VAT_SOLD_ACCOUNT : $langs->trans("CodeNotDef");
 
 	$tabfac = array ();
 	$tabht = array ();

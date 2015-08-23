@@ -43,7 +43,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 
 // Security check
-if (empty($conf->paypal->enabled)) accessforbidden('',1,1,1);
+if (empty($conf->paypal->enabled)) accessforbidden('',0,0,1);
 
 $langs->load("main");
 $langs->load("other");
@@ -695,7 +695,7 @@ if (GETPOST("source") == 'contractline' && $valid)
 	$text='<b>'.$langs->trans("PaymentRenewContractId",$contract->ref,$contractline->ref).'</b>';
 	if ($contractline->fk_product)
 	{
-		$text.='<br>'.$product->ref.($product->libelle?' - '.$product->libelle:'');
+		$text.='<br>'.$product->ref.($product->label?' - '.$product->label:'');
 	}
 	if ($contractline->description) $text.='<br>'.dol_htmlentitiesbr($contractline->description);
 	//if ($contractline->date_fin_validite) {

@@ -5,7 +5,7 @@
  * Copyright (C) 2007      Franky Van Liedekerke <franky.van.liedekerke@telenet.be>
  * Copyright (C) 2011-2012 Philippe Grand	     <philippe.grand@atoo-net.com>
  * Copyright (C) 2013      Florian Henry		  	<florian.henry@open-concept.pro>
- * Copyright (C) 2014      Marcos García         <marcosgdf@gmail.com>
+ * Copyright (C) 2014-2015 Marcos García         <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,6 +52,11 @@ class Livraison extends CommonObject
 	var $ref_customer;
 	var $statut;
 
+	/**
+	 * @deprecated
+	 * @see note_public, note_private
+	 */
+	var $note;
 	var $note_public;
 	var $note_private;
 
@@ -990,6 +995,23 @@ class Livraison extends CommonObject
 		return $this->commonGenerateDocument($modelpath, $modele, $outputlangs, 0, 0, 0);
 	}
 
+	/**
+	 * Function used to replace a thirdparty id with another one.
+	 *
+	 * @param DoliDB $db Database handler
+	 * @param int $origin_id Old thirdparty id
+	 * @param int $dest_id New thirdparty id
+	 * @return bool
+	 */
+	public static function replaceThirdparty(DoliDB $db, $origin_id, $dest_id)
+	{
+		$tables = array(
+			'livraison'
+		);
+
+		return CommonObject::commonReplaceThirdparty($db, $origin_id, $dest_id, $tables);
+	}
+
 }
 
 
@@ -997,10 +1019,8 @@ class Livraison extends CommonObject
 /**
  *  Classe de gestion des lignes de bons de livraison
  */
-class LivraisonLigne
+class LivraisonLigne extends CommonObjectLine
 {
-	var $db;
-
 	// From llx_expeditiondet
 	var $qty;
 	var $qty_asked;
@@ -1010,7 +1030,19 @@ class LivraisonLigne
 	var $origin_id;
 	var $label;       // Label produit
 	var $description;  // Description produit
+	/**
+	 * @deprecated
+	 * @see product_ref
+	 */
 	var $ref;
+	/**
+	 * @deprecated
+	 * @see product_label;
+	 */
+	var $libelle;
+
+	public $product_ref;
+	public $product_label;
 
 	/**
 	 *	Constructor

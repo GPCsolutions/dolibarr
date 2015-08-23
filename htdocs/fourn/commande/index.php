@@ -56,7 +56,7 @@ print '<tr valign="top"><td class="notopnoleft" width="30%">';
 
 /*
  * Search form
-*/
+ */
 $var=false;
 print '<table class="noborder nohover" width="100%">';
 print '<form method="post" action="list.php">';
@@ -71,7 +71,7 @@ print "</form></table><br>\n";
 
 /*
  * Statistics
-*/
+ */
 
 $sql = "SELECT count(cf.rowid), fk_statut";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
@@ -114,7 +114,7 @@ if ($resql)
     }
     $db->free($resql);
 
-    print '<table class="noborder" width="100%">';
+    print '<table class="noborder nohover" width="100%">';
     print '<tr class="liste_titre"><td colspan="2">'.$langs->trans("Statistics").' - '.$langs->trans("SuppliersOrders").'</td></tr>';
     print "</tr>\n";
     foreach (array(0,1,2,3,4,5,6) as $statut)
@@ -131,7 +131,7 @@ if ($resql)
     }
     if ($conf->use_javascript_ajax)
     {
-        print '<tr><td align="center" colspan="2">';
+        print '<tr class="impair"><td align="center" colspan="2">';
         $data=array('series'=>$dataseries);
         dol_print_graph('stats',300,180,$data,1,'pie',1);
         print '</td></tr>';

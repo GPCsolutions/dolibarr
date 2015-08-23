@@ -1,5 +1,12 @@
 # Dolibarr language file - en_US - Accounting Expert
 CHARSET=UTF-8
+ACCOUNTING_EXPORT_SEPARATORCSV=Column separator for export file
+ACCOUNTING_EXPORT_DATE=Date format for export file
+ACCOUNTING_EXPORT_PIECE=Export the number of piece ?
+ACCOUNTING_EXPORT_GLOBAL_ACCOUNT=Export with global account ?
+ACCOUNTING_EXPORT_LABEL=Export the label ?
+ACCOUNTING_EXPORT_AMOUNT=Export the amount ?
+ACCOUNTING_EXPORT_DEVISE=Export the devise ?
 
 Accounting=ບັນ​ຊີ
 Globalparameters=​ໂຕ​ຕັ້ງ​ຄ່າ​ທັງ​ໝົດ
@@ -7,20 +14,20 @@ Chartofaccounts=Chart of accounts
 Fiscalyear=Fiscal years
 Menuaccount=Accounting accounts
 Menuthirdpartyaccount=Thirdparty accounts
-MenuTools=Tools
+MenuTools=ເຄື່ອງມື
 
 ConfigAccountingExpert=Configuration of the module accounting expert
 Journaux=Journals
 JournalFinancial=Financial journals
 Exports=Exports
-Export=Export
+Export=ສົ່ງອອກ
 Modelcsv=Model of export
 OptionsDeactivatedForThisExportModel=For this export model, options are deactivated
 Selectmodelcsv=Select a model of export
 Modelcsv_normal=Classic export
 Modelcsv_CEGID=Export towards CEGID Expert
 BackToChartofaccounts=Return chart of accounts
-Back=Return
+Back=ກັບຄືນ
 
 Definechartofaccounts=Define a chart of accounts
 Selectchartofaccounts=Select a chart of accounts
@@ -34,13 +41,13 @@ Dispatched=Dispatched
 CustomersVentilation=Breakdown customers
 SuppliersVentilation=Breakdown suppliers
 TradeMargin=Trade margin
-Reports=Reports
+Reports=ບົດລາຍງານ
 ByCustomerInvoice=By invoices customers
 ByMonth=By Month
 NewAccount=New accounting account
-Update=Update
-List=List
-Create=Create
+Update=ປັບປຸງ
+List=ລາຍການ
+Create=ສ້າງ
 UpdateAccount=Modification of an accounting account
 UpdateMvts=Modification of a movement
 WriteBookKeeping=Record accounts in general ledger
@@ -81,9 +88,8 @@ ACCOUNTING_LENGTH_AACCOUNT=Length of the third party accounts
 
 ACCOUNTING_SELL_JOURNAL=Sell journal
 ACCOUNTING_PURCHASE_JOURNAL=Purchase journal
-ACCOUNTING_BANK_JOURNAL=Bank journal
-ACCOUNTING_CASH_JOURNAL=Cash journal
 ACCOUNTING_MISCELLANEOUS_JOURNAL=Miscellaneous journal
+ACCOUNTING_EXPENSEREPORT_JOURNAL=Expense report journal
 ACCOUNTING_SOCIAL_JOURNAL=Social journal
 
 ACCOUNTING_ACCOUNT_TRANSFER_CASH=Account of transfer
@@ -94,10 +100,10 @@ ACCOUNTING_PRODUCT_SOLD_ACCOUNT=Accounting account by default for the sold produ
 ACCOUNTING_SERVICE_BUY_ACCOUNT=Accounting account by default for the bought services (if not defined in the service sheet)
 ACCOUNTING_SERVICE_SOLD_ACCOUNT=Accounting account by default for the sold services (if not defined in the service sheet)
 
-Doctype=Type of document
-Docdate=Date
+Doctype=ປະເພດເອກະສານ
+Docdate=ວັນທີ
 Docref=Reference
-Numerocompte=Account
+Numerocompte=ບັນຊີ
 Code_tiers=Thirdparty
 Labelcompte=Label account
 Debit=Debit

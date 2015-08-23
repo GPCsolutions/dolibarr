@@ -53,7 +53,9 @@ if (empty($usemargins)) $usemargins=0;
 	<td align="center"><?php $coldisplay++; ?><?php echo ($i+1); ?></td>
 	<?php } ?>
 	<td><?php $coldisplay++; ?><div id="line_<?php echo $line->id; ?>"></div>
-	<?php if (($line->info_bits & 2) == 2) { ?>
+	<?php 
+	if (($line->info_bits & 2) == 2) {
+	?>
 		<a href="<?php echo DOL_URL_ROOT.'/comm/remx.php?id='.$this->socid; ?>">
 		<?php
 		$txt='';
@@ -90,9 +92,8 @@ if (empty($usemargins)) $usemargins=0;
 	{
 		if ($line->fk_product > 0)
 		{
-
 			echo $form->textwithtooltip($text,$description,3,'','',$i,0,(!empty($line->fk_parent_line)?img_picto('', 'rightarrow'):''));
-
+			
 			// Show range
 			echo get_date_range($line->date_start, $line->date_end);
 
@@ -128,7 +129,7 @@ if (empty($usemargins)) $usemargins=0;
 	<?php } ?>
 	<td align="right" class="nowrap"><?php $coldisplay++; ?><?php echo vatrate($line->tva_tx,'%',$line->info_bits); ?></td>
 
-	<td align="right" class="nowrap"><?php $coldisplay++; ?><?php echo price($line->pu_ht); ?></td>
+	<td align="right" class="nowrap"><?php $coldisplay++; ?><?php echo price($line->subprice); ?></td>
 
 	<?php if ($inputalsopricewithtax) { ?>
 	<td align="right" class="nowrap"><?php $coldisplay++; ?><?php echo (isset($line->pu_ttc)?price($line->pu_ttc):price($line->subprice)); ?></td>
@@ -144,6 +145,18 @@ if (empty($usemargins)) $usemargins=0;
 		} else echo '&nbsp;';	?>
 	</td>
 
+	<?php
+	if($conf->global->PRODUCT_USE_UNITS)
+	{
+		print '<td align="left" class="nowrap">';
+		$label = $line->getLabelOfUnit('short');
+		if ($label !== '') {
+			print $langs->trans($label);
+		}
+		print '</td>';
+	}
+	?>
+
 	<?php if (!empty($line->remise_percent) && $line->special_code != 3) { ?>
 	<td align="right"><?php
 		$coldisplay++;
@@ -156,7 +169,7 @@ if (empty($usemargins)) $usemargins=0;
 
 	if ($this->situation_cycle_ref) {
 		$coldisplay++;
-		print '<td align="right" nowrap="nowrap">' . $line->situation_percent . '%</td>';
+		print '<td align="right" class="nowrap">' . $line->situation_percent . '%</td>';
 	}
 
   	if ($usemargins && ! empty($conf->margin->enabled) && empty($user->societe_id))

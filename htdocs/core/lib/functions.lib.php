@@ -12,6 +12,7 @@
  * Copyright (C) 2013      Alexandre Spangaro   <alexandre.spangaro@gmail.com>
  * Copyright (C) 2014      Cédric GROSS         <c.gross@kreiz-it.fr>
  * Copyright (C) 2014-2015 Marcos García        <marcosgdf@gmail.com>
+ * Copyright (C) 2015       Jean-François Ferry		<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,10 +45,13 @@ include_once DOL_DOCUMENT_ROOT .'/core/lib/json.lib.php';
  * @param	string 	$class		Class name
  * @param 	string 	$member		Name of property
  * @return 	mixed				Return value of static property
- * @deprecated Dolibarr now requires 5.3.0+
+ * @deprecated Dolibarr now requires 5.3.0+, use $class::$property syntax
+ * @see https://php.net/manual/language.oop5.static.php
  */
 function getStaticMember($class, $member)
 {
+	dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);
+
 	// This part is deprecated. Uncomment if for php 5.2.*, and comment next isset class::member
 	/*if (version_compare(phpversion(), '5.3.0', '<'))
 	{
@@ -138,7 +142,7 @@ function getEntity($element=false, $shared=0)
  */
 function getBrowserInfo($user_agent)
 {
-	include_once DOL_DOCUMENT_ROOT.'/core/class/mobiledetect.class.php';
+	include_once DOL_DOCUMENT_ROOT.'/includes/mobiledetect/mobiledetect.class.php';
 
 	$name='unknown';
 	$version='';
@@ -214,7 +218,7 @@ function dol_shutdown()
 	global $conf,$user,$langs,$db;
 	$disconnectdone=false; $depth=0;
 	if (is_object($db) && ! empty($db->connected)) { $depth=$db->transaction_opened; $disconnectdone=$db->close(); }
-	dol_syslog("--- End access to ".$_SERVER["PHP_SELF"].(($disconnectdone && $depth)?' (Warn: db disconnection forced, transaction depth was '.$depth.')':''), (($disconnectdone && $depth)?LOG_WARNING:LOG_DEBUG));
+	dol_syslog("--- End access to ".$_SERVER["PHP_SELF"].(($disconnectdone && $depth)?' (Warn: db disconnection forced, transaction depth was '.$depth.')':''), (($disconnectdone && $depth)?LOG_WARNING:LOG_INFO));
 }
 
 
@@ -222,11 +226,11 @@ function dol_shutdown()
  *  Return value of a param into GET or POST supervariable
  *
  *  @param	string	$paramname   Name of parameter to found
- *  @param	string	$check	     Type of check (''=no check,  'int'=check it's numeric, 'alpha'=check it's text and sign, 'aZ'=check it's a-z only, 'array'=check it's array, 'san_alpha'= Use filter_var with FILTER_SANITIZE_STRING (do not use this for free text string), 'custom'= custom filter specify $filter and $options)
+ *  @param	string	$check	     Type of check (''=no check,  'int'=check it's numeric, 'alpha'=check it's text and sign, 'aZ'=check it's a-z only, 'array'=check it's array, 'san_alpha'=Use filter_var with FILTER_SANITIZE_STRING (do not use this for free text string), 'custom'= custom filter specify $filter and $options)
  *  @param	int		$method	     Type of method (0 = get then post, 1 = only get, 2 = only post, 3 = post then get, 4 = post then get then cookie)
  *  @param  int     $filter      Filter to apply when $check is set to custom. (See http://php.net/manual/en/filter.filters.php for détails)
  *  @param  mixed   $options     Options to pass to filter_var when $check is set to custom
- *  @return string||string[]     Value found (string or array), or '' if check fails
+ *  @return string|string[]      Value found (string or array), or '' if check fails
  */
 function GETPOST($paramname,$check='',$method=0,$filter=NULL,$options=NULL)
 {
@@ -386,11 +390,12 @@ function dol_buildpath($path, $type=0)
  *
  * 	@param	object	$object		Object to clone
  *	@return object				Object clone
- *  @deprecated Dolibarr no longer supports PHP4, you can now use native function
+ *  @deprecated Dolibarr no longer supports PHP4, use PHP5 native clone construct
+ *  @see https://php.net/manual/language.oop5.cloning.php
  */
 function dol_clone($object)
 {
-	dol_syslog("Functions.lib::dol_clone Clone object");
+	dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);
 
 	$myclone=clone($object);
 	return $myclone;
@@ -540,7 +545,7 @@ function dol_escape_js($stringtoescape, $mode=0, $noescapebackslashn=0)
 
 
 /**
- *  Returns text escaped for inclusion in HTML alt or title tags
+ *  Returns text escaped for inclusion in HTML alt or title tags, or into values of HTML input fields.
  *
  *  @param      string		$stringtoescape		String to escape
  *  @param		int			$keepb				Do not clean b tags
@@ -724,13 +729,12 @@ function dol_get_fiche_head($links=array(), $active='0', $title='', $notab=0, $p
 	// Show tabs
 	$bactive=false;
 	// if =0 we don't use the feature
-	$limittoshow=($conf->global->MAIN_MAXTABS_IN_CARD?$conf->global->MAIN_MAXTABS_IN_CARD:99);
+	$limittoshow=(empty($conf->global->MAIN_MAXTABS_IN_CARD)?99:$conf->global->MAIN_MAXTABS_IN_CARD);
 	$displaytab=0;
 
 	for ($i = 0 ; $i <= $maxkey ; $i++)
 	{
-
-		if ((is_numeric($active) && $i == $active) || (! is_numeric($active) && $active == $links[$i][2]))
+		if ((is_numeric($active) && $i == $active) || (! empty($links[$i][2]) && ! is_numeric($active) && $active == $links[$i][2]))
 		{
 			$isactive=true;
 			$bactive=true;
@@ -740,9 +744,9 @@ function dol_get_fiche_head($links=array(), $active='0', $title='', $notab=0, $p
 		else
 			$isactive=false;
 
-		if ($i <=$limittoshow || $isactive )
+		if ($i <= $limittoshow || $isactive )
 		{
-			$out.='<div class="inline-block tabsElem'.($isactive ? ' tabsElemActive' : '').((! $isactive && ! empty($conf->global->MAIN_HIDE_INACTIVETAB_ON_PRINT))?' hideonprint':'').'">';
+			$out.='<div class="inline-block tabsElem'.($isactive ? ' tabsElemActive' : '').((! $isactive && ! empty($conf->global->MAIN_HIDE_INACTIVETAB_ON_PRINT))?' hideonprint':'').'"><!-- id tab = '.(empty($links[$i][2])?'':$links[$i][2]).' -->';
 			if (isset($links[$i][2]) && $links[$i][2] == 'image')
 			{
 				if (!empty($links[$i][0]))
@@ -774,13 +778,13 @@ function dol_get_fiche_head($links=array(), $active='0', $title='', $notab=0, $p
 			if (isset($links[$i][2]) && $links[$i][2] == 'image')
 			{
 				if (!empty($links[$i][0]))
-					$outmore.='<a  class="tabimage" href="'.$links[$i][0].'">'.$links[$i][1].'</a>'."\n";
+					$outmore.='<a class="tabimage" href="'.$links[$i][0].'">'.$links[$i][1].'</a>'."\n";
 				else
-					$outmore.='<span  class="tabspan">'.$links[$i][1].'</span>'."\n";
+					$outmore.='<span class="tabspan">'.$links[$i][1].'</span>'."\n";
 
 			}
 			else if (! empty($links[$i][1]))
-				$outmore.='<a "'.(! empty($links[$i][2])?' id="'.$links[$i][2].'"':'').'  class="inline-block" href="'.$links[$i][0].'">'.$links[$i][1].'</a>'."\n";
+				$outmore.='<a'.(! empty($links[$i][2])?' id="'.$links[$i][2].'"':'').' class="inline-block" href="'.$links[$i][0].'">'.$links[$i][1].'</a>'."\n";
 
 			$outmore.='</div>';
 		}
@@ -789,14 +793,15 @@ function dol_get_fiche_head($links=array(), $active='0', $title='', $notab=0, $p
 
 	if ($displaytab > $limittoshow)
 	{
-		$out.='<div id="moretabs" class="inline-block tabsElem">';
+		$tabsname=str_replace("@", "", $picto);
+		$out.='<div id="moretabs'.$tabsname.'" class="inline-block tabsElem">';
 		$out.='<a href="" data-role="button" style="background-color: #f0f0f0;" class="tab inline-block">'.$langs->trans("More").'...</a>';
-		$out.='<div id="moretabsList" style="position: absolute; left: -999em;text-align: left;margin:0px;padding:2px">'.$outmore.'</div>';
+		$out.='<div id="moretabsList'.$tabsname.'" style="position: absolute; left: -999em;text-align: left;margin:0px;padding:2px">'.$outmore.'</div>';
 		$out.="</div>\n";
 
 		$out.="<script>";
-		$out.="$('#moretabs').mouseenter( function() { $('#moretabsList').css('left','auto');});";
-		$out.="$('#moretabs').mouseleave( function() { $('#moretabsList').css('left','-999em');});";
+		$out.="$('#moretabs".$tabsname.").mouseenter( function() { $('#moretabsList".$tabsname.").css('left','auto');});";
+		$out.="$('#moretabs".$tabsname.").mouseleave( function() { $('#moretabsList".$tabsname.").css('left','-999em');});";
 		$out.="</script>";
 	}
 
@@ -831,6 +836,25 @@ function dol_get_fiche_end($notab=0)
 }
 
 /**
+ * Show a string with the label tag dedicated to the HTML edit field.
+ *
+ * @param	string	$langkey		Translation key
+ * @param 	string	$fieldkey		Key of the html select field the text refers to
+ * @param	int		$fieldrequired	1=Field is mandatory
+ */
+function fieldLabel($langkey, $fieldkey, $fieldrequired=0)
+{
+	global $conf, $langs;
+	$ret='';
+	if ($fieldrequired) $ret.='<span class="fieldrequired">';
+	if (empty($conf->dol_use_jmobile)) $ret.='<label for="'.$fieldkey.'">';
+	$ret.=$langs->trans($langkey);
+	if (empty($conf->dol_use_jmobile)) $ret.='</label>';
+	if ($fieldrequired) $ret.='</span>';
+	return $ret;
+}
+
+/**
  * Return string to add class property on html element with pair/impair.
  *
  * @param	string	$var			0 or 1
@@ -853,6 +877,7 @@ function dol_bc($var,$moreclass='')
  *      @param	string		$sep			Separator to use to build string
  *      @param	Translate	$outputlangs	Object lang that contains language for text translation.
  *      @return string          			Formated string
+ *      @see dol_print_address
  */
 function dol_format_address($object,$withcountry=0,$sep="\n",$outputlangs='')
 {
@@ -1127,19 +1152,6 @@ function dol_getdate($timestamp,$fast=false)
 	else
 	{
 		$arrayinfo=getdate($timestamp);
-
-		/*$startday=isset($conf->global->MAIN_START_WEEK)?$conf->global->MAIN_START_WEEK:1;
-		if($startday==1)
-		{
-			if ($arrayinfo["wday"]==0)
-			{
-				$arrayinfo["wday"]=6;
-			}
-			else
-			{
-				$arrayinfo["wday"]=$arrayinfo["wday"]-1;
-			}
-		}*/
 	}
 
 	return $arrayinfo;
@@ -1593,6 +1605,7 @@ function dol_user_country()
  *  @param  int		$mode        thirdparty|contact|member|other
  *  @param  int		$id          Id of object
  *  @return void
+ *  @see dol_format_address
  */
 function dol_print_address($address, $htmlid, $mode, $id)
 {
@@ -1634,7 +1647,7 @@ function dol_print_address($address, $htmlid, $mode, $id)
 /**
  *	Return true if email syntax is ok
  *
- *	@param	    string		$address    			email (Ex: "toto@titi.com", "John Do <johndo@titi.com>")
+ *	@param	    string		$address    			email (Ex: "toto@examle.com", "John Do <johndo@example.com>")
  *  @param		int			$acceptsupervisorkey	If 1, the special string '__SUPERVISOREMAIL__' is also accepted as valid
  *	@return     boolean     						true if email syntax is OK, false if KO or empty string
  */
@@ -1648,8 +1661,8 @@ function isValidEmail($address, $acceptsupervisorkey=0)
 
 /**
  *  Return true if phone number syntax is ok
+ *  TODO Decide what to do with this
  *
- * TODO: Decide what to do with this
  *  @param	string		$phone		phone (Ex: "0601010101")
  *  @return boolean     			true if phone syntax is OK, false if KO or empty string
  */
@@ -1712,13 +1725,18 @@ function dol_substr($string,$start,$length,$stringencoding='')
  *  @param		string	$type			Type of graph ('pie', 'barline')
  *  @param		int		$showpercent	Show percent (with type='pie' only)
  *  @param		string	$url			Param to add an url to click values
+ *  @param		int		$combineother	0=No combine, 0.05=Combine if lower than 5%
  *  @return		void
  *  @deprecated
+ *  @see DolGraph
  */
-function dol_print_graph($htmlid,$width,$height,$data,$showlegend=0,$type='pie',$showpercent=0,$url='')
+function dol_print_graph($htmlid,$width,$height,$data,$showlegend=0,$type='pie',$showpercent=0,$url='',$combineother=0.05)
 {
+	dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);
+
 	global $conf,$langs;
 	global $theme_datacolor;    // To have var kept when function is called several times
+
 	if (empty($conf->use_javascript_ajax)) return;
 	$jsgraphlib='flot';
 	$datacolor=array();
@@ -1760,26 +1778,34 @@ function dol_print_graph($htmlid,$width,$height,$data,$showlegend=0,$type='pie',
 						series: {
 							pie: {
 								show: true,
-								radius: 3/4,
+								radius: 0.8,';
+			if ($combineother)
+			{
+				print '
+								combine: {
+								 	threshold: '.$combineother.'
+								},';
+			}
+			print '
 								label: {
 									show: true,
-									radius: 3/4,
+									radius: 0.9,
 									formatter: function(label, series) {
 										var percent=Math.round(series.percent);
 										var number=series.data[0][1];
 										return \'';
-										print '<div style="font-size:8pt;text-align:center;padding:2px;color:white;">';
+										print '<div style="font-size:8pt;text-align:center;padding:2px;color:black;">';
 										if ($url) print '<a style="color: #FFFFFF;" border="0" href="'.$url.'=">';
-										print '\'+'.($showlegend?'number':'label+\'<br/>\'+number');
+										print '\'+'.($showlegend?'number':'label+\' \'+number');
 										if (! empty($showpercent)) print '+\'<br/>\'+percent+\'%\'';
 										print '+\'';
 										if ($url) print '</a>';
 										print '</div>\';
 									},
 									background: {
-										opacity: 0.5,
+										opacity: 0.0,
 										color: \'#000000\'
-									}
+									},
 								}
 							}
 						},
@@ -2046,22 +2072,24 @@ function img_picto_common($titlealt, $picto, $options = '', $pictoisfullpath = 0
 /**
  *	Show logo action
  *
- *	@param	string	$titlealt       Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
- *	@param  int		$numaction   	Action to show
- *	@return string      			Return an img tag
+ *	@param	string		$titlealt       Text on alt and title of image. Alt only if param notitle is set to 1. If text is "TextA:TextB", use Text A on alt and Text B on title.
+ *	@param  string		$numaction   	Action id or code to show
+ *	@return string      				Return an img tag
  */
 function img_action($titlealt, $numaction)
 {
 	global $conf, $langs;
 
-	if ($titlealt == 'default')
+	if (empty($titlealt) || $titlealt == 'default')
 	{
-		if ($numaction == -1) $titlealt = $langs->transnoentitiesnoconv('ChangeDoNotContact');
-		if ($numaction == 0) $titlealt = $langs->transnoentitiesnoconv('ChangeNeverContacted');
-		if ($numaction == 1) $titlealt = $langs->transnoentitiesnoconv('ChangeToContact');
-		if ($numaction == 2) $titlealt = $langs->transnoentitiesnoconv('ChangeContactInProcess');
-		if ($numaction == 3) $titlealt = $langs->transnoentitiesnoconv('ChangeContactDone');
+		if ($numaction == '-1' || $numaction == 'ST_NO')			{ $numaction = -1; $titlealt = $langs->transnoentitiesnoconv('ChangeDoNotContact'); }
+		elseif ($numaction ==  '0' || $numaction == 'ST_NEVER') 	{ $numaction = 0; $titlealt = $langs->transnoentitiesnoconv('ChangeNeverContacted'); }
+		elseif ($numaction ==  '1' || $numaction == 'ST_TODO')  	{ $numaction = 1; $titlealt = $langs->transnoentitiesnoconv('ChangeToContact'); }
+		elseif ($numaction ==  '2' || $numaction == 'ST_PEND')  	{ $numaction = 2; $titlealt = $langs->transnoentitiesnoconv('ChangeContactInProcess'); }
+		elseif ($numaction ==  '3' || $numaction == 'ST_DONE')  	{ $numaction = 3; $titlealt = $langs->transnoentitiesnoconv('ChangeContactDone'); }
+		else { $titlealt = $langs->transnoentitiesnoconv('ChangeStatus '.$numaction); $numaction = 0; }
 	}
+	if (! is_numeric($numaction)) $numaction=0;
 
 	return img_picto($titlealt, 'stcomm'.$numaction.'.png');
 }
@@ -2196,7 +2224,7 @@ function img_help($usehelpcursor = 1, $usealttitle = 1)
 		else $usealttitle = $langs->trans('Info');
 	}
 
-	return img_picto($usealttitle, 'info.png', ($usehelpcursor ? 'style="cursor: help"' : ''));
+	return img_picto($usealttitle, 'info.png', ($usehelpcursor ? 'style="vertical-align: middle; cursor: help"' : 'style="vertical-align: middle;"'));
 }
 
 /**
@@ -2211,7 +2239,7 @@ function img_info($titlealt = 'default')
 
 	if ($titlealt == 'default') $titlealt = $langs->trans('Informations');
 
-	return img_picto($titlealt, 'info.png');
+	return img_picto($titlealt, 'info.png', 'style="vertical-align: middle;"');
 }
 
 /**
@@ -2227,7 +2255,7 @@ function img_warning($titlealt = 'default', $float = 0)
 
 	if ($titlealt == 'default') $titlealt = $langs->trans('Warning');
 
-	return img_picto($titlealt, 'warning.png', ($float ? 'style="float: right"' : ''));
+	return img_picto($titlealt, 'warning.png', 'class="pictowarning"'.($float ? ' style="float: right"' : ''));
 }
 
 /**
@@ -2390,9 +2418,12 @@ function img_mime($file, $titlealt = '')
  *	@param  int		$option		Option
  *	@return string      		Return img tag
  *  @deprecated
+ *  @see img_picto
  */
 function img_phone($titlealt = 'default', $option = 0)
 {
+	dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);
+
 	global $conf,$langs;
 
 	if ($titlealt == 'default') $titlealt = $langs->trans('Call');
@@ -2462,7 +2493,7 @@ function info_admin($text, $infoonimgalt = 0, $nodiv=0)
 		return img_picto($text, 'info', 'class="hideonsmartphone"');
 	}
 
-	return ($nodiv?'':'<div class="info hideonsmartphone">').img_picto($langs->trans('InfoAdmin'), 'info', 'class="hideonsmartphone"').' '.$text.($nodiv?'':'</div>');
+	return ($nodiv?'':'<div class="info hideonsmartphone">').img_picto($langs->trans('InfoAdmin'), ($nodiv?'info':'info_black'), 'class="hideonsmartphone"').' '.$text.($nodiv?'':'</div>');
 }
 
 
@@ -2474,10 +2505,11 @@ function info_admin($text, $infoonimgalt = 0, $nodiv=0)
  *
  *	@param	 	DoliDB	$db      	Database handler
  *	@param  	mixed	$error		String or array of errors strings to show
+ *  @param		array	$errors		Array of errors
  *	@return 	void
  *  @see    	dol_htmloutput_errors
  */
-function dol_print_error($db='',$error='')
+function dol_print_error($db='',$error='',$errors=null)
 {
 	global $conf,$langs,$argv;
 	global $dolibarr_main_prod;
@@ -2550,12 +2582,15 @@ function dol_print_error($db='',$error='')
 		$syslog.=", db_error=".$db->lasterror();
 	}
 
-	if ($error)
+	if ($error || $errors)
 	{
 		$langs->load("errors");
 
-		if (is_array($error)) $errors=$error;
-		else $errors=array($error);
+		// Merge all into $errors array
+		if (is_array($error) && is_array($errors)) $errors=array_merge($error,$errors);
+		elseif (is_array($error)) $errors=$error;
+		elseif (is_array($errors)) $errors=array_merge(array($error),$errors);
+		else $errors=array_merge(array($error));
 
 		foreach($errors as $msg)
 		{
@@ -2564,7 +2599,7 @@ function dol_print_error($db='',$error='')
 			{
 				$out.="<b>".$langs->trans("Message").":</b> ".$msg."<br>\n" ;
 			}
-			else                            // Mode CLI
+			else                        // Mode CLI
 			{
 				$out.='> '.$langs->transnoentities("Message").":\n".$msg."\n" ;
 			}
@@ -2613,11 +2648,12 @@ function dol_print_error_email($prefixcode)
  *	@param  string	$td          Options of attribute td ("" by defaut, example: 'align="center"')
  *	@param  string	$sortfield   Current field used to sort
  *	@param  string	$sortorder   Current sort order
+ *  @param	string	$prefix		 Prefix for css. Use space after prefix to add your own CSS tag.
  *	@return	void
  */
-function print_liste_field_titre($name, $file="", $field="", $begin="", $moreparam="", $td="", $sortfield="", $sortorder="")
+function print_liste_field_titre($name, $file="", $field="", $begin="", $moreparam="", $td="", $sortfield="", $sortorder="", $prefix="")
 {
-	print getTitleFieldOfList($name, 0, $file, $field, $begin, $moreparam, $td, $sortfield, $sortorder);
+	print getTitleFieldOfList($name, 0, $file, $field, $begin, $moreparam, $td, $sortfield, $sortorder, $prefix);
 }
 
 /**
@@ -2632,9 +2668,10 @@ function print_liste_field_titre($name, $file="", $field="", $begin="", $morepar
  *	@param  string	$moreattrib  Add more attributes on th ("" by defaut)
  *	@param  string	$sortfield   Current field used to sort
  *	@param  string	$sortorder   Current sort order
+ *  @param	string	$prefix		 Prefix for css. Use space after prefix to add your own CSS tag.
  *	@return	string
  */
-function getTitleFieldOfList($name, $thead=0, $file="", $field="", $begin="", $moreparam="", $moreattrib="", $sortfield="", $sortorder="")
+function getTitleFieldOfList($name, $thead=0, $file="", $field="", $begin="", $moreparam="", $moreattrib="", $sortfield="", $sortorder="", $prefix="")
 {
 	global $conf;
 	//print "$name, $file, $field, $begin, $options, $moreattrib, $sortfield, $sortorder<br>\n";
@@ -2647,8 +2684,8 @@ function getTitleFieldOfList($name, $thead=0, $file="", $field="", $begin="", $m
 
 	// If field is used as sort criteria we use a specific class
 	// Example if (sortfield,field)=("nom","xxx.nom") or (sortfield,field)=("nom","nom")
-	if ($field && ($sortfield == $field || $sortfield == preg_replace("/^[^\.]+\./","",$field))) $out.= '<'.$tag.' class="liste_titre_sel" '. $moreattrib.'>';
-	else $out.= '<'.$tag.' class="liste_titre" '. $moreattrib.'>';
+	if ($field && ($sortfield == $field || $sortfield == preg_replace("/^[^\.]+\./","",$field))) $out.= '<'.$tag.' class="'.$prefix.'liste_titre_sel" '. $moreattrib.'>';
+	else $out.= '<'.$tag.' class="'.$prefix.'liste_titre" '. $moreattrib.'>';
 
 	if (! empty($conf->dol_optimize_smallscreen) && empty($thead) && $field)    // If this is a sort field
 	{
@@ -2708,9 +2745,12 @@ function getTitleFieldOfList($name, $thead=0, $file="", $field="", $begin="", $m
  *	@param	string	$title			Title to show
  *	@return	string					Title to show
  *  @deprecated						Use print_fiche_titre instead
+ *  @see print_fiche_titre
  */
 function print_titre($title)
 {
+	dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);
+
 	print '<div class="titre">'.$title.'</div>';
 }
 
@@ -2723,8 +2763,9 @@ function print_titre($title)
  *	@param	int		$pictoisfullpath	1=Icon name is a full absolute url of image
  * 	@param	int		$id					To force an id on html objects
  * 	@return	void
+ *  @deprecated Use print load_fiche_titre instead
  */
-function print_fiche_titre($title, $mesg='', $picto='title.png', $pictoisfullpath=0, $id='')
+function print_fiche_titre($title, $mesg='', $picto='title_generic.png', $pictoisfullpath=0, $id='')
 {
 	print load_fiche_titre($title, $mesg, $picto, $pictoisfullpath, $id);
 }
@@ -2780,12 +2821,12 @@ function load_fiche_titre($titre, $mesg='', $picto='title.png', $pictoisfullpath
  *  @param	string	$morehtml			More html to show
  *	@return	void
  */
-function print_barre_liste($titre, $page, $file, $options='', $sortfield='', $sortorder='', $center='', $num=-1, $totalnboflines=0, $picto='title.png', $pictoisfullpath=0, $morehtml='')
+function print_barre_liste($titre, $page, $file, $options='', $sortfield='', $sortorder='', $center='', $num=-1, $totalnboflines=0, $picto='title_generic.png', $pictoisfullpath=0, $morehtml='')
 {
 	global $conf,$langs;
 
-	if ($picto == 'setup') $picto='title.png';
-	if (($conf->browser->name == 'ie') && $picto=='title.png') $picto='title.gif';
+	if ($picto == 'setup') $picto='title_setup.png';
+	if (($conf->browser->name == 'ie') && $picto=='title_generic.png') $picto='title.gif';
 
 	if (($num > $conf->liste_limit) || ($num == -1))
 	{
@@ -2798,7 +2839,7 @@ function print_barre_liste($titre, $page, $file, $options='', $sortfield='', $so
 
 	print "\n";
 	print "<!-- Begin title '".$titre."' -->\n";
-	print '<table width="100%" border="0" class="notopnoleftnoright" style="margin-bottom: 2px;"><tr>';
+	print '<table width="100%" border="0" class="notopnoleftnoright" style="margin-bottom: 6px;"><tr>';
 
 	// Left
 	if ($picto && $titre) print '<td class="nobordernopadding hideonsmartphone" width="40" align="left" valign="middle">'.img_picto('', $picto, '', $pictoisfullpath).'</td>';
@@ -2818,45 +2859,44 @@ function print_barre_liste($titre, $page, $file, $options='', $sortfield='', $so
 	$pagelist = '';
 	if ($page > 0 || $num > $conf->liste_limit)
 	{
-		if ($totalnboflines)
+		if ($totalnboflines)	// If we know total nb of lines
 		{
-			$maxnbofpage=10;
+			$maxnbofpage=(empty($conf->dol_optimize_smallscreen)?10:3);		// nb before and after selected page
 
 			$nbpages=ceil($totalnboflines/$conf->liste_limit);
 			$cpt=($page-$maxnbofpage);
 			if ($cpt < 0) { $cpt=0; }
-			$pagelist.=$langs->trans('Page');
+
 			if ($cpt>=1)
 			{
-				$pagelist.=' <a href="'.$file.'?page=0'.$options.'&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">1</a>';
-				if ($cpt >= 2) $pagelist.=' ...';
+				$pagelist.= '<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><a '.(empty($conf->dol_use_jmobile)?'':'data-role="button" ').'href="'.$file.'?page=0'.$options.'&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">1</a></li>';
+				if ($cpt >= 2) $pagelist.='<li><span class="inactive">...</span></li>';
 			}
 			do
 			{
 				if ($cpt==$page)
 				{
-					$pagelist.= ' <u>'.($page+1).'</u>';
+					$pagelist.= '<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><span '.(empty($conf->dol_use_jmobile)?'class="active"':'data-role="button"').'>'.($page+1).'</span></li>';
 				}
 				else
 				{
-					$pagelist.= ' <a href="'.$file.'?page='.$cpt.$options.'&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">'.($cpt+1).'</a>';
+					$pagelist.= '<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><a '.(empty($conf->dol_use_jmobile)?'':'data-role="button" ').'href="'.$file.'?page='.$cpt.$options.'&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">'.($cpt+1).'</a></li>';
 				}
 				$cpt++;
 			}
 			while ($cpt < $nbpages && $cpt<=$page+$maxnbofpage);
 			if ($cpt<$nbpages)
 			{
-				if ($cpt<$nbpages-1) $pagelist.= ' ...';
-				$pagelist.= ' <a href="'.$file.'?page='.($nbpages-1).$options.'&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">'.$nbpages.'</a>';
+				if ($cpt<$nbpages-1) $pagelist.= '<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><span '.(empty($conf->dol_use_jmobile)?'class="inactive"':'data-role="button"').'>...</span></li>';
+				$pagelist.= '<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><a '.(empty($conf->dol_use_jmobile)?'':'data-role="button" ').'href="'.$file.'?page='.($nbpages-1).$options.'&amp;sortfield='.$sortfield.'&amp;sortorder='.$sortorder.'">'.$nbpages.'</a></li>';
 			}
 		}
 		else
 		{
-			$pagelist.= $langs->trans('Page').' '.($page+1);
+			$pagelist.= '<li'.(empty($conf->dol_use_jmobile)?' class="pagination"':'').'><span '.(empty($conf->dol_use_jmobile)?'class="active"':'data-role="button"').'>'.($page+1)."</li>";
 		}
 	}
-	print_fleche_navigation($page,$file,$options,$nextpage,$pagelist);
-	if ($morehtml) print $morehtml;
+	print_fleche_navigation($page,$file,$options,$nextpage,$pagelist,$morehtml);		// output the div and ul for previous/last completed with page numbers into $pagelist
 	print '</td>';
 
 	print '</tr></table>'."\n";
@@ -2864,30 +2904,42 @@ function print_barre_liste($titre, $page, $file, $options='', $sortfield='', $so
 }
 
 /**
- *	Fonction servant a afficher les fleches de navigation dans les pages de listes
+ *	Function to show navigation arrows into lists
  *
  *	@param	int				$page				Number of page
- *	@param	string			$file				Lien
- *	@param	string			$options         	Autres parametres d'url a propager dans les liens ("" par defaut)
- *	@param	integer		$nextpage	    	Do we show a next page button
- *	@param	string			$betweenarrows		HTML Content to show between arrows
+ *	@param	string			$file				Page URL (in most cases provided with $_SERVER["PHP_SELF"])
+ *	@param	string			$options         	Other url paramaters to propagate ("" by default)
+ *	@param	integer			$nextpage	    	Do we show a next page button
+ *	@param	string			$betweenarrows		HTML content to show between arrows. MUST contains '<li> </li>' tags or '<li><span> </span></li>'.
+ *  @param	string			$afterarrows		HTML content to show after arrows. Must NOT contains '<li> </li>' tags.
  *	@return	void
  */
-function print_fleche_navigation($page,$file,$options='',$nextpage=0,$betweenarrows='')
+function print_fleche_navigation($page, $file, $options='', $nextpage=0, $betweenarrows='', $afterarrows='')
 {
 	global $conf, $langs;
 
+	print '<div class="pagination"><ul>';
 	if ($page > 0)
 	{
-		if (empty($conf->dol_use_jmobile)) print '<a href="'.$file.'?page='.($page-1).$options.'">'.img_previous($langs->trans("Previous")).'</a>';
-		else print '<a data-role="button" data-icon="arrow-l" data-iconpos="left" href="'.$file.'?page='.($page-1).$options.'">'.$langs->trans("Previous").'</a>';
+		if (empty($conf->dol_use_jmobile)) print '<li class="pagination"><a class="paginationprevious" href="'.$file.'?page='.($page-1).$options.'"><</a></li>';
+		else print '<li><a data-role="button" data-icon="arrow-l" data-iconpos="left" href="'.$file.'?page='.($page-1).$options.'">'.$langs->trans("Previous").'</a></li>';
 	}
-	if ($betweenarrows) print ($page > 0?' ':'').$betweenarrows.($nextpage>0?' ':'');
+	if ($betweenarrows)
+	{
+		print $betweenarrows;
+	}
 	if ($nextpage > 0)
 	{
-		if (empty($conf->dol_use_jmobile)) print '<a href="'.$file.'?page='.($page+1).$options.'">'.img_next($langs->trans("Next")).'</a>';
-		else print '<a data-role="button" data-icon="arrow-r" data-iconpos="right" href="'.$file.'?page='.($page+1).$options.'">'.$langs->trans("Next").'</a>';
+		if (empty($conf->dol_use_jmobile)) print '<li class="pagination"><a class="paginationnext" href="'.$file.'?page='.($page+1).$options.'">></a></li>';
+		else print '<li><a data-role="button" data-icon="arrow-r" data-iconpos="right" href="'.$file.'?page='.($page+1).$options.'">'.$langs->trans("Next").'</a></li>';
 	}
+	if ($afterarrows)
+	{
+		print '<li class="paginationafterarrows">';
+		print $afterarrows;
+		print '</li>';
+	}
+	print '</ul></div>'."\n";
 }
 
 
@@ -3004,14 +3056,13 @@ function price($amount, $form=0, $outlangs='', $trunc=1, $rounding=-1, $forcerou
 			$cursymbolafter.=($tmpcur == $currency_code ? ' '.$tmpcur : $tmpcur);
 		}
 	}
-	$output=$cursymbolbefore.$output.$end.$cursymbolafter;
+	$output=$cursymbolbefore.$output.$end.($cursymbolafter?' ':'').$cursymbolafter;
 
 	return $output;
 }
 
 /**
- *	Function that return a number with universal decimal format (decimal separator is '.') from
- *	an amount typed by a user.
+ *	Function that return a number with universal decimal format (decimal separator is '.') from an amount typed by a user.
  *	Function to use on each input amount before any numeric test or database insert
  *
  *	@param	float	$amount			Amount to convert/clean
@@ -3271,7 +3322,7 @@ function get_localtax_by_third($local)
 /**
  *  Get type and rate of localtaxes for a particular vat rate/country fo thirdparty
  *  TODO
- *  This function is called to retrieve type for building PDF. Such call of function must be removed.
+ *  This function is also called to retrieve type for building PDF. Such call of function must be removed.
  *  Instead this function must be called when adding a line to get (array of localtax and type) and
  *  provide it to the function calcul_price_total.
  *
@@ -3679,8 +3730,8 @@ function yn($yesno, $case=1, $color=0)
 	{
 		$result=$langs->trans('yes');
 		if ($case == 1 || $case == 3) $result=$langs->trans("Yes");
-		if ($case == 2) $result='<input type="checkbox" value="1" checked="checked" disabled="disabled">';
-		if ($case == 3) $result='<input type="checkbox" value="1" checked="checked" disabled="disabled"> '.$result;
+		if ($case == 2) $result='<input type="checkbox" value="1" checked disabled>';
+		if ($case == 3) $result='<input type="checkbox" value="1" checked disabled> '.$result;
 
 		$classname='ok';
 	}
@@ -3688,8 +3739,8 @@ function yn($yesno, $case=1, $color=0)
 	{
 		$result=$langs->trans("no");
 		if ($case == 1 || $case == 3) $result=$langs->trans("No");
-		if ($case == 2) $result='<input type="checkbox" value="0" disabled="disabled">';
-		if ($case == 3) $result='<input type="checkbox" value="0" disabled="disabled"> '.$result;
+		if ($case == 2) $result='<input type="checkbox" value="0" disabled>';
+		if ($case == 3) $result='<input type="checkbox" value="0" disabled> '.$result;
 
 		if ($color == 2) $classname='ok';
 		else $classname='error';
@@ -3700,26 +3751,46 @@ function yn($yesno, $case=1, $color=0)
 
 
 /**
- *	Return a path to have a directory according to an id
+ *	Return a path to have a directory according to object.
  *  Examples:       '001' with level 3->"0/0/1/", '015' with level 3->"0/1/5/"
  *  Examples:       'ABC-1' with level 3 ->"0/0/1/", '015' with level 1->"5/"
  *
- *	@param	string	$num            Id to develop
- *	@param  int		$level		    Level of development (1, 2 or 3 level)
+ *	@param	string	$num            Id of object
+ *	@param  int		$level		    Level of subdirs to return (1, 2 or 3 levels)
  * 	@param	int		$alpha		    Use alpha ref
- *  @param  int		$withoutslash   0=With slash at end, 1=without slash at end
- *  @return	string					Dir to use
+ *  @param  int		$withoutslash   0=With slash at end, 1=without slash at end (except if '/', we return '')
+ *  @param	Object	$object			Object
+ *  @param	string	$modulepart		Type of object ('invoice_supplier, 'donation', 'invoice', ...')
+ *  @return	string					Dir to use ending. Example '' or '1/' or '1/2/'
  */
-function get_exdir($num,$level=3,$alpha=0,$withoutslash=0)
+function get_exdir($num,$level,$alpha,$withoutslash,$object,$modulepart)
 {
+	global $conf;
+
 	$path = '';
-	if (empty($alpha)) $num = preg_replace('/([^0-9])/i','',$num);
-	else $num = preg_replace('/^.*\-/i','',$num);
-	$num = substr("000".$num, -$level);
-	if ($level == 1) $path = substr($num,0,1);
-	if ($level == 2) $path = substr($num,1,1).'/'.substr($num,0,1);
-	if ($level == 3) $path = substr($num,2,1).'/'.substr($num,1,1).'/'.substr($num,0,1);
-	if (empty($withoutslash)) $path.='/';
+
+	// TODO if object is null, load it from id and modulepart.
+
+
+	if (! empty($level) && in_array($modulepart, array('cheque','user','category','holiday','shipment', 'member','don','donation','supplier_invoice','invoice_supplier')))
+	{
+		// This part should be removed once all code is using "get_exdir" to forge path, with all parameters provided
+		if (empty($alpha)) $num = preg_replace('/([^0-9])/i','',$num);
+		else $num = preg_replace('/^.*\-/i','',$num);
+		$num = substr("000".$num, -$level);
+		if ($level == 1) $path = substr($num,0,1);
+		if ($level == 2) $path = substr($num,1,1).'/'.substr($num,0,1);
+		if ($level == 3) $path = substr($num,2,1).'/'.substr($num,1,1).'/'.substr($num,0,1);
+	}
+	else
+	{
+		// TODO
+		// We will introduce here a common way of forging path for document storage
+		// Here, $num=id, ref and modulepart are required.
+
+	}
+
+	if (empty($withoutslash) && ! empty($path)) $path.='/';
 	return $path;
 }
 
@@ -3728,9 +3799,10 @@ function get_exdir($num,$level=3,$alpha=0,$withoutslash=0)
  *
  *	@param	string	$dir		Directory to create (Separator must be '/'. Example: '/mydir/mysubdir')
  *	@param	string	$dataroot	Data root directory (To avoid having the data root in the loop. Using this will also lost the warning on first dir PHP has no permission when open_basedir is used)
+ *  @param	int		$newmask	Mask for new file (Defaults to $conf->global->MAIN_UMASK or 0755 if unavailable). Example: '0444'
  *	@return int         		< 0 if KO, 0 = already exists, > 0 if OK
  */
-function dol_mkdir($dir, $dataroot='')
+function dol_mkdir($dir, $dataroot='', $newmask=null)
 {
 	global $conf;
 
@@ -3767,8 +3839,10 @@ function dol_mkdir($dir, $dataroot='')
 				dol_syslog("functions.lib::dol_mkdir: Directory '".$ccdir."' does not exists or is outside open_basedir PHP setting.",LOG_DEBUG);
 
 				umask(0);
-				$dirmaskdec=octdec('0755');
-				if (! empty($conf->global->MAIN_UMASK)) $dirmaskdec=octdec($conf->global->MAIN_UMASK);
+				$dirmaskdec=octdec($newmask);
+				if (empty($newmask)) {
+					$dirmaskdec = empty( $conf->global->MAIN_UMASK ) ? octdec( '0755' ) : octdec( $conf->global->MAIN_UMASK );
+				}
 				$dirmaskdec |= octdec('0111');  // Set x bit required for directories
 				if (! @mkdir($ccdir_osencoded, $dirmaskdec))
 				{
@@ -3996,7 +4070,7 @@ function dol_nboflines($s,$maxchar=0)
  *	@param	int		$maxlinesize  	Largeur de ligne en caracteres (ou 0 si pas de limite - defaut)
  * 	@param	string	$charset		Give the charset used to encode the $text variable in memory.
  *	@return int						Number of lines
- *	@see	dol_nboflines
+ *	@see	dol_nboflines, dolGetFirstLineOfText
  */
 function dol_nboflines_bis($text,$maxlinesize=0,$charset='UTF-8')
 {
@@ -4034,9 +4108,12 @@ function dol_nboflines_bis($text,$maxlinesize=0,$charset='UTF-8')
  *
  * @return		float		Time (millisecondes) with microsecondes in decimal part
  * @deprecated Dolibarr does not support PHP4, you should use native function
+ * @see microtime()
  */
 function dol_microtime_float()
 {
+	dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);
+
 	return microtime(true);
 }
 
@@ -4062,9 +4139,11 @@ function dol_textishtml($msg,$option=0)
 		if (preg_match('/<html/i',$msg))				return true;
 		elseif (preg_match('/<body/i',$msg))			return true;
 		elseif (preg_match('/<(b|em|i)>/i',$msg))		return true;
-		elseif (preg_match('/<(br|div|font|img|li|span|strong|table)>/i',$msg)) 	  return true;
-		elseif (preg_match('/<(br|div|font|img|li|span|strong|table)\s+[^<>\/]*>/i',$msg)) return true;
-		elseif (preg_match('/<(br|div|font|img|li|span|strong|table)\s+[^<>\/]*\/>/i',$msg)) return true;
+		elseif (preg_match('/<(br|div|font|li|span|strong|table)>/i',$msg)) 	  return true;
+		elseif (preg_match('/<(br|div|font|li|span|strong|table)\s+[^<>\/]*>/i',$msg)) return true;
+		elseif (preg_match('/<(br|div|font|li|span|strong|table)\s+[^<>\/]*\/>/i',$msg)) return true;
+		elseif (preg_match('/<img\s+[^<>]*src[^<>]*>/i',$msg)) return true;	// must accept <img src="http://example.com/aaa.png" />
+		elseif (preg_match('/<a\s+[^<>]*href[^<>]*>/i',$msg)) return true;	// must accept <a href="http://example.com/aaa.png" />
 		elseif (preg_match('/<h[0-9]>/i',$msg))			return true;
 		elseif (preg_match('/&[A-Z0-9]{1,6};/i',$msg))	return true;    // Html entities names (http://www.w3schools.com/tags/ref_entities.asp)
 		elseif (preg_match('/&#[0-9]{2,3};/i',$msg))	return true;    // Html entities numbers (http://www.w3schools.com/tags/ref_entities.asp)
@@ -4245,15 +4324,16 @@ function dolGetFirstLastname($firstname,$lastname,$nameorder=-1)
 /**
  *	Set event message in dol_events session object. Will be output by calling dol_htmloutput_events.
  *  Note: Calling dol_htmloutput_events is done into pages by standard llxFooter() function.
+ *  Note: Prefer to use setEventMessages instead.
  *
  *	@param	mixed	$mesgs			Message string or array
  *  @param  string	$style      	Which style to use ('mesgs' by default, 'warnings', 'errors')
  *  @return	void
  *  @see	dol_htmloutput_events
- *  @deprecated	Use setEventMessages instead
  */
 function setEventMessage($mesgs, $style='mesgs')
 {
+	//dol_syslog(__FUNCTION__ . " is deprecated", LOG_WARNING);		This is not deprecated, it is used by setEventMessages function
 	if (! is_array($mesgs))		// If mesgs is a string
 	{
 		if ($mesgs) $_SESSION['dol_events'][$style][] = $mesgs;
@@ -4487,12 +4567,13 @@ function dol_htmloutput_errors($mesgstring='', $mesgarray='', $keepembedded=0)
  *
  *  @param      array		$array      		Array to sort (array of array('key','otherkey1','otherkey2'...))
  *  @param      string		$index				Key in array to use for sorting criteria
- *  @param      int			$order				Sort order
+ *  @param      int			$order				Sort order ('asc' or 'desc')
  *  @param      int			$natsort			1=use "natural" sort (natsort), 0=use "standard" sort (asort)
  *  @param      int			$case_sensitive		1=sort is case sensitive, 0=not case sensitive
+ *  @param		int			$keepindex			If 0 and index key of array to sort is a numeric, than index will be rewrote. If 1 or index key is not numeric, key for index is kept after sorting.
  *  @return     array							Sorted array
  */
-function dol_sort_array(&$array, $index, $order='asc', $natsort=0, $case_sensitive=0)
+function dol_sort_array(&$array, $index, $order='asc', $natsort=0, $case_sensitive=0, $keepindex=0)
 {
 	// Clean parameters
 	$order=strtolower($order);
@@ -4501,13 +4582,21 @@ function dol_sort_array(&$array, $index, $order='asc', $natsort=0, $case_sensiti
 	if (is_array($array) && $sizearray>0)
 	{
 		foreach(array_keys($array) as $key) $temp[$key]=$array[$key][$index];
+
 		if (!$natsort) ($order=='asc') ? asort($temp) : arsort($temp);
 		else
 		{
 			($case_sensitive) ? natsort($temp) : natcasesort($temp);
 			if($order!='asc') $temp=array_reverse($temp,TRUE);
 		}
-		foreach(array_keys($temp) as $key) (is_numeric($key))? $sorted[]=$array[$key] : $sorted[$key]=$array[$key];
+
+		$sorted = array();
+
+		foreach(array_keys($temp) as $key)
+		{
+			(is_numeric($key) && empty($keepindex)) ? $sorted[]=$array[$key] : $sorted[$key]=$array[$key];
+		}
+
 		return $sorted;
 	}
 	return $array;
@@ -4564,7 +4653,8 @@ function dol_osencode($str)
 
 
 /**
- *      Return an id or code from a code or id. Store also Code-Id into a cache for next use.
+ *      Return an id or code from a code or id.
+ *      Store also Code-Id into a cache to speed up next request on same key.
  *
  * 		@param	DoliDB	$db			Database handler
  * 		@param	string	$key		Code to get Id
@@ -4572,7 +4662,7 @@ function dol_osencode($str)
  * 		@param	string	$fieldkey	Field for code
  * 		@param	string	$fieldid	Field for id
  *      @return int					<0 if KO, Id of code if OK
- *      @see getLabelFromKey
+ *      @see $langs->getLabelFromKey
  */
 function dol_getIdFromCode($db,$key,$tablename,$fieldkey='code',$fieldid='id')
 {
@@ -4587,7 +4677,7 @@ function dol_getIdFromCode($db,$key,$tablename,$fieldkey='code',$fieldid='id')
 		return $cache_codes[$tablename][$key];   // Found in cache
 	}
 
-	$sql = "SELECT ".$fieldid." as id";
+	$sql = "SELECT ".$fieldid." as valuetoget";
 	$sql.= " FROM ".MAIN_DB_PREFIX.$tablename;
 	$sql.= " WHERE ".$fieldkey." = '".$key."'";
 	dol_syslog('dol_getIdFromCode', LOG_DEBUG);
@@ -4595,7 +4685,7 @@ function dol_getIdFromCode($db,$key,$tablename,$fieldkey='code',$fieldid='id')
 	if ($resql)
 	{
 		$obj = $db->fetch_object($resql);
-		if ($obj) $cache_codes[$tablename][$key]=$obj->id;
+		if ($obj) $cache_codes[$tablename][$key]=$obj->valuetoget;
 		else $cache_codes[$tablename][$key]='';
 		$db->free($resql);
 		return $cache_codes[$tablename][$key];
@@ -4801,7 +4891,7 @@ function complete_head_from_modules($conf,$langs,$object,&$head,&$h,$type,$mode=
  * Print common footer :
  * 		conf->global->MAIN_HTML_FOOTER
  * 		conf->global->MAIN_GOOGLE_AN_ID
- * 		DOL_TUNING
+ * 		conf->global->MAIN_SHOW_TUNING_INFO or $_SERVER["MAIN_SHOW_TUNING_INFO"]
  * 		conf->logbuffer
  *
  * @param	string	$zone	'private' (for private pages) or 'public' (for public pages)
@@ -4838,7 +4928,7 @@ function printCommonFooter($zone='private')
 	}
 
 	// End of tuning
-	if (! empty($_SERVER['DOL_TUNING']) || ! empty($conf->global->MAIN_SHOW_TUNING_INFO))
+	if (! empty($_SERVER['MAIN_SHOW_TUNING_INFO']) || ! empty($conf->global->MAIN_SHOW_TUNING_INFO))
 	{
 		print "\n".'<script type="text/javascript">'."\n";
 		print 'window.console && console.log("';
@@ -4948,20 +5038,24 @@ function dol_getmypid()
 
 
 /**
- * Generate natural SQL search string
+ * Generate natural SQL search string for a criteria (this criteria can be tested on one or several fields)
  *
- * @param 	string|string[]	$fields 	String or array of strings, filled with the name of fields in the SQL query
+ * @param 	string|string[]	$fields 	String or array of strings, filled with the name of all fields in the SQL query we must check (combined with a OR)
  * @param 	string 			$value 		The value to look for.
- *                          		    If param $numeric is 0, can contains several keywords separated with a space, like "keyword1 keyword2" = We want record field like keyword1 and field like keyword2
- *                             			If param $numeric is 1, can contains an operator <>= like "<10" or ">=100.5 < 1000"
- * @param	integer			$numeric	0=value is list of keywords, 1=value is a numeric test
+ *                          		    If param $mode is 0, can contains several keywords separated with a space or |
+ *                                         like "keyword1 keyword2" = We want record field like keyword1 AND field like keyword2
+ *                                         or like "keyword1|keyword2" = We want record field like keyword1 OR field like keyword2
+ *                             			If param $mode is 1, can contains an operator <, > or = like "<10" or ">=100.5 < 1000"
+ *                             			If param $mode is 2, can contains a list of id separated by comma like "1,3,4"
+ * @param	integer			$mode		0=value is list of keywords, 1=value is a numeric test (Example ">5.5 <10"), 2=value is a list of id separated with comma (Example '1,3,4')
+ * @param	integer			$nofirstand	1=Do now output the first 'AND'
  * @return 	string 			$res 		The statement to append to the SQL query
  */
-function natural_search($fields, $value, $numeric=0)
+function natural_search($fields, $value, $mode=0, $nofirstand=0)
 {
     global $db,$langs;
 
-    if ($numeric)
+    if ($mode == 1)
     {
     	$value=preg_replace('/([<>=]+)\s+([0-9'.preg_quote($langs->trans("DecimalSeparator"),'/').'\-])/','\1\2',$value);	// Clean string '< 10' into '<10' so we can the explode on space to get all tests to do
     }
@@ -4978,7 +5072,7 @@ function natural_search($fields, $value, $numeric=0)
         $newres = '';
         foreach ($fields as $field)
         {
-            if ($numeric)
+            if ($mode == 1)
             {
             	$operator='=';
             	$newcrit = preg_replace('/([<>=]+)/','',trim($crit));
@@ -4990,21 +5084,41 @@ function natural_search($fields, $value, $numeric=0)
             	}
             	if ($newcrit != '')
             	{
-            		$newres .= ($i2 > 0 ? ' OR ' : '') . $field . ' '.$operator.' '.price2num($newcrit);
+            		$numnewcrit = price2num($newcrit);
+            		if (is_numeric($numnewcrit))
+            		{
+            			$newres .= ($i2 > 0 ? ' OR ' : '') . $field . ' '.$operator.' '.$numnewcrit;
+            		}
+            		else
+            		{
+            			$newres .= ($i2 > 0 ? ' OR ' : '') . '1 = 2';	// force false
+            		}
             		$i2++;	// a criteria was added to string
             	}
             }
-            else
+            else if ($mode == 2)
             {
-            	$newres .= ($i2 > 0 ? ' OR ' : '') . $field . " LIKE '%" . $db->escape(trim($crit)) . "%'";
+				$newres .= ($i2 > 0 ? ' OR ' : '') . $field . " IN (" . $db->escape(trim($crit)) . ")";
             	$i2++;	// a criteria was added to string
+            }
+            else
+			{
+				$textcrit = '';
+				$tmpcrits = explode('|',$crit);
+				$i3 = 0;
+				foreach($tmpcrits as $tmpcrit)
+				{
+	            	$newres .= (($i2 > 0 || $i3 > 0) ? ' OR ' : '') . $field . " LIKE '%" . $db->escape(trim($tmpcrit)) . "%'";
+	            	$i3++;
+				}
+				$i2++;	// a criteria was added to string
             }
             $i++;
         }
         if ($newres) $res = $res . ($res ? ' AND ' : '') . ($i2 > 1 ? '(' : '') .$newres . ($i2 > 1 ? ')' : '');
         $j++;
     }
-    $res = " AND (" . $res . ")";
+    $res = ($nofirstand?"":" AND ")."(" . $res . ")";
     //print 'xx'.$res.'yy';
     return $res;
 }

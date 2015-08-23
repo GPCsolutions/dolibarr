@@ -1,7 +1,7 @@
 # Dolibarr language file - Source file is en_US - boxes
 BoxLastRssInfos=Rss bilgileri
 BoxLastProducts=Son %s ürün/hizmet
-BoxProductsAlertStock=Stoktaki ürün uyarısı
+BoxProductsAlertStock=Stok uyarısındaki ürünler
 BoxLastProductsInContract=Son %s sözleşmeli ürün/hizmet
 BoxLastSupplierBills=Son tedarikçi faturaları
 BoxLastCustomerBills=Son müşteri faturaları
@@ -47,7 +47,7 @@ BoxTitleLastModifiedMembers=Son %s üye
 BoxTitleLastFicheInter=Değiştirilen son %s müdahale
 BoxTitleOldestUnpaidCustomerBills=En eski ödenmemiş %s müşteri faturası
 BoxTitleOldestUnpaidSupplierBills=En eski ödenmemiş %s tedarikçi faturası
-BoxTitleCurrentAccounts=Açık hesabın bakiyesi
+BoxTitleCurrentAccounts=Açık hesap bakiyeleri
 BoxTitleSalesTurnover=Satış cirosu
 BoxTitleTotalUnpaidCustomerBills=Ödenmemiş müşteri faturaları
 BoxTitleTotalUnpaidSuppliersBills=Ödenmemiş tedarikçi faturaları
@@ -94,3 +94,4 @@ BoxProductDistributionFor=%sin %s içindeki dağılımı
 ForCustomersInvoices=Müşteri faturaları
 ForCustomersOrders=Müşteri siparişleri
 ForProposals=Teklifler
+LastXMonthRolling=Devreden son %s ay

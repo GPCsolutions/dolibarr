@@ -44,7 +44,7 @@ $list = array(
     'ACCOUNTING_PRODUCT_SOLD_ACCOUNT',
     'ACCOUNTING_SERVICE_BUY_ACCOUNT',
     'ACCOUNTING_SERVICE_SOLD_ACCOUNT',
-    'ACCOUNTING_VAT_ACCOUNT',
+    'ACCOUNTING_VAT_SOLD_ACCOUNT',
     'ACCOUNTING_VAT_BUY_ACCOUNT',
     'ACCOUNTING_ACCOUNT_CUSTOMER',
     'ACCOUNTING_ACCOUNT_SUPPLIER'
@@ -104,7 +104,7 @@ llxHeader();
 $form=new Form($db);
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans('ComptaSetup'),$linkback,'setup');
+print_fiche_titre($langs->trans('ComptaSetup'),$linkback,'title_setup');
 
 print '<br>';
 

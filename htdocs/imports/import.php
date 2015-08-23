@@ -1,7 +1,7 @@
 <?php
-/* Copyright (C) 2005-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
+/* Copyright (C) 2005-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C) 2012 Christophe Battarel  		<christophe.battarel@altairis.fr>
+ * Copyright (C) 2012      Christophe Battarel	<christophe.battarel@altairis.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -886,9 +886,10 @@ if ($step == 4 && $datatoimport)
 				if ($objimport->array_import_convertvalue[0][$code]['rule']=='fetchidfromcodeid') $htmltext.=$langs->trans("DataComeFromIdFoundFromCodeId",$filecolumn,$langs->transnoentitiesnoconv($objimport->array_import_convertvalue[0][$code]['dict'])).'<br>';
 			}
 		}
+		// Source required
 		$htmltext.=$langs->trans("SourceRequired").': <b>'.yn(preg_match('/\*$/',$label)).'</b><br>';
 		$example=$objimport->array_import_examplevalues[0][$code];
-
+		// Example
 		if (empty($objimport->array_import_convertvalue[0][$code]))	// If source file does not need convertion
 		{
 		    if ($example) $htmltext.=$langs->trans("SourceExample").': <b>'.$example.'</b><br>';
@@ -897,6 +898,11 @@ if ($step == 4 && $datatoimport)
 		{
 		    if ($objimport->array_import_convertvalue[0][$code]['rule']=='fetchidfromref')    $htmltext.=$langs->trans("SourceExample").': <b>'.$langs->transnoentitiesnoconv("ExampleAnyRefFoundIntoElement",$entitylang).($example?' ('.$langs->transnoentitiesnoconv("Example").': '.$example.')':'').'</b><br>';
 		    if ($objimport->array_import_convertvalue[0][$code]['rule']=='fetchidfromcodeid') $htmltext.=$langs->trans("SourceExample").': <b>'.$langs->trans("ExampleAnyCodeOrIdFoundIntoDictionary",$langs->transnoentitiesnoconv($objimport->array_import_convertvalue[0][$code]['dict'])).($example?' ('.$langs->transnoentitiesnoconv("Example").': '.$example.')':'').'</b><br>';
+		}
+		// Format control rule
+		if (! empty($objimport->array_import_regex[0][$code]))
+		{
+			$htmltext.=$langs->trans("FormatControlRule").': <b>'.$objimport->array_import_regex[0][$code].'</b><br>';
 		}
 		$htmltext.='<br>';
 		// Target field info
@@ -1194,7 +1200,7 @@ if ($step == 5 && $datatoimport)
 	print $langs->trans("Option");
 	print '</td><td>';
 	print '<input type="checkbox" name="excludefirstline" value="1"';
-	print ($excludefirstline?' checked="checked"':'');
+	print ($excludefirstline?' checked':'');
 	print ' onClick="javascript: window.location=\''.$_SERVER["PHP_SELF"].'?step=5&excludefirstline='.($excludefirstline?'0':'1').$param2.'\';">';
 	print ' '.$langs->trans("DoNotImportFirstLine");
 	print '</td></tr>';
@@ -1536,8 +1542,8 @@ if ($step == 6 && $datatoimport)
 	print '<tr><td>';
 	print $langs->trans("Option");
 	print '</td><td>';
-	print '<input type="checkbox" name="excludefirstline" value="1" disabled="disabled"';
-	print ($excludefirstline?' checked="checked"':'');
+	print '<input type="checkbox" name="excludefirstline" value="1" disabled';
+	print ($excludefirstline?' checked':'');
 	print '>';
 	print ' '.$langs->trans("DoNotImportFirstLine");
 	print '</td></tr>';

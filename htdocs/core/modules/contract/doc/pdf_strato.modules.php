@@ -5,6 +5,7 @@
  * Copyright (C) 2008		Raphael Bertrand (Resultic)	<raphael.bertrand@resultic.fr>
  * Copyright (C) 2011		Fabrice CHERRIER
  * Copyright (C) 2013       Philippe Grand	            <philippe.grand@atoo-net.com>
+ * Copyright (C) 2015       Marcos García               <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +31,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/modules/contract/modules_contract.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 
 
 /**
@@ -253,6 +255,7 @@ class pdf_strato extends ModelePDFContract
 					$objectligne = $object->lines[$i];
 
 					$valide = $objectligne->id ? $objectligne->fetch($objectligne->id) : 0;
+
 					if ($valide > 0 || $object->specimen)
 					{
 						$curX = $this->posxdesc-1;
@@ -278,12 +281,20 @@ class pdf_strato extends ModelePDFContract
 							$durationi = $langs->trans("Unknown");
 						}
 
+						$txtpredefinedservice='';
+                        $txtpredefinedservice = $objectligne->product_ref;
+                        if ($objectligne->product_label)
+                        {
+                        	$txtpredefinedservice .= ' - ';
+                        	$txtpredefinedservice .= $objectligne->product_label;
+                        }
+
 						$txt='<strong>'.dol_htmlentitiesbr($outputlangs->transnoentities("Date")." : ".$datei." - ".$outputlangs->transnoentities("Duration")." : ".$durationi,1,$outputlangs->charset_output).'</strong>';
 						$desc=dol_htmlentitiesbr($objectligne->desc,1);
 
-						$pdf->writeHTMLCell(0, 0, $curX, $curY, dol_concatdesc($txt,$desc), 0, 1, 0);
+						$pdf->writeHTMLCell(0, 0, $curX, $curY, dol_concatdesc($txt,dol_concatdesc($txtpredefinedservice,$desc)), 0, 1, 0);
 
-						$nexY = $pdf->GetY();
+						$nexY = $pdf->GetY() + 2;
 						$pageposafter=$pdf->getPage();
 						$pdf->setPage($pageposbefore);
 						$pdf->setTopMargin($this->marge_haute);
@@ -452,7 +463,7 @@ class pdf_strato extends ModelePDFContract
 	 *  Show top header of page.
 	 *
 	 *  @param	PDF			$pdf     		Object PDF
-	 *  @param  Object		$object     	Object to show
+	 *  @param  CommonObject		$object     	Object to show
 	 *  @param  int	    	$showaddress    0=no, 1=yes
 	 *  @param  Translate	$outputlangs	Object lang for output
 	 *  @return	void
@@ -588,16 +599,15 @@ class pdf_strato extends ModelePDFContract
 
 			$this->recipient = $object->client;
 
-			// Recipient name
-			if (! empty($usecontact)) {
-				// On peut utiliser le nom de la societe du contact
-				if (! empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) $socname = $object->contact->socname;
-				else $socname = $object->client->name;
-				$this->recipient->name = $outputlangs->convToOutputCharset($socname);
+			//Recipient name
+			// On peut utiliser le nom de la societe du contact
+			if ($usecontact && !empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) {
+				$thirdparty = $object->contact;
+			} else {
+				$thirdparty = $object->client;
 			}
-			else {
-				$this->recipient->name = $outputlangs->convToOutputCharset($object->client->name);
-			}
+
+			$this->recipient->name = pdfBuildThirdpartyName($thirdparty, $outputlangs);
 
 			$carac_client=pdf_build_address($outputlangs, $this->emetteur, $object->client, (isset($object->contact)?$object->contact:''), $usecontact, 'target');
 
@@ -631,10 +641,10 @@ class pdf_strato extends ModelePDFContract
 	 *   	Show footer of page. Need this->emetteur object
      *
 	 *   	@param	PDF			$pdf     			PDF
-	 * 		@param	Object		$object				Object to show
+	 * 		@param	CommonObject		$object				Object to show
 	 *      @param	Translate	$outputlangs		Object lang for output
 	 *      @param	int			$hidefreetext		1=Hide free text
-	 *      @return	void
+	 *      @return	integer
 	 */
 	function _pagefoot(&$pdf,$object,$outputlangs,$hidefreetext=0)
 	{

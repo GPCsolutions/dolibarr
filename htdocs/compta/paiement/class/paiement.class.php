@@ -40,7 +40,16 @@ class Paiement extends CommonObject
 	var $ref;
 	var $facid;
 	var $datepaye;
-    var $total;             // deprecated
+	/**
+	 * @deprecated
+	 * @see amount, amounts
+	 */
+    var $total;
+	/**
+	 * @deprecated
+	 * @see amount, amounts
+	 */
+	var $montant;
 	var $amount;            // Total amount of payment
 	var $amounts=array();   // Array of amounts
 	var $author;
@@ -69,10 +78,12 @@ class Paiement extends CommonObject
 	/**
 	 *    Load payment from database
 	 *
-	 *    @param	int		$id     Id of payment to get
-	 *    @return   int     		<0 if KO, 0 if not found, >0 if OK
+	 *    @param	int		$id			Id of payment to get
+	 *    @param	string	$ref		Ref of payment to get (currently ref = id but this may change in future)
+	 *    @param	int		$fk_bank	Id of bank line associated to payment
+	 *    @return   int		<0 if KO, 0 if not found, >0 if OK
 	 */
-	function fetch($id)
+	function fetch($id, $ref='', $fk_bank='')
 	{
 		$sql = 'SELECT p.rowid, p.datep as dp, p.amount, p.statut, p.fk_bank,';
 		$sql.= ' c.code as type_code, c.libelle as type_libelle,';
@@ -81,7 +92,12 @@ class Paiement extends CommonObject
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'c_paiement as c, '.MAIN_DB_PREFIX.'paiement as p';
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'bank as b ON p.fk_bank = b.rowid ';
 		$sql.= ' WHERE p.fk_paiement = c.id';
-		$sql.= ' AND p.rowid = '.$id;
+		if ($id > 0)
+			$sql.= ' AND p.rowid = '.$id;
+		else if ($ref)
+			$sql.= ' AND p.rowid = '.$ref;
+		else if ($fk_bank)
+			$sql.= ' AND p.fk_bank = '.$fk_bank;
 
 		dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
 		$result = $this->db->query($sql);
@@ -103,7 +119,8 @@ class Paiement extends CommonObject
 				$this->type_code      = $obj->type_code;
 				$this->statut         = $obj->statut;
 
-				$this->bank_account   = $obj->fk_account;
+				$this->bank_account   = $obj->fk_account; // deprecated
+				$this->fk_account     = $obj->fk_account;
 				$this->bank_line      = $obj->fk_bank;
 
 				$this->db->free($result);
@@ -653,6 +670,29 @@ class Paiement extends CommonObject
 		{
 			$this->error=$this->db->lasterror();
 			dol_syslog(get_class($this).'::valide '.$this->error);
+			return -1;
+		}
+	}
+
+	/**
+	 *    Reject payment
+	 *
+	 *    @return     int     <0 if KO, >0 if OK
+	 */
+	function reject()
+	{
+		$sql = 'UPDATE '.MAIN_DB_PREFIX.$this->table_element.' SET statut = 2 WHERE rowid = '.$this->id;
+
+		dol_syslog(get_class($this).'::reject', LOG_DEBUG);
+		$result = $this->db->query($sql);
+		if ($result)
+		{
+			return 1;
+		}
+		else
+		{
+			$this->error=$this->db->lasterror();
+			dol_syslog(get_class($this).'::reject '.$this->error);
 			return -1;
 		}
 	}

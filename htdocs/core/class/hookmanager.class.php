@@ -116,9 +116,9 @@ class HookManager
      * 	    @param		array	$parameters		Array of parameters
      * 		@param		Object	$object			Object to use hooks on
      * 	    @param		string	$action			Action code on calling page ('create', 'edit', 'view', 'add', 'update', 'delete'...)
-     * 		@return		mixed					For doActions,formObjectOptions,pdf_xxx:    								Return 0 if we want to keep standard actions, >0 if we want to stop standard actions, <0 means KO.
-     * 											For printSearchForm,printLeftBlock,printTopRightMenu,formAddObjectLine,...: Return HTML string. TODO Deprecated. Must always return an int and things to print into ->resprints.
-     *                                          Can also return some values into an array ->results.
+     * 		@return		mixed					For 'addreplace hooks (doActions,formObjectOptions,pdf_xxx,...):  					Return 0 if we want to keep standard actions, >0 if we want to stop standard actions, <0 if KO. Things to print are returned into ->resprints and set into ->resPrint. Things to return are returned into ->results and set into ->resArray.
+     * 											For 'output' hooks (printLeftBlock, formAddObjectLine, formBuilddocOptions, ...):	Return 0, <0 if KO. Things to print are returned into ->resprints and set into ->resPrint. Things to print are returned into ->resprints and set into ->resPrint. Things to return are returned into ->results and set into ->resArray.
+     *                                          All types can also return some values into an array ->results.
      * 											$this->error or this->errors are also defined by class called by this function if error.
      */
 	function executeHooks($method, $parameters=false, &$object='', &$action='')
@@ -128,26 +128,29 @@ class HookManager
         $parameters['context']=join(':',$this->contextarray);
         dol_syslog(get_class($this).'::executeHooks method='.$method." action=".$action." context=".$parameters['context']);
 
-        // Define type of hook ('output' or 'addreplace'. 'returnvalue' is deprecated).
+        // Define type of hook ('output' or 'addreplace'. 'returnvalue' is deprecated because a 'addreplace' hook can also return resPrint and resArray).
         $hooktype='output';
-        if (in_array(
-        	$method,
-        	array(
-        		'addMoreActionsButtons',
-		        'addStatisticLine',
-		        'doActions',
-        		'formCreateThirdpartyOptions',
-		        'formObjectOptions',
-		        'formattachOptions',
-		        'formBuilddocLineOptions',
-		        'moveUploadedFile',
-		        'pdf_writelinedesc',
-		        'paymentsupplierinvoices',
-		        'printSearchForm',
-        		'formatEvent'
-        		)
-        	)) $hooktype='addreplace';
-        // Deprecated hook types
+		if (in_array(
+			$method,
+			array(
+				'addMoreActionsButtons',
+				'addStatisticLine',
+				'deleteFile',
+				'doActions',
+				'formCreateThirdpartyOptions',
+				'formObjectOptions',
+				'formattachOptions',
+				'formBuilddocLineOptions',
+				'moveUploadedFile',
+				'pdf_writelinedesc',
+				'paymentsupplierinvoices',
+				'printAddress',
+				'printSearchForm',
+				'formatEvent',
+				'addCalendarChoice'
+				)
+			)) $hooktype='addreplace';
+        // Deprecated hook types ('returnvalue')
         if (preg_match('/^pdf_/',$method) && $method != 'pdf_writelinedesc') $hooktype='returnvalue';		// pdf_xxx except pdf_writelinedesc are 'returnvalue' hooks. When there is 2 hooks of this type, only last one win. TODO Move them into 'output' or 'addreplace' hooks.
         if ($method == 'insertExtraFields')
         {
@@ -192,10 +195,10 @@ class HookManager
                     		dol_syslog("Error on hook module=".$module.", method ".$method.", class ".get_class($actionclassinstance).", hooktype=".$hooktype.(empty($this->error)?'':" ".$this->error).(empty($this->errors)?'':" ".join(",",$this->errors)), LOG_ERR);
                     	}
 
-                    	if (is_array($actionclassinstance->results))  $this->resArray =array_merge($this->resArray, $actionclassinstance->results);
+                    	if (isset($actionclassinstance->results) && is_array($actionclassinstance->results))  $this->resArray =array_merge($this->resArray, $actionclassinstance->results);
                     	if (! empty($actionclassinstance->resprints)) $this->resPrint.=$actionclassinstance->resprints;
                     }
-                    // Generic hooks that return a string or array (printSearchForm, printLeftBlock, formAddObjectLine, formBuilddocOptions, ...)
+                    // Generic hooks that return a string or array (printLeftBlock, formAddObjectLine, formBuilddocOptions, ...)
                     else
 					{
                     	// TODO. this should be done into the method of hook by returning nothing
@@ -209,8 +212,7 @@ class HookManager
                     	// TODO dead code to remove (do not enable this, but fix hook instead): result must not be a string. we must use $actionclassinstance->resprints to return a string
                     	if (! is_array($result) && ! is_numeric($result))
                     	{
-                    		//print 'Error: Bug into module '.get_class($actionclassinstance).' hook must not return a string but an int and set string into ->resprints';
-                    		dol_syslog('Error: Bug into module '.get_class($actionclassinstance).' hook must not return a string but an int and set string into ->resprints', LOG_ERR);
+                    		dol_syslog('Error: Bug into hook '.$method.' of module class '.get_class($actionclassinstance).'. Method must not return a string but an int (0=OK, 1=Replace, -1=KO) and set string into ->resprints', LOG_ERR);
                     		if (empty($actionclassinstance->resprints)) { $this->resPrint.=$result; $result=0; }
                     	}
                     }

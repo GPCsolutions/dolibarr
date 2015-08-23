@@ -6,6 +6,7 @@
  * Copyright (C) 2012      	Christophe Battarel <christophe.battarel@altairis.fr>
  * Copyright (C) 2012       Cédric Salvador     <csalvador@gpcsolutions.fr>
  * Copyright (C) 2012-2014  Raphaël Doursenaud  <rdoursenaud@gpcsolutions.fr>
+ * Copyright (C) 2015       Marcos García       <marcosgdf@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,7 +69,7 @@ class pdf_crabe extends ModelePDFFactures
 	 */
 	public $posxprogress;
 
-	
+
 	/**
 	 *	Constructor
 	 *
@@ -115,9 +116,19 @@ class pdf_crabe extends ModelePDFFactures
 
 		// Define position of columns
 		$this->posxdesc=$this->marge_gauche+1;
-		$this->posxtva=112;
-		$this->posxup=126;
-		$this->posxqty=145;
+		if($conf->global->PRODUCT_USE_UNITS)
+		{
+			$this->posxtva=99;
+			$this->posxup=114;
+			$this->posxqty=133;
+			$this->posxunit=150;
+		}
+		else
+		{
+			$this->posxtva=112;
+			$this->posxup=126;
+			$this->posxqty=145;
+		}
 		$this->posxdiscount=162;
 		$this->posxprogress=174; // Only displayed for situation invoices
 		$this->postotalht=174;
@@ -180,7 +191,7 @@ class pdf_crabe extends ModelePDFFactures
 				$objphoto = new Product($this->db);
 				$objphoto->fetch($object->lines[$i]->fk_product);
 
-				$pdir = get_exdir($object->lines[$i]->fk_product,2) . $object->lines[$i]->fk_product ."/photos/";
+				$pdir = get_exdir($object->lines[$i]->fk_product,2,0,0,'product') . $object->lines[$i]->fk_product ."/photos/";
 				$dir = $conf->product->dir_output.'/'.$pdir;
 
 				$realpath='';
@@ -282,7 +293,7 @@ class pdf_crabe extends ModelePDFFactures
 						$this->atleastonediscount++;
 					}
 				}
-				if (empty($this->atleastonediscount))
+				if (empty($this->atleastonediscount) && empty($conf->global->PRODUCT_USE_UNITS))
 				{
 					$this->posxpicture+=($this->postotalht - $this->posxdiscount);
 					$this->posxtva+=($this->postotalht - $this->posxdiscount);
@@ -293,7 +304,7 @@ class pdf_crabe extends ModelePDFFactures
 				}
 
 				// Situation invoice handling
-				if ($object->situation_cycle_ref) 
+				if ($object->situation_cycle_ref)
 				{
 					$this->situationinvoice = True;
 					$progress_width = 14;
@@ -332,16 +343,16 @@ class pdf_crabe extends ModelePDFFactures
 						$pdf->writeHTMLCell(190, 3, $this->posxdesc-1, $tab_top-1, dol_htmlentitiesbr($desc_incoterms), 0, 1);
 						$nexY = $pdf->GetY();
 						$height_incoterms=$nexY-$tab_top;
-	
+
 						// Rect prend une longueur en 3eme param
 						$pdf->SetDrawColor(192,192,192);
 						$pdf->Rect($this->marge_gauche, $tab_top-1, $this->page_largeur-$this->marge_gauche-$this->marge_droite, $height_incoterms+1);
-	
+
 						$tab_top = $nexY+6;
 						$height_incoterms += 4;
 					}
 				}
-				
+
 				// Affiche notes
 				$notetoshow=empty($object->note_public)?'':$object->note_public;
 				if (! empty($conf->global->MAIN_ADD_SALE_REP_SIGNATURE_IN_NOTE))
@@ -486,7 +497,23 @@ class pdf_crabe extends ModelePDFFactures
 					// Quantity
 					$qty = pdf_getlineqty($object, $i, $outputlangs, $hidedetails);
 					$pdf->SetXY($this->posxqty, $curY);
-					$pdf->MultiCell($this->posxdiscount-$this->posxqty-0.8, 3, $qty, 0, 'R');	// Enough for 6 chars
+					// Enough for 6 chars
+					if($conf->global->PRODUCT_USE_UNITS)
+					{
+						$pdf->MultiCell($this->posxunit-$this->posxqty-0.8, 4, $qty, 0, 'R');
+					}
+					else
+					{
+						$pdf->MultiCell($this->posxdiscount-$this->posxqty-0.8, 4, $qty, 0, 'R');
+					}
+
+					// Unit
+					if($conf->global->PRODUCT_USE_UNITS)
+					{
+						$unit = pdf_getlineunit($object, $i, $outputlangs, $hidedetails, $hookmanager);
+						$pdf->SetXY($this->posxunit, $curY);
+						$pdf->MultiCell($this->posxdiscount-$this->posxunit-0.8, 4, $unit, 0, 'L');
+					}
 
 					// Discount on line
 					if ($object->lines[$i]->remise_percent)
@@ -508,7 +535,7 @@ class pdf_crabe extends ModelePDFFactures
 					$total_excl_tax = pdf_getlinetotalexcltax($object, $i, $outputlangs, $hidedetails);
 					$pdf->SetXY($this->postotalht, $curY);
 					$pdf->MultiCell($this->page_largeur-$this->marge_droite-$this->postotalht, 3, $total_excl_tax, 0, 'R', 0);
-					
+
 					// Collecte des totaux par valeur de tva dans $this->tva["taux"]=total_tva
 					$prev_progress = $object->lines[$i]->get_prev_progress();
 					if ($prev_progress > 0) // Compute progress from previous situation
@@ -1326,7 +1353,23 @@ class pdf_crabe extends ModelePDFFactures
 		if (empty($hidetop))
 		{
 			$pdf->SetXY($this->posxqty-1, $tab_top+1);
-			$pdf->MultiCell($this->posxdiscount-$this->posxqty-1,2, $outputlangs->transnoentities("Qty"),'','C');
+			if($conf->global->PRODUCT_USE_UNITS)
+			{
+				$pdf->MultiCell($this->posxunit-$this->posxqty-1,2, $outputlangs->transnoentities("Qty"),'','C');
+			}
+			else
+			{
+				$pdf->MultiCell($this->posxdiscount-$this->posxqty-1,2, $outputlangs->transnoentities("Qty"),'','C');
+			}
+		}
+
+		if($conf->global->PRODUCT_USE_UNITS) {
+			$pdf->line($this->posxunit - 1, $tab_top, $this->posxunit - 1, $tab_top + $tab_height);
+			if (empty($hidetop)) {
+				$pdf->SetXY($this->posxunit - 1, $tab_top + 1);
+				$pdf->MultiCell($this->posxdiscount - $this->posxunit - 1, 2, $outputlangs->transnoentities("Unit"), '',
+					'C');
+			}
 		}
 
 		$pdf->line($this->posxdiscount-1, $tab_top, $this->posxdiscount-1, $tab_top + $tab_height);
@@ -1380,8 +1423,10 @@ class pdf_crabe extends ModelePDFFactures
 		$pdf->SetTextColor(0,0,60);
 		$pdf->SetFont('','B', $default_font_size + 3);
 
+		$w = 110;
+
 		$posy=$this->marge_haute;
-        $posx=$this->page_largeur-$this->marge_droite-100;
+        $posx=$this->page_largeur-$this->marge_droite-$w;
 
 		$pdf->SetXY($this->marge_gauche,$posy);
 
@@ -1398,14 +1443,14 @@ class pdf_crabe extends ModelePDFFactures
 			{
 				$pdf->SetTextColor(200,0,0);
 				$pdf->SetFont('','B',$default_font_size - 2);
-				$pdf->MultiCell(100, 3, $outputlangs->transnoentities("ErrorLogoFileNotFound",$logo), 0, 'L');
-				$pdf->MultiCell(100, 3, $outputlangs->transnoentities("ErrorGoToGlobalSetup"), 0, 'L');
+				$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ErrorLogoFileNotFound",$logo), 0, 'L');
+				$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ErrorGoToGlobalSetup"), 0, 'L');
 			}
 		}
 		else
 		{
 			$text=$this->emetteur->name;
-			$pdf->MultiCell(100, 4, $outputlangs->convToOutputCharset($text), 0, 'L');
+			$pdf->MultiCell($w, 4, $outputlangs->convToOutputCharset($text), 0, 'L');
 		}
 
 		$pdf->SetFont('','B', $default_font_size + 3);
@@ -1416,14 +1461,14 @@ class pdf_crabe extends ModelePDFFactures
 		if ($object->type == 2) $title=$outputlangs->transnoentities("InvoiceAvoir");
 		if ($object->type == 3) $title=$outputlangs->transnoentities("InvoiceDeposit");
 		if ($object->type == 4) $title=$outputlangs->transnoentities("InvoiceProFormat");
-		$pdf->MultiCell(100, 3, $title, '', 'R');
+		$pdf->MultiCell($w, 3, $title, '', 'R');
 
 		$pdf->SetFont('','B',$default_font_size);
 
 		$posy+=5;
 		$pdf->SetXY($posx,$posy);
 		$pdf->SetTextColor(0,0,60);
-		$pdf->MultiCell(100, 4, $outputlangs->transnoentities("Ref")." : " . $outputlangs->convToOutputCharset($object->ref), '', 'R');
+		$pdf->MultiCell($w, 4, $outputlangs->transnoentities("Ref")." : " . $outputlangs->convToOutputCharset($object->ref), '', 'R');
 
 		$posy+=1;
 		$pdf->SetFont('','', $default_font_size - 2);
@@ -1433,7 +1478,7 @@ class pdf_crabe extends ModelePDFFactures
 			$posy+=4;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("RefCustomer")." : " . $outputlangs->convToOutputCharset($object->ref_client), '', 'R');
+			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("RefCustomer")." : " . $outputlangs->convToOutputCharset($object->ref_client), '', 'R');
 		}
 
 		$objectidnext=$object->getIdReplacingInvoice('validated');
@@ -1445,7 +1490,7 @@ class pdf_crabe extends ModelePDFFactures
 			$posy+=3;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("ReplacementByInvoice").' : '.$outputlangs->convToOutputCharset($objectreplacing->ref), '', 'R');
+			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ReplacementByInvoice").' : '.$outputlangs->convToOutputCharset($objectreplacing->ref), '', 'R');
 		}
 		if ($object->type == 1)
 		{
@@ -1455,7 +1500,7 @@ class pdf_crabe extends ModelePDFFactures
 			$posy+=4;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("ReplacementInvoice").' : '.$outputlangs->convToOutputCharset($objectreplaced->ref), '', 'R');
+			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ReplacementInvoice").' : '.$outputlangs->convToOutputCharset($objectreplaced->ref), '', 'R');
 		}
 		if ($object->type == 2)
 		{
@@ -1465,34 +1510,34 @@ class pdf_crabe extends ModelePDFFactures
 			$posy+=3;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("CorrectionInvoice").' : '.$outputlangs->convToOutputCharset($objectreplaced->ref), '', 'R');
+			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("CorrectionInvoice").' : '.$outputlangs->convToOutputCharset($objectreplaced->ref), '', 'R');
 		}
 
 		$posy+=4;
 		$pdf->SetXY($posx,$posy);
 		$pdf->SetTextColor(0,0,60);
-		$pdf->MultiCell(100, 3, $outputlangs->transnoentities("DateInvoice")." : " . dol_print_date($object->date,"day",false,$outputlangs), '', 'R');
+		$pdf->MultiCell($w, 3, $outputlangs->transnoentities("DateInvoice")." : " . dol_print_date($object->date,"day",false,$outputlangs), '', 'R');
 
 		if ($object->type != 2)
 		{
 			$posy+=3;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("DateEcheance")." : " . dol_print_date($object->date_lim_reglement,"day",false,$outputlangs,true), '', 'R');
+			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("DateEcheance")." : " . dol_print_date($object->date_lim_reglement,"day",false,$outputlangs,true), '', 'R');
 		}
 
-		if ($object->client->code_client)
+		if ($object->thirdparty->code_client)
 		{
 			$posy+=3;
 			$pdf->SetXY($posx,$posy);
 			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell(100, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->client->code_client), '', 'R');
+			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->thirdparty->code_client), '', 'R');
 		}
 
 		$posy+=1;
 
 		// Show list of linked objects
-		$posy = pdf_writeLinkedObjects($pdf, $object, $outputlangs, $posx, $posy, 100, 3, 'R', $default_font_size);
+		$posy = pdf_writeLinkedObjects($pdf, $object, $outputlangs, $posx, $posy, $w, 3, 'R', $default_font_size);
 
 		if ($showaddress)
 		{
@@ -1537,18 +1582,15 @@ class pdf_crabe extends ModelePDFFactures
 				$result=$object->fetch_contact($arrayidcontact[0]);
 			}
 
-			// Recipient name
-			if (! empty($usecontact))
-			{
-				// On peut utiliser le nom de la societe du contact
-				if (! empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) $socname = $object->contact->socname;
-				else $socname = $object->client->name;
-				$carac_client_name=$outputlangs->convToOutputCharset($socname);
+			//Recipient name
+			// On peut utiliser le nom de la societe du contact
+			if ($usecontact && !empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) {
+				$thirdparty = $object->contact;
+			} else {
+				$thirdparty = $object->client;
 			}
-			else
-			{
-				$carac_client_name=$outputlangs->convToOutputCharset($object->client->name);
-			}
+
+			$carac_client_name= pdfBuildThirdpartyName($thirdparty, $outputlangs);
 
 			$carac_client=pdf_build_address($outputlangs,$this->emetteur,$object->client,($usecontact?$object->contact:''),$usecontact,'target');
 

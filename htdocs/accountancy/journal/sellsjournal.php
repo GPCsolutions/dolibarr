@@ -99,7 +99,7 @@ $sql .= " JOIN " . MAIN_DB_PREFIX . "societe as s ON s.rowid = f.fk_soc";
 $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "c_tva as ct ON fd.tva_tx = ct.taux AND ct.fk_pays = '" . $idpays . "'";
 $sql .= " WHERE fd.fk_code_ventilation > 0 ";
 if (! empty($conf->multicompany->enabled)) {
-	$sql .= " AND f.entity = " . $conf->entity;
+	$sql .= " AND f.entity IN (" . getEntity("facture", 1) . ")";
 }
 $sql .= " AND f.fk_statut > 0";
 if (! empty($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS))
@@ -136,12 +136,12 @@ if ($result) {
 			else
 				$compta_prod = (! empty($conf->global->ACCOUNTING_SERVICE_SOLD_ACCOUNT)) ? $conf->global->ACCOUNTING_SERVICE_SOLD_ACCOUNT : $langs->trans("CodeNotDef");
 		}
-		$cpttva = (! empty($conf->global->ACCOUNTING_VAT_ACCOUNT)) ? $conf->global->ACCOUNTING_VAT_ACCOUNT : $langs->trans("CodeNotDef");
+		$cpttva = (! empty($conf->global->ACCOUNTING_VAT_SOLD_ACCOUNT)) ? $conf->global->ACCOUNTING_VAT_SOLD_ACCOUNT : $langs->trans("CodeNotDef");
 		$compta_tva = (! empty($obj->account_tva) ? $obj->account_tva : $cpttva);
 
 		// Situation invoices handling
 		$line = new FactureLigne($db);
-		$line->fetch($obj->id);
+		$line->fetch($obj->rowid);
 		$prev_progress = $line->get_prev_progress();
 		if ($obj->situation_percent == 0) { // Avoid divide by 0
 			$situation_ratio = 0;
@@ -178,7 +178,7 @@ if ($result) {
 
 /*
  * Action
- * FIXME Action must be set before any view part
+ * FIXME Action must be set before any view part to respect MVC
  */
 
 // Bookkeeping Write

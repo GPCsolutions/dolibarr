@@ -42,6 +42,7 @@ abstract class DolibarrModules
     /**
      * @var string Relative path to module style sheet
      * @deprecated
+     * @see module_parts
      */
     public $style_sheet = '';
 
@@ -59,6 +60,11 @@ abstract class DolibarrModules
      * @var array Module constants
      */
     public $const = array();
+
+    /**
+     * @var array Module cron jobs entries
+     */
+    public $cronjobs = array();
 
     /**
      * @var array Module access rights
@@ -188,6 +194,16 @@ abstract class DolibarrModules
      */
     public $core_enabled;
 
+	/**
+	 * Constructor. Define names, constants, directories, boxes, permissions
+	 *
+	 * @param DoliDB		$db      Database handler
+	 */
+	//public function __construct($db);
+	// We should but can't set this as abstract because this will make dolibarr hang
+	// after migration due to old module not implementing. We must wait PHP is able to make
+	// a try catch on Fatal error to manage this correctly.
+	
     /**
      * Enables a module.
      * Inserts all informations into database
@@ -209,17 +225,20 @@ abstract class DolibarrModules
         // Insert activation module constant
         if (! $err) $err+=$this->_active();
 
-        // Insert new pages for tabs into llx_const
+        // Insert new pages for tabs (into llx_const)
         if (! $err) $err+=$this->insert_tabs();
 
         // Insert activation of module's parts
         if (! $err) $err+=$this->insert_module_parts();
 
-        // Insert constant defined by modules, into llx_const
+        // Insert constant defined by modules (into llx_const)
         if (! $err) $err+=$this->insert_const();
 
-        // Insert boxes def into llx_boxes_def and boxes setup into llx_boxes
+        // Insert boxes def into llx_boxes_def and boxes setup (into llx_boxes)
         if (! $err && ! preg_match('/noboxes/',$options)) $err+=$this->insert_boxes($options);
+
+        // Insert cron job entries (entry in llx_cronjobs)
+        if (! $err) $err+=$this->insert_cronjobs();
 
         // Insert permission definitions of module into llx_rights_def. If user is admin, grant this permission to user.
         if (! $err) $err+=$this->insert_permissions(1);
@@ -306,6 +325,9 @@ abstract class DolibarrModules
 
         // Remove list of module's available boxes (entry in llx_boxes)
         if (! $err && ! preg_match('/(newboxdefonly|noboxes)/',$options)) $err+=$this->delete_boxes();	// We don't have to delete if option ask to keep boxes safe or ask to add new box def only
+
+        // Remove list of module's cron job entries (entry in llx_cronjobs)
+        if (! $err) $err+=$this->delete_cronjobs();
 
         // Remove module's permissions from list of available permissions (entries in llx_rights_def)
         if (! $err) $err+=$this->delete_permissions();
@@ -824,6 +846,130 @@ abstract class DolibarrModules
     }
 
     /**
+     * Adds cronjobs
+     *
+     * @return  int             Error count (0 if OK)
+     */
+    function insert_cronjobs()
+    {
+        require_once DOL_DOCUMENT_ROOT . '/core/class/infobox.class.php';
+
+        global $conf;
+
+        $err=0;
+
+        if (is_array($this->cronjobs))
+        {
+            foreach ($this->cronjobs as $key => $value)
+            {
+                $label  = isset($this->cronjobs[$key]['label'])?$this->cronjobs[$key]['label']:'';
+                $jobtype  = isset($this->cronjobs[$key]['jobtype'])?$this->cronjobs[$key]['jobtype']:'';
+                $class  = isset($this->cronjobs[$key]['class'])?$this->cronjobs[$key]['class']:'';
+                $method = isset($this->cronjobs[$key]['method'])?$this->cronjobs[$key]['method']:'';
+                $command  = isset($this->cronjobs[$key]['command'])?$this->cronjobs[$key]['command']:'';
+                $parameters  = isset($this->cronjobs[$key]['parameters'])?$this->cronjobs[$key]['parameters']:'';
+                $comment = isset($this->cronjobs[$key]['comment'])?$this->cronjobs[$key]['comment']:'';
+                $frequency = isset($this->cronjobs[$key]['frequency'])?$this->cronjobs[$key]['frequency']:'';
+                $unitfrequency = isset($this->cronjobs[$key]['unitfrequency'])?$this->cronjobs[$key]['unitfrequency']:'';
+
+                // Search if boxes def already present
+                $sql = "SELECT count(*) as nb FROM ".MAIN_DB_PREFIX."cronjob";
+                $sql.= " WHERE module_name = '".$this->db->escape($this->rights_class)."'";
+                if ($class) $sql.= " AND classesname = '".$this->db->escape($class)."'";
+                if ($method) $sql.= " AND methodename = '".$this->db->escape($method)."'";
+                if ($command) $sql.= " AND command = '".$this->db->escape($command)."'";
+                $sql.= " AND entity = ".$conf->entity;
+
+                $now=dol_now();
+
+                dol_syslog(get_class($this)."::insert_cronjobs", LOG_DEBUG);
+                $result=$this->db->query($sql);
+                if ($result)
+                {
+                    $obj = $this->db->fetch_object($result);
+                    if ($obj->nb == 0)
+                    {
+                        $this->db->begin();
+
+                        if (! $err)
+                        {
+                            $sql = "INSERT INTO ".MAIN_DB_PREFIX."cronjob (module_name, datec, label, jobtype, classesname, methodename, command, params, note, frequency, unitfrequency, entity)";
+                            $sql.= " VALUES (";
+                            $sql.= "'".$this->db->escape($this->rights_class)."', ";
+                            $sql.= "'".$this->db->idate($now)."', ";
+                            $sql.= "'".$this->db->escape($label)."', ";
+                            $sql.= "'".$this->db->escape($jobtype)."', ";
+                            $sql.= ($class?"'".$this->db->escape($class)."'":"null").",";
+                            $sql.= ($method?"'".$this->db->escape($method)."'":"null").",";
+                            $sql.= ($command?"'".$this->db->escape($command)."'":"null").",";
+                            $sql.= ($parameters?"'".$this->db->escape($parameters)."'":"null").",";
+                            $sql.= ($comment?"'".$this->db->escape($comment)."'":"null").",";
+                            $sql.= "'".$this->db->escape($frequency)."', ";
+                            $sql.= "'".$this->db->escape($unitfrequency)."', ";
+                            $sql.= $conf->entity;
+                            $sql.= ")";
+print $sql;
+
+                            dol_syslog(get_class($this)."::insert_cronjobs", LOG_DEBUG);
+                            $resql=$this->db->query($sql);
+                            if (! $resql) $err++;
+
+                        }
+
+                        if (! $err)
+                        {
+                            $this->db->commit();
+                        }
+                        else
+                        {
+                            $this->error=$this->db->lasterror();
+                            $this->db->rollback();
+                        }
+                    }
+                    // else box already registered into database
+                }
+                else
+              {
+                    $this->error=$this->db->lasterror();
+                    $err++;
+                }
+            }
+        }
+
+        return $err;
+    }
+
+
+    /**
+     * Removes boxes
+     *
+     * @return  int Error count (0 if OK)
+     */
+    function delete_cronjobs()
+    {
+        global $conf;
+
+        $err=0;
+
+        if (is_array($this->cronjobs))
+        {
+            $sql = "DELETE FROM ".MAIN_DB_PREFIX."cronjob";
+            $sql.= " WHERE module_name = '".$this->db->escape($this->rights_class)."'";
+            $sql.= " AND entity = ".$conf->entity;
+
+            dol_syslog(get_class($this)."::delete_cronjobs", LOG_DEBUG);
+            $resql=$this->db->query($sql);
+            if (! $resql)
+            {
+                $this->error=$this->db->lasterror();
+                $err++;
+            }
+        }
+
+        return $err;
+    }
+
+    /**
      * Removes tabs
      *
      * @return  int Error count (0 if OK)
@@ -864,7 +1010,18 @@ abstract class DolibarrModules
             $i=0;
             foreach ($this->tabs as $key => $value)
             {
-                if ($value)
+            	if (is_array($value) && count($value) == 0) continue;	// Discard empty arrays
+
+            	$entity=$conf->entity;
+            	$newvalue = $value;
+
+            	if (is_array($value))
+            	{
+            		$newvalue = $value['data'];
+            		if (isset($value['entity'])) $entity = $value['entity'];
+            	}
+
+                if ($newvalue)
                 {
                     $sql = "INSERT INTO ".MAIN_DB_PREFIX."const (";
                     $sql.= "name";
@@ -1234,10 +1391,11 @@ abstract class DolibarrModules
             $menu->target=$this->menu[$key]['target'];
             $menu->user=$this->menu[$key]['user'];
             $menu->enabled=isset($this->menu[$key]['enabled'])?$this->menu[$key]['enabled']:0;
-
+            $menu->position=$this->menu[$key]['position'];
+            
             if (! $err)
             {
-                $result=$menu->create($user);
+                $result=$menu->create($user);	// Save menu entry into table llx_menu
                 if ($result > 0)
                 {
                     $this->menu[$key]['rowid']=$result;
@@ -1523,5 +1681,31 @@ abstract class DolibarrModules
         }
         return $err;
     }
+
+	/**
+	 * Function called when module is enabled.
+	 * The init function add constants, boxes, permissions and menus (defined in constructor) into Dolibarr database.
+	 * It also creates data directories
+	 *
+	 * @param string $options    Options when enabling module ('', 'noboxes')
+	 * @return int             	1 if OK, 0 if KO
+	 */
+	public function init($options = '')
+	{
+		return $this->_init(array(), $options);
+	}
+
+	/**
+	 * Function called when module is disabled.
+	 * Remove from database constants, boxes and permissions from Dolibarr database.
+	 * Data directories are not deleted
+	 *
+	 * @param      string	$options    Options when enabling module ('', 'noboxes')
+	 * @return     int             	1 if OK, 0 if KO
+	 */
+	public function remove($options = '')
+	{
+		return $this->_remove(array(), $options);
+	}
 
 }

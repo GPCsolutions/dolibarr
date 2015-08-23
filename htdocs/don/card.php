@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2001-2002	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
- * Copyright (C) 2004-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2015	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2013       Florian Henry		  	<florian.henry@open-concept.pro>
  * Copyright (C) 2015       Alexandre Spangaro	  	<alexandre.spangaro@gmail.com>
@@ -64,6 +64,7 @@ $hookmanager->initHooks(array('doncard','globalcard'));
 /*
  * Actions
  */
+
 $reshook = $hookmanager->executeHooks('doActions', $parameters, $object, $action); // Note that $action and $object may have been modified by some
 if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 
@@ -106,10 +107,10 @@ if ($action == 'update')
         $object->email       = GETPOST("email");
 		$object->date        = $donation_date;
 		$object->public      = GETPOST("public");
-		$object->fk_project  = GETPOST("fk_project");
+		$object->fk_projet   = GETPOST("fk_projet");
 		$object->note_private= GETPOST("note_private");
 		$object->note_public = GETPOST("note_public");
-		
+
 		// Fill array 'array_options' with data from add form
         $ret = $extrafields->setOptionalsFromPost($extralabels,$object);
 		if ($ret < 0) $error++;
@@ -161,8 +162,8 @@ if ($action == 'add')
 		$object->note_private= GETPOST("note_private");
 		$object->note_public = GETPOST("note_public");
 		$object->public      = GETPOST("public");
-		$object->fk_project  = GETPOST("fk_project");
-		
+		$object->fk_projet   = GETPOST("fk_projet");
+
 		// Fill array 'array_options' with data from add form
         $ret = $extrafields->setOptionalsFromPost($extralabels,$object);
 		if ($ret < 0) $error++;
@@ -171,6 +172,10 @@ if ($action == 'add')
 		{
 			header("Location: index.php");
 			exit;
+		}
+		else
+		{
+			setEventMessages($object->error, $object->errors, 'errors');
 		}
 	}
 }
@@ -227,10 +232,11 @@ if ($action == 'set_paid')
 /*
  * Build doc
  */
+
 if ($action == 'builddoc')
 {
 	$object = new Don($db);
-	$object->fetch($id);
+	$result=$object->fetch($id);
 
 	// Save last template used to generate document
 	if (GETPOST('model')) $object->setDocModel($user, GETPOST('model','alpha'));
@@ -265,21 +271,18 @@ $formfile = new FormFile($db);
 $formcompany = new FormCompany($db);
 
 
-/* ************************************************************************** */
-/*                                                                            */
-/* Donation card in create mode                                               */
-/*                                                                            */
-/* ************************************************************************** */
-
 if ($action == 'create')
 {
 	print_fiche_titre($langs->trans("AddDonation"));
 
 	print '<form name="add" action="' . $_SERVER["PHP_SELF"] . '" method="POST">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<table class="border" width="100%">';
-
 	print '<input type="hidden" name="action" value="add">';
+
+	dol_fiche_head('');
+
+	print '<table class="border" width="100%">';
+	print '<tbody>';
 
     $nbrows=11;
     if (! empty($conf->projet->enabled)) $nbrows++;
@@ -314,14 +317,14 @@ if ($action == 'create')
     print $form->select_country(GETPOST('country_id')!=''?GETPOST('country_id'):$object->country_id);
     if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
     print '</td></tr>';
-	
+
 	print "<tr>".'<td>'.$langs->trans("EMail").'</td><td><input type="text" name="email" value="'.GETPOST("email").'" size="40"></td></tr>';
 
 	// Public note
 	print '<tr>';
 	print '<td class="border" valign="top">' . $langs->trans('NotePublic') . '</td>';
 	print '<td valign="top" colspan="2">';
-	
+
     $doleditor = new DolEditor('note_public', $note_public, '', 80, 'dolibarr_notes', 'In', 0, false, true, ROWS_3, 70);
 	print $doleditor->Create(1);
 	print '</td></tr>';
@@ -339,11 +342,11 @@ if ($action == 'create')
 
 	if (! empty($conf->projet->enabled))
     {
-    	
+
     	$formproject=new FormProjets($db);
-    	
+
         print "<tr><td>".$langs->trans("Project")."</td><td>";
-        $formproject->select_projects(-1, GETPOST("fk_project"),'fk_project', 0, 1, 0, 1);
+        $formproject->select_projects(-1, GETPOST("fk_projet"),'fk_projet', 0, 0, 1, 1);
 		print "</td></tr>\n";
     }
 
@@ -354,9 +357,14 @@ if ($action == 'create')
     {
 		print $object->showOptionals($extrafields,'edit',$parameters);
     }
-	
+
+    print '</tbody>';
 	print "</table>\n";
-	print '<br><div class="center"><input type="submit" class="button" name="save" value="'.$langs->trans("Save").'"> &nbsp; &nbsp; <input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'"></div>';
+
+	dol_fiche_end();
+
+	print '<div class="center"><input type="submit" class="button" name="save" value="'.$langs->trans("Save").'">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'"></div>';
+
 	print "</form>\n";
 }
 
@@ -378,16 +386,19 @@ if (! empty($id) && $action == 'edit')
 		dol_print_error($db); exit;
 	}
 
+	$hselected='card';
 	$head = donation_prepare_head($object);
-	dol_fiche_head($head, $hselected, $langs->trans("Donation"), 0, 'generic');
 
 	print '<form name="update" action="' . $_SERVER["PHP_SELF"] . '" method="POST">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<table class="border" width="100%">';
-
 	print '<input type="hidden" name="action" value="update">';
 	print '<input type="hidden" name="rowid" value="'.$object->id.'">';
 	print '<input type="hidden" name="amount" value="'.$object->amount.'">';
+
+
+	dol_fiche_head($head, $hselected, $langs->trans("Donation"), 0, 'generic');
+
+	print '<table class="border" width="100%">';
 
 	// Ref
 	print "<tr>".'<td>'.$langs->trans("Ref").'</td><td colspan="2">';
@@ -439,7 +450,7 @@ if (! empty($id) && $action == 'edit')
 	print $form->select_country((!empty($object->country_id)?$object->country_id:$mysoc->country_code),'country_id');
 	if ($user->admin) print info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
 	print '</td></tr>';
-	
+
 	print "<tr>".'<td>'.$langs->trans("EMail").'</td><td><input type="text" name="email" size="40" value="'.$object->email.'"></td></tr>';
 
     print "<tr><td>".$langs->trans("PaymentMode")."</td><td>\n";
@@ -456,10 +467,10 @@ if (! empty($id) && $action == 'edit')
     if (! empty($conf->projet->enabled))
     {
     	$formproject=new FormProjets($db);
-    	
+
         $langs->load('projects');
         print '<tr><td>'.$langs->trans('Project').'</td><td>';
-		$formproject->select_projects(-1, $object->fk_project,'fk_project', 0, 1, 0, 1);
+		$formproject->select_projects(-1, $object->fk_projet,'fk_projet', 0, 0, 1, 1);
         print '</td></tr>';
     }
 
@@ -473,11 +484,11 @@ if (! empty($id) && $action == 'edit')
 
 	print "</table>\n";
 
-	print '<br><div class="center"><input type="submit" class="button" name="save" value="'.$langs->trans("Save").'"> &nbsp; &nbsp; <input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'"></div>';
+	dol_fiche_end();
+
+	print '<div class="center"><input type="submit" class="button" name="save" value="'.$langs->trans("Save").'"> &nbsp; &nbsp; <input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'"></div>';
 
 	print "</form>\n";
-
-	print "</div>\n";
 }
 
 
@@ -495,7 +506,7 @@ if (! empty($id) && $action != 'edit')
         $text=$langs->trans("ConfirmDeleteADonation");
         print $form->formconfirm($_SERVER["PHP_SELF"]."?id=".$object->id,$langs->trans("DeleteADonation"),$text,"confirm_delete",'','',1);
     }
-	
+
 	$result=$object->fetch($id);
 	if ($result < 0) {
 		dol_print_error($db,$object->error); exit;
@@ -504,7 +515,9 @@ if (! empty($id) && $action != 'edit')
 	if ($result < 0) {
 		dol_print_error($db); exit;
 	}
-	
+
+	$hselected='card';
+
 	$head = donation_prepare_head($object);
 	dol_fiche_head($head, $hselected, $langs->trans("Donation"), 0, 'generic');
 
@@ -540,7 +553,7 @@ if (! empty($id) && $action != 'edit')
 	print '<tr><td>'.$langs->trans("Lastname").'</td><td colspan="2">'.$object->lastname.'</td></tr>';
 	print '<tr><td>'.$langs->trans("Firstname").'</td><td colspan="2">'.$object->firstname.'</td></tr>';
 	print '<tr><td>'.$langs->trans("Address").'</td><td>'.dol_nl2br($object->address).'</td>';
-	
+
 	$rowspan=6;
 	if (! empty($conf->projet->enabled)) $rowspan++;
 	print '<td rowspan="'.$rowspan.'" valign="top">';
@@ -582,7 +595,7 @@ if (! empty($id) && $action != 'edit')
 			print "<tr ".$bc[$var]."><td>";
 			print '<a href="'.DOL_URL_ROOT.'/don/payment/card.php?id='.$objp->rowid.'">'.img_object($langs->trans("Payment"),"payment").' '.$objp->rowid.'</a></td>';
 			print '<td>'.dol_print_date($db->jdate($objp->dp),'day')."</td>\n";
-		        $labeltype=$langs->trans("PaymentType".$object->type_code)!=("PaymentType".$object->type_code)?$langs->trans("PaymentType".$object->type_code):$object->paiement_type;				
+		        $labeltype=$langs->trans("PaymentType".$object->type_code)!=("PaymentType".$object->type_code)?$langs->trans("PaymentType".$object->type_code):$object->paiement_type;
                                print "<td>".$labeltype.' '.$object->num_paiement."</td>\n";
 			print '<td align="right">'.price($objp->amount)."</td><td>&nbsp;".$langs->trans("Currency".$conf->currency)."</td>\n";
 			print "</tr>";
@@ -626,7 +639,7 @@ if (! empty($id) && $action != 'edit')
 	else
 	{
 		print $object->country_olddata;
-	}	
+	}
 	print '</td></tr>';
 
 	// EMail
@@ -644,7 +657,10 @@ if (! empty($id) && $action != 'edit')
     {
         print '<tr>';
 		print '<td>'.$langs->trans("Project").'</td>';
-		print '<td>'.$object->projet.'</td>';
+		print '<td>';
+		$object->fetch_projet();
+		print $object->project->getNomUrl(4);
+		print '</td>';
 		print '</tr>';
     }
 
@@ -681,12 +697,12 @@ if (! empty($id) && $action != 'edit')
     }
 
 	// Create payment
-	if ($object->statut == 1 && $object->paid == 0 && $user->rights->don->creer) 
+	if ($object->statut == 1 && $object->paid == 0 && $user->rights->don->creer)
 	{
-		if ($remaintopay == 0) 
+		if ($remaintopay == 0)
 		{
 			print '<div class="inline-block divButAction"><span class="butActionRefused" title="' . $langs->trans("DisabledBecauseRemainderToPayIsZero") . '">' . $langs->trans('DoPayment') . '</span></div>';
-		} 
+		}
 		else
 		{
 			print '<div class="inline-block divButAction"><a class="butAction" href="'.DOL_URL_ROOT.'/don/payment/payment.php?rowid=' . $object->id . '&amp;action=create">' . $langs->trans('DoPayment') . '</a></div>';
@@ -698,11 +714,18 @@ if (! empty($id) && $action != 'edit')
 	{
 		print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?rowid='.$object->id.'&action=set_paid">'.$langs->trans("ClassifyPaid")."</a></div>";
 	}
-	
+
 	// Delete
 	if ($user->rights->don->supprimer)
 	{
-		print '<div class="inline-block divButAction"><a class="butActionDelete" href="' . $_SERVER["PHP_SELF"] . '?rowid='.$object->id.'&action=delete">'.$langs->trans("Delete")."</a></div>";
+		if ($don->statut == -1 || $don->statut == 0)
+		{
+			print '<div class="inline-block divButAction"><a class="butActionDelete" href="card.php?rowid='.$don->id.'&action=delete">'.$langs->trans("Delete")."</a></div>";
+		}
+		else
+		{
+			print '<div class="inline-block divButAction"><a class="butActionDelete butActionRefused" href="#">'.$langs->trans("Delete")."</a></div>";
+		}
 	}
 	else
 	{
@@ -718,7 +741,7 @@ if (! empty($id) && $action != 'edit')
 	 * Documents generes
 	 */
 	$filename=dol_sanitizeFileName($object->id);
-	$filedir=$conf->don->dir_output . '/' . get_exdir($filename,2);
+	$filedir=$conf->don->dir_output . '/' . get_exdir($filename,2,0,1,$object,'donation'). '/'. dol_sanitizeFileName($object->ref);
 	$urlsource=$_SERVER['PHP_SELF'].'?rowid='.$object->id;
 	//            $genallowed=($fac->statut == 1 && ($fac->paye == 0 || $user->admin) && $user->rights->facture->creer);
 	//            $delallowed=$user->rights->facture->supprimer;
@@ -728,7 +751,7 @@ if (! empty($id) && $action != 'edit')
 	$var=true;
 
 	print '<br>';
-	$formfile->show_documents('donation',$filename,$filedir,$urlsource,$genallowed,$delallowed);
+	$formfile->show_documents('donation',$filename,$filedir,$urlsource,$genallowed,$delallowed,$object->modelpdf);
 
 	print '</td><td>&nbsp;</td>';
 

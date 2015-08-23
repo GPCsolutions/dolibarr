@@ -40,8 +40,12 @@ class UserGroup extends CommonObject
 
 	var $id;			// Group id
 	var $entity;		// Entity of group
+	/**
+	 * @deprecated
+	 * @see name
+	 */
 	var $nom;			// Name of group
-	var $name;			// Name of group	// deprecated
+	var $name;			// Name of group
 	var $globalgroup;	// Global group
 	var $note;			// Note on group
 	var $datec;			// Creation date of group
@@ -623,7 +627,7 @@ class UserGroup extends CommonObject
 			$action='create';
 
 			// Actions on extra fields (by external module or standard code)
-            // FIXME le hook fait double emploi avec le trigger !!
+            // TODO le hook fait double emploi avec le trigger !!
 			$hookmanager->initHooks(array('groupdao'));
 			$parameters=array();
 			$reshook=$hookmanager->executeHooks('insertExtraFields',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
@@ -694,7 +698,7 @@ class UserGroup extends CommonObject
 			$action='update';
 
 			// Actions on extra fields (by external module or standard code)
-            // FIXME le hook fait double emploi avec le trigger !!
+            // TODO le hook fait double emploi avec le trigger !!
 			$hookmanager->initHooks(array('groupdao'));
 			$parameters=array();
 			$reshook=$hookmanager->executeHooks('insertExtraFields',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks

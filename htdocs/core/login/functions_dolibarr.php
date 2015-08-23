@@ -1,6 +1,6 @@
 <?php
-/* Copyright (C) 2007-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2007-2009 Regis Houssin        <regis.houssin@capnetworks.com>
+/* Copyright (C) 2007-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2007-2015 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010-2011 Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -58,6 +58,7 @@ function check_user_password_dolibarr($usertotest,$passwordtotest,$entitytotest=
 		$sql.=' WHERE ('.$usernamecol1." = '".$db->escape($usertotest)."'";
 		if (preg_match('/@/',$usertotest)) $sql.=' OR '.$usernamecol2." = '".$db->escape($usertotest)."'";
 		$sql.=') AND '.$entitycol." IN (0," . ($entity ? $entity : 1) . ")";
+		$sql.=' AND statut = 1';
 
 		$resql=$db->query($sql);
 		if ($resql)
@@ -112,18 +113,16 @@ function check_user_password_dolibarr($usertotest,$passwordtotest,$entitytotest=
 				}
 
 				// We must check entity
-				if ($passok)
+				if ($passok && ! empty($conf->multicompany->enabled))	// We must check entity
 				{
 					global $mc;
 
-					if (!isset($mc)) {
-						//Global not available, disable $conf->multicompany->enabled for safety
-						$conf->multicompany->enabled = false;
-					}
-
-					if (! empty($conf->multicompany->enabled)) {
+					if (! isset($mc)) $conf->multicompany->enabled = false; 	// Global not available, disable $conf->multicompany->enabled for safety
+					else
+					{
 						$ret = $mc->checkRight($obj->rowid, $entitytotest);
-						if ($ret < 0) {
+						if ($ret < 0)
+						{
 							dol_syslog("functions_dolibarr::check_user_password_dolibarr Authentification ko entity '" . $entitytotest . "' not allowed for user '" . $obj->rowid . "'");
 							$login = ''; // force authentication failure
 						}

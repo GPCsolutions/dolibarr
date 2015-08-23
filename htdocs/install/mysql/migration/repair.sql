@@ -54,6 +54,7 @@ delete from llx_adherent_extrafields where fk_object not in (select rowid from l
 delete from llx_product_extrafields where fk_object not in (select rowid from llx_product);
 --delete from llx_societe_commerciaux where fk_soc not in (select rowid from llx_societe);
 
+update llx_product_batch set batch = '' where batch = 'Non d&eacute;fini';
 
 -- Fix: delete category child with no category parent.
 drop table tmp_categorie;
@@ -225,5 +226,8 @@ update llx_facturedet set product_type = 1 where product_type = 2;
 --update llx_facturedet as d set d.product_type = 1 where d.fk_product = 22 and d.product_type = 0;
 
 delete from llx_commande_fournisseur_dispatch where fk_commandefourndet = 0 or fk_commandefourndet IS NULL;
+
+
+delete from llx_menu where menu_handler = 'smartphone';
 
 

@@ -2,6 +2,7 @@
 RefSending=Ref. αποστολή
 Sending=Αποστολή
 Sendings=Αποστολές
+AllSendings=Όλες οι αποστολές
 Shipment=Αποστολή
 Shipments=Αποστολές
 ShowSending=Προβολή αποστολής
@@ -23,7 +24,7 @@ QtyOrdered=Ποσότητα παραγγελιών
 QtyShipped=Ποσότητα που αποστέλλεται
 QtyToShip=Ποσότητα προς αποστολή
 QtyReceived=Ποσότητα παραλαβής
-KeepToShip=Remain to ship
+KeepToShip=Αναμένει για αποστολή
 OtherSendingsForSameOrder=Άλλες αποστολές για αυτό το σκοπό
 DateSending=Ημερομηνία αποστολή της παραγγελίας
 DateSendingShort=Ημερομηνία αποστολή της παραγγελίας
@@ -52,7 +53,7 @@ DocumentModelSimple=Απλό μοντέλο έγγραφο
 DocumentModelMerou=Mérou A5 μοντέλο
 WarningNoQtyLeftToSend=Προσοχή, δεν υπάρχουν είδη που περιμένουν να σταλούν.
 StatsOnShipmentsOnlyValidated=Στατιστικά στοιχεία σχετικά με τις μεταφορές που πραγματοποιούνται μόνο επικυρωμένες. Χρησιμοποιείστε Ημερομηνία είναι η ημερομηνία της επικύρωσης της αποστολής (προγραμματισμένη ημερομηνία παράδοσης δεν είναι πάντα γνωστή).
-DateDeliveryPlanned=Προγραμματισμένη ημερομηνία παράδοσης
+DateDeliveryPlanned=Planned date of delivery
 DateReceived=Παράδοση Ημερομηνία παραλαβής
 SendShippingByEMail=Στείλτε αποστολή με e-mail
 SendShippingRef=Υποβολή της αποστολής %s
@@ -66,7 +67,7 @@ SendingRunning=Προϊόν από εντολή παραγγελιών σε πε
 SuppliersReceiptRunning=Προϊόν από εντολή παραγγελιών σε προμηθευτές
 ProductQtyInCustomersOrdersRunning=Ποσότητα προϊόντων σε ανοιχτές παραγγελίες πελατών
 ProductQtyInSuppliersOrdersRunning=Ποσότητα προϊόντων σε ανοιχτές παραγγελίες προμηθευτών
-ProductQtyInShipmentAlreadySent=Ποσότητα προϊόντων από ανοιγμένες παραγγελίες του πελάτη που έχουν ήδη αποσταλεί
+ProductQtyInShipmentAlreadySent=Product quantity from opened customer order already sent
 ProductQtyInSuppliersShipmentAlreadyRecevied=Ποσότητα προϊόντων από ανοιγμένες παραγγελίες του προμηθευτή που έχουν ήδη ληφθεί
 
 # Sending methods

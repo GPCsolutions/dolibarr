@@ -499,9 +499,11 @@ class Task extends CommonObject
      *	@param	int		$withpicto		0=No picto, 1=Include picto into link, 2=Only picto
      *	@param	string	$option			'withproject' or ''
      *  @param	string	$mode			Mode 'task', 'time', 'contact', 'note', document' define page to link to.
+     * 	@param	int		$addlabel		0=Default, 1=Add label into string, >1=Add first chars into string
+     *  @param	string	$sep			Separator between ref and label if option addlabel is set
      *	@return	string					Chaine avec URL
      */
-    function getNomUrl($withpicto=0,$option='',$mode='task')
+    function getNomUrl($withpicto=0,$option='',$mode='task', $addlabel=0, $sep=' - ')
     {
         global $langs;
 
@@ -509,7 +511,7 @@ class Task extends CommonObject
         $label = '<u>' . $langs->trans("ShowTask") . '</u>';
         if (! empty($this->ref))
             $label .= '<br><b>' . $langs->trans('Ref') . ':</b> ' . $this->ref;
-        if (! empty($this->title))
+        if (! empty($this->label))
             $label .= '<br><b>' . $langs->trans('LabelTask') . ':</b> ' . $this->label;
         if ($this->date_start || $this->date_end)
         {
@@ -525,7 +527,7 @@ class Task extends CommonObject
 
         if ($withpicto) $result.=($link.img_object($label, $picto, 'class="classfortooltip"').$linkend);
         if ($withpicto && $withpicto != 2) $result.=' ';
-        if ($withpicto != 2) $result.=$link.$this->ref.$linkend;
+        if ($withpicto != 2) $result.=$link.$this->ref.$linkend . (($addlabel && $this->label) ? $sep . dol_trunc($this->label, ($addlabel > 1 ? $addlabel : 0)) : '');
         return $result;
     }
 
@@ -561,9 +563,12 @@ class Task extends CommonObject
      * @param	int		$mode				0=Return list of tasks and their projects, 1=Return projects and tasks if exists
      * @param	string	$filteronprojref	Filter on project ref
      * @param	string	$filteronprojstatus	Filter on project status
+     * @param	string	$morewherefilter	Add more filter into where SQL request
+     * @param	string	$filteronprojuser	Filter on user that is a contact of project
+     * @param	string	$filterontaskuse	Filter on user assigned to task
      * @return 	array						Array of tasks
      */
-    function getTasksArray($usert=0, $userp=0, $projectid=0, $socid=0, $mode=0, $filteronprojref='', $filteronprojstatus=-1)
+    function getTasksArray($usert=0, $userp=0, $projectid=0, $socid=0, $mode=0, $filteronprojref='', $filteronprojstatus=-1, $morewherefilter='',$filteronprojuser=0,$filterontaskuse=0)
     {
         global $conf;
 
@@ -573,27 +578,36 @@ class Task extends CommonObject
 
         // List of tasks (does not care about permissions. Filtering will be done later)
         $sql = "SELECT p.rowid as projectid, p.ref, p.title as plabel, p.public, p.fk_statut,";
-        $sql.= " t.rowid as taskid, t.label, t.description, t.fk_task_parent, t.duration_effective, t.progress,";
-        $sql.= " t.dateo as date_start, t.datee as date_end, t.planned_workload, t.ref as ref_task,t.rang";
+        $sql.= " t.rowid as taskid, t.ref as taskref, t.label, t.description, t.fk_task_parent, t.duration_effective, t.progress,";
+        $sql.= " t.dateo as date_start, t.datee as date_end, t.planned_workload, t.rang";
         if ($mode == 0)
         {
             $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
             $sql.= ", ".MAIN_DB_PREFIX."projet_task as t";
-            $sql.= " WHERE t.fk_projet = p.rowid";
-            $sql.= " AND p.entity = ".$conf->entity;
-            if ($socid)	$sql.= " AND p.fk_soc = ".$socid;
-            if ($projectid) $sql.= " AND p.rowid in (".$projectid.")";
+            $sql.= " WHERE p.entity = ".$conf->entity;
+            $sql.= " AND t.fk_projet = p.rowid";
         }
-        if ($mode == 1)
+        elseif ($mode == 1)
         {
             $sql.= " FROM ".MAIN_DB_PREFIX."projet as p";
             $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."projet_task as t on t.fk_projet = p.rowid";
             $sql.= " WHERE p.entity = ".$conf->entity;
-            if ($socid)	$sql.= " AND p.fk_soc = ".$socid;
-            if ($projectid) $sql.= " AND p.rowid in (".$projectid.")";
         }
+        else return 'BadValueForParameterMode';
+
+        if ($filteronprojuser)
+        {
+			// TODO
+        }
+        if ($filterontaskuser)
+        {
+			// TODO
+        }
+        if ($socid)	$sql.= " AND p.fk_soc = ".$socid;
+        if ($projectid) $sql.= " AND p.rowid in (".$projectid.")";
         if ($filteronprojref) $sql.= " AND p.ref LIKE '%".$filteronprojref."%'";
         if ($filteronprojstatus > -1) $sql.= " AND p.fk_statut = ".$filteronprojstatus;
+        if ($morewherefilter) $sql.=$morewherefilter;
         $sql.= " ORDER BY p.ref, t.rang, t.dateo";
 
         //print $sql;exit;
@@ -629,7 +643,7 @@ class Task extends CommonObject
                 {
 					$tasks[$i] = new Task($this->db);
                     $tasks[$i]->id				= $obj->taskid;
-					$tasks[$i]->ref				= $obj->ref_task;
+					$tasks[$i]->ref				= $obj->taskref;
                     $tasks[$i]->fk_project		= $obj->projectid;
                     $tasks[$i]->projectref		= $obj->ref;
                     $tasks[$i]->projectlabel	= $obj->plabel;
@@ -898,6 +912,61 @@ class Task extends CommonObject
         }
         else
         {
+            dol_print_error($this->db);
+            return $result;
+        }
+    }
+
+    /**
+     *  Calculate vamue of time consumed using the thm (hourly amount value of work for user entering time)
+     *
+     *	@param		User		$fuser		Filter on a dedicated user
+     *  @param		string		$dates		Start date (ex 00:00:00)
+     *  @param		string		$datee		End date (ex 23:59:59)
+     *  @return 	array	        		Array of info for task array('amount')
+     */
+    function getSumOfAmount($fuser='', $dates='', $datee='')
+    {
+        global $langs;
+
+        if (empty($id)) $id=$this->id;
+
+        $result=array();
+
+        $sql = "SELECT";
+        $sql.= " SUM(t.task_duration / 3600 * ".$this->db->ifsql("t.thm IS NULL", 0, "t.thm").") as amount, SUM(".$this->db->ifsql("t.thm IS NULL", 1, 0).") as nblinesnull";
+        $sql.= " FROM ".MAIN_DB_PREFIX."projet_task_time as t";
+        $sql.= " WHERE t.fk_task = ".$id;
+        if (is_object($fuser) && $fuser->id > 0)
+        {
+        	$sql.=" AND fk_user = ".$fuser->id;
+        }
+    	if ($dates > 0)
+		{
+			$datefieldname="task_datehour";
+			$sql.=" AND (".$datefieldname." >= '".$this->db->idate($dates)."' OR ".$datefieldname." IS NULL)";
+		}
+    	if ($datee > 0)
+		{
+			$datefieldname="task_datehour";
+			$sql.=" AND (".$datefieldname." <= '".$this->db->idate($datee)."' OR ".$datefieldname." IS NULL)";
+		}
+		//print $sql;
+
+        dol_syslog(get_class($this)."::getSumOfAmount", LOG_DEBUG);
+        $resql=$this->db->query($sql);
+        if ($resql)
+        {
+            $obj = $this->db->fetch_object($resql);
+
+            $result['amount'] = $obj->amount;
+            $result['nblinesnull'] = $obj->nblinesnull;
+
+            $this->db->free($resql);
+            return $result;
+        }
+        else
+		{
             dol_print_error($this->db);
             return $result;
         }
@@ -1331,7 +1400,7 @@ class Task extends CommonObject
 	/**
 	 *	Return status label of object
 	 *
-	 *	@param	string	$mode		0=long label, 1=short label, 2=Picto + short label, 3=Picto, 4=Picto + long label, 5=Short label + Picto
+	 *	@param	integer	$mode		0=long label, 1=short label, 2=Picto + short label, 3=Picto, 4=Picto + long label, 5=Short label + Picto
 	 * 	@return	string	  			Label
 	 */
 	function getLibStatut($mode=0)
@@ -1343,7 +1412,7 @@ class Task extends CommonObject
 	 *	Return status label for an object
 	 *
 	 *	@param	int			$statut	  	Id statut
-	 *	@param	string		$mode		0=long label, 1=short label, 2=Picto + short label, 3=Picto, 4=Picto + long label, 5=Short label + Picto
+	 *	@param	integer		$mode		0=long label, 1=short label, 2=Picto + short label, 3=Picto, 4=Picto + long label, 5=Short label + Picto
 	 * 	@return	string	  				Label
 	 */
 	function LibStatut($statut,$mode=0)

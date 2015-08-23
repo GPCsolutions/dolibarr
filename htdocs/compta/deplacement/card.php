@@ -262,7 +262,7 @@ if ($action == 'create')
 
     print "<tr>";
     print '<td class="fieldrequired">'.$langs->trans("Date").'</td><td>';
-    print $form->select_date($datec?$datec:-1,'','','','','add',1,1);
+    print $form->select_date($datec?$datec:-1,'','','','','add',1,1,1);
     print '</td></tr>';
 
     // Km
@@ -358,7 +358,7 @@ else if ($id)
 
             // Date
             print '<tr><td class="fieldrequired">'.$langs->trans("Date").'</td><td>';
-            print $form->select_date($object->date,'','','','','update');
+            print $form->select_date($object->date,'',0,0,0,'update',1,0,1);
             print '</td></tr>';
 
             // Km
@@ -432,11 +432,13 @@ else if ($id)
             print $form->showrefnav($object, 'id', $linkback, 1, 'rowid', 'ref', '');
             print '</td></tr>';
 
-            // Type
+	        $form->load_cache_types_fees();
+
+	        // Type
             print '<tr><td>';
             print $form->editfieldkey("Type",'type',$langs->trans($object->type),$object,$conf->global->MAIN_EDIT_ALSO_INLINE && $user->rights->deplacement->creer,'select:types_fees');
             print '</td><td>';
-            print $form->editfieldval("Type",'type',$langs->trans($object->type),$object,$conf->global->MAIN_EDIT_ALSO_INLINE && $user->rights->deplacement->creer,'select:types_fees');
+            print $form->editfieldval("Type",'type',$form->cache_types_fees[$object->type],$object,$conf->global->MAIN_EDIT_ALSO_INLINE && $user->rights->deplacement->creer,'select:types_fees');
             print '</td></tr>';
 
             // Who

@@ -36,6 +36,7 @@
  */
 
 include_once DOL_DOCUMENT_ROOT.'/core/class/commoninvoice.class.php';
+require_once DOL_DOCUMENT_ROOT ."/core/class/commonobjectline.class.php";
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/client.class.php';
 require_once DOL_DOCUMENT_ROOT.'/margin/lib/margins.lib.php';
@@ -91,18 +92,16 @@ class Facture extends CommonInvoice
 	var $revenuestamp;
 	/**
 	 * @deprecated
+	 * @see note_private, note_public
 	 */
 	var $note;
 	var $note_private;
 	var $note_public;
 
 	/**
-	 * Check constants for more info:
-	 * - STATUS_DRAFT
-	 * - STATUS_VALIDATED
-	 * - STATUS_PAID
-	 * - STATUS_ABANDONED
+	 * Invoice status
 	 * @var int
+	 * @see Facture::STATUS_DRAFT, Facture::STATUS_VALIDATED, Facture::STATUS_PAID, Facture::STATUS_ABANDONED
 	 */
 	var $statut;
 	//! Fermeture apres paiement partiel: discount_vat, badcustomer, abandon
@@ -130,13 +129,16 @@ class Facture extends CommonInvoice
 	 * @deprecated
 	 */
 	var $products=array();
+	/**
+	 * @var FactureLigne[]
+	 */
 	var $lines=array();
 	var $line;
 	var $extraparams=array();
 	var $specimen;
 
 	var $fac_rec;
-	
+
 	//Incoterms
 	var $fk_incoterms;
 	var $location_incoterms;
@@ -484,7 +486,8 @@ class Facture extends CommonInvoice
 							$this->lines[$i]->label,
 							$this->lines[$i]->array_options,
 							$this->lines[$i]->situation_percent,
-							$this->lines[$i]->fk_prev_id
+							$this->lines[$i]->fk_prev_id,
+							$this->lines[$i]->fk_unit
 						);
 						if ($result < 0)
 						{
@@ -538,7 +541,9 @@ class Facture extends CommonInvoice
 						0,
 						$_facrec->lines[$i]->label,
 						null,
-						$_facrec->lines[$i]->situation_percent
+						$_facrec->lines[$i]->situation_percent,
+						'',
+						$_facrec->lines[$i]->fk_unit
 					);
 
 					if ( $result_insert < 0)
@@ -559,7 +564,7 @@ class Facture extends CommonInvoice
 					$action='create';
 
 					// Actions on extra fields (by external module or standard code)
-					// FIXME le hook fait double emploi avec le trigger !!
+					// TODO le hook fait double emploi avec le trigger !!
 					$hookmanager->initHooks(array('invoicedao'));
 					$parameters=array('invoiceid'=>$this->id);
 					$reshook=$hookmanager->executeHooks('insertExtraFields',$parameters,$this,$action); // Note that $action and $object may have been modified by some hooks
@@ -830,6 +835,7 @@ class Facture extends CommonInvoice
 			$line->rang				= $object->lines[$i]->rang;
 			$line->special_code		= $object->lines[$i]->special_code;
 			$line->fk_parent_line	= $object->lines[$i]->fk_parent_line;
+			$line->fk_unit			= $object->lines[$i]->fk_unit;
 
 			$line->fk_fournprice	= $object->lines[$i]->fk_fournprice;
 			$marginInfos			= getMarginInfos($object->lines[$i]->subprice, $object->lines[$i]->remise_percent, $object->lines[$i]->tva_tx, $object->lines[$i]->localtax1_tx, $object->lines[$i]->localtax2_tx, $object->lines[$i]->fk_fournprice, $object->lines[$i]->pa_ht);
@@ -1040,9 +1046,9 @@ class Facture extends CommonInvoice
 
 				//Incoterms
 				$this->fk_incoterms = $obj->fk_incoterms;
-				$this->location_incoterms = $obj->location_incoterms;									
+				$this->location_incoterms = $obj->location_incoterms;
 				$this->libelle_incoterms = $obj->libelle_incoterms;
-				
+
 				if ($this->statut == self::STATUS_DRAFT)	$this->brouillon = 1;
 
 				// Retreive all extrafield for invoice
@@ -1096,6 +1102,7 @@ class Facture extends CommonInvoice
 		$sql.= ' l.rang, l.special_code,';
 		$sql.= ' l.date_start as date_start, l.date_end as date_end,';
 		$sql.= ' l.info_bits, l.total_ht, l.total_tva, l.total_localtax1, l.total_localtax2, l.total_ttc, l.fk_code_ventilation, l.fk_product_fournisseur_price as fk_fournprice, l.buy_price_ht as pa_ht,';
+		$sql.= ' l.fk_unit,';
 		$sql.= ' p.ref as product_ref, p.fk_product_type as fk_product_type, p.label as product_label, p.description as product_desc';
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'facturedet as l';
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as p ON l.fk_product = p.rowid';
@@ -1113,7 +1120,8 @@ class Facture extends CommonInvoice
 				$objp = $this->db->fetch_object($result);
 				$line = new FactureLigne($this->db);
 
-				$line->rowid	        = $objp->rowid;
+				$line->id               = $objp->rowid;
+				$line->rowid	        = $objp->rowid;             // deprecated
 				$line->label            = $objp->custom_label;		// deprecated
 				$line->desc             = $objp->description;		// Description line
 				$line->product_type     = $objp->product_type;		// Type of line
@@ -1153,6 +1161,7 @@ class Facture extends CommonInvoice
 				$line->fk_parent_line	= $objp->fk_parent_line;
 				$line->situation_percent= $objp->situation_percent;
 				$line->fk_prev_id       = $objp->fk_prev_id;
+				$line->fk_unit	        = $objp->fk_unit;
 
 				$this->lines[$i] = $line;
 
@@ -2093,13 +2102,19 @@ class Facture extends CommonInvoice
 	 *		@param		array		$array_options		extrafields array
 	 *      @param      int         $situation_percent  Situation advance percentage
 	 *      @param      int         $fk_prev_id         Previous situation line id reference
+	 * 		@param 		string		$fk_unit 			Code of the unit to use. Null to use the default one
 	 *    	@return    	int             				<0 if KO, Id of line if OK
 	 */
-	function addline($desc, $pu_ht, $qty, $txtva, $txlocaltax1=0, $txlocaltax2=0, $fk_product=0, $remise_percent=0, $date_start='', $date_end='', $ventil=0, $info_bits=0, $fk_remise_except='', $price_base_type='HT', $pu_ttc=0, $type=self::TYPE_STANDARD, $rang=-1, $special_code=0, $origin='', $origin_id=0, $fk_parent_line=0, $fk_fournprice=null, $pa_ht=0, $label='', $array_options=0, $situation_percent=100, $fk_prev_id='')
+	function addline($desc, $pu_ht, $qty, $txtva, $txlocaltax1=0, $txlocaltax2=0, $fk_product=0, $remise_percent=0, $date_start='', $date_end='', $ventil=0, $info_bits=0, $fk_remise_except='', $price_base_type='HT', $pu_ttc=0, $type=self::TYPE_STANDARD, $rang=-1, $special_code=0, $origin='', $origin_id=0, $fk_parent_line=0, $fk_fournprice=null, $pa_ht=0, $label='', $array_options=0, $situation_percent=100, $fk_prev_id='', $fk_unit = null)
 	{
+		// Deprecation warning
+		if ($label) {
+			dol_syslog(__METHOD__ . ": using line label is deprecated", LOG_WARNING);
+		}
+
 		global $mysoc, $conf, $langs;
 
-		dol_syslog(get_class($this)."::addline facid=$this->id,desc=$desc,pu_ht=$pu_ht,qty=$qty,txtva=$txtva, txlocaltax1=$txlocaltax1, txlocaltax2=$txlocaltax2, fk_product=$fk_product,remise_percent=$remise_percent,date_start=$date_start,date_end=$date_end,ventil=$ventil,info_bits=$info_bits,fk_remise_except=$fk_remise_except,price_base_type=$price_base_type,pu_ttc=$pu_ttc,type=$type", LOG_DEBUG);
+		dol_syslog(get_class($this)."::addline facid=$this->id,desc=$desc,pu_ht=$pu_ht,qty=$qty,txtva=$txtva, txlocaltax1=$txlocaltax1, txlocaltax2=$txlocaltax2, fk_product=$fk_product,remise_percent=$remise_percent,date_start=$date_start,date_end=$date_end,ventil=$ventil,info_bits=$info_bits,fk_remise_except=$fk_remise_except,price_base_type=$price_base_type,pu_ttc=$pu_ttc,type=$type, fk_unit=$fk_unit", LOG_DEBUG);
 		include_once DOL_DOCUMENT_ROOT.'/core/lib/price.lib.php';
 
 		// Clean parameters
@@ -2171,7 +2186,7 @@ class Facture extends CommonInvoice
 				$result=$product->fetch($fk_product);
 				$product_type=$product->type;
 
-				if($conf->global->STOCK_MUST_BE_ENOUGH_FOR_INVOICE && $product_type == 0 && $product->stock_reel < $qty) {
+				if (! empty($conf->global->STOCK_MUST_BE_ENOUGH_FOR_INVOICE) && $product_type == 0 && $product->stock_reel < $qty) {
 					$this->error=$langs->trans('ErrorStockIsNotEnough');
 					$this->db->rollback();
 					return -3;
@@ -2201,9 +2216,9 @@ class Facture extends CommonInvoice
 			$this->line->info_bits=$info_bits;
 			$this->line->fk_remise_except=$fk_remise_except;
 			$this->line->total_ht=       (($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_ht):$total_ht);  // For credit note and if qty is negative, total is negative
-			$this->line->total_tva=      (($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_tva):$total_tva);
-			$this->line->total_localtax1=(($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_localtax1):$total_localtax1);
-			$this->line->total_localtax2=(($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_localtax2):$total_localtax2);
+			$this->line->total_tva=      $total_tva;
+			$this->line->total_localtax1=$total_localtax1;
+			$this->line->total_localtax2=$total_localtax2;
 			$this->line->localtax1_type = $localtaxes_type[0];
 			$this->line->localtax2_type = $localtaxes_type[2];
 			$this->line->total_ttc=      (($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_ttc):$total_ttc);
@@ -2213,6 +2228,7 @@ class Facture extends CommonInvoice
 			$this->line->origin_id=$origin_id;
 			$this->line->situation_percent = $situation_percent;
 			$this->line->fk_prev_id = $fk_prev_id;
+			$this->line->fk_unit=$fk_unit;
 
 			// infos marge
 			$this->line->fk_fournprice = $fk_fournprice;
@@ -2274,16 +2290,22 @@ class Facture extends CommonInvoice
 	 * 	@param		string		$label				Label of the line (deprecated, do not use)
 	 * 	@param		int			$special_code		Special code (also used by externals modules!)
      *  @param		array		$array_options		extrafields array
-	 * @param       int         $situation_percent  Situation advance percentage
+	 * 	@param      int         $situation_percent  Situation advance percentage
+	 * 	@param 		string		$fk_unit 			Code of the unit to use. Null to use the default one
 	 *  @return    	int             				< 0 if KO, > 0 if OK
 	 */
-	function updateline($rowid, $desc, $pu, $qty, $remise_percent, $date_start, $date_end, $txtva, $txlocaltax1=0, $txlocaltax2=0, $price_base_type='HT', $info_bits=0, $type= self::TYPE_STANDARD, $fk_parent_line=0, $skip_update_total=0, $fk_fournprice=null, $pa_ht=0, $label='', $special_code=0, $array_options=0, $situation_percent=0)
+	function updateline($rowid, $desc, $pu, $qty, $remise_percent, $date_start, $date_end, $txtva, $txlocaltax1=0, $txlocaltax2=0, $price_base_type='HT', $info_bits=0, $type= self::TYPE_STANDARD, $fk_parent_line=0, $skip_update_total=0, $fk_fournprice=null, $pa_ht=0, $label='', $special_code=0, $array_options=0, $situation_percent=0, $fk_unit = null)
 	{
+		// Deprecation warning
+		if ($label) {
+			dol_syslog(__METHOD__ . ": using line label is deprecated", LOG_WARNING);
+		}
+
 		include_once DOL_DOCUMENT_ROOT.'/core/lib/price.lib.php';
 
 		global $mysoc;
 
-		dol_syslog(get_class($this)."::updateline $rowid, $desc, $pu, $qty, $remise_percent, $date_start, $date_end, $txtva, $txlocaltax1, $txlocaltax2, $price_base_type, $info_bits, $type, $fk_parent_line", LOG_DEBUG);
+		dol_syslog(get_class($this)."::updateline rowid=$rowid, desc=$desc, pu=$pu, qty=$qty, remise_percent=$remise_percent, date_start=$date_start, date_end=$date_end, txtva=$txtva, txlocaltax1=$txlocaltax1, txlocaltax2=$txlocaltax2, price_base_type=$price_base_type, info_bits=$info_bits, type=$type, fk_parent_line=$fk_parent_line pa_ht=$pa_ht, special_code=$special_code fk_unit=$fk_unit", LOG_DEBUG);
 
 		if ($this->brouillon)
 		{
@@ -2294,7 +2316,6 @@ class Facture extends CommonInvoice
 			if (empty($fk_parent_line) || $fk_parent_line < 0) $fk_parent_line=0;
 			if (empty($special_code) || $special_code == 3) $special_code=0;
 			if ($situation_percent > 100 || is_null($situation_percent) || $situation_percent == "") $situation_percent = 100;
-
 
 			$remise_percent	= price2num($remise_percent);
 			$qty			= price2num($qty);
@@ -2313,7 +2334,8 @@ class Facture extends CommonInvoice
 
 			$localtaxes_type=getLocalTaxesFromRate($txtva,0,$this->thirdparty, $mysoc);
 
-			$tabprice=calcul_price_total($qty, $pu, $remise_percent, $txtva, $txlocaltax1, $txlocaltax2, 0, $price_base_type, $info_bits, $type,'',$localtaxes_type, $situation_percent);
+			$tabprice=calcul_price_total($qty, $pu, $remise_percent, $txtva, $txlocaltax1, $txlocaltax2, 0, $price_base_type, $info_bits, $type, $mysoc, $localtaxes_type, $situation_percent);
+
 			$total_ht  = $tabprice[0];
 			$total_tva = $tabprice[1];
 			$total_ttc = $tabprice[2];
@@ -2354,9 +2376,9 @@ class Facture extends CommonInvoice
 			$this->line->date_start			= $date_start;
 			$this->line->date_end			= $date_end;
 			$this->line->total_ht			= (($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_ht):$total_ht);  // For credit note and if qty is negative, total is negative
-			$this->line->total_tva			= (($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_tva):$total_tva);
-			$this->line->total_localtax1	= (($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_localtax1):$total_localtax1);
-			$this->line->total_localtax2	= (($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_localtax2):$total_localtax2);
+			$this->line->total_tva			= $total_tva;
+			$this->line->total_localtax1	= $total_localtax1;
+			$this->line->total_localtax2	= $total_localtax2;
 			$this->line->total_ttc			= (($this->type==self::TYPE_CREDIT_NOTE||$qty<0)?-abs($total_ttc):$total_ttc);
 			$this->line->info_bits			= $info_bits;
 			$this->line->special_code		= $special_code;
@@ -2364,7 +2386,7 @@ class Facture extends CommonInvoice
 			$this->line->fk_parent_line		= $fk_parent_line;
 			$this->line->skip_update_total	= $skip_update_total;
 			$this->line->situation_percent  = $situation_percent;
-
+			$this->line->fk_unit				= $fk_unit;
 
 			// infos marge
 			if (!empty($fk_product) && empty($fk_fournprice) && empty($pa_ht)) {
@@ -2699,7 +2721,10 @@ class Facture extends CommonInvoice
 				$dir = dol_buildpath($reldir."core/modules/facture/");
 
 				// Load file with numbering class (if found)
-				$mybool|=@include_once $dir.$file;
+				if (is_file($dir.$file) && is_readable($dir.$file))
+				{
+                    $mybool |= include_once $dir . $file;
+                }
 			}
 
 			// For compatibility
@@ -2712,8 +2737,11 @@ class Facture extends CommonInvoice
 				foreach ($conf->file->dol_document_root as $dirroot)
 				{
 					$dir = $dirroot."/core/modules/facture/";
+
 					// Load file with numbering class (if found)
-					$mybool|=@include_once $dir.$file;
+					if (is_file($dir.$file) && is_readable($dir.$file)) {
+                        $mybool |= include_once $dir . $file;
+                    }
 				}
 			}
 
@@ -3039,11 +3067,14 @@ class Facture extends CommonInvoice
 	/**
 	 *	Create a withdrawal request for a standing order
 	 *
-	 *	@param      User	$user       User asking standing order
+	 *	@param      User	$fuser       User asking standing order
+	 *  @param		float	$amount		Amount we request withdraw for
 	 *	@return     int         		<0 if KO, >0 if OK
 	 */
-	function demande_prelevement($user)
+	function demande_prelevement($fuser, $amount=0)
 	{
+		global $langs;
+
 		$error=0;
 
 		dol_syslog(get_class($this)."::demande_prelevement", LOG_DEBUG);
@@ -3077,27 +3108,36 @@ class Facture extends CommonInvoice
                     // For example print 239.2 - 229.3 - 9.9; does not return 0.
                     //$resteapayer=bcadd($this->total_ttc,$totalpaye,$conf->global->MAIN_MAX_DECIMALS_TOT);
                     //$resteapayer=bcadd($resteapayer,$totalavoir,$conf->global->MAIN_MAX_DECIMALS_TOT);
-                    $resteapayer = price2num($this->total_ttc - $totalpaye - $totalcreditnotes - $totaldeposits,'MT');
+					if (empty($amount)) $amount = price2num($this->total_ttc - $totalpaye - $totalcreditnotes - $totaldeposits,'MT');
 
-                    $sql = 'INSERT INTO '.MAIN_DB_PREFIX.'prelevement_facture_demande';
-                    $sql .= ' (fk_facture, amount, date_demande, fk_user_demande, code_banque, code_guichet, number, cle_rib)';
-                    $sql .= ' VALUES ('.$this->id;
-                    $sql .= ",'".price2num($resteapayer)."'";
-                    $sql .= ",'".$this->db->idate($now)."'";
-                    $sql .= ",".$user->id;
-                    $sql .= ",'".$bac->code_banque."'";
-                    $sql .= ",'".$bac->code_guichet."'";
-                    $sql .= ",'".$bac->number."'";
-                    $sql .= ",'".$bac->cle_rib."')";
+					if (is_numeric($amount) && $amount != 0)
+					{
+						$sql = 'INSERT INTO '.MAIN_DB_PREFIX.'prelevement_facture_demande';
+						$sql .= ' (fk_facture, amount, date_demande, fk_user_demande, code_banque, code_guichet, number, cle_rib)';
+						$sql .= ' VALUES ('.$this->id;
+						$sql .= ",'".price2num($amount)."'";
+						$sql .= ",'".$this->db->idate($now)."'";
+						$sql .= ",".$fuser->id;
+						$sql .= ",'".$bac->code_banque."'";
+						$sql .= ",'".$bac->code_guichet."'";
+						$sql .= ",'".$bac->number."'";
+						$sql .= ",'".$bac->cle_rib."')";
 
-                    dol_syslog(get_class($this)."::demande_prelevement", LOG_DEBUG);
-                    $resql=$this->db->query($sql);
-                    if (! $resql)
-                    {
-                        $this->error=$this->db->lasterror();
-                        dol_syslog(get_class($this).'::demandeprelevement Erreur');
-                        $error++;
-                    }
+						dol_syslog(get_class($this)."::demande_prelevement", LOG_DEBUG);
+						$resql=$this->db->query($sql);
+						if (! $resql)
+						{
+						    $this->error=$this->db->lasterror();
+						    dol_syslog(get_class($this).'::demandeprelevement Erreur');
+						    $error++;
+						}
+					}
+					else
+					{
+						$this->error='WithdrawRequestErrorNilAmount';
+	                    dol_syslog(get_class($this).'::demandeprelevement WithdrawRequestErrorNilAmount');
+	                    $error++;
+					}
 
         			if (! $error)
         			{
@@ -3137,11 +3177,11 @@ class Facture extends CommonInvoice
 	/**
 	 *  Supprime une demande de prelevement
 	 *
-	 *  @param  User		$user       utilisateur creant la demande
+	 *  @param  User	$fuser      User making delete
 	 *  @param  int		$did        id de la demande a supprimer
 	 *  @return	int					<0 if OK, >0 if KO
 	 */
-	function demande_prelevement_delete($user, $did)
+	function demande_prelevement_delete($fuser, $did)
 	{
 		$sql = 'DELETE FROM '.MAIN_DB_PREFIX.'prelevement_facture_demande';
 		$sql .= ' WHERE rowid = '.$did;
@@ -3162,8 +3202,8 @@ class Facture extends CommonInvoice
 	/**
 	 *	Load indicators for dashboard (this->nbtodo and this->nbtodolate)
 	 *
-	 *	@param      User	$user    	Object user
-	 *	@return WorkboardResponse|int <0 if KO, WorkboardResponse if OK
+	 *	@param  User		$user    	Object user
+	 *	@return WorkboardResponse|int 	<0 if KO, WorkboardResponse if OK
 	 */
 	function load_board($user)
 	{
@@ -3193,7 +3233,7 @@ class Facture extends CommonInvoice
 			$response = new WorkboardResponse();
 			$response->warning_delay=$conf->facture->client->warning_delay/60/60/24;
 			$response->label=$langs->trans("CustomerBillsUnpaid");
-			$response->url=DOL_URL_ROOT.'/compta/facture/impayees.php';
+			$response->url=DOL_URL_ROOT.'/compta/facture/list.php?search_status=1';
 			$response->img=img_object($langs->trans("Bills"),"bill");
 
 			while ($obj=$this->db->fetch_object($resql))
@@ -3425,6 +3465,7 @@ class Facture extends CommonInvoice
 		$sql.= ' l.remise_percent, l.subprice, l.info_bits, l.rang, l.special_code, l.fk_parent_line,';
 		$sql.= ' l.total_ht, l.total_tva, l.total_ttc, l.fk_product_fournisseur_price as fk_fournprice, l.buy_price_ht as pa_ht,';
 		$sql.= ' l.date_start, l.date_end,';
+		$sql.= ' l.fk_unit,';
 		$sql.= ' p.ref as product_ref, p.fk_product_type, p.label as product_label,';
 		$sql.= ' p.description as product_desc,';
         $sql.= ' p.entity';
@@ -3476,6 +3517,7 @@ class Facture extends CommonInvoice
 				$this->lines[$i]->pa_ht				= $marginInfos[0];
 				$this->lines[$i]->marge_tx			= $marginInfos[1];
 				$this->lines[$i]->marque_tx			= $marginInfos[2];
+				$this->lines[$i]->fk_unit			= $obj->fk_unit;
 
 				$i++;
 			}
@@ -3493,7 +3535,7 @@ class Facture extends CommonInvoice
 	/**
 	 *  Create a document onto disk according to template module.
 	 *
-	 *	@param	string		$modele			Force template to use ('' to not force)
+	 *	@param	string		$modele			Generator to use. Caller must set it to obj->modelpdf or GETPOST('modelpdf') for example.
 	 *	@param	Translate	$outputlangs	objet lang a utiliser pour traduction
 	 *  @param  int			$hidedetails    Hide details of lines
 	 *  @param  int			$hidedesc       Hide description
@@ -3521,22 +3563,24 @@ class Facture extends CommonInvoice
 
 		$modelpath = "core/modules/facture/doc/";
 
-		return $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref);
+		$result=$this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref);
+
+		return $result;
 	}
 
 	/**
 	 * Gets the smallest reference available for a new cycle
 	 *
 	 * @return int >= 1 if OK, -1 if error
-	 *
-	 *
 	 */
 	function newCycle()
 	{
-		$sql = 'SELECT max(situation_cycle_ref) FROM ' . MAIN_DB_PREFIX . 'facture';
+		$sql = 'SELECT max(situation_cycle_ref) FROM ' . MAIN_DB_PREFIX . 'facture as f';
+		$sql.= " WHERE f.entity in (".getEntity('facture').")";
 		$resql = $this->db->query($sql);
 		if ($resql) {
-			if ($resql->num_rows > 0) {
+			if ($resql->num_rows > 0)
+			{
 				$res = $this->db->fetch_array($resql);
 				$ref = $res['max(situation_cycle_ref)'];
 				$ref++;
@@ -3546,7 +3590,7 @@ class Facture extends CommonInvoice
 			$this->db->free($resql);
 			return $ref;
 		} else {
-			$this->error = $this->db->error();
+			$this->error = $this->db->lasterror();
 			dol_syslog("Error sql=" . $sql . ", error=" . $this->error, LOG_ERR);
 			return -1;
 		}
@@ -3607,7 +3651,7 @@ class Facture extends CommonInvoice
 			$this->db->commit();
 			return 1;
 		} else {
-			$this->error = $this->db->error();
+			$this->error = $this->db->lasterror();
 			dol_syslog(get_class($this) . "::update Error setFinal " . $sql, LOG_ERR);
 			$this->db->rollback();
 			return -1;
@@ -3630,11 +3674,28 @@ class Facture extends CommonInvoice
 			$last = $res['max(situation_counter)'];
 			return ($last == $this->situation_counter);
 		} else {
-			$this->error = $this->db->error();
+			$this->error = $this->db->lasterror();
 			dol_syslog(get_class($this) . "::select Error " . $this->error, LOG_ERR);
 			$this->db->rollback();
 			return -1;
 		}
+	}
+
+	/**
+	 * Function used to replace a thirdparty id with another one.
+	 *
+	 * @param DoliDB $db Database handler
+	 * @param int $origin_id Old thirdparty id
+	 * @param int $dest_id New thirdparty id
+	 * @return bool
+	 */
+	public static function replaceThirdparty(DoliDB $db, $origin_id, $dest_id)
+	{
+		$tables = array(
+			'facture'
+		);
+
+		return CommonObject::commonReplaceThirdparty($db, $origin_id, $dest_id, $tables);
 	}
 }
 
@@ -3654,7 +3715,10 @@ class FactureLigne extends CommonInvoiceLine
 	var $fk_facture;
 	//! Id parent line
 	var $fk_parent_line;
-	var $label;				// deprecated
+	/**
+	 * @deprecated
+	 */
+	var $label;
 	//! Description ligne
 	var $desc;
 
@@ -3686,8 +3750,16 @@ class FactureLigne extends CommonInvoiceLine
 	//var $remise;			// Montant calcule de la remise % sur PU HT (exemple 20)
 
 	// From llx_product
+	/**
+	 * @deprecated
+	 * @see product_ref
+	 */
 	var $ref;				// Product ref (deprecated)
 	var $product_ref;       // Product ref
+	/**
+	 * @deprecated
+	 * @see product_label
+	 */
 	var $libelle;      		// Product label (deprecated)
 	var $product_label;     // Product label
 	var $product_desc;  	// Description produit
@@ -3717,6 +3789,7 @@ class FactureLigne extends CommonInvoiceLine
 		$sql.= ' fd.date_start as date_start, fd.date_end as date_end, fd.fk_product_fournisseur_price as fk_fournprice, fd.buy_price_ht as pa_ht,';
 		$sql.= ' fd.info_bits, fd.special_code, fd.total_ht, fd.total_tva, fd.total_ttc, fd.total_localtax1, fd.total_localtax2, fd.rang,';
 		$sql.= ' fd.fk_code_ventilation,';
+		$sql.= ' fd.fk_unit,';
 		$sql.= ' fd.situation_percent, fd.fk_prev_id,';
 		$sql.= ' p.ref as product_ref, p.label as product_libelle, p.description as product_desc';
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'facturedet as fd';
@@ -3764,6 +3837,7 @@ class FactureLigne extends CommonInvoiceLine
 			$this->libelle				= $objp->product_libelle;  // deprecated
 			$this->product_label		= $objp->product_libelle;
 			$this->product_desc			= $objp->product_desc;
+			$this->fk_unit				= $objp->fk_unit;
 
 			$this->situation_percent    = $objp->situation_percent;
 			$this->fk_prev_id           = $objp->fk_prev_id;
@@ -3851,7 +3925,8 @@ class FactureLigne extends CommonInvoiceLine
 		$sql.= ' date_start, date_end, fk_code_ventilation, ';
 		$sql.= ' rang, special_code, fk_product_fournisseur_price, buy_price_ht,';
 		$sql.= ' info_bits, total_ht, total_tva, total_ttc, total_localtax1, total_localtax2,';
-		$sql.= ' situation_percent, fk_prev_id)';
+		$sql.= ' situation_percent, fk_prev_id,';
+		$sql.= ' fk_unit)';
 		$sql.= " VALUES (".$this->fk_facture.",";
 		$sql.= " ".($this->fk_parent_line>0?"'".$this->fk_parent_line."'":"null").",";
 		$sql.= " ".(! empty($this->label)?"'".$this->db->escape($this->label)."'":"null").",";
@@ -3882,6 +3957,7 @@ class FactureLigne extends CommonInvoiceLine
 		$sql.= " ".price2num($this->total_localtax2);
 		$sql .= ", " . $this->situation_percent;
 		$sql .= ", " . $this->fk_prev_id;
+		$sql .= ", ".(!$this->fk_unit ? 'NULL' : $this->fk_unit);
 		$sql.= ')';
 
 		dol_syslog(get_class($this)."::insert", LOG_DEBUG);
@@ -4046,6 +4122,7 @@ class FactureLigne extends CommonInvoiceLine
 		$sql.= ",fk_parent_line=".($this->fk_parent_line>0?$this->fk_parent_line:"null");
 		if (! empty($this->rang)) $sql.= ", rang=".$this->rang;
 		$sql .= ", situation_percent=" . $this->situation_percent;
+		$sql .= ", fk_unit=".(!$this->fk_unit ? 'NULL' : $this->fk_unit);
 		$sql.= " WHERE rowid = ".$this->rowid;
 
 		dol_syslog(get_class($this)."::update", LOG_DEBUG);

@@ -146,6 +146,10 @@ if ($action == 'setModuleOptions')
 else if ($action == 'set')
 {
 	$ret = addDocumentModel($value, $type, $label, $scandir);
+	if ($ret > 0 && empty($conf->global->EXPENSEREPORT_ADDON_PDF))
+	{
+		dolibarr_set_const($db, 'EXPENSEREPORT_ADDON_PDF', $value,'chaine',0,'',$conf->entity);
+	}
 }
 
 else if ($action == 'del')
@@ -231,7 +235,7 @@ llxHeader();
 $form=new Form($db);
 
 $linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print_fiche_titre($langs->trans("ExpenseReportsSetup"),$linkback,'setup');
+print_fiche_titre($langs->trans("ExpenseReportsSetup"),$linkback,'title_setup');
 
 
 $head=expensereport_admin_prepare_head();

@@ -146,7 +146,7 @@ if ($modecompta != 'CREANCES-DETTES')
 	$sql.= " WHERE pf.rowid IS NULL";
 	$sql.= " AND p.fk_bank = b.rowid";
 	$sql.= " AND b.fk_account = ba.rowid";
-	$sql.= " AND ba.entity = ".$conf->entity;
+	$sql.= " AND ba.entity IN (".getEntity('bank_account', 1).")";
 	$sql.= " GROUP BY dm";
 	$sql.= " ORDER BY dm";
 
@@ -298,7 +298,7 @@ for ($mois = 1+$nb_mois_decalage ; $mois <= 12+$nb_mois_decalage ; $mois++)
 			if ($annee_decalage != $year_end) print '<td width="15">&nbsp;</td>';
 		}
 
-		$total_ht[$annee]+=!empty($cum_ht[$case]) ? $cum_ht[$case] : 0;;
+		$total_ht[$annee]+=!empty($cum_ht[$case]) ? $cum_ht[$case] : 0;
 		$total[$annee]+=$cum[$case];
 	}
 

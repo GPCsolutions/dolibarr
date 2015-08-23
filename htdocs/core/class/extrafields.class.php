@@ -39,7 +39,7 @@ class ExtraFields
 	var $attribute_type;
 	// Tableau contenant le nom des champs en clef et le label de ces champs en value
 	var $attribute_label;
-	// Tableau contenant le nom des champs en clef et la taille de ces champs en value
+	// Tableau contenant le nom des champs en clef et la taille/longueur max de ces champs en value
 	var $attribute_size;
 	// Tableau contenant le nom des choix en clef et la valeur de ces choix en value
 	var $attribute_choice;
@@ -107,7 +107,7 @@ class ExtraFields
 	 *  @param  string	$label              label of attribute
 	 *  @param  int		$type               Type of attribute ('int', 'text', 'varchar', 'date', 'datehour')
 	 *  @param  int		$pos                Position of attribute
-	 *  @param  int		$size               Size/length of attribute
+	 *  @param  string	$size               Size/length of attribute
 	 *  @param  string	$elementtype        Element type ('member', 'product', 'thirdparty', ...)
 	 *  @param	int		$unique				Is field unique or not
 	 *  @param	int		$required			Is field required or not
@@ -124,11 +124,12 @@ class ExtraFields
 		if (empty($label)) return -1;
 
 		if ($elementtype == 'thirdparty') $elementtype='societe';
+		if ($elementtype == 'contact') $elementtype='socpeople';
 
 		// Create field into database except for separator type which is not stored in database
 		if ($type != 'separate')
 		{
-			$result=$this->create($attrname,$type,$size,$elementtype, $unique, $required, $default_value, $param, $perms, $list);
+			$result=$this->create($attrname, $type, $size, $elementtype, $unique, $required, $default_value, $param, $perms, $list);
 		}
 		$err1=$this->errno;
 		if ($result > 0 || $err1 == 'DB_ERROR_COLUMN_ALREADY_EXISTS' || $type == 'separate')
@@ -156,7 +157,7 @@ class ExtraFields
 	 *
 	 *	@param	string	$attrname			code of attribute
 	 *  @param	int		$type				Type of attribute ('int', 'text', 'varchar', 'date', 'datehour')
-	 *  @param	int		$length				Size/length of attribute
+	 *  @param	string	$length				Size/length of attribute ('5', '24,8', ...)
 	 *  @param  string	$elementtype        Element type ('member', 'product', 'thirdparty', 'contact', ...)
 	 *  @param	int		$unique				Is field unique or not
 	 *  @param	int		$required			Is field required or not
@@ -169,6 +170,7 @@ class ExtraFields
 	private function create($attrname, $type='varchar', $length=255, $elementtype='member', $unique=0, $required=0, $default_value='',$param='', $perms='', $list=0)
 	{
 		if ($elementtype == 'thirdparty') $elementtype='societe';
+		if ($elementtype == 'contact') $elementtype='socpeople';
 
 		$table=$elementtype.'_extrafields';
 
@@ -233,7 +235,7 @@ class ExtraFields
 	 *	@param	string			$label			label of attribute
 	 *  @param	int				$type			Type of attribute ('int', 'text', 'varchar', 'date', 'datehour', 'float')
 	 *  @param	int				$pos			Position of attribute
-	 *  @param	int				$size			Size/length of attribute
+	 *  @param	string			$size			Size/length of attribute ('5', '24,8', ...)
 	 *  @param  string			$elementtype	Element type ('member', 'product', 'thirdparty', ...)
 	 *  @param	int				$unique			Is field unique or not
 	 *  @param	int				$required		Is field required or not
@@ -248,6 +250,7 @@ class ExtraFields
 		global $conf;
 
 		if ($elementtype == 'thirdparty') $elementtype='societe';
+		if ($elementtype == 'contact') $elementtype='socpeople';
 
 		// Clean parameters
 		if (empty($pos)) $pos=0;
@@ -308,6 +311,7 @@ class ExtraFields
 	function delete($attrname, $elementtype='member')
 	{
 		if ($elementtype == 'thirdparty') $elementtype='societe';
+		if ($elementtype == 'contact') $elementtype='socpeople';
 
 		$table=$elementtype.'_extrafields';
 
@@ -342,6 +346,7 @@ class ExtraFields
 		global $conf;
 
 		if ($elementtype == 'thirdparty') $elementtype='societe';
+		if ($elementtype == 'contact') $elementtype='socpeople';
 
 		if (isset($attrname) && $attrname != '' && preg_match("/^\w[a-zA-Z0-9-_]*$/",$attrname))
 		{
@@ -389,6 +394,7 @@ class ExtraFields
 	function update($attrname,$label,$type,$length,$elementtype,$unique=0,$required=0,$pos=0,$param='',$alwayseditable=0, $perms='',$list='')
 	{
 		if ($elementtype == 'thirdparty') $elementtype='societe';
+		if ($elementtype == 'contact') $elementtype='socpeople';
 
 		$table=$elementtype.'_extrafields';
 
@@ -486,6 +492,8 @@ class ExtraFields
 
 		// Clean parameters
 		if ($elementtype == 'thirdparty') $elementtype='societe';
+		if ($elementtype == 'contact') $elementtype='socpeople';
+
 		if (empty($list)) $list=0;
 
 		if (isset($attrname) && $attrname != '' && preg_match("/^\w[a-zA-Z0-9-_]*$/",$attrname))
@@ -568,11 +576,12 @@ class ExtraFields
 		global $conf;
 
 		if ( empty($elementtype) ) return array();
-		
+
 		if ($elementtype == 'thirdparty') $elementtype='societe';
+		if ($elementtype == 'contact') $elementtype='socpeople';
 
 		$array_name_label=array();
-		
+
 		// For avoid conflicts with external modules
 		if (!$forceload && !empty($conf->global->MAIN_EXTRAFIELDS_DISABLED)) return $array_name_label;
 
@@ -602,7 +611,7 @@ class ExtraFields
 					$this->attribute_elementtype[$tab->name]=$tab->elementtype;
 					$this->attribute_unique[$tab->name]=$tab->fieldunique;
 					$this->attribute_required[$tab->name]=$tab->fieldrequired;
-					$this->attribute_param[$tab->name]=unserialize($tab->param);
+					$this->attribute_param[$tab->name]=($tab->param ? unserialize($tab->param) : '');
 					$this->attribute_pos[$tab->name]=$tab->pos;
 					$this->attribute_alwayseditable[$tab->name]=$tab->alwayseditable;
 					$this->attribute_perms[$tab->name]=$tab->perms;
@@ -697,7 +706,7 @@ class ExtraFields
 		{
 			$checked='';
 			if (!empty($value)) {
-				$checked=' checked="checked" value="1" ';
+				$checked=' checked value="1" ';
 			} else {
 				$checked=' value="1" ';
 			}
@@ -737,7 +746,7 @@ class ExtraFields
 			{
 				list($val, $parent) = explode('|', $val);
 				$out.='<option value="'.$key.'"';
-				$out.= ($value==$key?' selected="selected"':'');
+				$out.= ($value==$key?' selected':'');
 				$out.= (!empty($parent)?' parent="'.$parent.'"':'');
 				$out.='>'.$val.'</option>';
 			}
@@ -805,8 +814,10 @@ class ExtraFields
 					$sqlwhere.= ' WHERE 1';
 				}
 				if (in_array($InfoFieldList[0],array('tablewithentity'))) $sqlwhere.= ' AND entity = '.$conf->entity;	// Some tables may have field, some other not. For the moment we disable it.
-				//$sql.=preg_replace('/^ AND /','',$sqlwhere);
+				$sql.=$sqlwhere;
 				//print $sql;
+
+				$sql .= ' ORDER BY ' . implode(', ', $fields_label);
 
 				dol_syslog(get_class($this).'::showInputField type=sellist', LOG_DEBUG);
 				$resql = $this->db->query($sql);
@@ -847,7 +858,7 @@ class ExtraFields
 									$labeltoshow=dol_trunc($obj->$field_toshow,18).' ';
 								}
 							}
-							$out.='<option value="'.$obj->rowid.'" selected="selected">'.$labeltoshow.'</option>';
+							$out.='<option value="'.$obj->rowid.'" selected>'.$labeltoshow.'</option>';
 						}
 						else
 						{
@@ -864,7 +875,7 @@ class ExtraFields
 							if (empty($labeltoshow)) $labeltoshow='(not defined)';
 							if ($value==$obj->rowid)
 							{
-								$out.='<option value="'.$obj->rowid.'" selected="selected">'.$labeltoshow.'</option>';
+								$out.='<option value="'.$obj->rowid.'" selected>'.$labeltoshow.'</option>';
 							}
 
 							if (!empty($InfoFieldList[3]))
@@ -873,7 +884,7 @@ class ExtraFields
 							}
 
 							$out.='<option value="'.$obj->rowid.'"';
-							$out.= ($value==$obj->rowid?' selected="selected"':'');
+							$out.= ($value==$obj->rowid?' selected':'');
 							$out.= (!empty($parent)?' parent="'.$parent.'"':'');
 							$out.='>'.$labeltoshow.'</option>';
 						}
@@ -900,7 +911,7 @@ class ExtraFields
 				$out.=' value="'.$keyopt.'"';
 
 				if ((is_array($value_arr)) && in_array($keyopt,$value_arr)) {
-					$out.= 'checked="checked"';
+					$out.= 'checked';
 				}else {
 					$out.='';
 				}
@@ -915,13 +926,18 @@ class ExtraFields
 			{
 				$out.='<input class="flat" type="radio" name="options_'.$key.$keyprefix.'" '.($moreparam?$moreparam:'');
 				$out.=' value="'.$keyopt.'"';
-				$out.= ($value==$keyopt?'checked="checked"':'');
+				$out.= ($value==$keyopt?'checked':'');
 				$out.='/>'.$val.'<br>';
 			}
 		}
 		elseif ($type == 'chkbxlst')
 		{
-			$value_arr = explode(',', $value);
+			if (is_array($value)) {
+				$value_arr = $value;
+			}
+			else {
+				$value_arr = explode(',', $value);
+			}
 
 			if (is_array($param['options'])) {
 				$param_list = array_keys($param['options']);
@@ -1005,7 +1021,7 @@ class ExtraFields
 							$out .= '<input class="flat" type="checkbox" name="options_' . $key . $keyprefix . '[]" ' . ($moreparam ? $moreparam : '');
 							$out .= ' value="' . $obj->rowid . '"';
 
-							$out .= 'checked="checked"';
+							$out .= 'checked';
 
 							$out .= '/>' . $labeltoshow . '<br>';
 						} else {
@@ -1024,7 +1040,7 @@ class ExtraFields
 								$out .= '<input class="flat" type="checkbox" name="options_' . $key . $keyprefix . '[]" ' . ($moreparam ? $moreparam : '');
 								$out .= ' value="' . $obj->rowid . '"';
 
-								$out .= 'checked="checked"';
+								$out .= 'checked';
 								$out .= '';
 
 								$out .= '/>' . $labeltoshow . '<br>';
@@ -1037,7 +1053,7 @@ class ExtraFields
 							$out .= '<input class="flat" type="checkbox" name="options_' . $key . $keyprefix . '[]" ' . ($moreparam ? $moreparam : '');
 							$out .= ' value="' . $obj->rowid . '"';
 
-							$out .= ((is_array($value_arr) && in_array($obj->rowid, $value_arr)) ? ' checked="checked" ' : '');
+							$out .= ((is_array($value_arr) && in_array($obj->rowid, $value_arr)) ? ' checked ' : '');
 							;
 							$out .= '';
 
@@ -1056,7 +1072,7 @@ class ExtraFields
 		elseif ($type == 'link')
 		{
 			$out='';
-			
+
 			$param_list=array_keys($param['options']);
 			// 0 : ObjectName
 			// 1 : classPath
@@ -1120,9 +1136,9 @@ class ExtraFields
 		{
 			$checked='';
 			if (!empty($value)) {
-				$checked=' checked="checked" ';
+				$checked=' checked ';
 			}
-			$value='<input type="checkbox" '.$checked.' '.($moreparam?$moreparam:'').' readonly="readonly" disabled="disabled">';
+			$value='<input type="checkbox" '.$checked.' '.($moreparam?$moreparam:'').' readonly disabled>';
 		}
 		elseif ($type == 'mail')
 		{

@@ -1,6 +1,6 @@
 <?php
-/* Copyright (C) 2014 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2014 Frederic France      <frederic.france@free.fr>
+/* Copyright (C) 2014-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2014      Frederic France      <frederic.france@free.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,22 +16,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**     \defgroup   printing     Module printing
- *      \brief      Module for activation of printing icon
+/** \defgroup   printing     Module printing
+ *  \brief      Module for activation of printing icon to make direct printing
  */
 
 /**
  *  \file       htdocs/core/modules/modPrinting.class.php
  *  \ingroup    printing
- *  \brief      Fichier de description et activation du module Printing
+ *  \brief      File of class to describe and activate module Direct Printing
  */
 include_once DOL_DOCUMENT_ROOT .'/core/modules/DolibarrModules.class.php';
 
 
 
 /**
- *  \class      modPrinting
- *  \brief      Classe de description et activation du module Printing
+ *  Class to describe and activate module Direct Printing
  */
 class modPrinting extends DolibarrModules
 {
@@ -44,10 +43,10 @@ class modPrinting extends DolibarrModules
     function  __construct($db)
     {
         $this->db = $db ;
-        $this->numero = 112000;
+        $this->numero = 64000;
         // Family can be 'crm','financial','hr','projects','products','ecm','technic','other'
         // It is used to group modules in module setup page
-        $this->family = "other";
+        $this->family = "technic";
         // Module label (no space allowed), used if translation string 'ModuleXXXName' not found (where XXX is value of numeric property 'numero' of module)
         $this->name = preg_replace('/^mod/i','',get_class($this));
 		// Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
@@ -59,7 +58,7 @@ class modPrinting extends DolibarrModules
         // Name of image file used for this module.
         // If file is in theme/yourtheme/img directory under name object_pictovalue.png, use this->picto='pictovalue'
         // If file is in module/img directory under name object_pictovalue.png, use this->picto='pictovalue@module'
-        $this->picto = 'technic';
+        $this->picto = 'printer';
 
         // Data directories to create when module is enabled.
         $this->dirs = array();
@@ -94,7 +93,7 @@ class modPrinting extends DolibarrModules
         // $this->rights[$r][5]     Niveau 2 pour nommer permission dans code
 
         $r++;
-        $this->rights[$r][0] = 112001;
+        $this->rights[$r][0] = 64001;
         $this->rights[$r][1] = 'Printing';
         $this->rights[$r][2] = 'r';
         $this->rights[$r][3] = 1;
@@ -121,35 +120,4 @@ class modPrinting extends DolibarrModules
 
 
     }
-
-    /**
-     *   Function called when module is enabled.
-     *   The init function add constants, boxes, permissions and menus (defined in constructor) into Dolibarr database.
-     *   It also creates data directories
-     *
-     *   @param      string	$options    Options when enabling module ('', 'noboxes')
-     *   @return     int                1 if OK, 0 if KO
-     */
-    function init($options='')
-    {
-        $sql = array();
-
-        return $this->_init($sql, $options);
-    }
-
-    /**
-     *   Function called when module is disabled.
-     *   Remove from database constants, boxes and permissions from Dolibarr database.
-     *   Data directories are not deleted
-     *
-     *   @param      string $options    Options when enabling module ('', 'noboxes')
-     *   @return     int                 1 if OK, 0 if KO
-     */
-    function remove($options='')
-    {
-        $sql = array();
-
-        return $this->_remove($sql, $options);
-    }
-
 }

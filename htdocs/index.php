@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2001-2004 Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2013 Laurent Destailleur	<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin	<regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2015 Regis Houssin	<regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2012 Juanjo Menent	<jmenent@2byte.es>
  * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
  *
@@ -71,7 +71,7 @@ if (! empty($conf->global->MAIN_APPLICATION_TITLE)) $title=$langs->trans("HomeAr
 
 llxHeader('',$title);
 
-print_fiche_titre($langs->trans("HomeArea"));
+print_fiche_titre($langs->trans("HomeArea"),'','title_home');
 
 if (! empty($conf->global->MAIN_MOTD))
 {
@@ -134,7 +134,7 @@ if (empty($user->societe_id))
     print '<th class="liste_titre" colspan="2">'.$langs->trans("DolibarrStateBoard").'</th>';
     print '<th class="liste_titre" align="right">&nbsp;</th>';
     print '</tr>';
-    print '<tr class="impair"><td colspan="3" class="impair tdboxstats nohover">';
+    print '<tr class="impair"><td colspan="3" class="tdboxstats nohover">';
 
     $var=true;
 
@@ -161,7 +161,7 @@ if (empty($user->societe_id))
 		! empty($conf->fournisseur->enabled) && $user->rights->fournisseur->facture->lire);
 	    // Class file containing the method load_state_board for each line
 	    $includes=array(DOL_DOCUMENT_ROOT."/societe/class/client.class.php",
-	    DOL_DOCUMENT_ROOT."/comm/prospect/class/prospect.class.php",
+	    DOL_DOCUMENT_ROOT."/societe/class/client.class.php",
 	    DOL_DOCUMENT_ROOT."/fourn/class/fournisseur.class.php",
 	    DOL_DOCUMENT_ROOT."/adherents/class/adherent.class.php",
 	    DOL_DOCUMENT_ROOT."/product/class/product.class.php",
@@ -174,7 +174,7 @@ if (empty($user->societe_id))
 	    DOL_DOCUMENT_ROOT."/fourn/class/fournisseur.facture.class.php");
 	    // Name class containing the method load_state_board for each line
 	    $classes=array('Client',
-	                   'Prospect',
+	                   'Client',
 	                   'Fournisseur',
 	                   'Adherent',
 	                   'Product',
@@ -268,16 +268,16 @@ if (empty($user->societe_id))
 	            else $board=$boardloaded[$classe];
 
 	            $var=!$var;
-	            if ($langfile[$key]) $langs->load($langfile[$key]);
+	            if (!empty($langfile[$key])) $langs->load($langfile[$key]);
 	            $text=$langs->trans($titres[$key]);
-	            print '<div class="boxstats">';
 	            print '<a href="'.$links[$key].'" class="nobold nounderline">';
+	            print '<div class="boxstats">';
 	            print img_object("",$icons[$key]).' '.$text.'<br>';
-	            print '</a>';
-	            print '<a href="'.$links[$key].'">';
+	            //print '</a>';
+	            //print '<a href="'.$links[$key].'">';
 	            print $board->nb[$val];
-	            print '</a>';
 	            print '</div>';
+	            print '</a>';
 	        }
 	    }
     }

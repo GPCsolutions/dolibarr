@@ -6,6 +6,9 @@
  * Copyright (C) 2013	   Florian Henry		<florian.henry@open-concept.pro>
  * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
  * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
+ * Copyright (C) 2015	   juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2015 	   Abbes Bahfir 	<bafbes@gmail.com>
+ * Copyright (C) 2015	   Ferran Marcet		<fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,8 +75,12 @@ $search_company = GETPOST("search_company","alpha");
 $search_amount_no_tax = GETPOST("search_amount_no_tax","alpha");
 $search_amount_all_tax = GETPOST("search_amount_all_tax","alpha");
 $search_status=GETPOST('search_status','alpha');
+$day = GETPOST("day","int");
 $month = GETPOST("month","int");
 $year = GETPOST("year","int");
+$day_lim	= GETPOST('day_lim','int');
+$month_lim	= GETPOST('month_lim','int');
+$year_lim	= GETPOST('year_lim','int');
 $filter = GETPOST("filtre");
 
 if (GETPOST("button_removefilter_x") || GETPOST("button_removefilter"))		// Both test must be present to be compatible with all browsers
@@ -120,7 +127,7 @@ if ($mode == 'search')
 
 $now=dol_now();
 $form=new Form($db);
-$htmlother=new FormOther($db);
+$formother=new FormOther($db);
 $formfile = new FormFile($db);
 
 llxHeader('',$langs->trans("SuppliersInvoices"),'EN:Suppliers_Invoices|FR:FactureFournisseur|ES:Facturas_de_proveedores');
@@ -161,14 +168,29 @@ if ($search_ref_supplier)
 }
 if ($month > 0)
 {
-	if ($year > 0)
+	if ($year > 0 && empty($day))
 	$sql.= " AND fac.datef BETWEEN '".$db->idate(dol_get_first_day($year,$month,false))."' AND '".$db->idate(dol_get_last_day($year,$month,false))."'";
+	else if ($year > 0 && ! empty($day))
+		$sql.= " AND fac.datef BETWEEN '".$db->idate(dol_mktime(0, 0, 0, $month, $day, $year))."' AND '".$db->idate(dol_mktime(23, 59, 59, $month, $day, $year))."'";
 	else
-	$sql.= " AND date_format(fac.datef, '%m') = '$month'";
+	$sql.= " AND date_format(fac.datef, '%m') = '".$month."'";
 }
 else if ($year > 0)
 {
 	$sql.= " AND fac.datef BETWEEN '".$db->idate(dol_get_first_day($year,1,false))."' AND '".$db->idate(dol_get_last_day($year,12,false))."'";
+}
+if ($month_lim > 0)
+{
+	if ($year_lim > 0 && empty($day_lim))
+		$sql.= " AND fac.date_lim_reglement BETWEEN '".$db->idate(dol_get_first_day($year_lim,$month_lim,false))."' AND '".$db->idate(dol_get_last_day($year_lim,$month_lim,false))."'";
+	else if ($year_lim > 0 && ! empty($day_lim))
+		$sql.= " AND fac.date_lim_reglement BETWEEN '".$db->idate(dol_mktime(0, 0, 0, $month_lim, $day_lim, $year_lim))."' AND '".$db->idate(dol_mktime(23, 59, 59, $month_lim, $day_lim, $year_lim))."'";
+	else
+		$sql.= " AND date_format(fac.date_lim_reglement, '%m') = '".$month_lim."'";
+}
+else if ($year_lim > 0)
+{
+	$sql.= " AND fac.datef BETWEEN '".$db->idate(dol_get_first_day($year_lim,1,false))."' AND '".$db->idate(dol_get_last_day($year_lim,12,false))."'";
 }
 if ($search_label)
 {
@@ -242,10 +264,10 @@ if ($resql)
 	print_liste_field_titre($langs->trans("AmountHT"),$_SERVER["PHP_SELF"],"fac.total_ht","",$param,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("AmountTTC"),$_SERVER["PHP_SELF"],"fac.total_ttc","",$param,'align="right"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"fk_statut,paye","",$param,'align="right"',$sortfield,$sortorder);
-	print '<td class="liste_titre">&nbsp;</td>';
+	print_liste_field_titre('',$_SERVER["PHP_SELF"],"",'','','',$sortfield,$sortorder,'maxwidthsearch ');
 	print "</tr>\n";
 
-	// Lignes des champs de filtre
+	// Line for filters
 
 	print '<tr class="liste_titre">';
 	print '<td class="liste_titre" align="left">';
@@ -258,13 +280,15 @@ if ($resql)
 		print '</td>';
 	}
 	print '<td class="liste_titre" colspan="1" align="center">';
+	if (! empty($conf->global->MAIN_LIST_FILTER_ON_DAY)) print '<input class="flat" type="text" size="1" maxlength="2" name="day" value="'.$day.'">';
 	print '<input class="flat" type="text" size="1" maxlength="2" name="month" value="'.$month.'">';
-	//print '&nbsp;'.$langs->trans('Year').': ';
-	$syear = $year;
-	//if ($syear == '') $syear = date("Y");
-	$htmlother->select_year($syear?$syear:-1,'year',1, 20, 5);
+	$formother->select_year($year?$year:-1,'year',1, 20, 5);
 	print '</td>';
-	print '<td class="liste_titre">&nbsp;</td>';
+	print '<td class="liste_titre" colspan="1" align="center">';
+	if (! empty($conf->global->MAIN_LIST_FILTER_ON_DAY)) print '<input class="flat" type="text" size="1" maxlength="2" name="day_lim" value="'.$day_lim.'">';
+	print '<input class="flat" type="text" size="1" maxlength="2" name="month_lim" value="'.$month_lim.'">';
+	$formother->select_year($year_lim?$year_lim:-1,'year_lim',1, 20, 5);
+	print '</td>';
 	print '<td class="liste_titre" align="left">';
 	print '<input class="flat" size="16" type="text" name="search_label" value="'.$search_label.'">';
 	print '</td>';
@@ -309,8 +333,8 @@ if ($resql)
 		$facturestatic->ref_supplier=$obj->ref_supplier;
 		print $facturestatic->getNomUrl(1);
 		$filename=dol_sanitizeFileName($obj->ref);
-		$filedir=$conf->fournisseur->dir_output.'/facture' . '/' . dol_sanitizeFileName($obj->facid).'/0/'.dol_sanitizeFileName($obj->ref);
-		print $formfile->getDocumentsLink($facturestatic->element, $filename, $filedir);
+		$filedir=$conf->fournisseur->facture->dir_output.'/'.get_exdir($obj->facid,2,0,0,$facturestatic,'invoice_supplier').dol_sanitizeFileName($obj->ref);
+		print $formfile->getDocumentsLink('facture_fournisseur', $filename, $filedir);
 		print "</td>\n";
 
 		// Ref supplier

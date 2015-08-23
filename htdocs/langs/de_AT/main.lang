@@ -24,7 +24,6 @@ ErrorLogoFileNotFound=Logo-Datei '%s' kann nicht gefunden werden
 ErrorGoToGlobalSetup=Bitte wechseln Sie zu den 'Firma/Stiftung"-Einstellungen um das Problem zu beheben
 ErrorFailedToSendMail=Fehler beim Senden des Mails (Absender=%s, Empfänger=%s)
 ErrorAttachedFilesDisabled=Die Dateianhangsfunktion ist auf diesem Server deaktiviert
-ErrorInternalErrorDetected=Interner Fehler entdeckt
 ErrorDuplicateField=Dieser Wert muß einzigartig sein
 LevelOfFeature=Funktions-Level
 PreviousConnexion=Vorherige Verbindung
@@ -49,7 +48,6 @@ DolibarrBoard=dolibarr Übersciht
 January=Jänner
 ReportName=Berichtname
 FillTownFromZip=Stadt aus PLZ ergänzen
-AmountInCurrency=Betrag in %s
 NbOfCustomers=Anzahl der Kundena
 RebuildDoc=Dokument neu erzeugen
 RefCustomer=Kunden Nr.

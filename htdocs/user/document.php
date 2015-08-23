@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2002-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2015 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2013      Cédric Salvador      <csalvador@gpcsolutions.fr>
  *
@@ -68,7 +68,7 @@ if ($user->societe_id > 0) $socid = $user->societe_id;
 $feature2='user';
 if ($user->id == $id) { $feature2=''; $canreaduser=1; } // A user can always read its own card
 if (!$canreaduser) {
-	$result = restrictedArea($user, 'user', $id, '&user', $feature2);
+	$result = restrictedArea($user, 'user', $id, 'user&user', $feature2);
 }
 if ($user->id <> $id && ! $canreaduser) accessforbidden();
 

@@ -129,13 +129,13 @@ if ($action == 'edit')
     // Date To Birth
     print '<tr><td>'.$langs->trans("DateToBirth").'</td><td>';
     $form=new Form($db);
-    print $form->select_date($object->birthday,'birthday',0,0,1,"perso");
+    print $form->select_date($object->birthday,'birthday',0,0,1,"perso", 1,0,1);
     print '</td>';
 
     print '<td colspan="2">'.$langs->trans("Alert").': ';
     if (! empty($object->birthday_alert))
     {
-        print '<input type="checkbox" name="birthday_alert" checked="checked"></td>';
+        print '<input type="checkbox" name="birthday_alert" checked></td>';
     }
     else
     {

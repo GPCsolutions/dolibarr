@@ -1,5 +1,6 @@
 <?php
 /* Copyright (C) 2010-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2015	   Juanjo Menent		<jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -233,6 +234,12 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
         $input='<h2>abc</h2>';
         $after=dol_textishtml($input);
         $this->assertTrue($after);
+        $input='<img id="abc" src="https://xxx.com/aaa/image.png" />';
+        $after=dol_textishtml($input);
+        $this->assertTrue($after,'Failure on test of img tag');
+        $input='<a class="azerty" href="https://xxx.com/aaa/image.png" />';
+        $after=dol_textishtml($input);
+        $this->assertTrue($after,'Failure on test of a tag');
 
         // False
         $input='xxx < br>';
@@ -244,6 +251,10 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
         $input='xxx <brstyle="ee">';
         $after=dol_textishtml($input);
         $this->assertFalse($after);
+        $input='This is a text with html comments <!-- comment -->';	// we suppose this is not enough to be html content
+        $after=dol_textishtml($input);
+        $this->assertFalse($after);
+
     }
 
 
@@ -843,7 +854,7 @@ class FunctionsLibTest extends PHPUnit_Framework_TestCase
     	$vat1=get_default_localtax($companyes,$companyes,1,0);
     	$vat2=get_default_localtax($companyes,$companyes,2,0);
     	$this->assertEquals(5.2,$vat1);
-    	$this->assertEquals(-21,$vat2);
+    	$this->assertEquals(-19,$vat2);
 
     	// Test RULE ES-IT
     	$vat1=get_default_localtax($companyes,$companyit,1,0);

@@ -1,6 +1,6 @@
 <?php
 /* Copyright (c) 2003-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (c) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (c) 2004-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ class DolGraph
 	var $showlegend=1;
 	var $showpointvalue=1;
 	var $showpercent=0;
-
+	var $combine=0;				// 0.05 if you want to combine records < 5% into "other"
 	var $graph;     			// Objet Graph (Artichow, Phplot...)
 	var $error;
 
@@ -115,7 +115,7 @@ class DolGraph
 	 * Set Y precision
 	 *
 	 * @param 	float	$which_prec		Precision
-	 * @return 	string
+	 * @return 	boolean
 	 */
 	function SetPrecisionY($which_prec)
 	{
@@ -187,7 +187,7 @@ class DolGraph
 	 * Set y label
 	 *
 	 * @param 	string	$label		Y label
-	 * @return	boolean				True
+	 * @return	boolean|null				True
 	 */
 	function SetYLabel($label)
 	{
@@ -198,7 +198,7 @@ class DolGraph
 	 * Set width
 	 *
 	 * @param 	int		$w			Width
-	 * @return	boolean				True
+	 * @return	boolean|null				True
 	 */
 	function SetWidth($w)
 	{
@@ -554,7 +554,7 @@ class DolGraph
 	/**
 	 * Return min value of all data
 	 *
-	 * @return 	int		Max value of all data
+	 * @return 	double		Max value of all data
 	 */
 	function GetFloorMinValue()
 	{
@@ -578,7 +578,7 @@ class DolGraph
 	 *
 	 * @param	string	$file    	Image file name to use to save onto disk (also used as javascript unique id)
 	 * @param	string	$fileurl	Url path to show image if saved onto disk
-	 * @return	void
+	 * @return	integer|null
 	 */
 	function draw($file,$fileurl='')
 	{
@@ -875,39 +875,43 @@ class DolGraph
 			function plotWithOptions_'.$tag.'() {
 			$.plot($("#placeholder_'.$tag.'"), d0,
 			{
-			series: {
-			pie: {
-			show: true,
-			radius: 3/4,
-			label: {
-			show: true,
-			radius: 3/4,
-			formatter: function(label, series) {
-			var percent=Math.round(series.percent);
-			var number=series.data[0][1];
-			return \'';
-			$this->stringtoshow.='<div style="font-size:8pt;text-align:center;padding:2px;color:white;">';
-			if ($urltemp) $this->stringtoshow.='<a style="color: #FFFFFF;" border="0" href="'.$urltemp.'">';
-			$this->stringtoshow.='\'+';
-			$this->stringtoshow.=($showlegend?'':'label+\'<br/>\'+');	// Hide label if already shown in legend
-			$this->stringtoshow.=($showpointvalue?'number+':'');
-			$this->stringtoshow.=($showpercent?'\'<br/>\'+percent+\'%\'+':'');
-			$this->stringtoshow.='\'';
-			if ($urltemp) $this->stringtoshow.='</a>';
-			$this->stringtoshow.='</div>\';
-			},
-			background: {
-			opacity: 0.5,
-			color: \'#000000\'
-			}
-			}
-			}
+				series: {
+					pie: {
+						show: true,
+						radius: 0.8,
+						'.($this->combine ? '
+						combine: {
+						 	threshold: '.$this->combine.'
+						},' : '') . '
+						label: {
+							show: true,
+							radius: 0.9,
+							formatter: function(label, series) {
+								var percent=Math.round(series.percent);
+								var number=series.data[0][1];
+								return \'';
+								$this->stringtoshow.='<div style="font-size:8pt;text-align:center;padding:2px;color:black;">';
+								if ($urltemp) $this->stringtoshow.='<a style="color: #FFFFFF;" border="0" href="'.$urltemp.'">';
+								$this->stringtoshow.='\'+';
+								$this->stringtoshow.=($showlegend?'':'label+\' \'+');	// Hide label if already shown in legend
+								$this->stringtoshow.=($showpointvalue?'number+':'');
+								$this->stringtoshow.=($showpercent?'\'<br/>\'+percent+\'%\'+':'');
+								$this->stringtoshow.='\'';
+								if ($urltemp) $this->stringtoshow.='</a>';
+								$this->stringtoshow.='</div>\';
+							},
+							background: {
+							opacity: 0.0,
+							color: \'#000000\'
+						}
+					}
+				}
 			},
 			zoom: {
-			interactive: true
+				interactive: true
 			},
 			pan: {
-			interactive: true
+				interactive: true
 			},';
 			if (count($datacolor))
 			{

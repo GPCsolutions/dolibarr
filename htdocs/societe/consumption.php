@@ -1,7 +1,9 @@
 <?php
 /* Copyright (C) 2012-2013 Philippe Berthet     <berthet@systune.be>
- * Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2013	   Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2004-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2013-2015 Juanjo Menent		<jmenent@2byte.es>
+ * Copyright (C) 2015      Marcos García        <marcosgdf@gmail.com>
+ * Copyright (C) 2015	   Ferran Marcet		<fmarcet@2byte.es>
  *
  * Version V1.1 Initial version of Philippe Berthet
  * Version V2   Change to be compatible with 3.4 and enhanced to be more generic
@@ -75,6 +77,7 @@ $langs->load("bills");
 $langs->load("orders");
 $langs->load("suppliers");
 $langs->load("propal");
+$langs->load("interventions");
 
 // Initialize technical object to manage hooks of thirdparties. Note that conf->hooks_modules contains array array
 $hookmanager->initHooks(array('consumptionthirdparty'));
@@ -98,7 +101,7 @@ $form = new Form($db);
 $formother = new FormOther($db);
 $productstatic=new Product($db);
 
-$title = $langs->trans("Referer",$object->name);
+$title = $langs->trans("Referers",$object->name);
 if (! empty($conf->global->MAIN_HTML_TITLE) && preg_match('/thirdpartynameonly/',$conf->global->MAIN_HTML_TITLE) && $object->name) $title=$object->name." - ".$title;
 $help_url='EN:Module_Third_Parties|FR:Module_Tiers|ES:Empresas';
 llxHeader('',$title,$help_url);
@@ -117,6 +120,10 @@ print '<tr><td width="25%">'.$langs->trans('ThirdPartyName').'</td>';
 print '<td colspan="3">';
 print $form->showrefnav($object,'socid','',($user->societe_id?0:1),'rowid','nom');
 print '</td></tr>';
+
+// Alias names (commercial, trademark or alias names)
+print '<tr id="name_alias"><td><label for="name_alias_input">'.$langs->trans('AliasNames').'</label></td>';
+print '<td colspan="3">'.$object->name_alias.'</td></tr>';
 
 if (! empty($conf->global->SOCIETE_USEPREFIX))  // Old not used prefix field
 {
@@ -199,7 +206,7 @@ if ($type_element == 'invoice')
 { 	// Customer : show products from invoices
 	require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 	$documentstatic=new Facture($db);
-	$sql_select = 'SELECT f.rowid as doc_id, f.facnumber as doc_number, f.type as doc_type, f.datef as dateprint, f.fk_statut as status, ';
+	$sql_select = 'SELECT f.rowid as doc_id, f.facnumber as doc_number, f.type as doc_type, f.datef as dateprint, f.fk_statut as status, f.paye as paid, ';
 	$tables_from = MAIN_DB_PREFIX."facture as f,".MAIN_DB_PREFIX."facturedet as d";
 	$where = " WHERE f.fk_soc = s.rowid AND s.rowid = ".$socid;
 	$where.= " AND d.fk_facture = f.rowid";
@@ -230,7 +237,7 @@ if ($type_element == 'order')
 	$where = " WHERE c.fk_soc = s.rowid AND s.rowid = ".$socid;
 	$where.= " AND d.fk_commande = c.rowid";
 	$where.= " AND c.entity = ".$conf->entity;
-	$dateprint = 'c.datef';
+	$dateprint = 'c.date_commande';
 	$doc_number='c.ref';
 	$thirdTypeSelect='customer';
 }
@@ -308,6 +315,7 @@ print_liste_field_titre($langs->trans('Date'),$_SERVER['PHP_SELF'],'dateprint','
 print_liste_field_titre($langs->trans('Status'),$_SERVER['PHP_SELF'],'fk_status','',$param,'align="center"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans('Product'),$_SERVER['PHP_SELF'],'','',$param,'align="left"',$sortfield,$sortorder);
 print_liste_field_titre($langs->trans('Quantity'),$_SERVER['PHP_SELF'],'prod_qty','',$param,'align="right"',$sortfield,$sortorder);
+print "</tr>\n";
 // Filters
 print '<tr class="liste_titre">';
 print '<td class="liste_titre" align="left">';
@@ -337,11 +345,12 @@ if ($sql_select)
 	{
 		$documentstatic->id=$objp->doc_id;
 		$documentstatic->ref=$objp->doc_number;
-		$documentstatic->type=$objp->type;
+		$documentstatic->type=$objp->doc_type;
 		$documentstatic->fk_statut=$objp->status;
 		$documentstatic->fk_status=$objp->status;
 		$documentstatic->statut=$objp->status;
 		$documentstatic->status=$objp->status;
+		$documentstatic->paye=$objp->paid;
 
 		$var=!$var;
 		print "<tr ".$bc[$var].">";

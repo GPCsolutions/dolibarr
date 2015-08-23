@@ -1,10 +1,11 @@
 <?php
 /* Copyright (C) 2002-2007	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2014	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2015	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2011-2013  Juanjo Menent			<jmenent@2byte.es>
  * Copyright (C) 2013       Florian Henry           <florian.henry@open-concept.pro>
  * Copyright (C) 2014       Ferran Marcet           <fmarcet@2byte.es>
+ * Copyright (C) 201		Charlie Benke           <charlies@patas-monkey.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -159,7 +160,7 @@ else if ($action == 'confirm_modify' && $confirm == 'yes' && $user->rights->fich
 else if ($action == 'add' && $user->rights->ficheinter->creer)
 {
     $object->socid			= $socid;
-    $object->duree			= GETPOST('duree','int');
+    $object->duration			= GETPOST('duration','int');
     $object->fk_project		= GETPOST('projectid','int');
     $object->fk_contrat		= GETPOST('contratid','int');
     $object->author			= $user->id;
@@ -248,7 +249,14 @@ else if ($action == 'add' && $user->rights->ficheinter->creer)
 									$prod = new Product($db);
 									$prod->id=$lines[$i]->fk_product;
 									$prod->getMultiLangs();
-
+									// We show if duration is present on service (so we get it)
+									$prod->fetch($lines[$i]->fk_product);
+									if ($prod->duration_value && $prod->duration_unit == 'h' && $conf->global->FICHINTER_USE_SERVICE_DURATION)
+									{
+										$durationproduct=$prod->duration_value * 3600 * $lines[$i]->qty;
+									}
+									else
+										$durationproduct=3600;
 									$outputlangs = $langs;
 									$newlang='';
 									if (empty($newlang) && GETPOST('lang_id')) $newlang=GETPOST('lang_id');
@@ -277,11 +285,11 @@ else if ($action == 'add' && $user->rights->ficheinter->creer)
 							$date_intervention=dol_mktime(0,0,0,$timearray['mon'],$timearray['mday'],$timearray['year']);
 							if ($product_type == 1)
 							{ //service
-								$duration = 3600;
+								$duration = $durationproduct;
 							}
 							else
 							{ //product
-							    $duration = 0;
+								$duration = 0;
 							}
 
 							$predef = '';
@@ -324,24 +332,33 @@ else if ($action == 'add' && $user->rights->ficheinter->creer)
 	    }
 	    else
 	    {
-	    	// Extrafields
-			$extrafields = new ExtraFields($db);
-			$extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
-			$array_options = $extrafields->getOptionalsFromPost($extralabels);
+	    	// Fill array 'array_options' with data from add form
+	    	$ret = $extrafields->setOptionalsFromPost($extralabels, $object);
+	    	if ($ret < 0) {
+	    		$error ++;
+	    		$action = 'create';
+	    	}
 
-	        $object->array_options = $array_options;
+	    	if (! $error)
+	    	{
+	    		// Extrafields
+	    		$extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
+	    		$array_options = $extrafields->getOptionalsFromPost($extralabels);
 
-			$result = $object->create($user);
-	        if ($result > 0)
-	        {
-	            $id=$result;      // Force raffraichissement sur fiche venant d'etre cree
-	        }
-	        else
-	        {
-	            $langs->load("errors");
-	            setEventMessages($object->error, $object->errors, 'errors');
-	            $action = 'create';
-	        }
+	    		$object->array_options = $array_options;
+
+	    		$result = $object->create($user);
+	    		if ($result > 0)
+	    		{
+	    			$id=$result;      // Force raffraichissement sur fiche venant d'etre cree
+	    		}
+	    		else
+	    		{
+	    			$langs->load("errors");
+	    			setEventMessages($object->error, $object->errors, 'errors');
+	    			$action = 'create';
+	    		}
+	    	}
         }
     }
     else
@@ -699,7 +716,7 @@ else if ($action == 'update_extras')
 	if (! $error)
 	{
 		// Actions on extra fields (by external module or standard code)
-		// FIXME le hook fait double emploi avec le trigger !!
+		// TODO le hook fait double emploi avec le trigger !!
 		$hookmanager->initHooks(array('interventiondao'));
 		$parameters=array('id'=>$object->id);
 		$reshook=$hookmanager->executeHooks('insertExtraFields',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
@@ -870,6 +887,8 @@ if ($action == 'create')
 		print '<form name="fichinter" action="'.$_SERVER['PHP_SELF'].'" method="POST">';
 		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 
+		dol_fiche_head('');
+
 		print '<table class="border" width="100%">';
 
 		print '<input type="hidden" name="socid" value='.$soc->id.'>';
@@ -974,7 +993,9 @@ if ($action == 'create')
 	        print '<input type="hidden" name="originid"       value="'.$objectsrc->id.'">';
 		}
 
-		print '<br><div class="center">';
+		dol_fiche_end();
+
+		print '<div class="center">';
 		print '<input type="submit" class="button" value="'.$langs->trans("CreateDraftIntervention").'">';
 		print '</div>';
 
@@ -982,6 +1003,8 @@ if ($action == 'create')
 	}
 	else
 	{
+		dol_fiche_head('');
+
 		print '<form name="fichinter" action="'.$_SERVER['PHP_SELF'].'" method="POST">';
 		print '<table class="border" width="100%">';
 		print '<tr><td class="fieldrequired">'.$langs->trans("ThirdParty").'</td><td>';
@@ -989,7 +1012,9 @@ if ($action == 'create')
 		print '</td></tr>';
 		print '</table>';
 
-		print '<br><div class="center">';
+		dol_fiche_end();
+
+		print '<div class="center">';
 		print '<input type="hidden" name="action" value="create">';
 		print '<input type="submit" class="button" value="'.$langs->trans("CreateDraftIntervention").'">';
 		print '</div>';
@@ -1092,7 +1117,7 @@ else if ($id > 0 || ! empty($ref))
 	{
 		// Duration
 		print '<tr><td>'.$langs->trans("TotalDuration").'</td>';
-		print '<td colspan="3">'.convertSecondToTime($object->duree, 'all', $conf->global->MAIN_DURATION_OF_WORKDAY).'</td>';
+		print '<td colspan="3">'.convertSecondToTime($object->duration, 'all', $conf->global->MAIN_DURATION_OF_WORKDAY).'</td>';
 		print '</tr>';
 	}
 
@@ -1207,6 +1232,7 @@ else if ($id > 0 || ! empty($ref))
 		include DOL_DOCUMENT_ROOT.'/core/tpl/bloc_showhide.tpl.php';
 	}
 
+	// Line of interventions
  	if (empty($conf->global->FICHINTER_DISABLE_DETAILS))
  	{
 		print '<form action="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'" name="addinter" method="post">';
@@ -1383,9 +1409,9 @@ else if ($id > 0 || ! empty($ref))
 				print '<td colspan="4">&nbsp;</td>';
 				print "</tr>\n";
 
-				$var=false;
+				$var=true;
 
-				print '<tr '.$bc[$var].">\n";
+				print '<tr '.$bcnd[$var].">\n";
 				print '<td>';
 				// editeur wysiwyg
 				require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
@@ -1406,7 +1432,7 @@ else if ($id > 0 || ! empty($ref))
 				print '<td align="right">';
 				$selectmode='select';
 				if (! empty($conf->global->INTERVENTION_ADDLINE_FREEDUREATION)) $selectmode='text';
-				$form->select_duration('duration', (!GETPOST('durationhour','int') && !GETPOST('durationmin','int'))?3600:(60*60*GETPOST('durationhour','int')+60*GETPOST('durationmin','int')), 0, $selectmode, 1);
+				$form->select_duration('duration', (!GETPOST('durationhour','int') && !GETPOST('durationmin','int'))?3600:(60*60*GETPOST('durationhour','int')+60*GETPOST('durationmin','int')), 0, $selectmode);
 				print '</td>';
 
 				print '<td align="center" valign="middle" colspan="4"><input type="submit" class="button" value="'.$langs->trans('Add').'" name="addline"></td>';
@@ -1545,7 +1571,6 @@ else if ($id > 0 || ! empty($ref))
 	if ($action != 'presend')
 	{
 		print '<div class="fichecenter"><div class="fichehalfleft">';
-		//print '<table width="100%"><tr><td width="50%" valign="top">';
 
 		/*
 		 * Built documents
@@ -1563,12 +1588,14 @@ else if ($id > 0 || ! empty($ref))
 		//print "<br>\n";
 		$somethingshown=$formfile->show_documents('ficheinter',$filename,$filedir,$urlsource,$genallowed,$delallowed,$object->modelpdf,1,0,0,28,0,'','','',$soc->default_lang);
 
-		/*
-		 * Linked object block
-		*/
-		$somethingshown=$object->showLinkedObjectBlock();
+		// Linked object block
+		$somethingshown = $form->showLinkedObjectBlock($object);
 
-		//print '</td><td valign="top" width="50%">';
+		// Show links to link elements
+		//$linktoelem = $form->showLinkToObjectBlock($object);
+		//if ($linktoelem) print '<br>'.$linktoelem;
+
+
 		print '</div><div class="fichehalfright"><div class="ficheaddleft">';
 
 		// List of actions on element
@@ -1577,18 +1604,20 @@ else if ($id > 0 || ! empty($ref))
 		$somethingshown=$formactions->showactions($object,'fichinter',$socid);
 
 		print '</div></div></div>';
-		//print "</td></tr></table>\n";
 	}
 
 
 	/*
 	 * Action presend
 	 */
+	if (GETPOST('modelselected')) {
+		$action = 'presend';
+	}
 	if ($action == 'presend')
 	{
 		$ref = dol_sanitizeFileName($object->ref);
 		include_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-		$fileparams = dol_most_recent_file($conf->ficheinter->dir_output . '/' . $ref, preg_quote($ref,'/'));
+		$fileparams = dol_most_recent_file($conf->ficheinter->dir_output . '/' . $ref, preg_quote($ref, '/').'[^\-]+');
 		$file=$fileparams['fullname'];
 
 		// Define output language
@@ -1615,12 +1644,15 @@ else if ($id > 0 || ! empty($ref))
 				dol_print_error($db,$result);
 				exit;
 			}
-			$fileparams = dol_most_recent_file($conf->ficheinter->dir_output . '/' . $ref, preg_quote($ref,'/'));
+			$fileparams = dol_most_recent_file($conf->ficheinter->dir_output . '/' . $ref, preg_quote($ref, '/').'[^\-]+');
 			$file=$fileparams['fullname'];
 		}
 
+		print '<div class="clearboth"></div>';
 		print '<br>';
-		print_titre($langs->trans('SendInterventionByMail'));
+		print_fiche_titre($langs->trans('SendInterventionByMail'));
+
+		dol_fiche_head('');
 
 		// Create form object
 		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
@@ -1671,6 +1703,7 @@ else if ($id > 0 || ! empty($ref))
 		// Tableau des parametres complementaires
 		$formmail->param['action']='send';
 		$formmail->param['models']='fichinter_send';
+		$formmail->param['models_id']=GETPOST('modelmailselected','int');
 		$formmail->param['fichinter_id']=$object->id;
 		$formmail->param['returnurl']=$_SERVER["PHP_SELF"].'?id='.$object->id;
 
@@ -1683,7 +1716,7 @@ else if ($id > 0 || ! empty($ref))
 
 		print $formmail->get_form();
 
-		print '<br>';
+		dol_fiche_end();
 	}
 }
 

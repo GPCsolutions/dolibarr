@@ -3,10 +3,10 @@
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
  * Copyright (C) 2007		Franky Van Liedekerke	<franky.van.liedekerke@telenet.be>
  * Copyright (C) 2006-2012	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2011-2013	Juanjo Menent			<jmenent@2byte.es>
+ * Copyright (C) 2011-2015	Juanjo Menent			<jmenent@2byte.es>
  * Copyright (C) 2013       Florian Henry		  	<florian.henry@open-concept.pro>
  * Copyright (C) 2014		Cedric GROSS			<c.gross@kreiz-it.fr>
- * Copyright (C) 2014       Marcos García           <marcosgdf@gmail.com>
+ * Copyright (C) 2014-2015  Marcos García           <marcosgdf@gmail.com>
  * Copyright (C) 2014       Francis Appels          <francis.appels@yahoo.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -77,7 +77,21 @@ class Expedition extends CommonObject
 	var $trueSize;
 
 	var $date_delivery;		// Date delivery planed
-	var $date_expedition;	// Date delivery real
+	/**
+	 * @deprecated
+	 * @see date_shipping
+	 */
+	var $date;
+	/**
+	 * @deprecated
+	 * @see date_shipping
+	 */
+	var $date_expedition;
+	/**
+	 * Effective delivery date
+	 * @var int
+	 */
+	public $date_shipping;
 	var $date_creation;
 	var $date_valid;
 
@@ -181,8 +195,6 @@ class Expedition extends CommonObject
 		global $conf, $langs;
 
 		$now=dol_now();
-
-		if (empty($this->model_pdf)) $this->model_pdf=$conf->global->EXPEDITION_ADDON_PDF;
 
 		require_once DOL_DOCUMENT_ROOT .'/product/stock/class/mouvementstock.class.php';
 		$error = 0;
@@ -438,7 +450,7 @@ class Expedition extends CommonObject
 		$sql.= " FROM ".MAIN_DB_PREFIX."expedition as e";
 		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."element_element as el ON el.fk_target = e.rowid AND el.targettype = '".$this->element."'";
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'c_incoterms as i ON e.fk_incoterms = i.rowid';
-		$sql.= " WHERE e.entity = ".$conf->entity;
+		$sql.= " WHERE e.entity IN (".getEntity('expedition', 1).")";
 		if ($id)   	  $sql.= " AND e.rowid=".$id;
         if ($ref)     $sql.= " AND e.ref='".$this->db->escape($ref)."'";
         if ($ref_ext) $sql.= " AND e.ref_ext='".$this->db->escape($ref_ext)."'";
@@ -461,8 +473,8 @@ class Expedition extends CommonObject
 				$this->statut               = $obj->fk_statut;
 				$this->user_author_id       = $obj->fk_user_author;
 				$this->date_creation        = $this->db->jdate($obj->date_creation);
-				$this->date                 = $this->db->jdate($obj->date_expedition);	// TODO obsolete
-				$this->date_expedition      = $this->db->jdate($obj->date_expedition);	// TODO obsolete
+				$this->date                 = $this->db->jdate($obj->date_expedition);	// TODO deprecated
+				$this->date_expedition      = $this->db->jdate($obj->date_expedition);	// TODO deprecated
 				$this->date_shipping        = $this->db->jdate($obj->date_expedition);	// Date real
 				$this->date_delivery        = $this->db->jdate($obj->date_delivery);	// Date planed
 				$this->fk_delivery_address  = $obj->fk_address;
@@ -492,14 +504,14 @@ class Expedition extends CommonObject
 
 				//Incoterms
 				$this->fk_incoterms = $obj->fk_incoterms;
-				$this->location_incoterms = $obj->location_incoterms;									
+				$this->location_incoterms = $obj->location_incoterms;
 				$this->libelle_incoterms = $obj->libelle_incoterms;
-			
+
 				$this->db->free($result);
 
 				if ($this->statut == 0) $this->brouillon = 1;
 
-				$file = $conf->expedition->dir_output . "/" .get_exdir($this->id, 2) . "/" . $this->id.".pdf";
+				$file = $conf->expedition->dir_output . "/" .get_exdir($this->id, 2, 0, 0, $this, 'shipment') . "/" . $this->id.".pdf";
 				$this->pdf_filename = $file;
 
 				// Tracking url
@@ -785,10 +797,11 @@ class Expedition extends CommonObject
 
 		$orderline = new OrderLine($this->db);
 		$orderline->fetch($id);
-		$fk_product = $orderline->fk_product;
 
-		if (! empty($orderline->fk_product))
+		if (! empty($conf->stock->enabled) && ! empty($orderline->fk_product))
 		{
+			$fk_product = $orderline->fk_product;
+
 			if (! ($entrepot_id > 0) && empty($conf->global->STOCK_WAREHOUSE_NOT_REQUIRED_FOR_SHIPMENTS))
 			{
 				$this->error=$langs->trans("ErrorWarehouseRequiredIntoShipmentLine");
@@ -878,7 +891,7 @@ class Expedition extends CommonObject
 		if (isset($this->fk_delivery_address)) $this->fk_delivery_address=trim($this->fk_delivery_address);
 		if (isset($this->shipping_method_id)) $this->shipping_method_id=trim($this->shipping_method_id);
 		if (isset($this->tracking_number)) $this->tracking_number=trim($this->tracking_number);
-		if (isset($this->statut)) $this->statut=trim($this->statut);
+		if (isset($this->statut)) $this->statut=(int) $this->statut;
 		if (isset($this->trueDepth)) $this->trueDepth=trim($this->trueDepth);
 		if (isset($this->trueWidth)) $this->trueWidth=trim($this->trueWidth);
 		if (isset($this->trueHeight)) $this->trueHeight=trim($this->trueHeight);
@@ -1075,7 +1088,7 @@ class Expedition extends CommonObject
 								}
 								if (file_exists($dir))
 								{
-									if (!dol_delete_dir($dir))
+									if (!dol_delete_dir_recursive($dir))
 									{
 										$this->error=$langs->trans("ErrorCanNotDeleteDir",$dir);
 										return 0;
@@ -1221,23 +1234,34 @@ class Expedition extends CommonObject
 				$this->total_localtax1+= $tabprice[9];
 				$this->total_localtax2+= $tabprice[10];
 
+                $line->detail_batch = array();
+
 				// Eat-by date
-				if (! empty($conf->productbatch->enabled)) {
-                    /* test on conf at begining of file sometimes doesn't include expeditionbatch
-                     * May be conf is not well initialized for dark reason
-                     */
+				if (! empty($conf->productbatch->enabled) && $obj->line_id > 0)
+				{
                     require_once DOL_DOCUMENT_ROOT.'/expedition/class/expeditionbatch.class.php';
-                    if ($originline != $obj->fk_origin_line)
+
+                    $newdetailbatch = ExpeditionLineBatch::fetchAll($this->db,$obj->line_id);
+                    if (is_array($newdetailbatch))
                     {
-                        $line->detail_batch = ExpeditionLineBatch::fetchAll($this->db,$obj->line_id);
-                    } else {
-                        $line->detail_batch = array_merge($line->detail_batch,ExpeditionLineBatch::fetchAll($this->db,$obj->line_id));
+	                    if ($originline != $obj->fk_origin_line)
+	                    {
+	                        $line->detail_batch = $newdetailbatch;
+	                    }
+	                    else
+						{
+	                        $line->detail_batch = array_merge($line->detail_batch, $newdetailbatch);
+	                    }
                     }
 				}
-				if ($originline != $obj->fk_origin_line) {
+
+				if ($originline != $obj->fk_origin_line)
+				{
 				    $this->lines[$lineindex] = $line;
 				    $lineindex++;
-				} else {
+				}
+				else
+				{
 				    $line->total_ht			+= $tabprice[0];
 				    $line->total_localtax1 	+= $tabprice[9];
 				    $line->total_localtax2 	+= $tabprice[10];
@@ -1641,13 +1665,16 @@ class Expedition extends CommonObject
 	}
 
 	/**
-	 * 	Cree un bon d'expedition sur disque
+	 *  Create a document onto disk according to template module.
 	 *
-	 * 	@param	string		$modele			Force le modele a utiliser ('' to not force)
-	 * 	@param	Translate	$outputlangs	Objet lang a utiliser pour traduction
-	 *  @return int             			<=0 if KO, >0 if OK
+	 *  @param	    string		$modele			Force the model to using ('' to not force)
+	 *  @param		Translate	$outputlangs	object lang to use for translations
+	 *  @param      int			$hidedetails    Hide details of lines
+	 *  @param      int			$hidedesc       Hide description
+	 *  @param      int			$hideref        Hide ref
+	 *  @return     int         				0 if KO, 1 if OK
 	 */
-	public function generateDocument($modele, $outputlangs)
+	public function generateDocument($modele, $outputlangs,$hidedetails=0, $hidedesc=0, $hideref=0)
 	{
 		global $conf,$user,$langs;
 
@@ -1670,9 +1697,25 @@ class Expedition extends CommonObject
 
 		$this->fetch_origin();
 
-		return $this->commonGenerateDocument($modelpath, $modele, $outputlangs, 0, 0, 0);
+		return $this->commonGenerateDocument($modelpath, $modele, $outputlangs, $hidedetails, $hidedesc, $hideref);
 	}
 
+	/**
+	 * Function used to replace a thirdparty id with another one.
+	 *
+	 * @param DoliDB $db Database handler
+	 * @param int $origin_id Old thirdparty id
+	 * @param int $dest_id New thirdparty id
+	 * @return bool
+	 */
+	public static function replaceThirdparty(DoliDB $db, $origin_id, $dest_id)
+	{
+		$tables = array(
+			'expedition'
+		);
+
+		return CommonObject::commonReplaceThirdparty($db, $origin_id, $dest_id, $tables);
+	}
 }
 
 
@@ -1691,9 +1734,10 @@ class ExpeditionLigne
 
 	// From llx_commandedet or llx_propaldet
 	var $qty_asked;
-	var $libelle;       // Label produit
-	var $product_desc;  // Description produit
-	var $ref;
+	public $product_ref;
+	public $product_label;
+	public $product_desc;
+
 
 	// Invoicing
 	var $remise_percent;
@@ -1703,6 +1747,24 @@ class ExpeditionLigne
 	var $total_localtax1;   // Total Local tax 1
 	var $total_localtax2;   // Total Local tax 2
 
+	public $fk_origin_line;
+
+	// Deprecated
+	/**
+	 * @deprecated
+	 * @see fk_origin_line
+	 */
+	var $origin_line_id;
+	/**
+	 * @deprecated
+	 * @see product_ref
+	 */
+	var $ref;
+	/**
+	 * @deprecated
+	 * @see product_label
+	 */
+	var $libelle;
 
     /**
      *	Constructor

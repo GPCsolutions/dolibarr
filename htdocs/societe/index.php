@@ -1,8 +1,9 @@
 <?php
 /* Copyright (C) 2001-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2014 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
- * Copyright (C)      2014 Charles-Fr Benke	<charles.fr@benke.fr>
+ * Copyright (C) 2014      Charles-Fr Benke	    <charles.fr@benke.fr>
+ * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,8 +47,8 @@ $transAreaType = $langs->trans("ThirdPartiesArea");
 $helpurl='EN:Module_Third_Parties|FR:Module_Tiers|ES:M&oacute;dulo_Terceros';
 
 llxHeader("",$langs->trans("ThirdParties"),$helpurl);
-
-print_fiche_titre($transAreaType);
+$linkback='';
+print_fiche_titre($transAreaType,$linkback,'title_companies.png');
 
 
 //print '<table border="0" width="100%" class="notopnoleftnoright">';
@@ -60,7 +61,7 @@ print '<div class="fichecenter"><div class="fichethirdleft">';
  */
 $rowspan=2;
 if (! empty($conf->barcode->enabled)) $rowspan++;
-print '<form method="post" action="'.DOL_URL_ROOT.'/societe/societe.php">';
+print '<form method="post" action="'.DOL_URL_ROOT.'/societe/list.php">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<table class="noborder nohover" width="100%">'."\n";
 print '<tr class="liste_titre">';
@@ -134,7 +135,7 @@ if ($result)
 }
 else dol_print_error($db);
 
-print '<table class="noborder" width="100%">'."\n";
+print '<table class="noborder nohover" width="100%">'."\n";
 print '<tr class="liste_titre"><th colspan="2">'.$langs->trans("Statistics").'</th></tr>';
 if (! empty($conf->use_javascript_ajax) && ((round($third['prospect'])?1:0)+(round($third['customer'])?1:0)+(round($third['supplier'])?1:0)+(round($third['other'])?1:0) >= 2))
 {
@@ -145,7 +146,7 @@ if (! empty($conf->use_javascript_ajax) && ((round($third['prospect'])?1:0)+(rou
     if (! empty($conf->fournisseur->enabled) && empty($conf->global->SOCIETE_DISABLE_SUPPLIERS_STATS)) $dataseries[]=array('label'=>$langs->trans("Suppliers"),'data'=>round($third['supplier']));
     if (! empty($conf->societe->enabled))                                                              $dataseries[]=array('label'=>$langs->trans("Others"),'data'=>round($third['other']));
     $data=array('series'=>$dataseries);
-    dol_print_graph('stats',300,180,$data,1,'pie',0);
+    dol_print_graph('stats',300,180,$data,1,'pie',0,'',0);
     print '</td></tr>'."\n";
 }
 else
@@ -188,6 +189,7 @@ if (! empty($conf->categorie->enabled) && ! empty($conf->global->CATEGORY_GRAPHS
 	$sql.= " FROM ".MAIN_DB_PREFIX."categorie_societe as cs";
 	$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."categorie as c ON cs.fk_categorie = c.rowid";
 	$sql.= " WHERE c.type = 2";
+	if (! is_numeric($conf->global->CATEGORY_GRAPHSTATS_ON_THIRDPARTIES)) $sql.= " AND c.label like '".$db->escape($conf->global->CATEGORY_GRAPHSTATS_ON_THIRDPARTIES)."'";
 	$sql.= " AND c.entity IN (".getEntity('category',1).")";
 	$sql.= " GROUP BY c.label";
 	$total=0;

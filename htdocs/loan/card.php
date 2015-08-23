@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2014		Alexandre Spangaro   <alexandre.spangaro@gmail.com>
+/* Copyright (C) 2014-2015	Alexandre Spangaro   <alexandre.spangaro@gmail.com>
  * Copyright (C) 2015       Frederic France      <frederic.france@free.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -46,7 +46,7 @@ $object = new Loan($db);
 /*
  * Actions
  */
- 
+
 // Classify paid
 if ($action == 'confirm_paid' && $confirm == 'yes')
 {
@@ -86,7 +86,7 @@ if ($action == 'add' && $user->rights->loan->write)
 	{
 		$datestart=@dol_mktime(12,0,0, $_POST["startmonth"], $_POST["startday"], $_POST["startyear"]);
 		$dateend=@dol_mktime(12,0,0, $_POST["endmonth"], $_POST["endday"], $_POST["endyear"]);
-		
+
 		if (! $datestart)
 		{
 			setEventMessage($langs->trans("ErrorFieldRequired",$langs->transnoentities("DateStart")), 'errors');
@@ -191,6 +191,8 @@ if ($action == 'create')
     print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
     print '<input type="hidden" name="action" value="add">';
 
+	dol_fiche_head();
+
     print '<table class="border" width="100%">';
 
 	// Label
@@ -216,13 +218,13 @@ if ($action == 'create')
 	// Date Start
 	print "<tr>";
     print '<td class="fieldrequired">'.$langs->trans("DateStart").'</td><td>';
-    print $form->select_date($datestart?$datestart:-1,'start','','','','add',1,1);
+    print $form->select_date($datestart?$datestart:-1,'start','','','','add',1,1,1);
     print '</td></tr>';
 
 	// Date End
 	print "<tr>";
     print '<td class="fieldrequired">'.$langs->trans("DateEnd").'</td><td>';
-    print $form->select_date($dateend?$dateend:-1,'end','','','','add',1,1);
+    print $form->select_date($dateend?$dateend:-1,'end','','','','add',1,1,1);
     print '</td></tr>';
 
 	// Number of terms
@@ -287,8 +289,10 @@ if ($action == 'create')
 
 	print '</table>';
 
-    print '<br><center><input class="button" type="submit" value="'.$langs->trans("Save").'"> &nbsp; &nbsp; ';
-    print '<input class="button" type="submit" name="cancel" value="'.$langs->trans("Cancel").'"></center>';
+	dol_fiche_end();
+
+    print '<div align="center"><input class="button" type="submit" value="'.$langs->trans("Save").'">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+    print '<input class="button" type="submit" name="cancel" value="'.$langs->trans("Cancel").'"></div>';
 
     print '</form>';
 }
@@ -352,7 +356,7 @@ if ($id > 0)
 		print "<td>";
 		if ($action == 'edit')
 		{
-			print $form->select_date($object->datestart, 'start', 0, 0, 0, 'update', 1);
+			print $form->select_date($object->datestart, 'start', 0, 0, 0, 'update', 1, 0, 1);
 		}
 		else
 		{
@@ -365,7 +369,7 @@ if ($id > 0)
 		print "<td>";
 		if ($action == 'edit')
 		{
-			print $form->select_date($object->dateend, 'end', 0, 0, 0, 'update', 1);
+			print $form->select_date($object->dateend, 'end', 0, 0, 0, 'update', 1, 0, 1);
 		}
 		else
 		{
@@ -398,7 +402,7 @@ if ($id > 0)
 			print '<input type="submit" class="button" name="cancel" value="'.$langs->trans("Cancel").'">';
 			print '</div>';
 			print '</form>';
-		} 
+		}
 
 		dol_fiche_end();
 
@@ -425,15 +429,18 @@ if ($id > 0)
 		if ($resql)
 		{
 			$num = $db->num_rows($resql);
-			$i = 0; $total = 0;
+			$i = 0;
+            $total_insurance = 0;
+            $total_interest = 0;
+            $total_capital = 0;
 			echo '<table class="nobordernopadding" width="100%">';
 			print '<tr class="liste_titre">';
 			print '<td>'.$langs->trans("RefPayment").'</td>';
 			print '<td>'.$langs->trans("Date").'</td>';
 			print '<td>'.$langs->trans("Type").'</td>';
-			print '<td align="center" colspan="2">'.$langs->trans("Insurance").'</td>';
-			print '<td align="center" colspan="2">'.$langs->trans("Interest").'</td>';
-      		print '<td align="center" colspan="2">'.$langs->trans("Capital").'</td>';
+			print '<td align="center">'.$langs->trans("Insurance").'</td>';
+			print '<td align="center">'.$langs->trans("Interest").'</td>';
+      		print '<td align="center">'.$langs->trans("Capital").'</td>';
       		print '<td>&nbsp;</td>';
       		print '</tr>';
 
@@ -442,27 +449,31 @@ if ($id > 0)
 			{
 				$objp = $db->fetch_object($resql);
 				$var=!$var;
-				print "<tr ".$bc[$var]."><td>";
-				print '<a href="'.DOL_URL_ROOT.'/loan/payment/card.php?id='.$objp->rowid.'">'.img_object($langs->trans("Payment"),"payment").' '.$objp->rowid.'</a></td>';
+				print "<tr ".$bc[$var].">";
+				print '<td><a href="'.DOL_URL_ROOT.'/loan/payment/card.php?id='.$objp->rowid.'">'.img_object($langs->trans("Payment"),"payment").' '.$objp->rowid.'</a></td>';
 				print '<td>'.dol_print_date($db->jdate($objp->dp),'day')."</td>\n";
 				print "<td>".$objp->paiement_type.' '.$objp->num_payment."</td>\n";
-				print '<td align="right">'.price($objp->amount_insurance)."</td><td>&nbsp;".$langs->trans("Currency".$conf->currency)."</td>\n";
-				print '<td align="right">'.price($objp->amount_interest)."</td><td>&nbsp;".$langs->trans("Currency".$conf->currency)."</td>\n";
-        		print '<td align="right">'.price($objp->amount_capital)."</td><td>&nbsp;".$langs->trans("Currency".$conf->currency)."</td>\n";
+                print '<td align="right">'.price($objp->amount_insurance, 0, $langs, 0, 0, -1, $conf->currency)."</td>\n";
+                print '<td align="right">'.price($objp->amount_interest, 0, $langs, 0, 0, -1, $conf->currency)."</td>\n";
+                print '<td align="right">'.price($objp->amount_capital, 0, $langs, 0, 0, -1, $conf->currency)."</td>\n";
 				print "</tr>";
-				$totalpaid += $objp->amount_capital;
+                $total_insurance += $objp->amount_insurance;
+                $total_interest += $objp->amount_interest;
+                $total_capital += $objp->amount_capital;
 				$i++;
 			}
 
+			$totalpaid = $total_insurance + $total_interest + $total_capital;
+
 			if ($object->paid == 0)
 			{
-				print '<tr><td colspan="7" align="right">'.$langs->trans("AlreadyPaid").' :</td><td align="right"><b>'.price($totalpaid).'</b></td><td>&nbsp;'.$langs->trans("Currency".$conf->currency).'</td></tr>';
-				print '<tr><td colspan="7" align="right">'.$langs->trans("AmountExpected").' :</td><td align="right" bgcolor="#d0d0d0">'.price($object->capital).'</td><td bgcolor="#d0d0d0">&nbsp;'.$langs->trans("Currency".$conf->currency).'</td></tr>';
+				print '<tr><td colspan="5" align="right">'.$langs->trans("AlreadyPaid").' :</td><td align="right"><b>'.price($totalpaid, 0, $langs, 0, 0, -1, $conf->currency).'</b></td></tr>';
+				print '<tr><td colspan="5" align="right">'.$langs->trans("AmountExpected").' :</td><td align="right" bgcolor="#d0d0d0">'.price($object->capital, 0, $langs, 0, 0, -1, $conf->currency).'</td></tr>';
 
 				$staytopay = $object->capital - $totalpaid;
 
-				print '<tr><td colspan="7" align="right">'.$langs->trans("RemainderToPay").' :</td>';
-				print '<td align="right" bgcolor="#f0f0f0"><b>'.price($staytopay).'</b></td><td bgcolor="#f0f0f0">&nbsp;'.$langs->trans("Currency".$conf->currency).'</td></tr>';
+				print '<tr><td colspan="5" align="right">'.$langs->trans("RemainderToPay").' :</td>';
+				print '<td align="right" bgcolor="#f0f0f0"><b>'.price($staytopay, 0, $langs, 0, 0, -1, $conf->currency).'</b></td></tr>';
 			}
 			print "</table>";
 			$db->free($resql);

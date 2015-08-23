@@ -1,5 +1,12 @@
 # Dolibarr language file - en_US - Accounting Expert
 CHARSET=UTF-8
+ACCOUNTING_EXPORT_SEPARATORCSV=Dışaaktarma dosyası için sütun ayırıcısı
+ACCOUNTING_EXPORT_DATE=Dışaaktarma dosyası için tarih biçimi
+ACCOUNTING_EXPORT_PIECE=Dışaaktarılacak parça sayısı ?
+ACCOUNTING_EXPORT_GLOBAL_ACCOUNT=Genel hesapla mı dışaaktarılsın?
+ACCOUNTING_EXPORT_LABEL=Etiket dışaaktarılsın mı?
+ACCOUNTING_EXPORT_AMOUNT=Tutar dışaaktarılsın mı?
+ACCOUNTING_EXPORT_DEVISE=Aygıt dışaaktarılsın mı?
 
 Accounting=Muhasebe
 Globalparameters=Genel parametreler
@@ -52,7 +59,7 @@ AccountingVentilationSupplier=Tedarikçi hesabı analizi
 AccountingVentilationCustomer=Müşteri hesabı analizi
 Line=Satır
 
-CAHTF=Tedarikçi HT toplam sipariş
+CAHTF=Tedarikçi HT toplam alışı
 InvoiceLines=Analiz edilecek fatura kalemleri
 InvoiceLinesDone=Analiz edilen fatura kalemleri
 IntoAccount=Muhasebe hesabında
@@ -80,10 +87,9 @@ ACCOUNTING_LENGTH_GACCOUNT=Genel hesapların uzunluğu
 ACCOUNTING_LENGTH_AACCOUNT=Üçüncü parti hesaplarının uzunluğu
 
 ACCOUNTING_SELL_JOURNAL=Satış günlüğü
-ACCOUNTING_PURCHASE_JOURNAL=Satınalma günlüğü
-ACCOUNTING_BANK_JOURNAL=Banka günlüğü
-ACCOUNTING_CASH_JOURNAL=Kasa günlüğü
+ACCOUNTING_PURCHASE_JOURNAL=Alış günlüğü
 ACCOUNTING_MISCELLANEOUS_JOURNAL=Çeşitli günlük
+ACCOUNTING_EXPENSEREPORT_JOURNAL=Rapor günlüğü dışaaktarılsın mı?
 ACCOUNTING_SOCIAL_JOURNAL=Sosyal günlük
 
 ACCOUNTING_ACCOUNT_TRANSFER_CASH=Transfer hesabı
@@ -109,9 +115,9 @@ Codejournal=Günlük
 DelBookKeeping=Büyük defter kayıtlarını sil
 
 SellsJournal=Satış günlüğü
-PurchasesJournal=Satınalma günlüğü
+PurchasesJournal=Alış günlüğü
 DescSellsJournal=Satış günlüğü
-DescPurchasesJournal=Satınalma günlüğü
+DescPurchasesJournal=Alış günlüğü
 BankJournal=Banka günlüğü
 DescBankJournal=Nakit dışında her türlü ödemeyi içeren banka günlüğü
 CashJournal=Kasa günlüğü

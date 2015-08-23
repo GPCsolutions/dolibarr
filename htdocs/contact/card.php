@@ -1,12 +1,13 @@
 <?php
 /* Copyright (C) 2004-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2004-2013 Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2004-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2004      Benoit Mortier       <benoit.mortier@opensides.be>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
  * Copyright (C) 2007      Franky Van Liedekerke <franky.van.liedekerke@telenet.be>
  * Copyright (C) 2013      Florian Henry		  	<florian.henry@open-concept.pro>
  * Copyright (C) 2013      Alexandre Spangaro 	<alexandre.spangaro@gmail.com>
  * Copyright (C) 2014      Juanjo Menent	 	<jmenent@2byte.es>
+ * Copyright (C) 2015       Jean-François Ferry		<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +40,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
 require_once DOL_DOCUMENT_ROOT. '/core/class/html.form.class.php';
 require_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
+require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
 $langs->load("companies");
 $langs->load("users");
 $langs->load("other");
@@ -200,7 +202,11 @@ if (empty($reshook))
 
         // Fill array 'array_options' with data from add form
 		$ret = $extrafields->setOptionalsFromPost($extralabels,$object);
-		if ($ret < 0) $error++;
+		if ($ret < 0)
+		{
+			$error++;
+			$action = 'create';
+		}
 
         if (! GETPOST("lastname"))
         {
@@ -215,7 +221,17 @@ if (empty($reshook))
             {
                 $error++; $errors=array_merge($errors,($object->error?array($object->error):$object->errors));
                 $action = 'create';
-            }
+			} else {
+				// Categories association
+				$contcats = GETPOST( 'contcats', 'array' );
+				if (!empty( $contcats )) {
+					$cat = new Categorie( $db );
+					foreach ($contcats as $id_category) {
+						$cat->fetch( $id_category );
+						$cat->add_type( $object, 'contact' );
+					}
+				}
+			}
         }
 
         if (! $error && $id > 0)
@@ -255,7 +271,7 @@ if (empty($reshook))
         }
         else
         {
-            setEventMessage($object->error,$object->errors,'errors');
+            setEventMessages($object->error,$object->errors,'errors');
         }
     }
 
@@ -308,8 +324,22 @@ if (empty($reshook))
 
             $result = $object->update($contactid, $user);
 
-            if ($result > 0)
-            {
+			if ($result > 0) {
+				// Categories association
+				// First we delete all categories association
+				$sql = 'DELETE FROM ' . MAIN_DB_PREFIX . 'categorie_contact';
+				$sql .= ' WHERE fk_socpeople = ' . $object->id;
+				$db->query( $sql );
+
+				// Then we add the associated categories
+				$categories = GETPOST( 'contcats', 'array' );
+				if (!empty( $categories )) {
+					$cat = new Categorie( $db );
+					foreach ($categories as $id_category) {
+						$cat->fetch( $id_category );
+						$cat->add_type( $object, 'contact' );
+					}
+				}
                 $object->old_lastname='';
                 $object->old_firstname='';
                 $action = 'view';
@@ -412,7 +442,8 @@ else
             }
 
             $title = $addcontact = (! empty($conf->global->SOCIETE_ADDRESSES_MANAGEMENT) ? $langs->trans("AddContact") : $langs->trans("AddContactAddress"));
-            print_fiche_titre($title);
+            $linkback='';
+            print_fiche_titre($title,$linkback,'title_companies.png');
 
             // Affiche les erreurs
             dol_htmloutput_errors(is_numeric($error)?'':$error,$errors);
@@ -574,6 +605,15 @@ else
             print $form->selectarray('priv',$selectarray,(GETPOST("priv",'alpha')?GETPOST("priv",'alpha'):$object->priv),0);
             print '</td></tr>';
 
+			// Categories
+			if (! empty($conf->categorie->enabled)  && ! empty($user->rights->categorie->lire)) {
+				print '<tr><td>' . fieldLabel( 'Categories', 'contcats' ) . '</td><td colspan="3">';
+				$cate_arbo = $form->select_all_categories( Categorie::TYPE_CONTACT, null, 'parent', null, null, 1 );
+				print $form->multiselectarray( 'contcats', $cate_arbo, GETPOST( 'contcats', 'array' ), null, null, null,
+					null, '90%' );
+				print "</td></tr>";
+			}
+
             // Other attributes
             $parameters=array('colspan' => ' colspan="3"');
             $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
@@ -595,11 +635,11 @@ else
             $form=new Form($db);
             if ($object->birthday)
             {
-                print $form->select_date($object->birthday,'birthday',0,0,0,"perso");
+                print $form->select_date($object->birthday,'birthday',0,0,0,"perso", 1, 0, 1);
             }
             else
             {
-                print $form->select_date('','birthday',0,0,1,"perso");
+                print $form->select_date('','birthday',0,0,1,"perso", 1, 0, 1);
             }
             print '</td>';
 
@@ -796,22 +836,36 @@ else
             print '</td></tr>';
 
              // Note Public
-            print '<tr><td valign="top"><label for="note_public">'.$langs->trans("NotePublic").'</label></td><td colspan="3">';
+            print '<tr><td class="tdtop"><label for="note_public">'.$langs->trans("NotePublic").'</label></td><td colspan="3">';
             $doleditor = new DolEditor('note_public', $object->note_public, '', 80, 'dolibarr_notes', 'In', 0, false, true, ROWS_3, 70);
             print $doleditor->Create(1);
             print '</td></tr>';
 
             // Note Private
-            print '<tr><td valign="top"><label for="note_private">'.$langs->trans("NotePrivate").'</label></td><td colspan="3">';
+            print '<tr><td class="tdtop"><label for="note_private">'.$langs->trans("NotePrivate").'</label></td><td colspan="3">';
             $doleditor = new DolEditor('note_private', $object->note_private, '', 80, 'dolibarr_notes', 'In', 0, false, true, ROWS_3, 70);
             print $doleditor->Create(1);
             print '</td></tr>';
 
             // Statut
-            print '<tr><td valign="top">'.$langs->trans("Status").'</td>';
+            print '<tr><td>'.$langs->trans("Status").'</td>';
             print '<td>';
-            print $object->getLibStatut(5);
+            print $object->getLibStatut(4);
             print '</td></tr>';
+
+			// Categories
+			if (!empty( $conf->categorie->enabled ) && !empty( $user->rights->categorie->lire )) {
+				print '<tr><td>' . fieldLabel( 'Categories', 'contcats' ) . '</td>';
+				print '<td colspan="3">';
+				$cate_arbo = $form->select_all_categories( Categorie::TYPE_CONTACT, null, null, null, null, 1 );
+				$c = new Categorie( $db );
+				$cats = $c->containing( $object->id, Categorie::TYPE_CONTACT );
+				foreach ($cats as $cat) {
+					$arrayselected[] = $cat->id;
+				}
+				print $form->multiselectarray( 'contcats', $cate_arbo, $arrayselected, '', 0, '', 0, '90%' );
+				print "</td></tr>";
+			}
 
             // Other attributes
             $parameters=array('colspan' => ' colspan="3"');
@@ -1023,20 +1077,29 @@ else
         print '</td></tr>';
 
         // Note Public
-        print '<tr><td valign="top">'.$langs->trans("NotePublic").'</td><td colspan="3">';
+        print '<tr><td class="tdtop">'.$langs->trans("NotePublic").'</td><td colspan="3">';
         print nl2br($object->note_public);
         print '</td></tr>';
 
         // Note Private
-        print '<tr><td valign="top">'.$langs->trans("NotePrivate").'</td><td colspan="3">';
+        print '<tr><td class="tdtop">'.$langs->trans("NotePrivate").'</td><td colspan="3">';
         print nl2br($object->note_private);
 
 	 	// Statut
-		print '<tr><td valign="top">'.$langs->trans("Status").'</td>';
+		print '<tr><td>'.$langs->trans("Status").'</td>';
 		print '<td>';
-		print $object->getLibStatut(5);
+		print $object->getLibStatut(4);
 		print '</td>';
 		print '</tr>'."\n";
+
+		// Categories
+		if (! empty($conf->categorie->enabled)  && ! empty($user->rights->categorie->lire)) {
+			print '<tr><td>' . $langs->trans( "Categories" ) . '</td>';
+			print '<td colspan="3">';
+			print $form->showCategories( $object->id, 'contact', 1 );
+			print '</td></tr>';
+		}
+
         // Other attributes
         $parameters=array('socid'=>$socid, 'colspan' => ' colspan="3"');
         $reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
@@ -1086,6 +1149,14 @@ else
         else print $langs->trans("NoDolibarrAccess");
         print '</td></tr>';
 
+        print '<tr><td>';
+        print $langs->trans("ExportCardToFormat").'</td><td colspan="3">';
+		print '<a href="'.DOL_URL_ROOT.'/contact/vcard.php?id='.$contact->id.'">';
+		print img_picto($langs->trans("VCard"),'vcard.png').' ';
+		print $langs->trans("VCard");
+		print '</a>';
+        print '</td></tr>';
+
         print "</table>";
 
         print dol_fiche_end();
@@ -1099,18 +1170,14 @@ else
 		{
         	if ($user->rights->societe->contact->creer)
             {
-                print '<a class="butAction" href="card.php?id='.$object->id.'&action=edit">'.$langs->trans('Modify').'</a>';
+                print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&action=edit">'.$langs->trans('Modify').'</a>';
             }
 
             if (! $object->user_id && $user->rights->user->user->creer)
             {
-                print '<a class="butAction" href="card.php?id='.$object->id.'&action=create_user">'.$langs->trans("CreateDolibarrLogin").'</a>';
+                print '<a class="butAction" href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&action=create_user">'.$langs->trans("CreateDolibarrLogin").'</a>';
             }
 
-            if ($user->rights->societe->contact->supprimer)
-            {
-                print '<a class="butActionDelete" href="card.php?id='.$object->id.'&action=delete'.($backtopage?'&backtopage='.urlencode($backtopage):'').'">'.$langs->trans('Delete').'</a>';
-            }
             // Activer
             if ($object->statut == 0 && $user->rights->societe->contact->creer)
             {
@@ -1120,6 +1187,12 @@ else
             if ($object->statut == 1 && $user->rights->societe->contact->creer)
             {
                 print '<a class="butActionDelete" href="'.$_SERVER['PHP_SELF'].'?action=disable&id='.$object->id.'">'.$langs->trans("DisableUser").'</a>';
+            }
+
+		    // Delete
+		    if ($user->rights->societe->contact->supprimer)
+            {
+                print '<a class="butActionDelete" href="'.$_SERVER['PHP_SELF'].'?id='.$object->id.'&action=delete'.($backtopage?'&backtopage='.urlencode($backtopage):'').'">'.$langs->trans('Delete').'</a>';
             }
         }
 

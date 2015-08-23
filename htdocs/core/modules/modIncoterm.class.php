@@ -46,7 +46,7 @@ class modIncoterm extends DolibarrModules
 
 		// Id for module (must be unique).
 		// Use here a free id (See in Home -> System information -> Dolibarr for list of used modules id).
-		$this->numero = 210009;
+		$this->numero = 62000;
 		// Key text used to identify module (for permissions, menus, etc...)
 		$this->rights_class = 'incoterm';
 
@@ -108,35 +108,5 @@ class modIncoterm extends DolibarrModules
 		// Main menu entries
 		$this->menus = array();			// List of menus to add
 		$r=0;
-	}
-
-	/**
-	 *		Function called when module is enabled.
-	 *		The init function add constants, boxes, permissions and menus (defined in constructor) into Dolibarr database.
-	 *		It also creates data directories
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-	 */
-	function init($options='')
-	{
-		$sql = array();
-
-		return $this->_init($sql, $options);
-	}
-
-	/**
-	 *		Function called when module is disabled.
-	 *      Remove from database constants, boxes and permissions from Dolibarr database.
-	 *		Data directories are not deleted
-	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
-	 *      @return     int             	1 if OK, 0 if KO
-	 */
-	function remove($options='')
-	{
-		$sql = array();
-
-		return $this->_remove($sql, $options);
 	}
 }

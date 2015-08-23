@@ -18,6 +18,23 @@
 -- -- VPGSQL8.2 DELETE FROM llx_usergroup_user      WHERE fk_user      NOT IN (SELECT rowid from llx_user);
 -- -- VMYSQL4.1 DELETE FROM llx_usergroup_user      WHERE fk_usergroup NOT IN (SELECT rowid from llx_usergroup);
 
+
+UPDATE llx_facture_fourn set ref=rowid where ref IS NULL;
+ALTER TABLE llx_facture_fourn MODIFY COLUMN ref varchar(255) NOT NULL;
+
+
+-- IVORY COST (id country=21)
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,localtax2,localtax2_type,note,active) values (211, 21,  '0','0',0,0,0,0,'IVA Rate 0',1);
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,localtax1,localtax1_type,localtax2,localtax2_type,note,active) values (212, 21,  '18','0',7.5,2,0,0,'IVA standard rate',1);
+-- Taiwan VAT Rates
+insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values ( 2131, 213, '5', '0', 'VAT 5%', 1);
+
+ALTER TABLE llx_societe_rib ADD COLUMN rum varchar(32) after default_rib;
+ALTER TABLE llx_societe_rib ADD COLUMN frstrecur varchar(16) default 'FRST' after rum;
+
+ALTER TABLE llx_cronjob ADD COLUMN entity integer DEFAULT 0;
+ALTER TABLE llx_cronjob MODIFY COLUMN params text NULL;
+
 -- Loan
 create table llx_loan
 (
@@ -64,10 +81,20 @@ create table llx_payment_loan
   fk_user_modif		integer
 )ENGINE=innodb;
 
+ALTER TABLE llx_extrafields ADD COLUMN fieldrequired integer DEFAULT 0;
 ALTER TABLE llx_extrafields ADD COLUMN perms varchar(255) after fieldrequired;
 ALTER TABLE llx_extrafields ADD COLUMN list integer DEFAULT 0 after perms;
 
 ALTER TABLE llx_payment_salary ADD COLUMN salary real after datev;
+
+ALTER TABLE llx_payment_salary ADD INDEX idx_payment_salary_ref (num_payment);
+ALTER TABLE llx_payment_salary ADD INDEX idx_payment_salary_user (fk_user, entity);
+ALTER TABLE llx_payment_salary ADD INDEX idx_payment_salary_datep (datep);
+ALTER TABLE llx_payment_salary ADD INDEX idx_payment_salary_datesp (datesp);
+ALTER TABLE llx_payment_salary ADD INDEX idx_payment_salary_dateep (dateep);
+
+ALTER TABLE llx_payment_salary ADD CONSTRAINT fk_payment_salary_user FOREIGN KEY (fk_user) REFERENCES llx_user (rowid);
+
 
 UPDATE llx_projet_task_time SET task_datehour = task_date where task_datehour IS NULL;
 ALTER TABLE llx_projet_task_time ADD COLUMN task_date_withhour integer DEFAULT 0 after task_datehour;
@@ -76,7 +103,7 @@ ALTER TABLE llx_projet_task MODIFY COLUMN duration_effective real DEFAULT 0 NULL
 ALTER TABLE llx_projet_task MODIFY COLUMN planned_workload real DEFAULT 0 NULL;
 
 
-ALTER TABLE llx_commande_fournisseur MODIFY COLUMN date_livraison datetime; 
+ALTER TABLE llx_commande_fournisseur MODIFY COLUMN date_livraison datetime;
 
 -- Add id commandefourndet in llx_commande_fournisseur_dispatch to correct /fourn/commande/dispatch.php display when several times same product in supplier order
 ALTER TABLE llx_commande_fournisseur_dispatch ADD COLUMN fk_commandefourndet INTEGER NOT NULL DEFAULT 0 AFTER fk_product;
@@ -101,14 +128,17 @@ ALTER TABLE llx_product_fournisseur_price ADD COLUMN fk_supplier_price_expressio
 ALTER TABLE llx_product ADD COLUMN fk_price_expression integer DEFAULT NULL;
 ALTER TABLE llx_product_price ADD COLUMN fk_price_expression integer DEFAULT NULL;
 
+ALTER TABLE llx_product ADD COLUMN fifo double(24,8) after pmp;
+ALTER TABLE llx_product ADD COLUMN lifo double(24,8) after fifo;
 
+  
 --create table for user conf of printing driver
-CREATE TABLE llx_printing 
+CREATE TABLE llx_printing
 (
  rowid integer AUTO_INCREMENT PRIMARY KEY,
  tms timestamp,
  datec datetime,
- printer_name text NOT NULL, 
+ printer_name text NOT NULL,
  printer_location text NOT NULL,
  printer_id varchar(255) NOT NULL,
  copy integer NOT NULL DEFAULT '1',
@@ -119,9 +149,6 @@ CREATE TABLE llx_printing
 
 ALTER TABLE llx_product_fournisseur_price ADD COLUMN fk_price_expression integer DEFAULT NULL;
 
--- Taiwan VAT Rates
-insert into llx_c_tva(rowid,fk_pays,taux,recuperableonly,note,active) values ( 2131, 213, '5', '0', 'VAT 5%', 1);
-
 -- Add situation invoices
 ALTER TABLE llx_facture ADD COLUMN situation_cycle_ref smallint;
 ALTER TABLE llx_facture ADD COLUMN situation_counter smallint;
@@ -130,12 +157,12 @@ ALTER TABLE llx_facturedet ADD COLUMN situation_percent real;
 ALTER TABLE llx_facturedet ADD COLUMN fk_prev_id integer;
 
 -- Convert SMTP config to main entity, so new entities don't get the old values
-UPDATE llx_const SET entity = 1 WHERE entity = 0 AND name = "MAIN_MAIL_SENDMODE";
-UPDATE llx_const SET entity = 1 WHERE entity = 0 AND name = "MAIN_MAIL_SMTP_PORT";
-UPDATE llx_const SET entity = 1 WHERE entity = 0 AND name = "MAIN_MAIL_SMTP_SERVER";
-UPDATE llx_const SET entity = 1 WHERE entity = 0 AND name = "MAIN_MAIL_SMTPS_ID";
-UPDATE llx_const SET entity = 1 WHERE entity = 0 AND name = "MAIN_MAIL_SMTPS_PW";
-UPDATE llx_const SET entity = 1 WHERE entity = 0 AND name = "MAIN_MAIL_EMAIL_TLS";
+UPDATE llx_const SET entity = __ENCRYPT('1')__ WHERE __DECRYPT('entity')__ = 0 AND __DECRYPT('name')__ = "MAIN_MAIL_SENDMODE";
+UPDATE llx_const SET entity = __ENCRYPT('1')__ WHERE __DECRYPT('entity')__ = 0 AND __DECRYPT('name')__ = "MAIN_MAIL_SMTP_PORT";
+UPDATE llx_const SET entity = __ENCRYPT('1')__ WHERE __DECRYPT('entity')__ = 0 AND __DECRYPT('name')__ = "MAIN_MAIL_SMTP_SERVER";
+UPDATE llx_const SET entity = __ENCRYPT('1')__ WHERE __DECRYPT('entity')__ = 0 AND __DECRYPT('name')__ = "MAIN_MAIL_SMTPS_ID";
+UPDATE llx_const SET entity = __ENCRYPT('1')__ WHERE __DECRYPT('entity')__ = 0 AND __DECRYPT('name')__ = "MAIN_MAIL_SMTPS_PW";
+UPDATE llx_const SET entity = __ENCRYPT('1')__ WHERE __DECRYPT('entity')__ = 0 AND __DECRYPT('name')__ = "MAIN_MAIL_EMAIL_TLS";
 
 
 create table llx_bank_account_extrafields
@@ -148,7 +175,9 @@ create table llx_bank_account_extrafields
 
 
 ALTER TABLE llx_stock_mouvement MODIFY COLUMN label varchar(255);
+ALTER TABLE llx_stock_mouvement MODIFY COLUMN price double(24,8) DEFAULT 0;
 ALTER TABLE llx_stock_mouvement ADD COLUMN inventorycode varchar(128);
+
 
 ALTER TABLE llx_product_association ADD COLUMN incdec integer DEFAULT 1;
 
@@ -180,6 +209,8 @@ ALTER TABLE llx_stock_mouvement ADD COLUMN batch varchar(30) DEFAULT NULL;
 ALTER TABLE llx_stock_mouvement ADD COLUMN eatby date DEFAULT NULL;
 ALTER TABLE llx_stock_mouvement ADD COLUMN sellby date DEFAULT NULL;
 
+UPDATE llx_product_batch SET batch = 'unknown' WHERE batch IS NULL;
+ALTER TABLE llx_product_batch MODIFY COLUMN batch varchar(30) NOT NULL;
 
 
 CREATE TABLE llx_expensereport (
@@ -191,7 +222,7 @@ CREATE TABLE llx_expensereport (
   total_ht 			double(24,8) DEFAULT 0,
   total_tva 		double(24,8) DEFAULT 0,
   localtax1			double(24,8) DEFAULT 0,				-- amount total localtax1
-  localtax2			double(24,8) DEFAULT 0,				-- amount total localtax2	
+  localtax2			double(24,8) DEFAULT 0,				-- amount total localtax2
   total_ttc 		double(24,8) DEFAULT 0,
   date_debut 		date NOT NULL,
   date_fin 			date NOT NULL,
@@ -200,7 +231,6 @@ CREATE TABLE llx_expensereport (
   date_approve		datetime,
   date_refuse 		datetime,
   date_cancel 		datetime,
-  date_paiement 	datetime,
   tms 		 		timestamp,
   fk_user_author 	integer NOT NULL,
   fk_user_modif 	integer DEFAULT NULL,
@@ -209,9 +239,9 @@ CREATE TABLE llx_expensereport (
   fk_user_approve   integer DEFAULT NULL,
   fk_user_refuse 	integer DEFAULT NULL,
   fk_user_cancel 	integer DEFAULT NULL,
-  fk_user_paid 		integer DEFAULT NULL,
   fk_statut			integer NOT NULL,		-- 1=brouillon, 2=validé (attente approb), 4=annulé, 5=approuvé, 6=payed, 99=refusé
   fk_c_paiement 	integer DEFAULT NULL,
+  paid 				smallint default 0 NOT NULL,
   note_public		text,
   note_private 		text,
   detail_refuse 	varchar(255) DEFAULT NULL,
@@ -227,18 +257,17 @@ CREATE TABLE llx_expensereport_det
    rowid integer NOT NULL AUTO_INCREMENT PRIMARY KEY,
    fk_expensereport integer NOT NULL,
    fk_c_type_fees integer NOT NULL,
-   fk_projet integer NOT NULL,
-   fk_c_tva integer NOT NULL,
+   fk_projet integer,
    comments text NOT NULL,
    product_type integer DEFAULT -1,
    qty real NOT NULL,
    value_unit real NOT NULL,
    remise_percent real,
-   tva_tx						double(6,3),						    -- Vat rat
-   localtax1_tx               	double(6,3)  DEFAULT 0,    		 	-- localtax1 rate
-   localtax1_type			 	varchar(10)	  	 NULL, 				 	-- localtax1 type
-   localtax2_tx               	double(6,3)  DEFAULT 0,    		 	-- localtax2 rate
-   localtax2_type			 	varchar(10)	  	 NULL, 				 	-- localtax2 type
+   tva_tx						double(6,3),					-- Vat rat
+   localtax1_tx               	double(6,3)  DEFAULT 0,    		-- localtax1 rate
+   localtax1_type			 	varchar(10)	  	 NULL, 			-- localtax1 type
+   localtax2_tx               	double(6,3)  DEFAULT 0,    		-- localtax2 rate
+   localtax2_type			 	varchar(10)	  	 NULL, 			-- localtax2 type
    total_ht double(24,8) DEFAULT 0 NOT NULL,
    total_tva double(24,8) DEFAULT 0 NOT NULL,
    total_localtax1				double(24,8)  	DEFAULT 0,		-- Total LocalTax1 for total quantity of line
@@ -251,9 +280,29 @@ CREATE TABLE llx_expensereport_det
    import_key					varchar(14)
 ) ENGINE=innodb;
 
+ALTER TABLE llx_expensereport_det MODIFY COLUMN fk_projet integer NULL;
+ALTER TABLE llx_expensereport_det MODIFY COLUMN fk_c_tva integer NULL;
+
+create table llx_payment_expensereport
+(
+  rowid                   integer AUTO_INCREMENT PRIMARY KEY,
+  fk_expensereport        integer,
+  datec                   datetime,           -- date de creation
+  tms                     timestamp,
+  datep                   datetime,           -- payment date
+  amount                  real DEFAULT 0,
+  fk_typepayment          integer NOT NULL,
+  num_payment             varchar(50),
+  note                    text,
+  fk_bank                 integer NOT NULL,
+  fk_user_creat           integer,            -- creation user
+  fk_user_modif           integer             -- last modification user
+)ENGINE=innodb;
+
 
 ALTER TABLE llx_projet ADD COLUMN budget_amount double(24,8);
-
+-- Alias names (commercial, trademark or alias names)
+ALTER TABLE llx_societe ADD COLUMN name_alias varchar(128) NULL;
 
 create table llx_commande_fournisseurdet_extrafields
 (
@@ -284,11 +333,12 @@ ALTER TABLE llx_commande_fournisseurdet ADD COLUMN special_code	 integer DEFAULT
 ALTER TABLE llx_commande_fournisseurdet ADD COLUMN rang integer DEFAULT 0;
 ALTER TABLE llx_commande_fournisseurdet ADD COLUMN fk_parent_line integer NULL after fk_commande;
 
-ALTER TABLE llx_projet ADD COLUMN date_close datetime DEFAULT NULL;    
+ALTER TABLE llx_projet ADD COLUMN date_close datetime DEFAULT NULL;
 ALTER TABLE llx_projet ADD COLUMN fk_user_close integer DEFAULT NULL;
+ALTER TABLE llx_projet ADD COLUMN fk_opp_status integer DEFAULT NULL after fk_statut;
+ALTER TABLE llx_projet ADD COLUMN opp_amount double(24,8) DEFAULT NULL;
 
 
-  
 -- Module AskPriceSupplier --
 CREATE TABLE llx_askpricesupplier (
   rowid integer NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -377,6 +427,9 @@ CREATE TABLE llx_askpricesupplierdet_extrafields (
 -- End Module AskPriceSupplier --
 
 
+ALTER TABLE llx_commande_fournisseur ADD COLUMN date_approve2 datetime after date_approve;
+ALTER TABLE llx_commande_fournisseur ADD COLUMN fk_user_approve2 integer after fk_user_approve;
+
 ALTER TABLE llx_societe ADD COLUMN fk_incoterms integer;
 ALTER TABLE llx_societe ADD COLUMN location_incoterms varchar(255);
 ALTER TABLE llx_propal ADD COLUMN fk_incoterms integer;
@@ -423,7 +476,8 @@ ALTER TABLE llx_societe_extrafields ADD UNIQUE INDEX uk_societe_extrafields (fk_
 ALTER TABLE llx_don ADD COLUMN fk_country integer NOT NULL after country;
 ALTER TABLE llx_don CHANGE COLUMN fk_paiement fk_payment integer;
 ALTER TABLE llx_don ADD COLUMN paid smallint default 0 NOT NULL after fk_payment;
-ALTER TABLE llx_don CHANGE COLUMN fk_don_projet fk_project integer NULL;
+ALTER TABLE llx_don CHANGE COLUMN fk_don_projet fk_projet integer NULL;
+ALTER TABLE llx_don CHANGE COLUMN fk_project fk_projet integer NULL;
 
 create table llx_don_extrafields
 (
@@ -510,3 +564,168 @@ create table llx_c_price_global_variable_updater
 	next_update			integer DEFAULT 0,
 	last_status			text DEFAULT NULL
 )ENGINE=innodb;
+
+ALTER TABLE llx_adherent CHANGE COLUMN note note_private text DEFAULT NULL;
+ALTER TABLE llx_adherent ADD COLUMN note_public text DEFAULT NULL after note_private;
+
+CREATE TABLE IF NOT EXISTS llx_propal_merge_pdf_product (
+  rowid integer NOT NULL auto_increment PRIMARY KEY,
+  fk_product integer NOT NULL,
+  file_name varchar(200) NOT NULL,
+  lang 	varchar(5) DEFAULT NULL,
+  fk_user_author integer DEFAULT NULL,
+  fk_user_mod integer NOT NULL,
+  datec datetime NOT NULL,
+  tms timestamp NOT NULL,
+  import_key varchar(14) DEFAULT NULL
+) ENGINE=InnoDB;
+
+
+-- Units
+create table llx_c_units(
+	rowid integer AUTO_INCREMENT PRIMARY KEY,
+	code varchar(3),
+	label varchar(50),
+	short_label varchar(5),
+	active tinyint DEFAULT 1 NOT NULL
+)ENGINE=innodb;
+ALTER TABLE llx_c_units ADD UNIQUE uk_c_units_code(code);
+
+INSERT INTO llx_c_units ( code, label, short_label, active) VALUES ('P','piece','p', 1);
+INSERT INTO llx_c_units ( code, label, short_label, active) VALUES ('SET','set','se', 1);
+INSERT INTO llx_c_units ( code, label, short_label, active) VALUES ('S','second','s', 1);
+INSERT INTO llx_c_units ( code, label, short_label, active) VALUES ('H','hour','h', 1);
+INSERT INTO llx_c_units ( code, label, short_label, active) VALUES ('D','day','d', 1);
+INSERT INTO llx_c_units ( code, label, short_label, active) VALUES ('KG','kilogram','kg', 1);
+INSERT INTO llx_c_units ( code, label, short_label, active) VALUES ('G','gram','g', 1);
+INSERT INTO llx_c_units ( code, label, short_label, active) VALUES ('M','meter','m', 1);
+INSERT INTO llx_c_units ( code, label, short_label, active) VALUES ('LM','linear meter','lm', 1);
+INSERT INTO llx_c_units ( code, label, short_label, active) VALUES ('M2','square meter','m2', 1);
+INSERT INTO llx_c_units ( code, label, short_label, active) VALUES ('M3','cubic meter','m3', 1);
+INSERT INTO llx_c_units ( code, label, short_label, active) VALUES ('L','liter','l', 1);
+
+alter table llx_product add fk_unit integer default NULL;
+ALTER TABLE llx_product ADD CONSTRAINT fk_product_fk_unit FOREIGN KEY (fk_unit) REFERENCES llx_c_units (rowid);
+
+alter table llx_facturedet_rec add fk_unit integer default NULL;
+ALTER TABLE llx_facturedet_rec ADD CONSTRAINT fk_facturedet_rec_fk_unit FOREIGN KEY (fk_unit) REFERENCES llx_c_units (rowid);
+
+alter table llx_facturedet add fk_unit integer default NULL;
+ALTER TABLE llx_facturedet ADD CONSTRAINT fk_facturedet_fk_unit FOREIGN KEY (fk_unit) REFERENCES llx_c_units (rowid);
+
+alter table llx_propaldet add fk_unit integer default NULL;
+ALTER TABLE llx_propaldet ADD CONSTRAINT fk_propaldet_fk_unit FOREIGN KEY (fk_unit) REFERENCES llx_c_units (rowid);
+
+alter table llx_commandedet add fk_unit integer default NULL;
+ALTER TABLE llx_commandedet ADD CONSTRAINT fk_commandedet_fk_unit FOREIGN KEY (fk_unit) REFERENCES llx_c_units (rowid);
+
+alter table llx_contratdet add fk_unit integer default NULL;
+ALTER TABLE llx_contratdet ADD CONSTRAINT fk_contratdet_fk_unit FOREIGN KEY (fk_unit) REFERENCES llx_c_units (rowid);
+
+alter table llx_commande_fournisseurdet add fk_unit integer default NULL;
+ALTER TABLE llx_commande_fournisseurdet ADD CONSTRAINT fk_commande_fournisseurdet_fk_unit FOREIGN KEY (fk_unit) REFERENCES llx_c_units (rowid);
+
+alter table llx_facture_fourn_det add fk_unit integer default NULL;
+ALTER TABLE llx_facture_fourn_det ADD CONSTRAINT fk_facture_fourn_det_fk_unit FOREIGN KEY (fk_unit) REFERENCES llx_c_units (rowid);
+
+
+
+
+-- Feature request: A page to merge two thirdparties into one #2613
+ALTER TABLE llx_categorie_societe DROP FOREIGN KEY fk_categorie_societe_fk_soc;
+ALTER TABLE llx_categorie_societe CHANGE COLUMN fk_societe fk_soc INTEGER NOT NULL;
+ALTER TABLE llx_categorie_societe ADD CONSTRAINT fk_categorie_societe_fk_soc   FOREIGN KEY (fk_soc) REFERENCES llx_societe (rowid);
+
+ALTER TABLE llx_categorie_fournisseur DROP FOREIGN KEY fk_categorie_fournisseur_fk_soc;
+ALTER TABLE llx_categorie_fournisseur CHANGE COLUMN fk_societe fk_soc INTEGER NOT NULL;
+ALTER TABLE llx_categorie_fournisseur ADD CONSTRAINT fk_categorie_fournisseur_fk_soc   FOREIGN KEY (fk_soc) REFERENCES llx_societe (rowid);
+
+ALTER TABLE llx_user DROP INDEX uk_user_fk_societe;
+ALTER TABLE llx_user DROP INDEX idx_user_fk_societe;
+ALTER TABLE llx_user CHANGE COLUMN fk_societe fk_soc INTEGER;
+ALTER TABLE llx_user ADD INDEX idx_user_fk_societe (fk_soc);
+
+ALTER TABLE llx_user ADD gender VARCHAR(10);
+
+-- API module
+ALTER TABLE llx_user ADD api_key VARCHAR(128) DEFAULT NULL AFTER pass_temp;
+ALTER TABLE llx_user ADD INDEX idx_user_api_key (api_key);
+
+-- Deprecated fields
+ALTER TABLE llx_actioncomm DROP COLUMN datea;
+ALTER TABLE llx_actioncomm DROP INDEX idx_actioncomm_datea;
+ALTER TABLE llx_actioncomm DROP COLUMN datea2;
+
+-- Email tracking
+ALTER TABLE llx_actioncomm ADD COLUMN email_msgid varchar(256);
+ALTER TABLE llx_actioncomm ADD COLUMN email_from varchar(256);
+ALTER TABLE llx_actioncomm ADD COLUMN email_sender varchar(256);
+ALTER TABLE llx_actioncomm ADD COLUMN email_to varchar(256);
+ALTER TABLE llx_actioncomm ADD COLUMN errors_to varchar(256);
+
+-- Recurring events
+ALTER TABLE llx_actioncomm ADD COLUMN recurid varchar(128);
+ALTER TABLE llx_actioncomm ADD COLUMN recurrule varchar(128);
+ALTER TABLE llx_actioncomm ADD COLUMN recurdateend datetime;
+
+ALTER TABLE llx_c_stcomm ADD COLUMN picto varchar(128);
+
+-- New trigger for Supplier invoice unvalidation
+INSERT INTO llx_c_action_trigger (code, label, description, elementtype, rang) VALUES ('BILL_SUPPLIER_UNVALIDATE','Supplier invoice unvalidated','Executed when a supplier invoice status is set back to draft','invoice_supplier',15);
+
+
+ALTER TABLE llx_holiday_users DROP PRIMARY KEY;
+
+DROP TABLE llx_holiday_types;
+
+CREATE TABLE llx_c_holiday_types (
+  rowid integer NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  code varchar(16) NOT NULL,
+  label varchar(255) NOT NULL,
+  affect integer NOT NULL,	
+  delay integer NOT NULL,
+  newByMonth double(8,5) DEFAULT 0 NOT NULL,
+  fk_country integer DEFAULT NULL,
+  active integer DEFAULT 1
+) ENGINE=innodb;
+
+ALTER TABLE llx_c_holiday_types ADD UNIQUE INDEX uk_c_holiday_types(code);
+
+insert into llx_c_holiday_types(code, label, affect, delay, newByMonth, fk_country) values ('LEAVE_PAID', 'Paid vacation', 1, 7, 0,    NULL);
+insert into llx_c_holiday_types(code, label, affect, delay, newByMonth, fk_country) values ('LEAVE_SICK', 'Sick leave',    0, 0, 0,    NULL);
+insert into llx_c_holiday_types(code, label, affect, delay, newByMonth, fk_country) values ('LEAVE_OTHER','Other leave',   0, 0, 0,    NULL);
+-- Leaves specific to France
+insert into llx_c_holiday_types(code, label, affect, delay, newByMonth, fk_country) values ('LEAVE_RTT',  'RTT'          , 1, 7, 0.83, 1);
+
+ALTER TABLE llx_holiday ADD COLUMN fk_type integer NOT NULL DEFAULT 1;
+ALTER TABLE llx_holiday_users ADD COLUMN fk_type integer NOT NULL DEFAULT 1;
+ALTER TABLE llx_holiday_logs ADD COLUMN fk_type integer NOT NULL DEFAULT 1;
+
+UPDATE llx_holiday_users SET fk_type = 1 WHERE fk_type IS NULL;
+UPDATE llx_holiday_logs SET fk_type = 1 WHERE fk_type IS NULL;
+
+UPDATE llx_const SET name = __ENCRYPT('ACCOUNTING_VAT_SOLD_ACCOUNT')__ WHERE __DECRYPT('name')__ = 'ACCOUNTING_VAT_ACCOUNT';
+
+create table llx_c_lead_status
+(
+  rowid       integer AUTO_INCREMENT PRIMARY KEY,
+  code 		  varchar(10),
+  label       varchar(50),
+  position    integer,
+  percent     double(5,2),
+  active      tinyint DEFAULT 1 NOT NULL
+)ENGINE=innodb;
+
+-- Opportunities status
+INSERT INTO llx_c_lead_status(rowid,code,label,position,percent,active) VALUES (1,'PROSP'  ,'Prospection',  10, 0,1);
+INSERT INTO llx_c_lead_status(rowid,code,label,position,percent,active) VALUES (2,'QUAL'   ,'Qualification',20, 20,1);
+INSERT INTO llx_c_lead_status(rowid,code,label,position,percent,active) VALUES (3,'PROPO'  ,'Proposal',     30, 40,1);
+INSERT INTO llx_c_lead_status(rowid,code,label,position,percent,active) VALUES (4,'NEGO'   ,'Negotiation',  40, 60,1);
+INSERT INTO llx_c_lead_status(rowid,code,label,position,percent,active) VALUES (5,'PENDING','Pending',      50, 50,0);
+INSERT INTO llx_c_lead_status(rowid,code,label,position,percent,active) VALUES (6,'WIN'    ,'Won',          60, 100,1);
+INSERT INTO llx_c_lead_status(rowid,code,label,position,percent,active) VALUES (7,'LOST'   ,'Lost',         70, 0,1);
+
+
+DELETE FROM llx_c_action_trigger where code = 'PROPAL_CLASSIFYBILLED';
+DELETE FROM llx_c_action_trigger where code = 'FICHINTER_CLASSIFYBILLED';
+

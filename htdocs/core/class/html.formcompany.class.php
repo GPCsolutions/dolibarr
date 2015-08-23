@@ -164,7 +164,7 @@ class FormCompany
 				$obj = $this->db->fetch_object($resql);
 
 				print '<option value="'.$obj->code.'"';
-				if ($selected == $obj->code) print ' selected="selected"';
+				if ($selected == $obj->code) print ' selected';
 				print '>';
 				$level=$langs->trans($obj->code);
 				if ($level == $obj->code) $level=$langs->trans($obj->label);
@@ -210,6 +210,7 @@ class FormCompany
 	 *    @param    string	$country_codeid    	Country code or id: 0=list for all countries, otherwise country code or country rowid to show
 	 *    @param    string	$htmlname			Id of department
 	 * 	  @return	string						String with HTML select
+	 *    @see select_country
 	 */
 	function select_state($selected='',$country_codeid=0, $htmlname='state_id')
 	{
@@ -234,7 +235,7 @@ class FormCompany
 		$result=$this->db->query($sql);
 		if ($result)
 		{
-			if (!empty($htmlname)) $out.= '<select id="'.$htmlname.'" class="flat" name="'.$htmlname.'">';
+			if (!empty($htmlname)) $out.= '<select id="'.$htmlname.'" class="flat minwidth300" name="'.$htmlname.'">';
 			if ($country_codeid) $out.= '<option value="0">&nbsp;</option>';
 			$num = $this->db->num_rows($result);
 			$i = 0;
@@ -255,7 +256,7 @@ class FormCompany
 							// Affiche la rupture si on est en mode liste multipays
 							if (! $country_codeid && $obj->country_code)
 							{
-								$out.= '<option value="-1" disabled="disabled">----- '.$obj->country." -----</option>\n";
+								$out.= '<option value="-1" disabled>----- '.$obj->country." -----</option>\n";
 								$country=$obj->country;
 							}
 						}
@@ -263,7 +264,7 @@ class FormCompany
 						if ((! empty($selected) && $selected == $obj->rowid)
 						 || (empty($selected) && ! empty($conf->global->MAIN_FORCE_DEFAULT_STATE_ID) && $conf->global->MAIN_FORCE_DEFAULT_STATE_ID == $obj->rowid))
 						{
-							$out.= '<option value="'.$obj->rowid.'" selected="selected">';
+							$out.= '<option value="'.$obj->rowid.'" selected>';
 						}
 						else
 						{
@@ -277,12 +278,16 @@ class FormCompany
 				}
 			}
 			if (! empty($htmlname)) $out.= '</select>';
-			if (! empty($htmlname) && $user->admin) $out.= info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
+			if (! empty($htmlname) && $user->admin) $out.= ' '.info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
 		}
 		else
 		{
 			dol_print_error($this->db);
 		}
+
+        // Make select dynamic
+        include_once DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php';
+        $out .= ajax_combobox($htmlname);
 
 		return $out;
 	}
@@ -330,13 +335,13 @@ class FormCompany
 							// Show break
 							$key=$langs->trans("Country".strtoupper($obj->country_code));
 							$valuetoshow=($key != "Country".strtoupper($obj->country_code))?$obj->country_code." - ".$key:$obj->country;
-							print '<option value="-1" disabled="disabled">----- '.$valuetoshow." -----</option>\n";
+							print '<option value="-1" disabled>----- '.$valuetoshow." -----</option>\n";
 							$country=$obj->country;
 						}
 
 						if ($selected > 0 && $selected == $obj->code)
 						{
-							print '<option value="'.$obj->code.'" selected="selected">'.$obj->label.'</option>';
+							print '<option value="'.$obj->code.'" selected>'.$obj->label.'</option>';
 						}
 						else
 						{
@@ -386,7 +391,7 @@ class FormCompany
 					$obj = $this->db->fetch_object($resql);
 					if ($selected == $obj->code)
 					{
-						$out.= '<option value="'.$obj->code.'" selected="selected">';
+						$out.= '<option value="'.$obj->code.'" selected>';
 					}
 					else
 					{
@@ -418,6 +423,7 @@ class FormCompany
 	 *    @param    string		$filter          	Add a SQL filter on list
 	 *    @return	void
 	 *    @deprecated Use print xxx->select_juridicalstatus instead
+	 *    @see select_juridicalstatus()
 	 */
 	function select_forme_juridique($selected='', $country_codeid=0, $filter='')
 	{
@@ -431,9 +437,10 @@ class FormCompany
 	 *    @param	string		$selected        	Preselected code of juridical type
 	 *    @param    int			$country_codeid     0=list for all countries, otherwise list only country requested
      *    @param    string		$filter          	Add a SQL filter on list
+     *    @param	string		$htmlname			HTML name of select
      *    @return	string							String with HTML select
 	 */
-	function select_juridicalstatus($selected='', $country_codeid=0, $filter='')
+	function select_juridicalstatus($selected='', $country_codeid=0, $filter='', $htmlname='forme_juridique_code')
 	{
 		global $conf,$langs,$user;
 		$langs->load("dict");
@@ -454,8 +461,8 @@ class FormCompany
 		if ($resql)
 		{
 			$out.= '<div id="particulier2" class="visible">';
-			$out.= '<select class="flat" name="forme_juridique_code" id="legal_form">';
-			if ($country_codeid) $out.= '<option value="0">&nbsp;</option>';
+			$out.= '<select class="flat minwidth200" name="'.$htmlname.'" id="'.$htmlname.'">';
+			if ($country_codeid) $out.= '<option value="0">&nbsp;</option>';	// When country_codeid is set, we force to add an empty line because it does not appears from select. When not set, we already get the empty line from select.
 
 			$num = $this->db->num_rows($resql);
 			if ($num)
@@ -465,13 +472,21 @@ class FormCompany
 				while ($i < $num)
 				{
 					$obj = $this->db->fetch_object($resql);
-					$labelcountry=(($langs->trans("Country".$obj->country_code)!="Country".$obj->country_code) ? $langs->trans("Country".$obj->country_code) : $obj->country);
-					$labeljs=(($langs->trans("JuridicalStatus".$obj->code)!="JuridicalStatus".$obj->code) ? $langs->trans("JuridicalStatus".$obj->code) : ($obj->label!='-'?$obj->label:''));	// $obj->label is already in output charset (converted by database driver)
-					$arraydata[$obj->code]=array('code'=>$obj->code, 'label'=>$labeljs, 'label_sort'=>$labelcountry.'_'.$labeljs, 'country_code'=>$obj->country_code, 'country'=>$labelcountry);
+
+					if ($obj->code)		// We exclude empty line, we will add it later
+					{
+						$labelcountry=(($langs->trans("Country".$obj->country_code)!="Country".$obj->country_code) ? $langs->trans("Country".$obj->country_code) : $obj->country);
+						$labeljs=(($langs->trans("JuridicalStatus".$obj->code)!="JuridicalStatus".$obj->code) ? $langs->trans("JuridicalStatus".$obj->code) : ($obj->label!='-'?$obj->label:''));	// $obj->label is already in output charset (converted by database driver)
+						$arraydata[$obj->code]=array('code'=>$obj->code, 'label'=>$labeljs, 'label_sort'=>$labelcountry.'_'.$labeljs, 'country_code'=>$obj->country_code, 'country'=>$labelcountry);
+					}
 					$i++;
 				}
 
 				$arraydata=dol_sort_array($arraydata, 'label_sort', 'ASC');
+				if (empty($country_codeid))	// Introduce empty value (if $country_codeid not empty, empty value was already added)
+				{
+					$arraydata[0]=array('code'=>0, 'label'=>'', 'label_sort'=>'_', 'country_code'=>'', 'country'=>'');
+				}
 
 				foreach($arraydata as $key => $val)
 				{
@@ -480,14 +495,14 @@ class FormCompany
 						// Show break when we are in multi country mode
 						if (empty($country_codeid) && $val['country_code'])
 						{
-							$out.= '<option value="0">----- '.$val['country']." -----</option>\n";
+							$out.= '<option value="0" disabled class="selectoptiondisabledwhite">----- '.$val['country']." -----</option>\n";
 							$country=$val['country'];
 						}
 					}
 
 					if ($selected > 0 && $selected == $val['code'])
 					{
-						$out.= '<option value="'.$val['code'].'" selected="selected">';
+						$out.= '<option value="'.$val['code'].'" selected>';
 					}
 					else
 					{
@@ -499,7 +514,12 @@ class FormCompany
 				}
 			}
 			$out.= '</select>';
-			if ($user->admin) $out.= info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
+			if ($user->admin) $out.= ' '.info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
+
+		    // Make select dynamic
+        	include_once DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php';
+	        $out .= ajax_combobox($htmlname);
+
 			$out.= '</div>';
 		}
 		else
@@ -639,14 +659,14 @@ class FormCompany
 						if ($selected > 0 && $selected == $obj->rowid)
 						{
 							print '<option value="'.$obj->rowid.'"';
-							if ($disabled) print ' disabled="disabled"';
-							print ' selected="selected">'.dol_trunc($obj->name,24).'</option>';
+							if ($disabled) print ' disabled';
+							print ' selected>'.dol_trunc($obj->name,24).'</option>';
 							$firstCompany = $obj->rowid;
 						}
 						else
 						{
 							print '<option value="'.$obj->rowid.'"';
-							if ($disabled) print ' disabled="disabled"';
+							if ($disabled) print ' disabled';
 							print '>'.dol_trunc($obj->name,24).'</option>';
 						}
 						$i ++;
@@ -698,10 +718,11 @@ class FormCompany
 	 *    @param    string		$htmlname				HTML select name
 	 *    @param    string		$fields					Fields
 	 *    @param    int			$fieldsize				Field size
-	 *    @param    int			$disableautocomplete    1 To disable autocomplete features
+	 *    @param    int			$disableautocomplete    1 To disable ajax autocomplete features (browser autocomplete may still occurs)
+	 *    @param	string		$moreattrib				Add more attribute on HTML input field
 	 *    @return	string
 	 */
-	function select_ziptown($selected='', $htmlname='zipcode', $fields='', $fieldsize=0, $disableautocomplete=0)
+	function select_ziptown($selected='', $htmlname='zipcode', $fields='', $fieldsize=0, $disableautocomplete=0, $moreattrib='')
 	{
 		global $conf;
 
@@ -710,8 +731,12 @@ class FormCompany
 		$size='';
 		if (!empty($fieldsize)) $size='size="'.$fieldsize.'"';
 
-		if ($conf->use_javascript_ajax && empty($disableautocomplete))	$out.= ajax_multiautocompleter($htmlname,$fields,DOL_URL_ROOT.'/core/ajax/ziptown.php')."\n";
-		$out.= '<input id="'.$htmlname.'" type="text" name="'.$htmlname.'" '.$size.' value="'.$selected.'">'."\n";
+		if ($conf->use_javascript_ajax && empty($disableautocomplete))
+		{
+			$out.= ajax_multiautocompleter($htmlname,$fields,DOL_URL_ROOT.'/core/ajax/ziptown.php')."\n";
+			$moreattrib.=' autocomplete="off"';
+		}
+		$out.= '<input id="'.$htmlname.'" type="text"'.($moreattrib?' '.$moreattrib:'').' name="'.$htmlname.'" '.$size.' value="'.$selected.'">'."\n";
 
 		return $out;
 	}
@@ -791,7 +816,7 @@ class FormCompany
     			{
     				if ($selected == $valors[$i])
     				{
-    					print '<option value="'.$valors[$i].'" selected="selected">';
+    					print '<option value="'.$valors[$i].'" selected>';
     				}
     				else
     				{

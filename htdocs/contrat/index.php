@@ -2,6 +2,7 @@
 /* Copyright (C) 2001-2004 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2011 Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2015      Jean-François Ferry	<jfefe@aternatik.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,7 +64,7 @@ $now = dol_now();
 
 llxHeader();
 
-print_fiche_titre($langs->trans("ContractsArea"));
+print_fiche_titre($langs->trans("ContractsArea"),'','title_commercial.png');
 
 
 //print '<table border="0" width="100%" class="notopnoleftnoright">';
@@ -176,7 +177,7 @@ else
 }
 
 
-print '<table class="noborder" width="100%">';
+print '<table class="noborder nohover" width="100%">';
 print '<tr class="liste_titre"><td colspan="2">'.$langs->trans("Statistics").' - '.$langs->trans("Services").'</td></tr>'."\n";
 $var=true;
 $listofstatus=array(0,4,4,5); $bool=false;
@@ -196,7 +197,7 @@ foreach($listofstatus as $status)
 }
 if (! empty($conf->use_javascript_ajax))
 {
-    print '<tr><td align="center" colspan="2">';
+    print '<tr class="impair"><td align="center" colspan="2">';
     $data=array('series'=>$dataseries);
     dol_print_graph('stats',300,180,$data,1,'pie',1);
     print '</td></tr>';

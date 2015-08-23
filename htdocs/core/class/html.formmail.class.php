@@ -32,7 +32,7 @@ require_once DOL_DOCUMENT_ROOT .'/core/class/html.form.class.php';
  *             $formmail->proprietes=1 ou chaine ou tableau de valeurs
  *             $formmail->show_form() affiche le formulaire
  */
-class FormMail
+class FormMail extends Form
 {
     var $db;
 
@@ -44,10 +44,20 @@ class FormMail
     var $replytomail;
     var $toname;
     var $tomail;
+	var $trackid;
 
     var $withsubstit;			// Show substitution array
     var $withfrom;
-    var $withto;				// Show recipient emails
+	/**
+	 * @var int
+	 * @deprecated Fill withto with array before calling method.
+	 * @see withto
+	 */
+	public $withtosocid;
+	/**
+	 * @var int|int[]
+	 */
+    public $withto;				// Show recipient emails
     var $withtofree;			// Show free text for recipient emails
     var $withtocc;
     var $withtoccc;
@@ -70,6 +80,8 @@ class FormMail
     var $param=array();
 
     var $error;
+
+    public $lines_model;
 
 
     /**
@@ -275,7 +287,12 @@ class FormMail
 			}
 
         	// Get message template
-        	$arraydefaultmessage=$this->getEMailTemplate($this->db, $this->param["models"], $user, $outputlangs);
+			$model_id=0;
+        	if (array_key_exists('models_id',$this->param))
+        	{
+        		$model_id=$this->param["models_id"];
+        	}
+        	$arraydefaultmessage=$this->getEMailTemplate($this->db, $this->param["models"], $user, $outputlangs, $model_id);
 
 	        /**
 	         * Used to render inputs with appropiate values giving an email/thirdparty
@@ -311,14 +328,40 @@ class FormMail
         	$out.= "\n<!-- Debut form mail -->\n";
         	if ($this->withform == 1)
         	{
-        		$out.= '<form method="POST" name="mailform" enctype="multipart/form-data" action="'.$this->param["returnurl"].'">'."\n";
+        		$out.= '<form method="POST" name="mailform" id="mailform" enctype="multipart/form-data" action="'.$this->param["returnurl"].'">'."\n";
 				$out.= '<input style="display:none" type="submit" id="sendmail" name="sendmail">';
         		$out.= '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'" />';
+        		$out.= '<input type="hidden" name="trackid" value="'.$this->trackid.'" />';
         	}
         	foreach ($this->param as $key=>$value)
         	{
         		$out.= '<input type="hidden" id="'.$key.'" name="'.$key.'" value="'.$value.'" />'."\n";
         	}
+
+        	$result = $this->fetchAllEMailTemplate($this->param["models"], $user, $outputlangs);
+        	if ($result<0)
+        	{
+        		setEventMessage($this->error,'errors');
+        	}
+        	$modelmail_array=array();
+        	foreach($this->lines_model as $line)
+        	{
+        		$modelmail_array[$line->id]=$line->label;
+        	}
+
+        	// Zone to select its email template
+        	if (count($modelmail_array)>0)
+        	{
+	        	$out.= '<div style="padding: 3px 0 3px 0">'."\n";
+	        	$out.= $langs->trans('SelectMailModel').':'.$this->selectarray('modelmailselected', $modelmail_array,$model_id);
+	        	if ($user->admin) $out.= info_admin($langs->trans("YouCanChangeValuesForThisListFromDictionarySetup"),1);
+	        	$out.= ' &nbsp; ';
+	        	$out.= '<input class="button" type="submit" value="'.$langs->trans('Valid').'" name="modelselected" id="modelselected">';
+	        	$out.= ' &nbsp; ';
+	        	$out.= '</div>';
+        	}
+
+
         	$out.= '<table class="border" width="100%">'."\n";
 
         	// Substitution array
@@ -747,7 +790,7 @@ class FormMail
 				}
 
 
-        		if (isset($_POST["message"])) $defaultmessage=$_POST["message"];
+        		if (isset($_POST["message"]) &&  ! $_POST['modelselected']) $defaultmessage=$_POST["message"];
 				else
 				{
 					$defaultmessage=make_substitutions($defaultmessage,$this->substit);
@@ -817,6 +860,23 @@ class FormMail
 </script>';
 
         	if ($this->withform == 1) $out.= '</form>'."\n";
+
+        	// Disable enter key if option MAIN_MAILFORM_DISABLE_ENTER is set
+        	if (! empty($conf->global->MAIN_MAILFORM_DISABLE_ENTERKEY))
+        	{
+	        	$out.= '<script type="text/javascript" language="javascript">';
+		        $out.= 'jQuery(document).ready(function () {';
+				$out.= '	$(document).on("keypress", \'#mailform\', function (e) {		/* Note this is calle at every key pressed ! */
+	    						var code = e.keyCode || e.which;
+	    						if (code == 13) {
+	        						e.preventDefault();
+	        						return false;
+	    						}
+							});';
+				$out.='		})';
+				$out.= '</script>';
+        	}
+
         	$out.= "<!-- Fin form mail -->\n";
 
         	return $out;
@@ -833,9 +893,10 @@ class FormMail
 	 * 		@param	string		$type_template	Get message for key module
 	 *      @param	string		$user			Use template public or limited to this user
 	 *      @param	Translate	$outputlangs	Output lang object
+	 *      @param	int			$id				Id template to find
 	 *      @return array						array('topic'=>,'content'=>,..)
 	 */
-	private function getEMailTemplate($db, $type_template, $user, $outputlangs)
+	private function getEMailTemplate($db, $type_template, $user, $outputlangs,$id=0)
 	{
 		$ret=array();
 
@@ -845,6 +906,7 @@ class FormMail
 		$sql.= " AND entity IN (".getEntity("c_email_templates").")";
 		$sql.= " AND (fk_user is NULL or fk_user = 0 or fk_user = ".$user->id.")";
 		if (is_object($outputlangs)) $sql.= " AND (lang = '".$outputlangs->defaultlang."' OR lang IS NULL OR lang = '')";
+		if (!empty($id)) $sql.= " AND rowid=".$id;
 		$sql.= $db->order("lang,label","ASC");
 		//print $sql;
 
@@ -888,5 +950,98 @@ class FormMail
 			return -1;
 		}
 	}
+
+	/**
+	 *      Find if template exists
+	 *      Search into table c_email_templates
+	 *
+	 * 		@param	string		$type_template	Get message for key module
+	 *      @param	string		$user			Use template public or limited to this user
+	 *      @param	Translate	$outputlangs	Output lang object
+	 *      @return	int		<0 if KO,
+	 */
+	public function isEMailTemplate($type_template, $user, $outputlangs)
+	{
+		$ret=array();
+
+		$sql = "SELECT label, topic, content, lang";
+		$sql.= " FROM ".MAIN_DB_PREFIX.'c_email_templates';
+		$sql.= " WHERE type_template='".$this->db->escape($type_template)."'";
+		$sql.= " AND entity IN (".getEntity("c_email_templates").")";
+		$sql.= " AND (fk_user is NULL or fk_user = 0 or fk_user = ".$user->id.")";
+		if (is_object($outputlangs)) $sql.= " AND (lang = '".$outputlangs->defaultlang."' OR lang IS NULL OR lang = '')";
+		$sql.= $this->db->order("lang,label","ASC");
+		//print $sql;
+
+		$resql = $this->db->query($sql);
+		if ($resql)
+		{
+			$num= $this->db->num_rows($resql);
+			$this->db->free($resql);
+			return $num;
+		}
+		else
+		{
+			$this->error=get_class($this).' '.__METHOD__.' ERROR:'.$this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 *      Find if template exists
+	 *      Search into table c_email_templates
+	 *
+	 * 		@param	string		$type_template	Get message for key module
+	 *      @param	string		$user			Use template public or limited to this user
+	 *      @param	Translate	$outputlangs	Output lang object
+	 *      @return	int		<0 if KO,
+	 */
+	public function fetchAllEMailTemplate($type_template, $user, $outputlangs)
+	{
+		$ret=array();
+
+		$sql = "SELECT rowid, label, topic, content, lang";
+		$sql.= " FROM ".MAIN_DB_PREFIX.'c_email_templates';
+		$sql.= " WHERE type_template='".$this->db->escape($type_template)."'";
+		$sql.= " AND entity IN (".getEntity("c_email_templates").")";
+		$sql.= " AND (fk_user is NULL or fk_user = 0 or fk_user = ".$user->id.")";
+		if (is_object($outputlangs)) $sql.= " AND (lang = '".$outputlangs->defaultlang."' OR lang IS NULL OR lang = '')";
+		$sql.= $this->db->order("lang,label","ASC");
+		//print $sql;
+
+		$resql = $this->db->query($sql);
+		if ($resql)
+		{
+			$this->lines_model=array();
+			while ($obj = $this->db->fetch_object($resql))
+			{
+				$line = new ModelMail();
+				$line->id=$obj->rowid;
+				$line->label=$obj->label;
+				$line->topic=$obj->topic;
+				$line->content=$obj->lacontentbel;
+				$line->lang=$obj->lang;
+				$this->lines_model[]=$line;
+			}
+			$this->db->free($resql);
+			return $num;
+		}
+		else
+		{
+			$this->error=get_class($this).' '.__METHOD__.' ERROR:'.$this->db->lasterror();
+			return -1;
+		}
+	}
 }
 
+/**
+ * ModelMail
+ */
+class ModelMail
+{
+	public $id;
+	public $label;
+	public $topic;
+	public $content;
+	public $lang;
+}

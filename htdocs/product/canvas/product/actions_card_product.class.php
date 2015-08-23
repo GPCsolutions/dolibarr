@@ -116,7 +116,7 @@ class ActionsCardProduct
 			// Price
 			$this->tpl['price'] = $this->price;
 			$this->tpl['price_min'] = $this->price_min;
-			$this->tpl['price_base_type'] = $form->load_PriceBaseType($this->price_base_type, "price_base_type");
+			$this->tpl['price_base_type'] = $form->selectPriceBaseType($this->price_base_type, "price_base_type");
 
 			// VAT
 			$this->tpl['tva_tx'] = $form->load_tva("tva_tx",-1,$mysoc,'');
@@ -138,7 +138,7 @@ class ActionsCardProduct
 
 		if ($action == 'view')
 		{
-            $head = product_prepare_head($this->object,$user);
+            $head = product_prepare_head($this->object);
 
             $this->tpl['showrefnav'] = $form->showrefnav($this->object,'ref','',1,'ref');
 

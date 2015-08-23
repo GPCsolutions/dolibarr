@@ -3,6 +3,7 @@
  * Copyright (C) 2008-2012	Regis Houssin				<regis.houssin@capnetworks.com>
  * Copyright (C) 2008		Raphael Bertrand (Resultic)	<raphael.bertrand@resultic.fr>
  * Copyright (C) 2014       Marcos García               <marcosgdf@gmail.com>
+ * Copyright (C) 2015       Ferran Marcet               <fmarcet@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +29,25 @@
 // Enable this line to trace path when function is called.
 //print xdebug_print_function_stack('Functions2.lib was called');exit;
 
+/**
+ * Return first line of text. Cut will depends if content is HTML or not.
+ *
+ * @param 	string	$text		Input text
+ * @return	string				Output text
+ * @see dol_nboflines_bis
+ */
+function dolGetFirstLineOfText($text)
+{
+	if (dol_textishtml($text))
+	{
+		$firstline=preg_replace('/<br[^>]*>.*$/s','',$text);		// The s pattern modifier means the . can match newline characters
+	}
+	else
+	{
+    	$firstline=preg_replace('/[\n\r].*/','',$text);
+	}
+    return $firstline.((strlen($firstline) != strlen($text))?'...':'');
+}
 
 /**
  * Same function than javascript unescape() function but in PHP.
@@ -374,9 +394,9 @@ function dol_print_object_info($object)
 
 /**
  *	Return an email formatted to include a tracking id
- *  For example  myemail@mydomain.com becom myemail+trackingid@mydomain.com
+ *  For example  myemail@example.com becom myemail+trackingid@example.com
  *
- *	@param	string	$email       	Email address (Ex: "toto@titi.com", "John Do <johndo@titi.com>")
+ *	@param	string	$email       	Email address (Ex: "toto@example.com", "John Do <johndo@example.com>")
  *	@param	string	$trackingid    	Tracking id (Ex: thi123 for thirdparty with id 123)
  *	@return boolean     			True if domain email is OK, False if KO
  */
@@ -389,7 +409,7 @@ function dolAddEmailTrackId($email, $trackingid)
 /**
  *	Return true if email has a domain name that can't be resolved
  *
- *	@param	string	$mail       Email address (Ex: "toto@titi.com", "John Do <johndo@titi.com>")
+ *	@param	string	$mail       Email address (Ex: "toto@example.com", "John Do <johndo@example.com>")
  *	@return boolean     		True if domain email is OK, False if KO
  */
 function isValidMailDomain($mail)
@@ -604,6 +624,7 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     global $conf;
 
     if (! is_object($objsoc)) $valueforccc=$objsoc;
+    else if($table == "commande_fournisseur" || $table == "facture_fourn" ) $valueforccc=$objsoc->code_fournisseur;
     else $valueforccc=$objsoc->code_client;
 
     // Clean parameters
@@ -616,10 +637,21 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
     //$date=dol_mktime(12, 0, 0, 1, 1, 1900);
     //$date=dol_stringtotime('20130101');
 
+    $hasglobalcounter=false;
     // Extract value for mask counter, mask raz and mask offset
-    if (! preg_match('/\{(0+)([@\+][0-9\-\+\=]+)?([@\+][0-9\-\+\=]+)?\}/i',$mask,$reg)) return 'ErrorBadMask';
-    $masktri=$reg[1].(! empty($reg[2])?$reg[2]:'').(! empty($reg[3])?$reg[3]:'');
-    $maskcounter=$reg[1];
+    if (preg_match('/\{(0+)([@\+][0-9\-\+\=]+)?([@\+][0-9\-\+\=]+)?\}/i',$mask,$reg))
+    {
+        $masktri=$reg[1].(! empty($reg[2])?$reg[2]:'').(! empty($reg[3])?$reg[3]:'');
+        $maskcounter=$reg[1];
+        $hasglobalcounter=true;
+    }
+    else
+    {
+        // setting some defaults so the rest of the code won't fail if there is a third party counter
+        $masktri='00000';
+        $maskcounter='00000';
+    }
+
     $maskraz=-1;
     $maskoffset=0;
     $resetEveryMonth=false;
@@ -638,6 +670,12 @@ function get_next_value($db,$mask,$table,$field,$where='',$objsoc='',$date='',$m
         if (dol_strlen($maskrefclient_maskcounter) > 0 && dol_strlen($maskrefclient_maskcounter) < 3) return 'ErrorCounterMustHaveMoreThan3Digits';
     }
     else $maskrefclient='';
+
+    // fail if there is neither a global nor a third party counter
+    if (! $hasglobalcounter && ($maskrefclient_maskcounter == ''))
+    {
+        return 'ErrorBadMask';
+    }
 
     // Extract value for third party type
     if (preg_match('/\{(t+)\}/i',$mask,$regType))
@@ -972,10 +1010,21 @@ function check_value($mask,$value)
 {
     $result=0;
 
+    $hasglobalcounter=false;
     // Extract value for mask counter, mask raz and mask offset
-    if (! preg_match('/\{(0+)([@\+][0-9]+)?([@\+][0-9]+)?\}/i',$mask,$reg)) return 'ErrorBadMask';
-    $masktri=$reg[1].(isset($reg[2])?$reg[2]:'').(isset($reg[3])?$reg[3]:'');
-    $maskcounter=$reg[1];
+    if (preg_match('/\{(0+)([@\+][0-9]+)?([@\+][0-9]+)?\}/i',$mask,$reg))
+    {
+        $masktri=$reg[1].(isset($reg[2])?$reg[2]:'').(isset($reg[3])?$reg[3]:'');
+        $maskcounter=$reg[1];
+        $hasglobalcounter=true;
+    }
+    else
+    {
+        // setting some defaults so the rest of the code won't fail if there is a third party counter
+        $masktri='00000';
+        $maskcounter='00000';
+    }
+
     $maskraz=-1;
     $maskoffset=0;
     if (dol_strlen($maskcounter) < 3) return 'ErrorCounterMustHaveMoreThan3Digits';
@@ -993,6 +1042,12 @@ function check_value($mask,$value)
         if (dol_strlen($maskrefclient_maskcounter) > 0 && dol_strlen($maskrefclient_maskcounter) < 3) return 'ErrorCounterMustHaveMoreThan3Digits';
     }
     else $maskrefclient='';
+
+    // fail if there is neither a global nor a third party counter
+    if (! $hasglobalcounter && ($maskrefclient_maskcounter == ''))
+    {
+        return 'ErrorBadMask';
+    }
 
     $maskwithonlyymcode=$mask;
     $maskwithonlyymcode=preg_replace('/\{(0+)([@\+][0-9]+)?([@\+][0-9]+)?\}/i',$maskcounter,$maskwithonlyymcode);
@@ -1860,27 +1915,30 @@ function fetchObjectByElement($element_id,$element_type) {
 
 
 /**
- *	Convert an array with RGB value into hex RGB value
+ *	Convert an array with RGB value into hex RGB value.
+ *  This is the opposite function of colorStringToArray
  *
  *  @param	array	$arraycolor			Array
- *  @param	string	$colorifnotfound	Color code to return if entry not defined
- *  @return	string						RGB hex value (without # before). For example: FF00FF
- *  @see	Make the opposite of colorStringToArray
+ *  @param	string	$colorifnotfound	Color code to return if entry not defined or not a RGB format
+ *  @return	string						RGB hex value (without # before). For example: 'FF00FF', '01FF02'
+ *  @see	colorStringToArray
  */
 function colorArrayToHex($arraycolor,$colorifnotfound='888888')
 {
 	if (! is_array($arraycolor)) return $colorifnotfound;
-	return dechex($arraycolor[0]).dechex($arraycolor[1]).dechex($arraycolor[2]);
+	if (empty($arraycolor)) return $colorifnotfound;
+	return sprintf("%02s",dechex($arraycolor[0])).sprintf("%02s",dechex($arraycolor[1])).sprintf("%02s",dechex($arraycolor[2]));
 }
 
-
 /**
- *	Convert a string RGB value ('FFFFFF', '255,255,255') into an array RGB array(255,255,255)
+ *	Convert a string RGB value ('FFFFFF', '255,255,255') into an array RGB array(255,255,255).
+ *  This is the opposite function of colorArrayToHex.
+ *  If entry is already an array, return it.
  *
  *  @param	string	$stringcolor		String with hex (FFFFFF) or comma RGB ('255,255,255')
- *  @param	string	$colorifnotfound	Color code to return if entry not defined
+ *  @param	array	$colorifnotfound	Color code array to return if entry not defined
  *  @return	string						RGB hex value (without # before). For example: FF00FF
- *  @see	Make the opposite of colorArrayToHex
+ *  @see	colorArrayToHex
  */
 function colorStringToArray($stringcolor,$colorifnotfound=array(88,88,88))
 {

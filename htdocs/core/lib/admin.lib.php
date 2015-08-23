@@ -833,20 +833,21 @@ function unActivateModule($value, $requiredby=1)
     {
         $objMod = new $modName($db);
         $result=$objMod->remove();
+        if ($result <= 0) $ret=$objMod->error;
     }
     else
     {
-        // TODO Cannot instantiate abstract class
-    	//$genericMod = new DolibarrModul($db);
-        //$genericMod->name=preg_replace('/^mod/i','',$modName);
-        //$genericMod->rights_class=strtolower(preg_replace('/^mod/i','',$modName));
-        //$genericMod->const_name='MAIN_MODULE_'.strtoupper(preg_replace('/^mod/i','',$modName));
+        // TODO Replace this afte DolibarrModules is moved as abstract class with a try catch to show module is bugged
+        $genericMod = new DolibarrModules($db);
+        $genericMod->name=preg_replace('/^mod/i','',$modName);
+        $genericMod->rights_class=strtolower(preg_replace('/^mod/i','',$modName));
+        $genericMod->const_name='MAIN_MODULE_'.strtoupper(preg_replace('/^mod/i','',$modName));
         dol_syslog("modules::unActivateModule Failed to find module file, we use generic function with name " . $modName);
-        //$genericMod->_remove();
+        $genericMod->_remove();
     }
 
     // Desactivation des modules qui dependent de lui
-    if ($requiredby)
+    if (! $ret && $requiredby)
     {
         $countrb=count($objMod->requiredby);
         for ($i = 0; $i < $countrb; $i++)
@@ -1083,18 +1084,18 @@ function form_constantes($tableau,$strictw3c=0)
             if ($const == 'ADHERENT_MAILMAN_URL')
             {
                 print '. '.$langs->trans("Example").': <a href="#" id="exampleclick1">'.img_down().'</a><br>';
-                //print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members?adminpw=%MAILMAN_ADMINPW%&subscribees=%EMAIL%&send_welcome_msg_to_this_batch=1';
+                //print 'http://lists.exampe.com/cgi-bin/mailman/admin/%LISTE%/members?adminpw=%MAILMAN_ADMINPW%&subscribees=%EMAIL%&send_welcome_msg_to_this_batch=1';
                 print '<div id="example1" class="hidden">';
-                print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/add?subscribees_upload=%EMAIL%&amp;adminpw=%MAILMAN_ADMINPW%&amp;subscribe_or_invite=0&amp;send_welcome_msg_to_this_batch=0&amp;notification_to_list_owner=0';
+                print 'http://lists.example.com/cgi-bin/mailman/admin/%LISTE%/members/add?subscribees_upload=%EMAIL%&amp;adminpw=%MAILMAN_ADMINPW%&amp;subscribe_or_invite=0&amp;send_welcome_msg_to_this_batch=0&amp;notification_to_list_owner=0';
                 print '</div>';
             }
             if ($const == 'ADHERENT_MAILMAN_UNSUB_URL')
             {
                 print '. '.$langs->trans("Example").': <a href="#" id="exampleclick2">'.img_down().'</a><br>';
                 print '<div id="example2" class="hidden">';
-                print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/remove?unsubscribees_upload=%EMAIL%&amp;adminpw=%MAILMAN_ADMINPW%&amp;send_unsub_ack_to_this_batch=0&amp;send_unsub_notifications_to_list_owner=0';
+                print 'http://lists.example.com/cgi-bin/mailman/admin/%LISTE%/members/remove?unsubscribees_upload=%EMAIL%&amp;adminpw=%MAILMAN_ADMINPW%&amp;send_unsub_ack_to_this_batch=0&amp;send_unsub_notifications_to_list_owner=0';
                 print '</div>';
-                //print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
+                //print 'http://lists.example.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
             }
             if ($const == 'ADHERENT_MAILMAN_LISTS')
             {
@@ -1105,7 +1106,7 @@ function form_constantes($tableau,$strictw3c=0)
             	print 'TYPE:Type1:mymailmanlist1,TYPE:Type2:mymailmanlist2<br>';
             	if ($conf->categorie->enabled) print 'CATEG:Categ1:mymailmanlist1,CATEG:Categ2:mymailmanlist2<br>';
             	print '</div>';
-            	//print 'http://lists.domain.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
+            	//print 'http://lists.example.com/cgi-bin/mailman/admin/%LISTE%/members/remove?adminpw=%MAILMAN_ADMINPW%&unsubscribees=%EMAIL%';
             }
 
             print "</td>\n";

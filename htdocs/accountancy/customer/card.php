@@ -1,7 +1,7 @@
 <?PHP
 /* Copyright (C) 2013-2014 Olivier Geffroy		<jeff@jeffinfo.com>
  * Copyright (C) 2013-2014 Florian Henry		<florian.henry@open-concept.pro>
- * Copyright (C) 2013-2014 Alexandre Spangaro	<alexandre.spangaro@gmail.com>
+ * Copyright (C) 2013-2015 Alexandre Spangaro	<alexandre.spangaro@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,6 @@ if ($user->societe_id > 0)
 /*
  * Actions
  */
-
 if ($action == 'ventil' && $user->rights->accounting->ventilation->dispatch) {
 	if (! GETPOST('cancel', 'alpha'))
 	{
@@ -62,6 +61,10 @@ if ($action == 'ventil' && $user->rights->accounting->ventilation->dispatch) {
 		exit();
 	}
 }
+
+/*
+ * View
+ */
 
 llxHeader("", "", "FicheVentilation");
 
@@ -87,7 +90,7 @@ if (! empty($id)) {
 	$sql .= " WHERE f.fk_statut > 0 AND l.rowid = " . $id;
 
 	if (! empty($conf->multicompany->enabled)) {
-		$sql .= " AND f.entity = '" . $conf->entity . "'";
+		$sql .= " AND f.entity IN (" . getEntity("facture", 1) . ")";
 	}
 
 	dol_syslog("/accounting/customer/card.php sql=" . $sql, LOG_DEBUG);
@@ -105,8 +108,9 @@ if (! empty($id)) {
 			print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '">';
 			print '<input type="hidden" name="action" value="ventil">';
 
-			$linkback='<a href="'.DOL_URL_ROOT.'/accountancy/customer/lines.php">'.$langs->trans("Back").'</a>';
-			print_fiche_titre($langs->trans('CustomersVentilation'),$linkback,'setup');
+			print_fiche_titre($langs->trans('CustomersVentilation'),'','title_setup');
+
+            dol_fiche_head();
 
 			print '<table class="border" width="100%">';
 
@@ -120,13 +124,13 @@ if (! empty($id)) {
 			print '<tr><td width="20%">' . $langs->trans("Line") . '</td>';
 			print '<td>' . nl2br($objp->description) . '</td></tr>';
 			print '<tr><td width="20%">' . $langs->trans("Account") . '</td><td>';
-			print $objp->account_number . '-' . $objp->label;
-			print '<tr><td width="20%">' . $langs->trans("NewAccount") . '</td><td>';
 			print $formventilation->select_account($objp->fk_code_ventilation, 'codeventil', 1);
 			print '</td></tr>';
 			print '</table>';
+			
+            dol_fiche_end();
 
-			print '<br><div class="center">';
+			print '<div class="center">';
 			print '<input class="button" type="submit" value="' . $langs->trans("Save") . '">';
 			print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
 			print '<input class="button" type="submit" name="cancel" value="' . $langs->trans("Cancel") . '">';

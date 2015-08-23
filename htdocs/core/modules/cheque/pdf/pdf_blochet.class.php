@@ -98,7 +98,7 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 		$outputlangs->load("products");
         $outputlangs->load("compta");
 
-		$dir = $_dir . "/".get_exdir($number,2,1).$number;
+		$dir = $_dir . "/".get_exdir($number,2,1,0,null,'cheque').$number;
 
 		if (! is_dir($dir))
 		{
@@ -188,7 +188,7 @@ class BordereauChequeBlochet extends ModeleChequeReceipts
 		$hookmanager->initHooks(array('pdfgeneration'));
 		$parameters=array('file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs);
 		global $action;
-		$reshook=$hookmanager->executeHooks('adterPDFCreation',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
+		$reshook=$hookmanager->executeHooks('afterPDFCreation',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
 
 		if (! empty($conf->global->MAIN_UMASK))
 			@chmod($file, octdec($conf->global->MAIN_UMASK));
