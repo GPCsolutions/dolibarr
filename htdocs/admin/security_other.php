@@ -166,6 +166,25 @@ else
 }
 print "</td></tr>";
 
+// Enable Content Security Policy
+$var = !$var;
+print "<tr " . $bc[$var] . ">";
+print '<td colspan="3">' . $langs->trans("EnableContentSecurityPolicy") . '</td>';
+// TODO: Add a tooltip explaining why it's a good idea as it completely prevents XSS
+print '<td align="right">';
+if (!empty($conf->use_javascript_ajax)) {
+	print ajax_constantonoff('MAIN_ENABLE_CSP');
+} else {
+	if (empty($conf->global->MAIN_ENABLE_CSP)) {
+		print '<a href="' . $_SERVER['PHP_SELF'] . '?action=set_MAIN_ENABLE_CSP">' . img_picto($langs->trans("Disabled"),
+				'off') . '</a>';
+	} else {
+		print '<a href="' . $_SERVER['PHP_SELF'] . '?action=del_MAIN_ENABLE_CSP">' . img_picto($langs->trans("Enabled"),
+				'on') . '</a>';
+	}
+}
+print "</td></tr>";
+
 print '</table>';
 
 

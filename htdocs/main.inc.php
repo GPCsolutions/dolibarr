@@ -976,6 +976,15 @@ function top_htmlhead($head, $title='', $disablejs=0, $disablehead=0, $arrayofjs
         print '<meta name="robots" content="noindex,nofollow">'."\n";      				// Do not index
         print '<meta name="viewport" content="width=device-width, initial-scale=1">';	// Scale for mobile device
         print '<meta name="author" content="Dolibarr Development Team">'."\n";
+		// Content Security Policy
+		if (! empty($conf->global->MAIN_ENABLE_CSP)) {
+			print '<meta http-equiv="Content-Security-Policy" content="default-src \'self\' \'unsafe-inline\' \'unsafe-eval\'';
+			if (!empty($dolibarr_main_force_https)) {
+				print ' https:';
+			}
+			// TODO: allow modules to insert their own policy (Gravatar, Dropbox, Google Drive…)
+			print'; report-uri /csp-report.php">';
+		}
 		if (! empty($conf->global->MAIN_ACTIVATE_HTML5)) print '<meta name="viewport" content="width=device-width, initial-scale=1.0">'."\n";	// Needed for Responsive Web Design
         $favicon=dol_buildpath('/theme/'.$conf->theme.'/img/favicon.ico',1);
         if (! empty($conf->global->MAIN_FAVICON_URL)) $favicon=$conf->global->MAIN_FAVICON_URL;
