@@ -138,18 +138,18 @@ $dolibarr_main_db_type='';
 // Database character set used to store data (forced during database creation).
 // Default value: depends on database driver
 // Examples:
-// dolibarr_main_db_character_set='utf8';
+// dolibarr_main_db_character_set='utf8mb4';
 //
-$dolibarr_main_db_character_set='utf8';
+$dolibarr_main_db_character_set='utf8mb4';
 
 
 // dolibarr_main_db_collation
 // Database character set used to sort data (forced during database creation).
 // Default value: depends on database driver
 // Examples:
-// dolibarr_main_db_collation='utf8_general_ci';
+// dolibarr_main_db_collation='utf8mb4_unicode_ci';
 //
-$dolibarr_main_db_collation='utf8_general_ci';
+$dolibarr_main_db_collation='utf8mb4_unicode_ci';
 
 
 
@@ -322,5 +322,3 @@ $dolibarr_main_db_prefix='';
 // Default value: 0 (pyramidal)
 // Examples:
 // $multicompany_transverse_mode='1';
-
-?>

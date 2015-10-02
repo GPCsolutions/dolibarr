@@ -87,8 +87,8 @@ else
 		if (preg_match('/mysql/i',$db->type))
 		{
 			$arraytest=array(
-				'character_set_database'=>array('var'=>'dolibarr_main_db_character_set','valifempty'=>'utf8'),
-				'collation_database'=>array('var'=>'dolibarr_main_db_collation','valifempty'=>'utf8_general_ci')
+				'character_set_database'=>array('var'=>'dolibarr_main_db_character_set','valifempty'=>'utf8mb4'),
+				'collation_database'=>array('var'=>'dolibarr_main_db_collation','valifempty'=>'utf8mb4_unicode_ci')
 			);
 		}
 

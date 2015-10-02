@@ -4,6 +4,7 @@
  * Copyright (C) 2004-2011	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2006		Andre Cianfarani		<acianfa@free.fr>
  * Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -113,7 +114,8 @@ class DoliDBMysqli extends DoliDB
 
                 // If client connected with different charset than Dolibarr HTML output
                 $clientmustbe='';
-                if (preg_match('/UTF-8/i',$conf->file->character_set_client))      $clientmustbe='utf8';
+	            // FIXME: this should be utf8 for MySQL < 5.5.3
+                if (preg_match('/UTF-8/i',$conf->file->character_set_client))      $clientmustbe='utf8mb4';
                 if (preg_match('/ISO-8859-1/i',$conf->file->character_set_client)) $clientmustbe='latin1';
                 if ($this->db->character_set_name() != $clientmustbe)
                 {
@@ -139,7 +141,8 @@ class DoliDBMysqli extends DoliDB
             {
                 // If client connected with different charset than Dolibarr HTML output
                 $clientmustbe='';
-                if (preg_match('/UTF-8/i',$conf->file->character_set_client))      $clientmustbe='utf8';
+	             // FIXME: this should be utf8 for MySQL < 5.5.3
+                if (preg_match('/UTF-8/i',$conf->file->character_set_client))      $clientmustbe='utf8mb4';
                 if (preg_match('/ISO-8859-1/i',$conf->file->character_set_client)) $clientmustbe='latin1';
                 if ($this->db->character_set_name() != $clientmustbe)
                 {

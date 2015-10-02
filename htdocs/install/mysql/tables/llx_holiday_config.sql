@@ -1,5 +1,6 @@
 -- ===================================================================
--- Copyright (C) 2012      Laurent Destailleur  <eldy@users.sourceforge.net>
+-- Copyright (C) 2012       Laurent Destailleur     <eldy@users.sourceforge.net>
+-- Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -19,7 +20,7 @@
 CREATE TABLE llx_holiday_config 
 (
 rowid    integer NOT NULL AUTO_INCREMENT PRIMARY KEY,
-name     VARCHAR( 255 ) NOT NULL UNIQUE,
+name     VARCHAR( 191 ) NOT NULL UNIQUE,
 value    TEXT NULL
 ) 
 ENGINE=innodb;

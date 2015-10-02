@@ -1,7 +1,8 @@
 -- ============================================================================
--- Copyright (C) 2003      Rodolphe Quiedeville <rodolphe@quiedeville.org>
--- Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
--- Copyright (C) 2010      Laurent Destailleur  <eldy@users.sourceforge.net>
+-- Copyright (C) 2003       Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+-- Copyright (C) 2005-2009  Regis Houssin           <regis.houssin@capnetworks.com>
+-- Copyright (C) 2010       Laurent Destailleur     <eldy@users.sourceforge.net>
+-- Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -21,7 +22,7 @@
 create table llx_boxes_def
 (
   rowid       integer AUTO_INCREMENT PRIMARY KEY,
-  file        varchar(200) NOT NULL,        -- Do not increase this as file+note must be small to allow index
+  file        varchar(191) NOT NULL,        -- Do not increase this as file+note must be small to allow index
   entity      integer DEFAULT 1 NOT NULL,	-- multi company id
   tms         timestamp,  
   note        varchar(130)                  -- Do not increase this as file+note must be small to allow index

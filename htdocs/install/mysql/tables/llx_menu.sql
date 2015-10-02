@@ -1,8 +1,9 @@
 -- ========================================================================
--- Copyright (C) 2007		Patrick Raguin		<patrick.raguin@gmail.com>
--- Copyright (C) 2007-2008	Laurent Destailleur	<eldy@users.sourceforge.net>
--- Copyright (C) 2009-2012	Regis Houssin		<regis.houssin@capnetworks.com>
--- Copyright (C) 2012		Marcos García		<marcosgdf@gmail.com>
+-- Copyright (C) 2007       Patrick Raguin          <patrick.raguin@gmail.com>
+-- Copyright (C) 2007-2008  Laurent Destailleur     <eldy@users.sourceforge.net>
+-- Copyright (C) 2009-2012  Regis Houssin           <regis.houssin@capnetworks.com>
+-- Copyright (C) 2012       Marcos García           <marcosgdf@gmail.com>
+-- Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -33,7 +34,7 @@ CREATE TABLE llx_menu
     fk_mainmenu   varchar(24),								-- 
     fk_leftmenu   varchar(24),								-- 
 	position      integer NOT NULL,							-- Sort order of entry
-	url           varchar(255) NOT NULL,					-- Relative (or absolute) url to go
+	url           varchar(191) NOT NULL,					-- Relative (or absolute) url to go
 	target        varchar(100) NULL,						-- Target of Url link
 	titre         varchar(255) NOT NULL,					-- Key for menu translation 
 	langs         varchar(100),								-- Lang file to load for translation

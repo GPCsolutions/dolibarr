@@ -1,10 +1,11 @@
 -- ============================================================================
--- Copyright (C) 2002-2006 Rodolphe Quiedeville <rodolphe@quiedeville.org>
--- Copyright (C) 2008-2010 Laurent Destailleur  <eldy@users.sourceforge.net>
--- Copyright (C) 2005-2010 Regis Houssin        <regis.houssin@capnetworks.com>
--- Copyright (C) 2010      Juanjo Menent        <jmenent@2byte.es>
--- Copyright (C) 2012-2013 Cédric Salvador      <csalvador@gpcsolutions.fr>
--- Copyright (C) 2014      Marcos García        <marcosgdf@gmail.com>
+-- Copyright (C) 2002-2006  Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+-- Copyright (C) 2008-2010  Laurent Destailleur     <eldy@users.sourceforge.net>
+-- Copyright (C) 2005-2010  Regis Houssin           <regis.houssin@capnetworks.com>
+-- Copyright (C) 2010       Juanjo Menent           <jmenent@2byte.es>
+-- Copyright (C) 2012-2013  Cédric Salvador         <csalvador@gpcsolutions.fr>
+-- Copyright (C) 2014       Marcos García           <marcosgdf@gmail.com>
+-- Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -33,7 +34,7 @@ create table llx_product
   tms						timestamp,
   fk_parent					integer	  DEFAULT 0,			-- Not used. Used by external modules. Virtual product id
 
-  label						varchar(255) NOT NULL,
+  label						varchar(191) NOT NULL,
   description				text,
   note						text,
   customcode                varchar(32),                    -- Optionnal custom code
@@ -58,7 +59,7 @@ create table llx_product
   duration					varchar(6),
   seuil_stock_alerte		integer      DEFAULT 0,
   url						varchar(255),
-  barcode					varchar(255) DEFAULT NULL,		-- barcode
+  barcode					varchar(191) DEFAULT NULL,		-- barcode
   fk_barcode_type			integer      DEFAULT NULL,		-- barcode type
   accountancy_code_sell		varchar(32),                    -- Selling accountancy code
   accountancy_code_buy		varchar(32),                    -- Buying accountancy code

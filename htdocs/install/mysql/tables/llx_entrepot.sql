@@ -1,7 +1,8 @@
 -- ============================================================================
--- Copyright (C) 2003-2006 Rodolphe Quiedeville	<rodolphe@quiedeville.org>
--- Copyright (C) 2004      Laurent Destailleur	<eldy@users.sourceforge.net>
--- Copyright (C) 2012      Juanjo Menent		<jmenent@2byte.es>
+-- Copyright (C) 2003-2006  Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+-- Copyright (C) 2004       Laurent Destailleur     <eldy@users.sourceforge.net>
+-- Copyright (C) 2012       Juanjo Menent           <jmenent@2byte.es>
+-- Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -23,7 +24,7 @@ create table llx_entrepot
   rowid           integer AUTO_INCREMENT PRIMARY KEY,
   datec           datetime,
   tms             timestamp,
-  label           varchar(255) NOT NULL,
+  label           varchar(191) NOT NULL,
   entity          integer DEFAULT 1 NOT NULL,	-- multi company id
   description     text,
   lieu            varchar(64),					-- resume lieu situation

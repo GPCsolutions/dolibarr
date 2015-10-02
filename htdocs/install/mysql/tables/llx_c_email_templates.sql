@@ -1,5 +1,6 @@
 -- ===================================================================
--- Copyright (C) 2001-2002 Rodolphe Quiedeville <rodolphe@quiedeville.org>
+-- Copyright (C) 2001-2002  Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+-- Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -28,7 +29,7 @@ create table llx_c_email_templates
   fk_user         integer,                        -- Id utilisateur si modele prive, sinon null
   datec           datetime,
   tms             timestamp,
-  label           varchar(255),					  -- Label of predefined email
+  label           varchar(191),					  -- Label of predefined email
   position        smallint,					      -- Position
   active          tinyint DEFAULT 1  NOT NULL,
   topic			  text,                           -- Predefined topic

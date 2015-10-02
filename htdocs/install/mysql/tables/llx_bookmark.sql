@@ -1,5 +1,6 @@
 -- ===================================================================
--- Copyright (C) 2007 Laurent Destailleur  <eldy@users.sourceforge.net>
+-- Copyright (C) 2007       Laurent Destailleur     <eldy@users.sourceforge.net>
+-- Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -22,7 +23,7 @@ create table llx_bookmark
   fk_soc      integer,
   fk_user     integer NOT NULL,
   dateb       datetime,
-  url         varchar(255) NOT NULL,
+  url         varchar(191) NOT NULL,
   target      varchar(16),
   title       varchar(64),
   favicon     varchar(24),

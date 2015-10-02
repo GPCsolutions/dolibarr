@@ -1,5 +1,6 @@
 -- ===================================================================
--- Copyright (C) 2012      Laurent Destailleur  <eldy@users.sourceforge.net>
+-- Copyright (C) 2012       Laurent Destailleur     <eldy@users.sourceforge.net>
+-- Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -20,7 +21,7 @@ CREATE TABLE llx_holiday_events
 (
   rowid    integer NOT NULL PRIMARY KEY AUTO_INCREMENT,
   entity   integer DEFAULT 1 NOT NULL,     -- multi company id
-  name     VARCHAR( 255 ) NOT NULL,
+  name     VARCHAR(191) NOT NULL,
   value    TEXT NOT NULL
 ) 
 ENGINE=innodb;

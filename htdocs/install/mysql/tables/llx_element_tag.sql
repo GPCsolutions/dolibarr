@@ -1,5 +1,6 @@
 -- ============================================================================
--- Copyright (C) 2012	Regis Houssin	<regis.houssin@capnetworks.com>
+-- Copyright (C) 2012       Regis Houssin           <regis.houssin@capnetworks.com>
+-- Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -21,7 +22,7 @@ create table llx_element_tag
   rowid				integer AUTO_INCREMENT PRIMARY KEY,
   entity			integer DEFAULT 1 NOT NULL,			-- multi company id
   lang				varchar(5) NOT NULL,
-  tag				varchar(255) NOT NULL,
+  tag				varchar(191) NOT NULL,
   fk_element		integer NOT NULL,
   element			varchar(64) NOT NULL
   

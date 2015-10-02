@@ -1,5 +1,6 @@
 -- ============================================================================
--- Copyright (C) 2013 Laurent Destailleur <eldy@users.sourceforge.net>
+-- Copyright (C) 2013       Laurent Destailleur     <eldy@users.sourceforge.net>
+-- Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -17,7 +18,7 @@
 
 CREATE TABLE llx_opensurvey_comments (
     id_comment INTEGER unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    id_sondage CHAR(16) NOT NULL,
+    id_sondage VARCHAR(16) NOT NULL,
     comment text NOT NULL,
     tms timestamp,
     usercomment text

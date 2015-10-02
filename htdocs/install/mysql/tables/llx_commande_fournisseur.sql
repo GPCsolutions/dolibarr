@@ -1,8 +1,9 @@
 -- ===================================================================
--- Copyright (C) 2004		Rodolphe Quiedeville	<rodolphe@quiedeville.org>
--- Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
--- Copyright (C) 2007		Laurent Destailleur		<eldy@users.sourceforge.net>
--- Copyright (C) 2010		Juanjo Menent			<jmenent@2byte.es>
+-- Copyright (C) 2004       Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+-- Copyright (C) 2005-2012  Regis Houssin           <regis.houssin@capnetworks.com>
+-- Copyright (C) 2007       Laurent Destailleur     <eldy@users.sourceforge.net>
+-- Copyright (C) 2010       Juanjo Menent           <jmenent@2byte.es>
+-- Copyright (C) 2015       Raphaël Doursenaud      <rdoursenaud@gpcsolutions.fr>
 --
 -- This program is free software; you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -23,7 +24,7 @@ create table llx_commande_fournisseur
 (
   rowid					integer AUTO_INCREMENT PRIMARY KEY,
 
-  ref					varchar(255) NOT NULL,          -- order number
+  ref					varchar(191) NOT NULL,          -- order number
   entity				integer DEFAULT 1 NOT NULL,	 -- multi company id
 
   ref_ext				varchar(64),                  -- reference into an external system (not used by dolibarr)
