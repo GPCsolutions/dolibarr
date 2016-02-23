@@ -38,6 +38,10 @@ $langs->setDefaultLang($setuplang);
 $versionfrom=GETPOST("versionfrom",'',3)?GETPOST("versionfrom",'',3):(empty($argv[1])?'':$argv[1]);
 $versionto=GETPOST("versionto",'',3)?GETPOST("versionto",'',3):(empty($argv[2])?'':$argv[2]);
 $action=GETPOST('action', 'alpha');
+if (php_sapi_name() == 'cli') {
+	// We force action in cli mode.
+	$action = 'set';
+}
 
 // Define targetversion used to update MAIN_VERSION_LAST_INSTALL for first install
 // or MAIN_VERSION_LAST_UPGRADE for upgrade.
@@ -67,6 +71,10 @@ if (@file_exists($forcedfile)) {
 	if ($force_install_noedit == 2) {
 		if (!empty($force_install_dolibarrlogin)) {
 			$login = $force_install_dolibarrlogin;
+		}
+		if (!empty($force_install_dolibarrpass)) {
+			$pass = $force_install_dolibarrpass;
+			$pass_verif = $pass;
 		}
 	}
 }

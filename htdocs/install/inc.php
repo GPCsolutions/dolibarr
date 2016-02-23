@@ -485,19 +485,24 @@ function dolibarr_install_syslog($message, $level=LOG_DEBUG)
  */
 function detect_dolibarr_main_document_root()
 {
-	// If PHP is in CGI mode, SCRIPT_FILENAME is PHP's path.
-	// Since that's not what we want, we suggest $_SERVER["DOCUMENT_ROOT"]
-	if (preg_match('/php$/i', $_SERVER["SCRIPT_FILENAME"]) || preg_match('/[\\/]php$/i',
-			$_SERVER["SCRIPT_FILENAME"]) || preg_match('/php\.exe$/i', $_SERVER["SCRIPT_FILENAME"])
-	) {
-		$dolibarr_main_document_root = $_SERVER["DOCUMENT_ROOT"];
-
-		if (!preg_match('/[\\/]dolibarr[\\/]htdocs$/i', $dolibarr_main_document_root)) {
-			$dolibarr_main_document_root .= "/dolibarr/htdocs";
-		}
-	} else {
+	if (php_sapi_name() == 'cli') {
 		// We assume /install to be under /htdocs, so we get the parent directory of the current directory
-		$dolibarr_main_document_root = dirname(dirname($_SERVER["SCRIPT_FILENAME"]));
+		$dolibarr_main_document_root = dirname(dirname(__FILE__));
+	} else {
+		// If PHP is in CGI mode, SCRIPT_FILENAME is PHP's path.
+		// Since that's not what we want, we suggest $_SERVER["DOCUMENT_ROOT"]
+		if (preg_match('/php$/i', $_SERVER["SCRIPT_FILENAME"]) || preg_match('/[\\/]php$/i',
+				$_SERVER["SCRIPT_FILENAME"]) || preg_match('/php\.exe$/i', $_SERVER["SCRIPT_FILENAME"])
+		) {
+			$dolibarr_main_document_root = $_SERVER["DOCUMENT_ROOT"];
+
+			if (!preg_match('/[\\/]dolibarr[\\/]htdocs$/i', $dolibarr_main_document_root)) {
+				$dolibarr_main_document_root .= "/dolibarr/htdocs";
+			}
+		} else {
+			// We assume /install to be under /htdocs, so we get the parent directory of the current directory
+			$dolibarr_main_document_root = dirname(dirname($_SERVER["SCRIPT_FILENAME"]));
+		}
 	}
 
 	return $dolibarr_main_document_root;
@@ -523,6 +528,9 @@ function detect_dolibarr_main_data_root($dolibarr_main_document_root)
  */
 function detect_dolibarr_main_url_root()
 {
+	if (php_sapi_name() == 'cli') {
+		throw new Exception("Dolibarr main URL root can't be detected in CLI mode. Please specify \$force_install_main_url_root in your install.forced.php configuration.");
+	}
 	// If defined (Ie: Apache with Linux)
 	if (isset($_SERVER["SCRIPT_URI"])) {
 		$dolibarr_main_url_root = $_SERVER["SCRIPT_URI"];

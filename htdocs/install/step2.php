@@ -42,7 +42,11 @@ error_reporting(0);		// Disable all errors
 @set_time_limit(900);	// Need 900 on some OS like Windows 7/64
 error_reporting($err);
 
-$action=GETPOST('action');
+$action=GETPOST('action', 'alpha');
+if (php_sapi_name() == 'cli') {
+	// We force action in cli mode.
+	$action = 'set';
+}
 $setuplang=(GETPOST('selectlang','',3)?GETPOST('selectlang','',3):'auto');
 $langs->setDefaultLang($setuplang);
 

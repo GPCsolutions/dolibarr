@@ -69,6 +69,9 @@ $force_install_databaserootpass = '';
 /** @var string Dolibarr super-administrator username */
 $force_install_dolibarrlogin = 'admin';
 
+/** @var string Dolibarr super-administrator password */
+$force_install_dolibarrpass = 'admin';
+
 /** @var bool Force install locking */
 $force_install_lockinstall = true;
 

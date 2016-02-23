@@ -229,7 +229,7 @@ if (isset($_SERVER["HTTP_USER_AGENT"]))
 
 // Force HTTPS if required ($conf->file->main_force_https is 0/1 or https dolibarr root url)
 // $_SERVER["HTTPS"] is 'on' when link is https, otherwise $_SERVER["HTTPS"] is empty or 'off'
-if (! empty($conf->file->main_force_https) && (empty($_SERVER["HTTPS"]) || $_SERVER["HTTPS"] != 'on'))
+if (! empty($conf->file->main_force_https) && (empty($_SERVER["HTTPS"]) || $_SERVER["HTTPS"] != 'on') && php_sapi_name() !== 'cli')
 {
     $newurl='';
     if (is_numeric($conf->file->main_force_https))

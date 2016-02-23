@@ -32,7 +32,11 @@ include 'inc.php';
 
 global $langs;
 
-$action=GETPOST('action','alpha');
+$action=GETPOST('action', 'alpha');
+if (php_sapi_name() == 'cli') {
+	// We force action in cli mode.
+	$action = 'set';
+}
 $setuplang=(GETPOST('selectlang','',3)?GETPOST('selectlang','',3):'auto');
 $langs->setDefaultLang($setuplang);
 
