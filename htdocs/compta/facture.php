@@ -3324,7 +3324,7 @@ else if ($id > 0 || ! empty($ref))
 	// Situations
 	if (! empty($conf->global->INVOICE_USE_SITUATION))
 	{
-		if ($object->type == 5 && ($object->situation_counter > 1))
+		if ($object->type == Facture::TYPE_SITUATION && ($object->situation_counter > 1))
 		{
 			$prevsits = $object->get_prev_sits();
 			print '<tr><td>';
@@ -3755,9 +3755,9 @@ else if ($id > 0 || ! empty($ref))
 			}
 
 			// Create next situation invoice
-			if ($user->rights->facture->creer && ($object->type == 5) && ($object->statut == 1 || $object->statut == 2)) {
+			if ($user->rights->facture->creer && ($object->type == Facture::TYPE_SITUATION) && ($object->statut == 1 || $object->statut == 2)) {
 				if ($object->is_last_in_cycle() && $object->situation_final != 1) {
-					print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?action=create&amp;type=5&amp;origin=facture&amp;originid=' . $object->id . '&amp;socid=' . $object->socid . '" >' . $langs->trans('CreateNextSituationInvoice') . '</a></div>';
+					print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?action=create&amp;type=' . Facture::TYPE_SITUATION . '&amp;origin=facture&amp;originid=' . $object->id . '&amp;socid=' . $object->socid . '" >' . $langs->trans('CreateNextSituationInvoice') . '</a></div>';
 				} else if (!$object->is_last_in_cycle()) {
 					print '<div class="inline-block divButAction"><a class="butActionRefused" href="#" title="' . $langs->trans("DisabledBecauseNotLastInCycle") . '">' . $langs->trans('CreateNextSituationInvoice') . '</a></div>';
 				} else {
