@@ -246,7 +246,7 @@ else {
 	<?php
 	if ($this->situation_cycle_ref) {
 		$coldisplay++;
-		print '<td class="nobottom nowrap" align="right"><input type="text" size="1" value="0" name="progress">%</td>';
+		print '<td class="nobottom nowrap" align="right"><input type="text" size="1" value="'. (isset($_POST['progress'])?$_POST['progress']:'0') . '" name="progress">%</td>';
 	}
 	if (! empty($usemargins))
 	{

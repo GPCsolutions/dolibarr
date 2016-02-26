@@ -8,7 +8,7 @@
  * Copyright (C) 2010-2015 Juanjo Menent         <jmenent@2byte.es>
  * Copyright (C) 2012-2013 Christophe Battarel   <christophe.battarel@altairis.fr>
  * Copyright (C) 2012-2013 Cédric Salvador       <csalvador@gpcsolutions.fr>
- * Copyright (C) 2012-2014 Raphaël Doursenaud    <rdoursenaud@gpcsolutions.fr>
+ * Copyright (C) 2012-2016 Raphaël Doursenaud    <rdoursenaud@gpcsolutions.fr>
  * Copyright (C) 2013      Jean-Francois FERRY   <jfefe@aternatik.fr>
  * Copyright (C) 2013-2014 Florian Henry         <florian.henry@open-concept.pro>
  * Copyright (C) 2013      Cédric Salvador       <csalvador@gpcsolutions.fr>
@@ -73,6 +73,7 @@ $id = (GETPOST('id', 'int') ? GETPOST('id', 'int') : GETPOST('facid', 'int')); /
 $ref = GETPOST('ref', 'alpha');
 $socid = GETPOST('socid', 'int');
 $action = GETPOST('action', 'alpha');
+$updatealllines = GETPOST('updatealllines', 'alpha');
 $confirm = GETPOST('confirm', 'alpha');
 $lineid = GETPOST('lineid', 'int');
 $userid = GETPOST('userid', 'int');
@@ -82,6 +83,11 @@ $search_montant_ht = GETPOST('search_montant_ht', 'alpha');
 $search_montant_ttc = GETPOST('search_montant_ttc', 'alpha');
 $origin = GETPOST('origin', 'alpha');
 $originid = (GETPOST('originid', 'int') ? GETPOST('originid', 'int') : GETPOST('origin_id', 'int')); // For backward compatibility
+
+// Alternate action for situation submit
+if (!empty($updatealllines)) {
+	$action = 'updatealllines';
+}
 
 // PDF
 $hidedetails = (GETPOST('hidedetails', 'int') ? GETPOST('hidedetails', 'int') : (! empty($conf->global->MAIN_GENERATE_DOCUMENTS_HIDE_DETAILS) ? 1 : 0));
@@ -1659,7 +1665,7 @@ if (empty($reshook))
 		}
 	}
 
-	else if ($action == 'updatealllines' && $user->rights->facture->creer && $_POST['all_percent'] == $langs->trans('Modifier'))
+	else if ($action == 'updatealllines' && $user->rights->facture->creer)
 	{
 		if (!$object->fetch($id) > 0) dol_print_error($db);
 		if (!is_null(GETPOST('all_progress')) && GETPOST('all_progress') != "")
@@ -3509,10 +3515,6 @@ else if ($id > 0 || ! empty($ref))
 	{
 		if ($object->situation_cycle_ref && $object->statut == 0) {
 			print '<tr class="liste_titre nodrag nodrop">';
-			print '<form name="updatealllines" id="updatealllines" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '"#updatealllines" method="POST">';
-			print '<input type="hidden" name="token" value="' . $_SESSION['newtoken'] . '" />';
-			print '<input type="hidden" name="action" value="updatealllines" />';
-			print '<input type="hidden" name="id" value="' . $object->id . '" />';
 
 			if (!empty($conf->global->MAIN_VIEW_LINE_NUMBER)) {
 				print '<td align="center" width="5">&nbsp;</td>';
@@ -3523,6 +3525,9 @@ else if ($id > 0 || ! empty($ref))
 			if ($inputalsopricewithtax) print '<td align="right" width="80">&nbsp;</td>';
 			print '<td align="right" width="50">&nbsp</td>';
 			print '<td align="right" width="50">&nbsp</td>';
+			if (!empty($conf->global->PRODUCT_USE_UNITS)) {
+				print '<td align="left">&nbsp;</td>';
+			}
 			print '<td align="right" width="50">' . $langs->trans('Progress') . '</td>';
 			if (! empty($conf->margin->enabled) && empty($user->societe_id))
 			{
@@ -3537,19 +3542,21 @@ else if ($id > 0 || ! empty($ref))
 			print '<td width="10">&nbsp;</td>';
 			print "</tr>\n";
 
+			print '<tr width="100%" class="nodrag nodrop">';
 			if (!empty($conf->global->MAIN_VIEW_LINE_NUMBER)) {
 				print '<td align="center" width="5">&nbsp;</td>';
 			}
-			print '<tr width="100%" class="nodrag nodrop">';
 			print '<td>&nbsp;</td>';
 			print '<td width="50">&nbsp;</td>';
 			print '<td width="80">&nbsp;</td>';
 			print '<td width="50">&nbsp;</td>';
+			if (!empty($conf->global->PRODUCT_USE_UNITS)) {
+				print '<td align="left">&nbsp;</td>';
+			}
 			print '<td width="50">&nbsp;</td>';
 			print '<td align="right" class="nowrap"><input type="text" size="1" value="" name="all_progress">%</td>';
-			print '<td colspan="4" align="right"><input class="button" type="submit" name="all_percent" value="Modifier" /></td>';
+			print '<td colspan="4" align="right"><input class="button" type="submit" name="updatealllines" value="Modifier" /></td>';
 			print '</tr>';
-			print '</form>';
 		}
 	}
 
