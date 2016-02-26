@@ -3322,7 +3322,7 @@ else if ($id > 0 || ! empty($ref))
 	print '</tr>';
 
 	// Situations
-	if (! empty($conf->global->INVOICE_US_SITUATION))
+	if (! empty($conf->global->INVOICE_USE_SITUATION))
 	{
 		if ($object->type == 5 && ($object->situation_counter > 1))
 		{
@@ -3505,7 +3505,7 @@ else if ($id > 0 || ! empty($ref))
 	print '<table id="tablelines" class="noborder noshadow" width="100%">';
 
 	// Show global modifiers
-	if (! empty($conf->global->INVOICE_US_SITUATION))
+	if (! empty($conf->global->INVOICE_USE_SITUATION))
 	{
 		if ($object->situation_cycle_ref && $object->statut == 0) {
 			print '<tr class="liste_titre nodrag nodrop">';
