@@ -13,6 +13,7 @@
         "source": "https://github.com/Dolibarr/dolibarr"
     },
     "config": {
+        "process-timeout": 3600,
         "vendor-dir": "htdocs/includes",
         "bin-dir": "dev/bin"
     },
@@ -31,7 +32,26 @@
         "jakub-onderka/php-parallel-lint": "^0",
         "jakub-onderka/php-console-highlighter": "^0",
         "phpunit/phpunit": "^4",
-        "squizlabs/php_codesniffer": "^2"
+        "squizlabs/php_codesniffer": "^2",
+        "wimg/php-compatibility": "^7"
+    },
+    "scripts": {
+        "post-update-cmd": "@compat_workaround",
+        "post-install-cmd": "@compat_workaround",
+        "compat_workaround": "rm -fr \"htdocs/includes/squizlabs/php_codesniffer/CodeSniffer/Standards/PHPCompatibility\"; cp -a \"htdocs/includes/wimg/php-compatibility\" \"htdocs/includes/squizlabs/php_codesniffer/CodeSniffer/Standards/PHPCompatibility\"",
+        "check": [
+            "@lint",
+            "@check_compat",
+            "@check_style"
+        ],
+        "lint": "parallel-lint --exclude htdocs/includes --blame .",
+        "check_compat": "TRAVIS_PHP_VERSION=\"${TRAVIS_PHP_VERSION:=5.3-7.0}\"; phpcs -n -p -d memory_limit=-1 -d max_execution_time=-1 --colors --standard=PHPCompatibility --runtime-set testVersion $TRAVIS_PHP_VERSION --ignore=custom/\\*,includes/\\* .",
+        "check_style": "phpcs -s -n -p -d memory_limit=-1 -d max_execution_time=-1 --colors --tab-width=4 --standard=dev/codesniffer/ruleset.xml --encoding=utf-8 .",
+        "test": [
+            "@unit"
+        ],
+        "unit": "phpunit -d memory_limit=-1 -c test/phpunit/phpunittest.xml test/phpunit/AllTests.php"
+
     },
     "suggest": {
         "ext-mysqlnd": "To use with MySQL or MariaDB",

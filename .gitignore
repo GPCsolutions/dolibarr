@@ -21,6 +21,6 @@ Thumbs.db
 # Composer installed repositories
 /htdocs/includes/**/.git
 # Composer autoloader and unwanted files
+dev/bin
 htdocs/includes/autoload.php
-htdocs/includes/bin/
 htdocs/includes/composer/

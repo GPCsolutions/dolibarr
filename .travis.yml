@@ -108,6 +108,14 @@ install:
   echo
 
 - |
+  echo "Installing PHP Compatibility"
+  composer -n require simplyadmire/composer-plugins ^2
+  composer -n require wimg/php-compatibility ^7
+  # Workaround https://github.com/wimg/PHPCompatibility/issues/102
+  cp -a "$TRAVIS_BUILD_DIR/htdocs/includes/wimg/php-compatibility" "$TRAVIS_BUILD_DIR/htdocs/includes/squizlabs/php_codesniffer/CodeSniffer/Standards/PHPCompatibility"
+  echo
+
+- |
   echo "Adding path of binaries tools installed by composer to the PATH"
   export PATH="$TRAVIS_BUILD_DIR/dev/bin:$PATH"
   echo
@@ -244,23 +252,14 @@ script:
   echo
 
 - |
-  echo "Checking PHP syntax errors"
+  echo "Checking PHP syntax errors, compatibility and coding style"
   # Ensure we catch errors
   set -e
-  parallel-lint --exclude htdocs/includes --blame .
+  composer check
   set +e
   echo
 
 # TODO: dev/* checks
-
-- |
-  echo "Checking coding style"
-  # Ensure we catch errors
-  set -e
-  # Exclusions are defined in the ruleset.xml file
-  phpcs -s -n -p -d memory_limit=-1 --colors --tab-width=4 --standard=dev/codesniffer/ruleset.xml --encoding=utf-8 .
-  set +e
-  echo
 
 # TODO: Check Javascript (jshint?)
 
